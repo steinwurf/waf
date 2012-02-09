@@ -261,7 +261,7 @@ class DependencyOptionsContext(OptionsContext):
         Prints the bundle/dependency options
         """
         #self.msg('Bundle options', 'NONE, ALL, ' + ', '.join(dependencies.keys()))
-        print 'Bundle options: ' + 'NONE, ALL, ' + ', '.join(dependencies.keys())
+        print('Bundle options:', 'NONE, ALL, ' + ', '.join(dependencies.keys()))
         sys.exit(0)
 
 
@@ -269,8 +269,8 @@ class DependencyOptionsContext(OptionsContext):
         """
         Show the current bundle options
         """
-        print 'Dependencies bundled: ' + ', '.join(dependency_config.DEPS)
-        print 'Bundle path ' + bundle_path()
+        print('Dependencies bundled:', ', '.join(dependency_config.DEPS))
+        print('Bundle path ', bundle_path())
         #self.msg('Dependencies bundled', ', '.join(dependency_config.DEPS))
         #self.msg('Bundle path', bundle_path())
         sys.exit(0)
