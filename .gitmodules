@@ -1,0 +1,3 @@
+[submodule "waf"]
+	path = waf
+	url = https://code.google.com/p/waf/
