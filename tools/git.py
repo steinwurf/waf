@@ -232,7 +232,6 @@ def repository_clone(self, repo_dir, repo_url):
 
         self.git_clone(repo_url, destdir = repo_dir)
             
-    self.git_pull(repo_dir)
 
 
 @conf

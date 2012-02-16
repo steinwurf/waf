@@ -19,62 +19,7 @@ import sys
 import os
 import shutil
 
-#################################
-# Load the wurftools dependencies
-#################################
 
-def options(opt):
-    opt.load('toolchain_cxx')
-    opt.load('git')
-
-def configure(conf):
-    conf.load('toolchain_cxx')
-    conf.load('git')
-
-
-##################
-# DistcleanContext
-##################
-
-def distclean(ctx):
-    """
-    Since we have nested the toolchain folders in the build dir
-    waf does not completly remove it
-    """
-    import shutil
-    import waflib.Scripting as script
-    script.distclean(ctx)
-    
-    lst = os.listdir('.')
-
-    for k in lst:
-
-        if k == 'build':
-            shutil.rmtree('build')
-        if k == '.dep_store':
-
-            # We also clean the dependency config
-            # if it is there
-            os.remove('.dep_store')
-
-
-def run_distclean(ctx):
-    """
-    First we run the one define in the module, then our own one
-    """
-    Context.g_module.distclean(ctx)
-    distclean(ctx)
-
-class DistcleanContext(Context.Context):
-    """ Clean the project """
-    cmd = 'distclean'
-    fun = run_distclean
-
-    def __init__(self, **kw):
-        super(DistcleanContext, self).__init__(**kw)
-
-    def execute(self):
-        run_distclean(self)
 
 ###############################
 # ToolchainConfigurationContext
@@ -113,7 +58,7 @@ dependency_config = ConfigSet()
 
 options_dirty = False
 
-DEP_FILE = '.dep_store'
+DEPENDENCY_FILE = '.dependency_config'
 """ The config file which tracks which dependencies have been choosen """
 
 RECURSE_DEPENDENCY = 0
@@ -128,7 +73,22 @@ OPTIONS_NAME = 'Dependency options'
 DEFAULT_BUNDLE_PATH = 'bundle_dependencies'
 """ Default folder to use for bundled dependencies """ 
 
+DEP_PATH_DEST = 'depend_%s_path'
+""" Destination of the dependency paths in the options """
 
+
+
+#################################
+# Load the wurftools dependencies
+#################################
+
+def options(opt):
+    opt.load('toolchain_cxx')
+    opt.load('git')
+
+def configure(conf):
+    conf.load('toolchain_cxx')
+    conf.load('git')
 
 
 def do_bundle_dependency(name):
@@ -142,17 +102,32 @@ def bundle_path():
     """
     Returns the path to the bundle path
     """
-    path = dependency_config.BUNDLE_PATH
+    path = dependency_config['BUNDLE_PATH']
 
     path = os.path.expanduser(path)
     path = os.path.abspath(path)
 
     return path
 
+def is_system_dependency_impl(name):
+    """
+    Returns true if the dependency has been specified
+    """
+    if name not in dependencies:
+        self.fatal('%s not recognized as an added dependency' % name)
+
+    if name in dependency_config['BUNDLE']:
+        return False
+
+    if dependency_config[DEP_PATH_DEST % name]:
+        return False
+
+    return True
+
 
 def dependency_path(name, tag = None):
     """
-    Returns the bundle directory
+    Returns path to the dependency inside the bundle directory
     """
 
     folder = name
@@ -175,32 +150,36 @@ class DependencyOptionsContext(OptionsContext):
         
         super(DependencyOptionsContext, self).__init__(**kw)
 
-        self.add_basic_options()
-        self.load_config()
+        self.load_dependency_config()
+        self.add_dependency_options()
+        self.preprocess_dependency_options()
+        self.store_dependency_config()
 
-        if '--bundle' in ''.join(sys.argv):
-            self.bundle_args()
-        else:
-            self.save_and_exit = False
         
-    def load_config(self):
+    def load_dependency_config(self):
         """
         Loads dependencies from the config file
         """
         
         try:
-            dependency_config.load(DEP_FILE)
+            dependency_config.load(DEPENDENCY_FILE)
         except Exception:
             pass
 
-        if not dependency_config.DEPS:
-            dependency_config.DEPS = ['NONE']
+        if not dependency_config.BUNDLE:
+            dependency_config.BUNDLE = ['NONE']
 
         if not dependency_config.BUNDLE_PATH:
             dependency_config.BUNDLE_PATH = DEFAULT_BUNDLE_PATH
 
+    def store_dependency_config(self):
+        """
+        Stores the dependency config
+        """
+        dependency_config.store(DEPENDENCY_FILE)
 
-    def add_basic_options(self):
+
+    def add_dependency_options(self):
         """
         Adds the options needed to control dependencies to the
         options context
@@ -222,7 +201,32 @@ class DependencyOptionsContext(OptionsContext):
         add('--bundle-show', dest='bundle_show', default=False,
             action='store_true', help='Show the dependency bundle options')
 
+        for d in dependencies:
+            add('--%s-path' % d, dest= DEP_PATH_DEST % d, default=False,
+                help='path to %s' % d)
+        
+    def is_system_dependency(self, name):
+        return is_system_dependency_impl(name)
 
+    def load_dependency(self, name):
+        """
+        Load a specific dependency in the OptionsContext
+        Notice, that it might not have been downloaded yet, in
+        that case we mark the options dirty
+        """
+        path = dependency_config[DEP_PATH_DEST % name]
+        
+        if path:
+
+            if not os.path.isdir(path):
+                global options_dirty
+                options_dirty = True
+            else:
+                self.recurse(path)
+
+        else:
+            self.fatal('Trying to load dependency %s which is not'
+                       ' bundled or has a path' % name)
 
     def parse_args(self, args = None):
         """
@@ -235,26 +239,10 @@ class DependencyOptionsContext(OptionsContext):
         except:
             if options_dirty:
                 Logs.pprint('YELLOW', 'Warning: The options might be incomplete as '
-                                      'some bundled dependencies have not been '
-                                      'downloaded yet. Run "./waf configure" to fetch them')
-
+                            'some bundled dependencies have not been '
+                            'downloaded yet. Run "./waf configure" to fetch them')
             raise
-
-
-        self.expand_args()
-        self.check_args()
-
-        if self.save_and_exit:
-            dependency_config.store(DEP_FILE)
-            sys.exit(0)
-
-
-        if Opt.options.bundle_show:
-            self.bundle_show()
-
-        if Opt.options.bundle_options:
-            self.bundle_options()
-            
+        
 
     def bundle_options(self):
         """
@@ -269,202 +257,176 @@ class DependencyOptionsContext(OptionsContext):
         """
         Show the current bundle options
         """
-        print('Dependencies bundled:', ', '.join(dependency_config.DEPS))
-        print('Bundle path ', bundle_path())
+        print dependency_config
         #self.msg('Dependencies bundled', ', '.join(dependency_config.DEPS))
         #self.msg('Bundle path', bundle_path())
         sys.exit(0)
 
-    def bundle_args(self):
+
+    def preprocess_dependency_options(self):
         """
-        Parses the --bundle argument done before any other
-        arguments are parsed by the options context. This
-        is done so that we know in advance what to do when
-        the add_dependency function is called.
+        Look in the options for dependencies
         """
 
-        self.save_and_exit = False
-        (o,l) = self.parser.parse_args()
+        # Remove the two arguments -h and --help to avoid the
+        # option parser exiting here. 
+        arguments = list(sys.argv)
 
-        if o.bundle:
-            bundle_args = o.bundle.split(',')
-
-            if dependency_config.DEPS != bundle_args:            
-                dependency_config.DEPS = bundle_args
-                self.save_and_exit = True
-
-        if o.bundle_path:
-            dependency_config.BUNDLE_PATH = o.bundle_path
-            self.save_and_exit = True
-
+        if '-h' in arguments: arguments.remove('-h')
+        if '--help' in arguments: arguments.remove('--help')
         
-            
-    def check_args(self):
-        """
-        Checks whether the arguments passed to the bundle
-        command are valid depedencies
-        """
-        deps = dependency_config.DEPS
-
-        if 'ALL' in deps:
-            self.fatal('Internal error ALL should have been expanded!')
+        (options, args) = self.parser.parse_args(arguments)
         
-        for d in deps:
+        if options.bundle_show:
+            self.bundle_show()
 
-            if d == 'NONE':
-                continue
-            
-            if d not in dependencies:
-                self.fatal('Error "%s" is not a valid / declared dependency' % d)
+        if options.bundle_options:
+            self.bundle_options()
 
-        if not dependency_config.BUNDLE_PATH:
-            self.fatal('Error "%s" bundle path not valid' % dependency_config.BUNDLE_PATH)
+        needs_configure = False
+
+        if options.bundle_path:
+            dependency_config['BUNDLE_PATH'] = options.bundle_path
+            needs_configure = True
+
+        if options.bundle:
+            dependency_config['BUNDLE'] = self.expand_bundle_argument(options.bundle)
+            needs_configure = True
+
+        # Update the path to the bundled dependencies
+        if needs_configure:
+            for d in dependencies:
+
+                config_key = DEP_PATH_DEST % d
+
+                if d in dependency_config['BUNDLE']:
+
+                    # Build the path
+                    bundle_name = d
+
+                    if dependencies[d]['tag']:
+                        bundle_name = bundle_name + '-' + dependencies[d]['tag']
+
+                    bundle_path = dependency_config['BUNDLE_PATH']
+                    bundle_path = os.path.join(bundle_path, bundle_name)
+                    bundle_path = os.path.expanduser(bundle_path)
+                    
+                    dependency_config[config_key] = bundle_path
+                    
+                else:
+                    dependency_config[config_key] = False
+
+        def check_not_bundled(name, msg):
+            if name in dependency_config['BUNDLE']:
+                self.fatal('%s -> %s' % (msg, name))
+
+        for d in dependencies:
+
+            path_key = DEP_PATH_DEST % d
+            path_value = getattr(options, path_key)
+
+            if path_value:
+                check_not_bundled(d, 'Path for already bundled dependency')
+                dependency_config[path_key] = path_value
+                needs_configure = True
+
+        if needs_configure:
+            # Inject the configure command into the arguments
+            sys.argv.append('configure')
 
 
-
-    def expand_args(self):
+    def expand_bundle_argument(self, arg):
         """
-        Expands the bundle args so that ALL,-gtest becomes the
+        Expands the bundle arg so that e.g. 'ALL,-gtest' becomes the
         right set of dependencies
         """
-        deps = dependency_config.DEPS
-
-        if 'NONE' in deps and 'ALL' in deps:
+        arg = arg.split(',')
+        
+        if 'NONE' in arg and 'ALL' in arg:
             self.fatal('Cannot specify both ALL and NONE as dependencies')
 
-        candidates = []
+        candidate_score = dict([(name, 0) for name in dependencies])
 
-        for d in deps:
+        def check_candidate(c):
+            if c not in candidate_score:
+                self.fatal('Cannot bundle %s, since it is not specified as a'
+                           ' dependency' % c)
 
-            if d == 'ALL':
-                candidates += dependencies.keys()
+        for a in arg:
+            
+            if a == 'ALL':
+                for candidate in candidate_score:
+                    candidate_score[candidate] += 1
                 continue
 
-            if d.startswith('-'):
-                dep = d[1:]
+            if a == 'NONE':
+                continue
 
-                try:
-                    candidates.remove(dep)
-                except ValueError:
-                    self.fatal('Cannot remove %s when not added to bundel set %r'
-                               % (dep, deps))
+            if a.startswith('-'):
+                a = a[1:]
+                check_candidate(a)
+                candidate_score[a] -= 1
+
             else:
+                check_candidate(a)
+                candidate_score[a] += 1
 
-                if d in candidates:
-                    self.fatal('Depedency %s added more than once' % d)
-                else:
-                    candidates.append(d)
-
-        dependency_config.DEPS = candidates
-
-    def resolve_status(self, name):
-        """
-        Figures out the status of a dependency
-        """
-        status = CHECK_DEPENDENCY
-        
-        for d in dependency_config.DEPS:
-            if d == 'ALL' or d == name:
-                status = RECURSE_DEPENDENCY
-
-            if d.startswith('-') and d[1:] == name:
-                status = CHECK_DEPENDENCY
-
-        return status
-
-    def bundle_dependency(self, name):
-        """
-        Returns whether the dependency is bundled
-        """
-        return do_bundle_dependency(name)
-
-    def add_dependency(self, name, repo_url, tag = None):
-        """
-        Adds a dependency 
-        """
-        
-        if name in dependencies:
-            dep = dependencies[name]
-
-            # check that the existing dependency specifies
-            # the same tag
-
-            if tag !=  dep['tag']:
-                self.fatal('existing dependency %s tag mismatch %s <=> %s' %
-                           (name, tag, dep['tag']))
-
-            if repo_url != dep['repo_url']:
-                self.fatal('exising dependency %s repo_url mismatch %s <=> %s' %
-                           (name, repo_url, dep['repo_url']))
-
-        else:
-
-            dependencies[name] = dict()
-            dep = dependencies[name]
-
-            dep['tag'] = tag
-            dep['repo_url'] = repo_url
-            dep['status'] = self.resolve_status(name)
-            dep['repo_dir'] = dependency_path(name)
-
-    def recurse_dependency(self, name):
-        """
-        Recurses a specific dependency
-        """
-
-        if not name in dependencies:
-            raise Errors.WafError('Error recurse called for non existing dependency %s' % name)
-    
-        dep = dependencies[name]
-    
-        assert dep['status'] == RECURSE_DEPENDENCY
-    
-        repo_dir = dep['repo_dir']
-    
-        if not os.path.isdir(repo_dir):
-            global options_dirty
-            options_dirty = True
-        else:
-            self.recurse(repo_dir)
+        candidates = [name for name in candidate_score if candidate_score[name] > 0] 
+        return candidates
+            
 
 @conf
-def list_bundle(self):
-    return ','.join(dependency_config.DEPS)
-
-@conf
-def bundle_dependency(self, name):
-    return do_bundle_dependency(name)
-
-@conf
-def recurse_dependency(self, name):
-
-    if not name in dependencies:
-        raise Errors.WafError('Error recurse called for non existing dependency %s' % name)
+def fetch_git_dependency(self, name):
 
     dep = dependencies[name]
 
     tag = dep['tag']
     repo_url = dep['repo_url']
-    repo_dir = dep['repo_dir']
+
+    repo_dir = dependency_config[DEP_PATH_DEST % name]
+
+    if not repo_dir:
+        self.fatal('Trying to load dependency %s which is not'
+                   ' bundled or has a path' % name)
+
+    if os.path.isdir(repo_dir):
+
+        # if we do not have a tag means we are following the
+        # master -- ensure we have the newest by doing a pull
         
-    self.repository_clone(repo_dir, repo_url)
+        #self.to_log('%s dir already exists skipping git clone' % repo_dir)
+        if not tag:
+            self.git_pull(repo_dir)
 
-    recurse_dir = ''
-
-    if tag:
-        local_clone = dependency_path(name, tag)
-    
-        self.local_clone_tag(repo_dir, local_clone, tag)
-        recurse_dir = local_clone
     else:
-        recurse_dir = repo_dir
+
+        self.repository_clone(repo_dir, repo_url)
+
+        if tag:
+            self.git_checkout(repo_dir, tag)
+
+    if self.git_has_submodules(repo_dir):
+        self.git_submodule_init(repo_dir)
+        self.git_submodule_update(repo_dir)
 
 
-    if self.git_has_submodules(recurse_dir):
-        self.git_submodule_init(recurse_dir)
-        self.git_submodule_update(recurse_dir)
+@conf
+def load_dependency(self, name):
+
+    if not name in dependencies:
+        self.fatal('Error load called for non existing dependency %s' % name)
+
+    if name in dependency_config['BUNDLE']:
+        self.fetch_git_dependency(name)
+
+    recurse_dir = dependency_config[DEP_PATH_DEST % name]
 
     self.recurse(recurse_dir)
+
+@conf
+def is_system_dependency(self, name):
+    return is_system_dependency_impl(name)
+
 
 ####################
 # SkipDependencyDist
@@ -475,16 +437,83 @@ class SkipDependencyDist(Scripting.Dist):
     Ensures that the dist command does not include the dep file
     """
     def get_excl(self):
-        return super(SkipDependencyDist, self).get_excl() + ' **/'+ DEP_FILE
+        return super(SkipDependencyDist, self).get_excl() + ' **/'+ DEPENDENCY_FILE
 
 
 
+##################
+# Add a dependency
+##################
+def add_dependency(name, repo_url, tag = None):
+    """
+    Adds a dependency 
+    """
+        
+    if name in dependencies:
+        dep = dependencies[name]
 
+        # check that the existing dependency specifies
+        # the same tag
 
+        if tag !=  dep['tag']:
+            self.fatal('existing dependency %s tag mismatch %s <=> %s' %
+                       (name, tag, dep['tag']))
 
+        if repo_url != dep['repo_url']:
+            self.fatal('exising dependency %s repo_url mismatch %s <=> %s' %
+                       (name, repo_url, dep['repo_url']))
+
+    else:
+
+        dependencies[name] = dict()
+        dependencies[name]['tag'] = tag
+        dependencies[name]['repo_url'] = repo_url
 
 
             
+##################
+# DistcleanContext
+##################
+
+def distclean(ctx):
+    """
+    Since we have nested the toolchain folders in the build dir
+    waf does not completly remove it
+    """
+    import shutil
+    import waflib.Scripting as script
+    script.distclean(ctx)
+    
+    lst = os.listdir('.')
+
+    for k in lst:
+
+        if k == 'build':
+            shutil.rmtree('build')
+        if k == DEPENDENCY_FILE:
+
+            # We also clean the dependency config
+            # if it is there
+            os.remove(DEPENDENCY_FILE)
+
+
+def run_distclean(ctx):
+    """
+    First we run the one define in the module, then our own one
+    """
+    Context.g_module.distclean(ctx)
+    distclean(ctx)
+
+class DistcleanContext(Context.Context):
+    """ Clean the project """
+    cmd = 'distclean'
+    fun = run_distclean
+
+    def __init__(self, **kw):
+        super(DistcleanContext, self).__init__(**kw)
+
+    def execute(self):
+        run_distclean(self)
             
 
 
