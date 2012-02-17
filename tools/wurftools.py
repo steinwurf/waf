@@ -451,7 +451,7 @@ def add_dependency(name, repo_url, tag = None):
     Adds a dependency 
     """
 
-    print("Adding",name)
+    #print("Adding",name)
         
     if name in dependencies:
         dep = dependencies[name]
