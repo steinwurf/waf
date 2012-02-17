@@ -6,6 +6,7 @@ import os
 from waflib.Configure import conf
 from waflib import Context
 from waflib import Utils
+from waflib import Errors
 
 try:
     import _winreg
@@ -80,55 +81,80 @@ def configure(conf):
         conf.find_program('git')
 
 
-    
-@conf
-def git_cmd_msg(self, cmd, **kw):
+def run_git_cmd_msg(ctx, cmd, **kw):
     """
     Runs a git command and writes the result
     to users 
     """
 
-    self.start_msg('Running git %s ' % ' '.join(cmd))
+    ctx.start_msg('Running git %s ' % ' '.join(cmd))
 
     try:
         
-        o = self.git_cmd_and_log(cmd, **kw)
-        self.end_msg('ok')
+        o = ctx.git_cmd_and_log(cmd, **kw)
+        ctx.end_msg('ok')
 
     except Exception as e:
 
-        self.end_msg('failed', 'YELLOW')
-        self.fatal(e.stderr)
+        ctx.end_msg('failed', 'YELLOW')
+        ctx.fatal(e.stderr)
 
     return o
 
     
 @conf
-def git_cmd_and_log(self, cmd, **kw):
+def git_cmd_msg(self, cmd, **kw):
+    run_git_cmd_msg(self, cmd, **kw)
+
+
+def run_git_cmd_and_log(ctx, cmd, **kw):
     """
     Runs a git command
     """
 
     cmd = Utils.to_list(cmd)
-    cmd = [self.env['GIT']] + cmd
+
+    if not 'GIT' in kw:
+        raise Errors.WafError('The git program must be available')
+
+    git_cmd = Utils.to_list(kw['GIT']) 
+    del kw['GIT']
+
+    cmd = git_cmd + cmd
     
-    return self.cmd_and_log(cmd, **kw)
+    return ctx.cmd_and_log(cmd, **kw)
+
+    
+@conf
+def git_cmd_and_log(self, cmd, **kw):
+
+    if not 'GIT' in kw: kw['GIT'] = self.env['GIT']
+    
+    run_git_cmd_and_log(self, cmd, **kw)
     
 
-@conf
-def git_tags(self, repo_dir, **kw):
+
+def run_git_tags(ctx, repo_dir, **kw):
     """
     Runs git tag -l and retuns the tags
     """
     kw['cwd'] = repo_dir
 
-    o = self.git_cmd_and_log('tag -l', **kw)
+    o = run_git_cmd_and_log(ctx, 'tag -l', **kw)
     tags = o.split('\n')
     return [t for t in tags if t != '']
 
 
 @conf
-def git_current_tag(self, repo_dir, **kw):
+def git_tags(self, repo_dir, **kw):
+
+    if not 'GIT' in kw: kw['GIT'] = self.env['GIT']
+    
+    run_git_tags(self, repo_dir, **kw)
+
+
+
+def run_git_current_tag(ctx, repo_dir, **kw):
     """
     Runs git describe --tags and retuns the tags
     If exactly on a tag it will return that
@@ -137,34 +163,54 @@ def git_current_tag(self, repo_dir, **kw):
     """
     kw['cwd'] = repo_dir
 
-    o = self.git_cmd_and_log('describe --tags', **kw)
+    o = run_git_cmd_and_log(ctx, 'describe --tags', **kw)
     return o.strip()
 
+
 @conf
-def git_checkout(self, repo_dir, branch, **kw):
+def git_current_tag(self, repo_dir, **kw):
+
+    if not 'GIT' in kw: kw['GIT'] = self.env['GIT']
+    run_git_current_tag(self, repo_dir, **kw)
+
+
+def run_git_checkout(ctx, repo_dir, branch, **kw):
     """
     Runs git checkout in the working dir
     """
     kw['cwd'] = repo_dir
-    self.git_cmd_and_log('checkout %s' % branch, **kw)
+    run_git_cmd_and_log(ctx, 'checkout %s' % branch, **kw)
 
 
 @conf
-def git_pull(self, repo_dir, **kw):
+def git_checkout(self, repo_dir, branch, **kw):
+
+    if not 'GIT' in kw: kw['GIT'] = self.env['GIT']
+    run_git_checkout(self, repo_dir, branch, **kw)
+
+
+def run_git_pull(ctx, repo_dir, **kw):
     """
     Runs git pull in the working dir
     """
     kw['cwd'] = repo_dir
-    self.git_cmd_and_log('pull', **kw)
+    run_git_cmd_and_log(ctx, 'pull', **kw)
+
 
 @conf
-def git_branch(self, repo_dir, **kw):
+def git_pull(self, repo_dir, **kw):
+
+    if not 'GIT' in kw: kw['GIT'] = self.env['GIT']
+    run_git_pull(self, repo_dir, **kw)
+
+
+def run_git_branch(ctx, repo_dir, **kw):
     """
     Runs git status in the working dir
     """
     kw['cwd'] = repo_dir
     
-    o = self.git_cmd_and_log('branch', **kw)
+    o = run_git_cmd_and_log(ctx, 'branch', **kw)
 
     branch = o.split('\n')
     branch = [b for b in branch if b != '']
@@ -179,37 +225,63 @@ def git_branch(self, repo_dir, **kw):
             others.append(b)
 
     if current == '':
-        self.fatal('Failed to locate current branch')
+        ctx.fatal('Failed to locate current branch')
 
     return current, others
 
+
 @conf
-def git_has_submodules(self, repo_dir):
+def git_branch(self, repo_dir, **kw):
+
+    if not 'GIT' in kw: kw['GIT'] = self.env['GIT']
+    run_git_branch(self, repo_dir, **kw)
+
+
+def run_git_has_submodules(repo_dir):
     """
     Returns true if the repository contains the .gitmodules file
     """
     return os.path.isfile(os.path.join(repo_dir, '.gitmodules'))
 
+
 @conf
-def git_submodule_init(self, repo_dir, **kw):
+def git_has_submodules(self, repo_dir):
+
+    run_git_has_submodules(repo_dir)
+
+
+def run_git_submodule_init(ctx, repo_dir, **kw):
     """
     Runs git submodule init in the repo_dir
     """
     kw['cwd'] = repo_dir
-    self.git_cmd_and_log('submodule init', **kw)
+    run_git_cmd_and_log(ctx, 'submodule init', **kw)
+
 
 @conf
-def git_submodule_update(self, repo_dir, **kw):
+def git_submodule_init(self, repo_dir, **kw):
+
+    if not 'GIT' in kw: kw['GIT'] = self.env['GIT']
+    run_git_submodule_init(self, repo_dir, **kw)
+
+
+def run_git_submodule_update(ctx, repo_dir, **kw):
     """
     Runs git submodule init in the repo_dir
     """
     kw['cwd'] = repo_dir
     
-    self.git_cmd_and_log('submodule update', **kw)
+    run_git_cmd_and_log(ctx, 'submodule update', **kw)
 
 
 @conf
-def git_clone(self, repo_url, **kw):
+def git_submodule_update(self, repo_dir, **kw):
+
+    if not 'GIT' in kw: kw['GIT'] = self.env['GIT']
+    run_git_submodule_init(self, repo_dir, **kw)
+
+
+def run_git_clone(ctx, repo_url, **kw):
     """
     Clone a repository
     """
@@ -227,8 +299,14 @@ def git_clone(self, repo_url, **kw):
         cmd.append(destdir)
         del kw['destdir']
 
-    self.git_cmd_msg(cmd, **kw)
+    run_git_cmd_msg(ctx, cmd, **kw)
 
+
+@conf
+def git_clone(self, repo_url, **kw):
+
+    if not 'GIT' in kw: kw['GIT'] = self.env['GIT']
+    run_git_clone(self, repo_url, **kw)
 
 
 @conf
@@ -236,6 +314,7 @@ def repository_clone(self, repo_dir, repo_url):
     """
     Ensures that a repository is cloned and exists
     """
+    
     if not os.path.isdir(repo_dir):
         self.to_log("repository dir %s not found" % repo_dir)
 
