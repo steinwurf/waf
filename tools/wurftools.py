@@ -21,6 +21,7 @@ import shutil
 
 
 
+
 ###############################
 # ToolchainConfigurationContext
 ###############################
@@ -76,11 +77,35 @@ DEFAULT_BUNDLE_PATH = 'bundle_dependencies'
 DEP_PATH_DEST = 'depend_%s_path'
 """ Destination of the dependency paths in the options """
 
-
+WURFTOOL_VERSION = 'v0.1'
+""" The version of this tool """
 
 #################################
 # Load the wurftools dependencies
 #################################
+
+def load_dependency_config():
+    """
+    Loads dependencies from the config file
+    """
+    
+    try:
+        dependency_config.load(DEPENDENCY_FILE)
+    except Exception:
+        pass
+
+    if not dependency_config.BUNDLE:
+        dependency_config.BUNDLE = ['NONE']
+
+    if not dependency_config.BUNDLE_PATH:
+        dependency_config.BUNDLE_PATH = os.path.abspath(DEFAULT_BUNDLE_PATH)
+
+def store_dependency_config():
+    """
+    Stores the dependency config
+    """
+    dependency_config.store(DEPENDENCY_FILE)
+
 
 def options(opt):
     opt.load('toolchain_cxx')
@@ -90,17 +115,9 @@ def configure(conf):
     conf.load('toolchain_cxx')
     conf.load('git')
 
-
-def bundle_path():
-    """
-    Returns the path to the bundle path
-    """
-    path = dependency_config['BUNDLE_PATH']
-
-    path = os.path.expanduser(path)
-    path = os.path.abspath(path)
-
-    return path
+    load_dependency_config()
+    dependency_config['GIT'] = conf.env['GIT']
+    store_dependency_config()
 
 def is_system_dependency_impl(name):
     """
@@ -118,22 +135,6 @@ def is_system_dependency_impl(name):
     return True
 
 
-def dependency_path(name, tag = None):
-    """
-    Returns path to the dependency inside the bundle directory
-    """
-
-    folder = name
-    
-    if tag:
-        folder = folder + '-' + tag
-    
-    path = bundle_path()
-    return os.path.join(path, folder)
-
-
-
-
 class DependencyOptionsContext(OptionsContext):
 
     
@@ -145,33 +146,10 @@ class DependencyOptionsContext(OptionsContext):
         
         super(DependencyOptionsContext, self).__init__(**kw)
 
-        self.load_dependency_config()
+        load_dependency_config()
         self.add_dependency_options()
         self.preprocess_dependency_options()
-        self.store_dependency_config()
-
-        
-    def load_dependency_config(self):
-        """
-        Loads dependencies from the config file
-        """
-        
-        try:
-            dependency_config.load(DEPENDENCY_FILE)
-        except Exception:
-            pass
-
-        if not dependency_config.BUNDLE:
-            dependency_config.BUNDLE = ['NONE']
-
-        if not dependency_config.BUNDLE_PATH:
-            dependency_config.BUNDLE_PATH = os.path.abspath(DEFAULT_BUNDLE_PATH)
-
-    def store_dependency_config(self):
-        """
-        Stores the dependency config
-        """
-        dependency_config.store(DEPENDENCY_FILE)
+        store_dependency_config()
 
 
     def add_dependency_options(self):
@@ -217,6 +195,17 @@ class DependencyOptionsContext(OptionsContext):
                 global options_dirty
                 options_dirty = True
             else:
+                
+                # If we are following a master branch we could
+                # potentially have out of date info here. So
+                # we see if we have a path to git - if so lets
+                # run a pull
+                if not dependencies[name]['tag'] and dependency_config['GIT']:
+
+                    import waflib.extras.git as git
+                    git_cmd = dependency_config['GIT']
+                    git.run_git_pull(self, path, quiet = True, GIT = git_cmd)
+                    
                 self.recurse(path)
 
         else:
@@ -252,7 +241,8 @@ class DependencyOptionsContext(OptionsContext):
         """
         Show the current bundle options
         """
-        print dependency_config
+        print(dependency_config)
+        print('wurftool version:', WURFTOOL_VERSION)
         #self.msg('Dependencies bundled', ', '.join(dependency_config.DEPS))
         #self.msg('Bundle path', bundle_path())
         sys.exit(0)
