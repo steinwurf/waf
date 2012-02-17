@@ -460,12 +460,12 @@ def add_dependency(name, repo_url, tag = None):
         # the same tag
 
         if tag !=  dep['tag']:
-            self.fatal('existing dependency %s tag mismatch %s <=> %s' %
-                       (name, tag, dep['tag']))
+            raise Errors.WafError('Existing dependency %s tag mismatch %s <=> %s' %
+                                  (name, tag, dep['tag']))
 
         if repo_url != dep['repo_url']:
-            self.fatal('exising dependency %s repo_url mismatch %s <=> %s' %
-                       (name, repo_url, dep['repo_url']))
+            raise Errors.WafError('Exising dependency %s repo_url mismatch %s <=> %s' %
+                                  (name, repo_url, dep['repo_url']))
 
     else:
 
