@@ -217,7 +217,7 @@ class DependencyOptionsContext(OptionsContext):
                 global options_dirty
                 options_dirty = True
             else:
-                self.recurse(path, once = True)
+                self.recurse(path)
 
         else:
             self.fatal('Trying to load dependency %s which is not'
@@ -388,10 +388,10 @@ def fetch_git_dependency(self, name):
 
         # if we do not have a tag means we are following the
         # master -- ensure we have the newest by doing a pull
-        
-        #self.to_log('%s dir already exists skipping git clone' % repo_dir)
+        Logs.debug('%s dir already exists skipping git clone' % repo_dir)
+
         if not tag:
-            self.git_pull(repo_dir)
+            self.git_pull(repo_dir, quiet = True)
 
     else:
 
@@ -411,12 +411,19 @@ def load_dependency(self, name):
     if not name in dependencies:
         self.fatal('Error load called for non existing dependency %s' % name)
 
-    if name in dependency_config['BUNDLE']:
-        self.fetch_git_dependency(name)
+
+    if isinstance(self, ConfigurationContext):
+
+        if name in dependency_config['BUNDLE']:
+            self.fetch_git_dependency(name)
 
     recurse_dir = dependency_config[DEP_PATH_DEST % name]
 
-    self.recurse(recurse_dir, once = True)
+    if not os.path.isdir(recurse_dir):
+        self.fatal('Could not find dependency %s at %s, run ./waf configure'
+                   % (name, recurse_dir))
+
+    self.recurse(recurse_dir)
 
 @conf
 def is_system_dependency(self, name):

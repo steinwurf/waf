@@ -116,49 +116,55 @@ def git_cmd_and_log(self, cmd, **kw):
     
 
 @conf
-def git_tags(self, repo_dir):
+def git_tags(self, repo_dir, **kw):
     """
     Runs git tag -l and retuns the tags
     """
+    kw['cwd'] = repo_dir
 
-    o = self.git_cmd_and_log('tag -l', cwd = repo_dir)
+    o = self.git_cmd_and_log('tag -l', **kw)
     tags = o.split('\n')
     return [t for t in tags if t != '']
 
 
 @conf
-def git_current_tag(self, repo_dir):
+def git_current_tag(self, repo_dir, **kw):
     """
     Runs git describe --tags and retuns the tags
     If exactly on a tag it will return that
     otherwise it will return <tag>-<n>-g<shortened sha-1>,
     where <n> is number of commits since <tag>
     """
+    kw['cwd'] = repo_dir
 
-    o = self.git_cmd_and_log('describe --tags', cwd = repo_dir)
+    o = self.git_cmd_and_log('describe --tags', **kw)
     return o.strip()
 
 @conf
-def git_checkout(self, repo_dir, branch):
+def git_checkout(self, repo_dir, branch, **kw):
     """
     Runs git checkout in the working dir
     """
-    self.git_cmd_and_log('checkout %s' % branch, cwd = repo_dir)
+    kw['cwd'] = repo_dir
+    self.git_cmd_and_log('checkout %s' % branch, **kw)
 
 
 @conf
-def git_pull(self, repo_dir):
+def git_pull(self, repo_dir, **kw):
     """
     Runs git pull in the working dir
     """
-    self.git_cmd_and_log('pull', cwd = repo_dir)
+    kw['cwd'] = repo_dir
+    self.git_cmd_and_log('pull', **kw)
 
 @conf
-def git_branch(self, repo_dir):
+def git_branch(self, repo_dir, **kw):
     """
     Runs git status in the working dir
     """
-    o = self.git_cmd_and_log('branch', cwd = repo_dir)
+    kw['cwd'] = repo_dir
+    
+    o = self.git_cmd_and_log('branch', **kw)
 
     branch = o.split('\n')
     branch = [b for b in branch if b != '']
@@ -185,18 +191,21 @@ def git_has_submodules(self, repo_dir):
     return os.path.isfile(os.path.join(repo_dir, '.gitmodules'))
 
 @conf
-def git_submodule_init(self, repo_dir):
+def git_submodule_init(self, repo_dir, **kw):
     """
     Runs git submodule init in the repo_dir
     """
-    self.git_cmd_and_log('submodule init', cwd = repo_dir)
+    kw['cwd'] = repo_dir
+    self.git_cmd_and_log('submodule init', **kw)
 
 @conf
-def git_submodule_update(self, repo_dir):
+def git_submodule_update(self, repo_dir, **kw):
     """
     Runs git submodule init in the repo_dir
     """
-    self.git_cmd_and_log('submodule update', cwd = repo_dir)
+    kw['cwd'] = repo_dir
+    
+    self.git_cmd_and_log('submodule update', **kw)
 
 
 @conf
