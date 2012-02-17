@@ -91,13 +91,6 @@ def configure(conf):
     conf.load('git')
 
 
-def do_bundle_dependency(name):
-    """
-    Returns whether the dependency is bundled
-    """
-    return name in dependency_config.DEPS
-
-
 def bundle_path():
     """
     Returns the path to the bundle path
@@ -143,6 +136,8 @@ def dependency_path(name, tag = None):
 
 class DependencyOptionsContext(OptionsContext):
 
+    
+
     def __init__(self, **kw):
         """
         Constructor for the dependency options
@@ -170,7 +165,7 @@ class DependencyOptionsContext(OptionsContext):
             dependency_config.BUNDLE = ['NONE']
 
         if not dependency_config.BUNDLE_PATH:
-            dependency_config.BUNDLE_PATH = DEFAULT_BUNDLE_PATH
+            dependency_config.BUNDLE_PATH = os.path.abspath(DEFAULT_BUNDLE_PATH)
 
     def store_dependency_config(self):
         """
@@ -222,7 +217,7 @@ class DependencyOptionsContext(OptionsContext):
                 global options_dirty
                 options_dirty = True
             else:
-                self.recurse(path)
+                self.recurse(path, once = True)
 
         else:
             self.fatal('Trying to load dependency %s which is not'
@@ -286,7 +281,8 @@ class DependencyOptionsContext(OptionsContext):
         needs_configure = False
 
         if options.bundle_path:
-            dependency_config['BUNDLE_PATH'] = options.bundle_path
+            path = os.path.abspath(os.path.expanduser(options.bundle_path))
+            dependency_config['BUNDLE_PATH'] = path
             needs_configure = True
 
         if options.bundle:
@@ -309,7 +305,6 @@ class DependencyOptionsContext(OptionsContext):
 
                     bundle_path = dependency_config['BUNDLE_PATH']
                     bundle_path = os.path.join(bundle_path, bundle_name)
-                    bundle_path = os.path.expanduser(bundle_path)
                     
                     dependency_config[config_key] = bundle_path
                     
@@ -421,7 +416,7 @@ def load_dependency(self, name):
 
     recurse_dir = dependency_config[DEP_PATH_DEST % name]
 
-    self.recurse(recurse_dir)
+    self.recurse(recurse_dir, once = True)
 
 @conf
 def is_system_dependency(self, name):
@@ -448,6 +443,8 @@ def add_dependency(name, repo_url, tag = None):
     """
     Adds a dependency 
     """
+
+    print("Adding",name)
         
     if name in dependencies:
         dep = dependencies[name]
