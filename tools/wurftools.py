@@ -195,17 +195,7 @@ class DependencyOptionsContext(OptionsContext):
                 global options_dirty
                 options_dirty = True
             else:
-                
-                # If we are following a master branch we could
-                # potentially have out of date info here. So
-                # we see if we have a path to git - if so lets
-                # run a pull
-                if not dependencies[name]['tag'] and dependency_config['GIT']:
-
-                    import waflib.extras.git as git
-                    git_cmd = dependency_config['GIT']
-                    git.run_git_pull(self, path, quiet = True, GIT = git_cmd)
-                    
+                                    
                 self.recurse(path)
 
         else:
