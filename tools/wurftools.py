@@ -323,7 +323,8 @@ class DependencyOptionsContext(OptionsContext):
 
         if needs_configure:
             # Inject the configure command into the arguments
-            sys.argv.append('configure')
+            if 'configure' not in sys.argv:
+                sys.argv.append('configure')
 
 
     def expand_bundle_argument(self, arg):
