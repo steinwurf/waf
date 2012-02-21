@@ -77,8 +77,17 @@ DEFAULT_BUNDLE_PATH = 'bundle_dependencies'
 DEP_PATH_DEST = 'depend_%s_path'
 """ Destination of the dependency paths in the options """
 
-WURFTOOL_VERSION = 'v0.1'
-""" The version of this tool """
+WURFTOOL_VERSION = 'v0.1.0'
+"""
+The version of this tool bump this version on changes to allow users to see
+exactly which version they are using.
+"""
+
+WURFTOOL_ABI_VERSION = 'v0.1.1'
+"""
+The version of layout of the DEPENDENCY_FILE,
+bumpt this version if you make incompatible changes
+"""
 
 #################################
 # Load the wurftools dependencies
@@ -88,11 +97,18 @@ def load_dependency_config():
     """
     Loads dependencies from the config file
     """
+    global dependency_config
     
     try:
         dependency_config.load(DEPENDENCY_FILE)
     except Exception:
         pass
+
+    if dependency_config.ABI != WURFTOOL_ABI_VERSION:
+        dependency_config = ConfigSet()
+
+    if not dependency_config.ABI:
+        dependency_config.ABI = WURFTOOL_ABI_VERSION
 
     if not dependency_config.BUNDLE:
         dependency_config.BUNDLE = ['NONE']
@@ -302,7 +318,7 @@ class DependencyOptionsContext(OptionsContext):
 
             if path_value:
                 check_not_bundled(d, 'Path for already bundled dependency')
-                dependency_config[path_key] = path_value
+                dependency_config[path_key] = os.path.abspath(os.path.expanduser(path_value))
                 needs_configure = True
 
         if needs_configure:
