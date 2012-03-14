@@ -391,7 +391,8 @@ def fetch_git_dependency(self, name):
             self.git_pull(repo_dir, quiet = True)
 
     else:
-
+        
+        Utils.check_dir(dependency_config['BUNDLE_PATH'])
         self.repository_clone(repo_dir, repo_url)
 
         if tag:
