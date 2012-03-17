@@ -4,6 +4,39 @@
 import os
 
 from waflib import Utils
+from waflib import Context
+from waflib import Options
+
+from waflib.Configure import conf
+from waflib.Configure import ConfigurationContext
+
+###############################
+# ToolchainConfigurationContext
+###############################
+
+class ToolchainConfigurationContext(ConfigurationContext):
+    '''configures the project'''
+    cmd='configure'
+
+    def init_dirs(self):
+        # Waf calls this function to set the output dir.
+        # Waf sets the output dir in the following order
+        # 1) Check whether the -o option has been specified
+        # 2) Check whether the wscript has an out varialble defined
+        # 3) Fallback and use the name of the lockfile
+        #
+        # In order to not suprise anybody we will disallow the out variable
+        # but allow our output dir to be overwritten by using the -o option
+
+        assert(getattr(Context.g_module,Context.OUT,None) == None)
+
+        if not Options.options.out:
+
+            # A toolchain was specified use that
+            self.out_dir = "build/" + Options.options.toolchain
+
+        super(ToolchainConfigurationContext, self).init_dirs()
+
 
 def options(opt):
     toolchain_opts = opt.add_option_group('Toolchain')
@@ -15,7 +48,7 @@ def options(opt):
 
     toolchain_opts.add_option('--toolchain-path', default=None, dest='toolchain_path',
                               help='Set the path to the toolchain')
-    
+
     opt.load('compiler_cxx')
 
 
@@ -24,7 +57,7 @@ def platform_toolchain(conf):
     """
     We just select the platform default toolchain. And rely on Waf to detect it
     """
-    
+
     conf.load('compiler_cxx')
 
 
@@ -45,23 +78,23 @@ def android_toolchain(conf):
     toolchain_bin = os.path.join(toolchain_dir, 'bin')
 
     paths = [toolchain_bin]
-    
+
     # Setup compiler and linker
     conf.find_program('arm-linux-androideabi-g++', path_list=paths, var='CXX')
     conf.env['LINK_CXX'] = conf.env['CXX']
-    
+
     conf.find_program('arm-linux-androideabi-gcc', path_list=paths, var='CC')
-    
+
     #Setup archiver and archiver flags
     conf.find_program('arm-linux-androideabi-ar', path_list=paths, var='AR')
     conf.env['ARFLAGS'] = "rcs"
-    
+
     conf.env['BINDIR'] = os.path.join(toolchain_dir, 'arm-linux-androideabi/bin')
-    
+
     # Set the andoid define - some libraries rely on this define being present
     conf.env.DEFINES += ['ANDROID']
 
-    
+
 
 def configure(conf):
 
@@ -76,7 +109,7 @@ def configure(conf):
 
     # Check if we support the toolchain (empty means default)
     if toolchain not in t:
-        conf.fatal('The selected toolchain "%s" is not supported' % toolchain)        
+        conf.fatal('The selected toolchain "%s" is not supported' % toolchain)
 
     # Store in env
     conf.env['TOOLCHAIN'] = toolchain
@@ -91,10 +124,30 @@ def configure(conf):
         conf.msg('Setting toolchain path to:', toolchain_path)
 
         conf.env['TOOLCHAIN_PATH'] = toolchain_path
-    
+
     # Get configure function for this toolchain
     function = t[toolchain]
 
     # Configure
     function(conf)
-        
+
+
+@conf
+def toolchain_cxx_flags(conf):
+    """
+    Returns the default cxx flags for the choosen toolchain
+    """
+
+    # Here one can optionally also switch on the CXX variable
+    # to specific the flags for specific compilers
+    if conf.env.TOOLCHAIN == 'linux' or conf.env.TOOLCHAIN == 'android':
+        return ['-O2', '-g', '-ftree-vectorize', '-Wextra', '-Wall']
+
+    if conf.env['TOOLCHAIN'] == 'win32':
+        return ['/O2', '/Ob2', '/W3', '/EHsc']
+
+
+
+
+
+
