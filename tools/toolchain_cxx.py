@@ -144,7 +144,7 @@ def toolchain_cxx_flags(conf):
         return ['-O2', '-g', '-ftree-vectorize', '-Wextra', '-Wall']
 
     if conf.env['TOOLCHAIN'] == 'win32':
-        return ['/O2', '/Ob2', '/W3', '/EHsc']
+        return ['/O2', '/Ob2', '/W3', '/MD', '/EHs']
 
 
 
