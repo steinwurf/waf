@@ -56,6 +56,15 @@ def android_toolchain(conf):
     conf.find_program('arm-linux-androideabi-ar', path_list=paths, var='AR')
     conf.env['ARFLAGS'] = "rcs"
     
+    #Setup android asm
+    conf.find_program('arm-linux-androideabi-as', path_list=paths, var='AS')
+    
+    #Setup android nm
+    conf.find_program('arm-linux-androideabi-nm', path_list=paths, var='NM')
+    
+    #Setup android ld
+    conf.find_program('arm-linux-androideabi-ld', path_list=paths, var='LD')
+    
     conf.env['BINDIR'] = os.path.join(toolchain_dir, 'arm-linux-androideabi/bin')
     
     # Set the andoid define - some libraries rely on this define being present
