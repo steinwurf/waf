@@ -23,34 +23,6 @@ import shutil
 
 
 ###############################
-# ToolchainConfigurationContext
-###############################
-
-class ToolchainConfigurationContext(ConfigurationContext):
-    '''configures the project'''
-    cmd='configure'
-    
-    def init_dirs(self):
-        # Waf calls this function to set the output dir.
-        # Waf sets the output dir in the following order
-        # 1) Check whether the -o option has been specified
-        # 2) Check whether the wscript has an out varialble defined
-        # 3) Fallback and use the name of the lockfile
-        #
-        # In order to not suprise anybody we will disallow the out variable
-        # but allow our output dir to be overwritten by using the -o option 
-
-        assert(getattr(Context.g_module,Context.OUT,None) == None)
-        
-        if not Options.options.out:
-                
-            # A toolchain was specified use that
-            self.out_dir = "build/" + Options.options.toolchain
-                
-        super(ToolchainConfigurationContext, self).init_dirs()
-
-
-###############################
 # DependencyOptionsContext etc.
 ###############################
 
@@ -72,7 +44,7 @@ OPTIONS_NAME = 'Dependency options'
 """ Name of the options group """
 
 DEFAULT_BUNDLE_PATH = 'bundle_dependencies'
-""" Default folder to use for bundled dependencies """ 
+""" Default folder to use for bundled dependencies """
 
 DEP_PATH_DEST = 'depend_%s_path'
 """ Destination of the dependency paths in the options """
@@ -98,7 +70,7 @@ def load_dependency_config():
     Loads dependencies from the config file
     """
     global dependency_config
-    
+
     try:
         dependency_config.load(DEPENDENCY_FILE)
     except Exception:
@@ -153,13 +125,13 @@ def is_system_dependency_impl(name):
 
 class DependencyOptionsContext(OptionsContext):
 
-    
+
 
     def __init__(self, **kw):
         """
         Constructor for the dependency options
         """
-        
+
         super(DependencyOptionsContext, self).__init__(**kw)
 
         load_dependency_config()
@@ -180,7 +152,7 @@ class DependencyOptionsContext(OptionsContext):
 
         add('--bundle', default=False, dest='bundle',
             help="Which dependencies to bundle")
-        
+
         add('--bundle-path', default=False, dest='bundle_path',
             help="The folder used for downloaded dependencies")
 
@@ -193,7 +165,7 @@ class DependencyOptionsContext(OptionsContext):
         for d in dependencies:
             add('--%s-path' % d, dest= DEP_PATH_DEST % d, default=False,
                 help='path to %s' % d)
-        
+
     def is_system_dependency(self, name):
         return is_system_dependency_impl(name)
 
@@ -204,14 +176,14 @@ class DependencyOptionsContext(OptionsContext):
         that case we mark the options dirty
         """
         path = dependency_config[DEP_PATH_DEST % name]
-        
+
         if path:
 
             if not os.path.isdir(path):
                 global options_dirty
                 options_dirty = True
             else:
-                                    
+
                 self.recurse(path)
 
         else:
@@ -232,7 +204,7 @@ class DependencyOptionsContext(OptionsContext):
                             'some bundled dependencies have not been '
                             'downloaded yet. Run "./waf configure" to fetch them')
             raise
-        
+
 
     def bundle_options(self):
         """
@@ -260,14 +232,14 @@ class DependencyOptionsContext(OptionsContext):
         """
 
         # Remove the two arguments -h and --help to avoid the
-        # option parser exiting here. 
+        # option parser exiting here.
         arguments = list(sys.argv)
 
         if '-h' in arguments: arguments.remove('-h')
         if '--help' in arguments: arguments.remove('--help')
-        
+
         (options, args) = self.parser.parse_args(arguments)
-        
+
         if options.bundle_show:
             self.bundle_show()
 
@@ -301,9 +273,9 @@ class DependencyOptionsContext(OptionsContext):
 
                     bundle_path = dependency_config['BUNDLE_PATH']
                     bundle_path = os.path.join(bundle_path, bundle_name)
-                    
+
                     dependency_config[config_key] = bundle_path
-                    
+
                 else:
                     dependency_config[config_key] = False
 
@@ -333,7 +305,7 @@ class DependencyOptionsContext(OptionsContext):
         right set of dependencies
         """
         arg = arg.split(',')
-        
+
         if 'NONE' in arg and 'ALL' in arg:
             self.fatal('Cannot specify both ALL and NONE as dependencies')
 
@@ -345,7 +317,7 @@ class DependencyOptionsContext(OptionsContext):
                            ' dependency' % c)
 
         for a in arg:
-            
+
             if a == 'ALL':
                 for candidate in candidate_score:
                     candidate_score[candidate] += 1
@@ -363,9 +335,9 @@ class DependencyOptionsContext(OptionsContext):
                 check_candidate(a)
                 candidate_score[a] += 1
 
-        candidates = [name for name in candidate_score if candidate_score[name] > 0] 
+        candidates = [name for name in candidate_score if candidate_score[name] > 0]
         return candidates
-            
+
 
 @conf
 def fetch_git_dependency(self, name):
@@ -391,7 +363,7 @@ def fetch_git_dependency(self, name):
             self.git_pull(repo_dir, quiet = True)
 
     else:
-        
+
         Utils.check_dir(dependency_config['BUNDLE_PATH'])
         self.repository_clone(repo_dir, repo_url)
 
@@ -446,11 +418,11 @@ class SkipDependencyDist(Scripting.Dist):
 ##################
 def add_dependency(name, repo_url, tag = None):
     """
-    Adds a dependency 
+    Adds a dependency
     """
 
     #print("Adding",name)
-        
+
     if name in dependencies:
         dep = dependencies[name]
 
@@ -472,7 +444,7 @@ def add_dependency(name, repo_url, tag = None):
         dependencies[name]['repo_url'] = repo_url
 
 
-            
+
 ##################
 # DistcleanContext
 ##################
@@ -485,7 +457,7 @@ def distclean(ctx):
     import shutil
     import waflib.Scripting as script
     script.distclean(ctx)
-    
+
     lst = os.listdir('.')
 
     for k in lst:
@@ -516,7 +488,7 @@ class DistcleanContext(Context.Context):
 
     def execute(self):
         run_distclean(self)
-            
+
 
 
 
