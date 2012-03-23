@@ -38,15 +38,60 @@ class ToolchainConfigurationContext(ConfigurationContext):
         super(ToolchainConfigurationContext, self).init_dirs()
 
 
+##################
+# DistcleanContext
+##################
+
+def distclean(ctx):
+    """
+    Since we have nested the toolchain folders in the build dir
+    waf does not completly remove it
+    """
+    import shutil
+    import waflib.Scripting as script
+    script.distclean(ctx)
+
+    lst = os.listdir('.')
+
+    for k in lst:
+
+        if k == 'build':
+            shutil.rmtree('build')
+
+
+def run_distclean(ctx):
+    """
+    First we run the one define in the module, then our own one
+    """
+    Context.g_module.distclean(ctx)
+    distclean(ctx)
+
+class DistcleanContext(Context.Context):
+    """ Clean the project """
+    cmd = 'distclean'
+    fun = run_distclean
+
+    def __init__(self, **kw):
+        super(DistcleanContext, self).__init__(**kw)
+
+    def execute(self):
+        run_distclean(self)
+
+
+
 def options(opt):
     toolchain_opts = opt.add_option_group('Toolchain')
 
-    toolchain_opts.add_option('--toolchain', default=Utils.unversioned_sys_platform(),
+    platform = Utils.unversioned_sys_platform()
+
+    toolchain_opts.add_option('--toolchain', default = platform,
                               dest='toolchain',
-                              help="Select a specific toolchain [default: %default]"
+                              help="Select a specific toolchain "
+                                   "[default: %default]"
                                    ", other example --toolchain=android.")
 
-    toolchain_opts.add_option('--toolchain-path', default=None, dest='toolchain_path',
+    toolchain_opts.add_option('--toolchain-path', default=None,
+                              dest='toolchain_path',
                               help='Set the path to the toolchain')
 
     opt.load('compiler_cxx')
@@ -88,16 +133,16 @@ def android_toolchain(conf):
     #Setup archiver and archiver flags
     conf.find_program('arm-linux-androideabi-ar', path_list=paths, var='AR')
     conf.env['ARFLAGS'] = "rcs"
-    
+
     #Setup android asm
     conf.find_program('arm-linux-androideabi-as', path_list=paths, var='AS')
-    
+
     #Setup android nm
     conf.find_program('arm-linux-androideabi-nm', path_list=paths, var='NM')
-    
+
     #Setup android ld
     conf.find_program('arm-linux-androideabi-ld', path_list=paths, var='LD')
-    
+
     conf.env['BINDIR'] = os.path.join(toolchain_dir, 'arm-linux-androideabi/bin')
 
     # Set the andoid define - some libraries rely on this define being present
@@ -110,6 +155,7 @@ def configure(conf):
     # Setup the toolchain configure functions
     t = dict()
     platform = Utils.unversioned_sys_platform()
+
     t[platform] = platform_toolchain
     t['android'] = android_toolchain
 
