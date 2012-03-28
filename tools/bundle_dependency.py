@@ -1,6 +1,23 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+"""
+Waf tool used to track dependencies. Using git tags to track whether a
+compatible newer version of a specific library is available. The git
+tags must be named after the Semantic Versioning scheme defined here
+www.semver.org
+
+The wscript will look like this:
+
+def options(opt):
+    opt.load('bundle_dependencies')
+
+def configure(conf):
+    conf.load('bundle_dependencies')
+
+
+"""
+
 from waflib.Configure import conf
 from waflib.Configure import ConfigurationContext
 from waflib.Options import OptionsContext
@@ -19,8 +36,7 @@ import sys
 import os
 import shutil
 
-
-dependencies = dict()
+import semver
 
 OPTIONS_NAME = 'Dependency options'
 """ Name of the options group """
@@ -31,17 +47,56 @@ DEFAULT_BUNDLE_PATH = 'bundle_dependencies'
 DEPENDENCY_PATH_KEY = '%s_DEPENDENCY_PATH'
 """ Destination of the dependency paths in the options """
 
-TOOL_VERSION = '1.0.0'
-"""
-The version of layout of the DEPENDENCY_FILE,
-bumpt this version if you make incompatible changes
-"""
+dependencies = dict()
+""" Dictionary storing the dependency information """
+
+def add_dependency(name, repo_url, semver):
+    """
+    Adds a dependency. The dependency will la
+    :param name: the name / identifier for this dependency
+    :param repo_url: the url to the git repository where the dependency
+                     may be fetched
+    :param tag: the major version to track
+    """
+
+    if name in dependencies:
+        dep = dependencies[name]
+
+        # check that the existing dependency specifies
+        # the same tag
+
+        if tag !=  dep['tag']:
+            raise Errors.WafError('Existing dependency %s tag '
+                                  'mismatch %s <=> %s' %
+                                  (name, tag, dep['tag']))
+
+        if repo_url != dep['repo_url']:
+            raise Errors.WafError('Exising dependency %s repo_url '
+                                  'mismatch %s <=> %s' %
+                                  (name, repo_url, dep['repo_url']))
+
+    else:
+
+        dependencies[name] = dict()
+        dependencies[name]['tag'] = tag
+        dependencies[name]['repo_url'] = repo_url
+
+
+
+def expand_path(path):
+    """
+    Simple helper to expand paths
+    :param path: a directory path to be expanded
+    :return: the expanded path
+    """
+    return os.path.abspath(os.path.expanduser(path))
 
 
 def options(opt):
     """
     Adds the options needed to control dependencies to the
-    options context
+    options context. Options are shown when ./waf -h is invoked
+    :param opt: the Waf OptionsContext
     """
 
     opt.load('git')
@@ -66,13 +121,11 @@ def options(opt):
         add('--%s-path' % d, dest = DEPENDENCY_PATH_KEY % d, default=False,
             help='path to %s' % d)
 
-def expand_path(path):
-    """
-    return an expanded path
-    """
-    return os.path.abspath(os.path.expanduser(path))
-
 def configure(conf):
+    """
+    The configure function for the bundle dependency tool
+    :param conf: the configuration context
+    """
 
     conf.load('git')
 
@@ -210,32 +263,6 @@ def dependency_path(self, name):
 
     return self.env[key]
 
-def add_dependency(name, repo_url, tag = None):
-    """
-    Adds a dependency
-    """
-
-    if name in dependencies:
-        dep = dependencies[name]
-
-        # check that the existing dependency specifies
-        # the same tag
-
-        if tag !=  dep['tag']:
-            raise Errors.WafError('Existing dependency %s tag '
-                                  'mismatch %s <=> %s' %
-                                  (name, tag, dep['tag']))
-
-        if repo_url != dep['repo_url']:
-            raise Errors.WafError('Exising dependency %s repo_url '
-                                  'mismatch %s <=> %s' %
-                                  (name, repo_url, dep['repo_url']))
-
-    else:
-
-        dependencies[name] = dict()
-        dependencies[name]['tag'] = tag
-        dependencies[name]['repo_url'] = repo_url
 
 
 
