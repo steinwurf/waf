@@ -36,7 +36,7 @@ import sys
 import os
 import shutil
 
-import semver
+
 
 OPTIONS_NAME = 'Dependency options'
 """ Name of the options group """
@@ -49,6 +49,56 @@ DEPENDENCY_PATH_KEY = '%s_DEPENDENCY_PATH'
 
 dependencies = dict()
 """ Dictionary storing the dependency information """
+
+
+class base_dependency(object):
+
+    __init__(self, name):
+        self.name = name
+
+    def pull(ctx, repo_dir, branch = 'master'):
+        """
+        """
+
+        ctx.git_pull
+
+
+class fixed_tag_version(object):
+
+    __init__(self, name, tag):
+        self.name = name
+        self.tag = tag
+
+
+    def pull_dependency(self, ctx):
+
+        self.pull_master(repo_dir)
+
+
+class follow_version(object):
+
+    __init__(self, name, tag):
+        self.name = name
+        self.tag = tag
+
+    def pull_dependency(self, ctx):
+        """
+        :param ctx: A waf ConfigurationContext
+        """
+
+
+        self.pull_master(repo_dir)
+
+        tags = self.tags()
+
+        # Get the tags properly formatted according to the semver.org
+        filtered =
+
+
+
+
+
+
 
 def add_dependency(name, repo_url, semver):
     """
@@ -198,17 +248,24 @@ def expand_bundle(arg):
 
 
 @conf
-def fetch_git_dependency(self, name):
+def pull_master(self):
+    """
+    """
+
+    path = conf.env['BUNDLE_PATH']
+
+
+
+
+
+@conf
+def fetch_dependency(self, name):
 
     dep = dependencies[name]
 
-    tag = dep['tag']
-    repo_url = dep['repo_url']
+    # Check if we already have downloaded the master
 
-    dep_dir = name
 
-    if tag:
-        dep_dir = dep_dir + '-' + tag
 
     repo_dir = os.path.join(self.env['BUNDLE_PATH'], dep_dir)
 

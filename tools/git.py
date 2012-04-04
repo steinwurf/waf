@@ -20,6 +20,7 @@ def find_in_winreg():
     """
     Look in the windows reg database for traces
     of the msysgit installer
+    :return: the path to the git folder if found otherwise an empty string
     """
 
     reg_value = reg_type = None
@@ -33,9 +34,9 @@ def find_in_winreg():
         (reg_value, reg_type) = _winreg.QueryValueEx(reg_key,
                                                      'InstallLocation')
 
-        
+
     except WindowsError as e:
-     
+
         try:
             reg_key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
                                       'SOFTWARE\\Microsoft'
@@ -44,7 +45,7 @@ def find_in_winreg():
 
             (reg_value, reg_type) = _winreg.QueryValueEx(reg_key,
                                                          'InstallLocation')
-            
+
         except WindowsError:
             pass
 
@@ -53,12 +54,13 @@ def find_in_winreg():
     else:
         return ''
 
-        
-            
+
+
 
 def find_git_win32(conf):
     """
     Attempt to find the git binary on windows
+    :param conf: a Waf ConfigurationContext
     """
     path = find_in_winreg()
 
@@ -69,11 +71,11 @@ def find_git_win32(conf):
         conf.find_program('git')
 
 
-def options(opt):
-    pass
-
-
 def configure(conf):
+    """
+    Attempts to locate the git binary
+    :param conf: a Waf ConfigurationContext
+    """
 
     if Utils.is_win32:
         find_git_win32(conf)
@@ -84,13 +86,13 @@ def configure(conf):
 def run_git_cmd_msg(ctx, cmd, **kw):
     """
     Runs a git command and writes the result
-    to users 
+    to users
     """
 
     ctx.start_msg('Running git %s ' % ' '.join(cmd))
 
     try:
-        
+
         o = ctx.git_cmd_and_log(cmd, **kw)
         ctx.end_msg('ok')
 
@@ -101,7 +103,7 @@ def run_git_cmd_msg(ctx, cmd, **kw):
 
     return o
 
-    
+
 @conf
 def git_cmd_msg(self, cmd, **kw):
     run_git_cmd_msg(self, cmd, **kw)
@@ -117,21 +119,21 @@ def run_git_cmd_and_log(ctx, cmd, **kw):
     if not 'GIT' in kw:
         raise Errors.WafError('The git program must be available')
 
-    git_cmd = Utils.to_list(kw['GIT']) 
+    git_cmd = Utils.to_list(kw['GIT'])
     del kw['GIT']
 
     cmd = git_cmd + cmd
-    
+
     return ctx.cmd_and_log(cmd, **kw)
 
-    
+
 @conf
 def git_cmd_and_log(self, cmd, **kw):
 
     if not 'GIT' in kw: kw['GIT'] = self.env['GIT']
-    
+
     run_git_cmd_and_log(self, cmd, **kw)
-    
+
 
 
 def run_git_tags(ctx, repo_dir, **kw):
@@ -149,7 +151,7 @@ def run_git_tags(ctx, repo_dir, **kw):
 def git_tags(self, repo_dir, **kw):
 
     if not 'GIT' in kw: kw['GIT'] = self.env['GIT']
-    
+
     run_git_tags(self, repo_dir, **kw)
 
 
@@ -209,7 +211,7 @@ def run_git_branch(ctx, repo_dir, **kw):
     Runs git status in the working dir
     """
     kw['cwd'] = repo_dir
-    
+
     o = run_git_cmd_and_log(ctx, 'branch', **kw)
 
     branch = o.split('\n')
@@ -270,7 +272,7 @@ def run_git_submodule_update(ctx, repo_dir, **kw):
     Runs git submodule init in the repo_dir
     """
     kw['cwd'] = repo_dir
-    
+
     run_git_cmd_and_log(ctx, 'submodule update', **kw)
 
 
@@ -314,12 +316,12 @@ def repository_clone(self, repo_dir, repo_url):
     """
     Ensures that a repository is cloned and exists
     """
-    
+
     if not os.path.isdir(repo_dir):
         self.to_log("repository dir %s not found" % repo_dir)
 
         self.git_clone(repo_url, destdir = repo_dir)
-            
+
 
 
 @conf
@@ -335,7 +337,7 @@ def repository_check(self, repo_dir, **kw):
 
         if current != kw['branch']:
             self.fatal('Unexpected branch %s was %s expected %s' %
-                       repo_dir, current,  kw['branch']) 
+                       repo_dir, current,  kw['branch'])
 
     if 'tag' in kw:
         tag = self.current_tag(repo_dir)
@@ -343,7 +345,7 @@ def repository_check(self, repo_dir, **kw):
         if tag != kw['tag']:
             self.fatal('Unexpected tag %s was %s' % (tag, kw['tag']))
 
-        
+
 @conf
 def local_clone_tag(self, from_repo_dir, to_repo_dir, tag):
     """
@@ -372,9 +374,9 @@ def local_clone_tag(self, from_repo_dir, to_repo_dir, tag):
             self.git_clone(from_repo_dir, destdir = to_repo_dir)
         else:
             self.git_clone(from_repo_dir, destdir=to_repo_dir, local=True)
-            
+
         self.git_checkout(to_repo_dir, tag)
 
 
 
-    
+
