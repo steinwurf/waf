@@ -2,3 +2,6 @@
 	path = waf
 	url = https://code.google.com/p/waf/
         ignore = dirty
+[submodule "python-semver"]
+	path = python-semver
+	url = https://github.com/k-bx/python-semver.git
