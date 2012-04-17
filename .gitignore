@@ -1,0 +1,10 @@
+.dependency_config
+.lock*
+build
+bundle_dependencies
+.waf*
+*.s
+*~
+\#*#
+*.out
+*.pyc
