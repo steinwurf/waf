@@ -194,7 +194,7 @@ def git_local_clone(ctx, source, destination, **kw):
     """
 
     if Utils.is_win32:
-        self.to_log('git local clone: fallback to git clone on win32')
+        ctx.to_log('git local clone: fallback to git clone on win32')
         git_clone(ctx, source, destination)
 
     else:
