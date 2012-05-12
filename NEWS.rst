@@ -6,7 +6,7 @@ of every change, see the Git log.
 
 Latest (head of the master branch)
 ----------------------------------
-* TBD
+* Fixed Python3.x support, broken include statement.
 
 1.0.0
 -----
