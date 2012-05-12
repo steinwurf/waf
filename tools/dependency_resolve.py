@@ -1,7 +1,15 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import semver
+# The from . import part was added when moving to
+# python3 we suspect that some include paths are not
+# the same. Which could be the reason we explicitly
+# have to show that the semver module is located in the
+# same folder as the dependency_resolve. Note, that this
+# happens with the waf packaging where all tools end up
+# in the extras folder
+from . import semver
+
 import os
 
 class ResolveGitMajorVersion(object):
