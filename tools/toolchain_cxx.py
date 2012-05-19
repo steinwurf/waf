@@ -6,6 +6,7 @@ import os
 from waflib import Utils
 from waflib import Context
 from waflib import Options
+from waflib import Errors
 
 from waflib.Configure import conf
 from waflib.Configure import ConfigurationContext
@@ -193,15 +194,20 @@ def toolchain_cxx_flags(conf):
     Returns the default cxx flags for the choosen toolchain
     """
 
-    # Here one can optionally also switch on the CXX variable
-    # to specific the flags for specific compilers
-    if conf.env.TOOLCHAIN == 'linux' or conf.env.TOOLCHAIN == 'android':
+    # Here one can optionally also switch on the TOOLCHAIN variable
+    # to specific the flags for specific toolchains
+
+    # Not clang goes first otherwise g++ will match clan(g++)
+
+    if 'clang' in conf.env.CXX[0]:
+        return ['-O2', '-g', '-Wextra', '-Wall']
+    elif 'g++' in conf.env.CXX[0]:
         return ['-O2', '-g', '-ftree-vectorize', '-Wextra', '-Wall']
-
-    if conf.env['TOOLCHAIN'] == 'win32':
+    elif 'CL.exe' in conf.env.CXX[0] or 'cl.exe' in conf.env.CXX[0]:
         return ['/O2', '/Ob2', '/W3', '/MD', '/EHs']
-
-
+    else:
+        raise Errors.WafError('toolchain_cxx flag for unknown compiler %s'
+                              % conf.env.CXX)
 
 
 
