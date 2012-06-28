@@ -199,11 +199,21 @@ def toolchain_cxx_flags(conf):
 
     # Not clang goes first otherwise g++ will match clan(g++)
 
-    if 'clang' in conf.env.CXX[0]:
+    # Sometimes CXX is a list sometimes a string, depending on the
+    # tool used to initialize the compiler - ugly but we deal with
+    # is here
+    CXX = ""
+    if isinstance(conf.env.CXX, list):
+        assert(len(conf.env.CXX) == 1)
+        CXX = conf.env.CXX[0]
+    else:
+        CXX = conf.env.CXX
+
+    if 'clang' in CXX:
         return ['-O2', '-g', '-Wextra', '-Wall']
-    elif 'g++' in conf.env.CXX[0]:
+    elif 'g++' in CXX:
         return ['-O2', '-g', '-ftree-vectorize', '-Wextra', '-Wall']
-    elif 'CL.exe' in conf.env.CXX[0] or 'cl.exe' in conf.env.CXX[0]:
+    elif 'CL.exe' in CXX or 'cl.exe' in CXX:
         return ['/O2', '/Ob2', '/W3', '/MD', '/EHs']
     else:
         raise Errors.WafError('toolchain_cxx flag for unknown compiler %s'
