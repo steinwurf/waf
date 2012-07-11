@@ -59,6 +59,10 @@ def add_dependency(opt, resolver):
 
     if name in dependencies:
 
+        if type(resolver) != type(dependencies[name]):
+            raise Errors.WafError('Incompatible dependency added %r <=> %r '
+                                  % (resolver, dependencies[name]))
+
         if dependencies[name] != resolver:
             raise Errors.WafError('Incompatible dependency added %r <=> %r '
                                   % (resolver, dependencies[name]))
