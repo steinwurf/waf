@@ -214,7 +214,7 @@ def toolchain_cxx_flags(conf):
     elif 'g++' in CXX:
         return ['-O2', '-g', '-ftree-vectorize', '-Wextra', '-Wall']
     elif 'CL.exe' in CXX or 'cl.exe' in CXX:
-        return ['/O2', '/Ob2', '/W3', '/MD', '/EHs']
+        return ['/O2', '/Ob2', '/W3', '/MT', '/EHs']
     else:
         raise Errors.WafError('toolchain_cxx flag for unknown compiler %s'
                               % conf.env.CXX)
