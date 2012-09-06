@@ -210,9 +210,20 @@ def toolchain_cxx_flags(conf):
         CXX = conf.env.CXX
 
     if 'clang' in CXX:
-        return ['-O2', '-g', '-Wextra', '-Wall']
+
+        flags = ['-O2', '-g', '-Wextra', '-Wall', '-std=c++0x']
+
+        return flags
     elif 'g++' in CXX:
-        return ['-O2', '-g', '-ftree-vectorize', '-Wextra', '-Wall']
+
+        flags = ['-O2', '-g', '-ftree-vectorize', '-Wextra', '-Wall']
+
+        if conf.env['TOOLCHAIN'] == 'android':
+            flags += ['-std=gnu++0x']
+        else:
+            flags += ['-std=c++0x']
+
+        return flags
     elif 'CL.exe' in CXX or 'cl.exe' in CXX:
         return ['/O2', '/Ob2', '/W3', '/MT', '/EHs']
     else:
