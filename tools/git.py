@@ -155,7 +155,7 @@ def git_branch(ctx, **kw):
 
 
 @conf
-def git_has_submodules(repository_dir):
+def git_has_submodules(ctx, repository_dir):
     """
     Returns true if the repository contains the .gitmodules file
     :param repository_dir: directory to check for git submodules
@@ -172,7 +172,7 @@ def git_submodule_init(ctx, **kw):
 
 
 @conf
-def git_submodule_update(ctx, repo_dir, **kw):
+def git_submodule_update(ctx, **kw):
     """
     Runs 'git submodule update'
     """

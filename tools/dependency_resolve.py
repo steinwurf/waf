@@ -47,6 +47,11 @@ class ResolveGitMajorVersion(object):
 
         ctx.git_pull(cwd = master_path)
 
+        # If the project contains submodules we also get those
+        if ctx.git_has_submodules(master_path):
+            ctx.git_submodule_init(cwd = master_path)
+            ctx.git_submodule_update(cwd = master_path)
+
         tags = ctx.git_tags(cwd = master_path)
 
         if len(tags) == 0:
@@ -153,6 +158,11 @@ class ResolveGitFollowMaster(object):
             ctx.git_clone(self.git_repository, master_path, cwd = path)
 
         ctx.git_pull(cwd = master_path)
+
+        # If the project contains submodules we also get those
+        if ctx.git_has_submodules(master_path):
+            ctx.git_submodule_init(cwd = master_path)
+            ctx.git_submodule_update(cwd = master_path)
 
         return master_path
 

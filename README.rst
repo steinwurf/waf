@@ -32,5 +32,10 @@ Build waf and include our custom tools::
 This will preduce a waf executable which we may copy into our projets.
 Note that the path to the tools must be absolute.
 
+Tools
+=====
 
+* waf_unit_test_v2 is a copy of the waf_unit_test tool. It contains
+  support for failing builds when a unit test fails and support for
+  running unit tests using a custom command template.
 
