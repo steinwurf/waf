@@ -72,6 +72,12 @@ class ResolveGitMajorVersion(object):
             ctx.git_local_clone(master_path, tag_path, cwd = path)
             ctx.git_checkout(tag, cwd = tag_path)
 
+            # If the project contains submodules we also get those
+            if ctx.git_has_submodules(tag_path):
+                ctx.git_submodule_init(cwd = tag_path)
+                ctx.git_submodule_update(cwd = tag_path)
+
+
         return tag_path
 
     def select_tag(self, tags):
