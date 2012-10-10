@@ -32,7 +32,7 @@ The following table shows some example of values:
  platform       cpu      compiler       custom options
 ============= ========= ============== ================
  linux         x86       gxx            i7-avx
- windows       x86_64    gxx46          test-sse4
+ windows       x86-64    gxx46          test-sse4
  blackberry    armv5te   clang
  ios                     clang31
  android                 msvc2010
