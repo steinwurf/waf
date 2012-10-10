@@ -106,6 +106,8 @@ class utest(Task.Task):
                 if testcmd:
                         self.ut_exec = (testcmd % self.ut_exec[0]).split(' ')
 
+                Logs.debug("ut: running %r", self.ut_exec)
+
 		proc = Utils.subprocess.Popen(self.ut_exec, cwd=cwd, env=fu, stderr=Utils.subprocess.PIPE, stdout=Utils.subprocess.PIPE)
 		(stdout, stderr) = proc.communicate()
 
