@@ -43,11 +43,11 @@ The following table shows some example of values:
 
 Some examples of mkspecs are::
 
-   cxx_linux-x86-gxx.py
-   cxx_linux-x86_64-gxx46.py
-   cxx_windows-x86-msvc2010.py
-   cxx_windows-x86_x64-msvc2010.py
-   cxx_windows-x86_x64-msvc2010-i7-avx.py
+   cxx_linux_x86_gxx.py
+   cxx_linux_x86-64_gxx46.py
+   cxx_windows_x86_msvc2010.py
+   cxx_windows_x86-x64_msvc2010.py
+   cxx_windows_x86-x64_msvc2010-i7-avx.py
 
 We will also allow values to be dropped e.g. ``cxx_linux-x86.py``
 the our tool should auto detect a compiler to use. This means
