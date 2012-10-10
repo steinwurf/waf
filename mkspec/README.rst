@@ -13,33 +13,32 @@ project which uses it for the same purpose.
 Naming a mkspec
 ===============
 
-An example of an mkspec file is:
-  cxx-*platform*-*cpu*-*compiler*-*custom options*.py
+An example of an mkspec file is: ``cxx-platform-cpu-compiler-custom options.py``
 
 Where the options are specifying the following:
-================ ====================================
-platform         specifies the platform that is used
----------------- ------------------------------------
-cpu              the instruction set used
----------------- ------------------------------------
-compiler         the compiler
----------------- ------------------------------------
-custom options   user defined options can be anything
-                 (optional)
-================ ====================================
+
+================ =====================================
+ option           purpose
+================ =====================================
+ platform         specifies the platform that is used
+ cpu              the instruction set used
+ compiler         the compiler
+ custom options   user defined options can be anything
+================ =====================================
 
 The following table shows some example of values:
+
 ============= ========= ============== ================
  platform       cpu      compiler       custom options
 ============= ========= ============== ================
-linux          x86       gxx            i7-avx
-windows        x86_64    gxx46          test-sse4
-blackberry     armv5te   clang
-ios                      clang31
-android                  msvc2010
-solaris                  msvc2012
-windowsphone             macport-gxx46
-mac
+ linux         x86       gxx            i7-avx
+ windows       x86_64    gxx46          test-sse4
+ blackberry    armv5te   clang
+ ios                     clang31
+ android                 msvc2010
+ solaris                 msvc2012
+ windowsphone            macport-gxx46
+ mac
 ============= ========= ============== ================
 
 Some examples of mkspecs are::
