@@ -45,7 +45,7 @@ def configure(conf):
 
         conf.msg('Setting cxx_mkspec path to:', cxx_mkspec_path)
 
-        conf.load(cxx_mkspec, path)
-        
+        conf.load(cxx_mkspec, cxx_mkspec_path)
+
     else:
         conf.load(cxx_mkspec)

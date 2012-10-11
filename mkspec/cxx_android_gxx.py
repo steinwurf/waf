@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from waflib.Tools.gxx import gxx_common_flags
+
 def configure(conf):
     """
     This is the default android toolchain. We use a single setup which we expect
     to work with all Android toolchains however in the future we might have to
     make the choice more specific i.e. android-x86 or similar.
     """
+
     conf.gxx_common_flags()
     conf.cxx_load_tools()
 
