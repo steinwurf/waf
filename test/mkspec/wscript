@@ -22,9 +22,9 @@ def options(opt):
     opt.load('wurf_cxx_mkspec')
 
 def configure(conf):
+    conf.filter_mkspec(lambda mkspec: "default" in mkspec)
     conf.load("dependency_bundle")
     conf.load('wurf_cxx_mkspec')
-
 
 def build(bld):
     bld.program(source='main.cpp', target='app')
