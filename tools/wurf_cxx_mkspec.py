@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import os, sys, inspect
+import os, sys, inspect, ast
 
 from waflib import Utils
 from waflib import Context
@@ -50,7 +50,7 @@ def options(opt):
              "Example: --cxx_mkspec=cxx_linux_x86-64_gxx4.6")
 
     toolchain_opts.add_option(
-        '--cxx_mkspec-options', default = None,
+        '--cxx_mkspec_options', default = None,
         dest='cxx_mkspec_options',
         help="Some mkspec requires addtional options. Example: "+
              "--cxx-mkspec-options=NDK_DIR=~/.android-standalone-ndk/gcc4.4/bin"
@@ -59,6 +59,13 @@ def options(opt):
     opt.load("compiler_cxx")
 
 
+#ITEM1=12123 ITEM2=dsfasdf
+
+def read_options(options):
+    if options:
+        return ast.literal_eval("{'%s'}" % options
+                                .replace('=', "':'")
+                                .replace(' ', "','"))
 
 def configure(conf):
     # Which mkspec should we use, by default, use the default one.
@@ -82,6 +89,8 @@ def configure(conf):
         # Just use the current directory then.
         pass
 
+    conf.options.cxx_mkspec_options = read_options(
+        conf.options.cxx_mkspec_options)
 
     conf.msg('Setting cxx_mkspec path to:', cxx_mkspec_path)
     conf.msg('Using the mkspec:', mkspec)
