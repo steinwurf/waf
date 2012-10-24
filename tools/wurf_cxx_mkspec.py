@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+!/usr/bin/env python
 # encoding: utf-8
 
 import os, sys, inspect, ast
@@ -44,13 +44,13 @@ def options(opt):
     toolchain_opts = opt.add_option_group('mkspecs')
 
     toolchain_opts.add_option(
-        '--cxx_mkspec', default = None,
+        '--cxx-mkspec', default = None,
         dest='cxx_mkspec',
         help="Select a specific cxx_mkspec. "+
              "Example: --cxx_mkspec=cxx_linux_x86-64_gxx4.6")
 
     toolchain_opts.add_option(
-        '--cxx_mkspec_options', default = None,
+        '--cxx-mkspec-options', default = None, action="append",
         dest='cxx_mkspec_options',
         help="Some mkspec requires addtional options. Example: "+
              "--cxx-mkspec-options=NDK_DIR=~/.android-standalone-ndk/gcc4.4/bin"
@@ -59,13 +59,19 @@ def options(opt):
     opt.load("compiler_cxx")
 
 
-#ITEM1=12123 ITEM2=dsfasdf
+#ITEM1=12123 ITEM2=hello
+def read_options(conf):
 
-def read_options(options):
-    if options:
-        return ast.literal_eval("{'%s'}" % options
-                                .replace('=', "':'")
-                                .replace(' ', "','"))
+    conf.env["cxx_mkspec_options"] = {}
+    if conf.options.cxx_mkspec_options:
+        for option in conf.options.cxx_mkspec_options:
+            try:
+                key, value = option.split('=')
+            except Exception, e:
+                conf.fatal("cxx-mkspec-options has to have the format 'KEY=VALUE'"
+                           ", you specified %r,"
+                           "which resulted in Error:'%s'" %(option, e))
+            conf.env["cxx_mkspec_options"][key] = value
 
 def configure(conf):
     # Which mkspec should we use, by default, use the default one.
@@ -78,7 +84,7 @@ def configure(conf):
     if filter and not filter(mkspec):
         raise Errors.WafError(
             msg="Unsupported mkspec, the mkspec must comply with:\n"+
-                 inspect.getsource(filter))
+            inspect.getsource(filter))
 
     #Where should we look for the mkspec?
 
@@ -89,8 +95,7 @@ def configure(conf):
         # Just use the current directory then.
         pass
 
-    conf.options.cxx_mkspec_options = read_options(
-        conf.options.cxx_mkspec_options)
+    read_options(conf)
 
     conf.msg('Setting cxx_mkspec path to:', cxx_mkspec_path)
     conf.msg('Using the mkspec:', mkspec)
