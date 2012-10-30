@@ -6,6 +6,11 @@ of every change, see the Git log.
 
 Latest (head of the master branch)
 ----------------------------------
+* tbd
+
+2.0.0
+-----
+* Added mkspecs
 * Fixed Python3.x support, broken include statement.
 * Added wurf_waf_unit_test tool
 * Added wurf_protoc & wurf_proto_cxx tools for protobuf support
