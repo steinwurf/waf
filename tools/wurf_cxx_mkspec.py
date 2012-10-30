@@ -58,10 +58,7 @@ def options(opt):
 
     opt.load("compiler_cxx")
 
-
-#ITEM1=12123 ITEM2=hello
 def read_options(conf):
-
     conf.env["cxx_mkspec_options"] = {}
     if conf.options.cxx_mkspec_options:
         for option in conf.options.cxx_mkspec_options:
@@ -97,9 +94,9 @@ def configure(conf):
 
     read_options(conf)
 
+    conf.load(mkspec, cxx_mkspec_path)
     conf.msg('Setting cxx_mkspec path to:', cxx_mkspec_path)
     conf.msg('Using the mkspec:', mkspec)
-    conf.load(mkspec, cxx_mkspec_path)
 
 filter = None
 
