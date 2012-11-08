@@ -95,7 +95,7 @@ def configure(conf):
     read_options(conf)
 
     conf.load(mkspec, cxx_mkspec_path)
-    conf.msg('Setting cxx_mkspec path to:', cxx_mkspec_path)
+    #conf.msg('Setting cxx_mkspec path to:', cxx_mkspec_path)
     conf.msg('Using the mkspec:', mkspec)
 
 filter = None

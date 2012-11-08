@@ -148,7 +148,7 @@ def configure(conf):
 
         conf.start_msg('Resolve dependency %s' % name)
         dependency_path = dependencies[name].resolve(conf, bundle_path)
-        conf.end_msg('ok')
+        conf.end_msg(dependency_path)
 
         conf.env['BUNDLE_DEPENDENCIES'][name] = dependency_path
 
@@ -156,8 +156,11 @@ def configure(conf):
 
         key = DEPENDENCY_PATH_KEY % name
         dependency_path = getattr(conf.options, key)
+        dependency_path = expand_path(dependency_path)
 
-        conf.env['BUNDLE_DEPENDENCIES'][name] = expand_path(dependency_path)
+        conf.start_msg('User resolve dependency %s' % name)
+        conf.env['BUNDLE_DEPENDENCIES'][name] = dependency_path
+        conf.end_msg(dependency_path)
 
 
 
