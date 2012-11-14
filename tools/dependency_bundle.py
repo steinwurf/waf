@@ -126,7 +126,7 @@ def configure(conf):
     bundle_path = expand_path(conf.options.bundle_path)
 
     # List all the dependencies to be bundled
-    bundle_list = expand_bundle(conf.options.bundle)
+    bundle_list = expand_bundle(conf, conf.options.bundle)
 
     # List all the dependencies with an explicit path
     explicit_list = explicit_dependencies(conf.options)
@@ -164,7 +164,7 @@ def configure(conf):
 
 
 
-def expand_bundle(arg):
+def expand_bundle(conf, arg):
     """
     Expands the bundle arg so that e.g. 'ALL,-gtest' becomes the
     right set of dependencies
@@ -176,13 +176,13 @@ def expand_bundle(arg):
     arg = arg.split(',')
 
     if 'NONE' in arg and 'ALL' in arg:
-        self.fatal('Cannot specify both ALL and NONE as dependencies')
+        conf.fatal('Cannot specify both ALL and NONE as dependencies')
 
     candidate_score = dict([(name, 0) for name in dependencies])
 
     def check_candidate(c):
         if c not in candidate_score:
-            self.fatal('Cannot bundle %s, since it is not specified as a'
+            conf.fatal('Cannot bundle %s, since it is not specified as a'
                        ' dependency' % c)
 
     for a in arg:
