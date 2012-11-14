@@ -49,6 +49,7 @@ class ResolveGitMajorVersion(object):
 
         # If the project contains submodules we also get those
         if ctx.git_has_submodules(master_path):
+            ctx.git_submodule_sync(cwd = master_path)
             ctx.git_submodule_init(cwd = master_path)
             ctx.git_submodule_update(cwd = master_path)
 
@@ -74,6 +75,7 @@ class ResolveGitMajorVersion(object):
 
             # If the project contains submodules we also get those
             if ctx.git_has_submodules(tag_path):
+                ctx.git_submodule_sync(cwd = master_path)
                 ctx.git_submodule_init(cwd = tag_path)
                 ctx.git_submodule_update(cwd = tag_path)
 
@@ -167,6 +169,7 @@ class ResolveGitFollowMaster(object):
 
         # If the project contains submodules we also get those
         if ctx.git_has_submodules(master_path):
+            ctx.git_submodule_sync(cwd = master_path)
             ctx.git_submodule_init(cwd = master_path)
             ctx.git_submodule_update(cwd = master_path)
 

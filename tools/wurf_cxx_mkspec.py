@@ -53,10 +53,48 @@ def options(opt):
         '--cxx-mkspec-options', default = None, action="append",
         dest='cxx_mkspec_options',
         help="Some mkspec requires addtional options. Example: "+
-             "--cxx-mkspec-options=NDK_DIR=~/.android-standalone-ndk/gcc4.4/bin"
-        )
+             "--cxx-mkspec-options=NDK_DIR=~/.android-standalone-ndk/gcc4.4/bin")
 
     opt.load("compiler_cxx")
+
+
+@conf
+def get_mkspec_option(conf, name):
+
+    if not name in conf.env['cxx_mkspec_options']:
+        conf.fatal('The %s options was not specified' % name)
+
+    return conf.env['cxx_mkspec_options'][name]
+
+
+@conf
+def set_mkspec_option(conf, name, value):
+    conf.env['cxx_mkspec_options'][name] = value
+
+
+# Allows us to catch queries for platforms that we do not yet support
+mkspec_platforms = ['windows','linux', 'android', 'mac']
+
+@conf
+def get_mkspec_platform(conf):
+    return get_mkspec_option('MKSPEC_PLATFORM')
+
+@conf
+def set_mkspec_platform(conf, platform):
+    if not platform in mkspec_platforms:
+        conf.fatal("The mkspec platform %s is not supported"
+                   " supported is %s" % (platform, mkspec_platform))
+
+    conf.set_mkspec_option('MKSPEC_PLATFORM', platform)
+
+@conf
+def is_mkspec_platform(conf, platform):
+    if not platform in mkspec_platforms:
+        conf.fatal("The mkspec platform %s is not supported"
+                   " supported is %s" % (platform, mkspec_platform))
+
+    return conf.get_mkspec_platform == platform
+
 
 def read_options(conf):
     conf.env["cxx_mkspec_options"] = {}

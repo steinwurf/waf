@@ -180,6 +180,14 @@ def git_submodule_update(ctx, **kw):
 
 
 @conf
+def git_submodule_sync(ctx, **kw):
+    """
+    Runs 'git submodule sync'
+    """
+    git_cmd_and_log(ctx, 'submodule sync', **kw)
+
+
+@conf
 def git_clone(ctx, source, destination, **kw):
     """
     Clone a repository
