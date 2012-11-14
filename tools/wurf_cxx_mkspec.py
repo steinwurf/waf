@@ -86,7 +86,7 @@ def get_mkspec_platform(conf):
             platform = 'windows'
         elif platform == 'darwin':
             platform = 'mac'
-        set_mkspec_platform(platform)
+        conf.set_mkspec_platform(platform)
     else:
         return conf.env['MKSPEC_PLATFORM']
 
