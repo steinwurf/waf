@@ -79,7 +79,7 @@ mkspec_platform_specializations = { 'windows' : ['windows xp',
 @conf
 def get_mkspec_platform(conf):
     #If the MKSPEC_PLATFORM is not set, we auto detect it.
-    if conf.env['MKSPEC_PLATFORM'] == None:
+    if conf.env['MKSPEC_PLATFORM'] == []:
 
         platform = Utils.unversioned_sys_platform()
         if platform == 'win32':
