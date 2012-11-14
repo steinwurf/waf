@@ -79,20 +79,19 @@ mkspec_platform_specializations = { 'windows' : ['windows xp',
 @conf
 def get_mkspec_platform(conf):
     #If the MKSPEC_PLATFORM is not set, we auto detect it.
-    if conf.env['MKSPEC_PLATFORM'] == []:
-
+    if not conf.env['MKSPEC_PLATFORM']:
         platform = Utils.unversioned_sys_platform()
         if platform == 'win32':
             platform = 'windows'
         elif platform == 'darwin':
             platform = 'mac'
         conf.set_mkspec_platform(platform)
-    else:
-        return conf.env['MKSPEC_PLATFORM']
+    
+    return conf.env['MKSPEC_PLATFORM']
 
 @conf
 def set_mkspec_platform(conf, platform):
-    if conf.env['MKSPEC_PLATFORM'] != []:
+    if conf.env['MKSPEC_PLATFORM']:
         conf.fatal(("The mkspec platform could not be set to %s, as it was "
                    "already set to %s.") %
                    (platform, conf.env['MKSPEC_PLATFORM']))
