@@ -33,7 +33,7 @@ the predefined callback::
 		bld.add_post_fun(waf_unit_test.summary)
 """
 
-import os, sys
+import os, sys, ntpath
 from waflib.TaskGen import feature, after_method
 from waflib import Utils, Task, Logs, Options
 testlock = Utils.threading.Lock()
@@ -104,26 +104,57 @@ class utest(Task.Task):
 
                 testcmd = getattr(Options.options, 'testcmd', False)
                 if testcmd:
-                        self.ut_exec = (testcmd % self.ut_exec[0]).split(' ')
+                        cmd_list = testcmd.split('#')
+                        for i, cmd in enumerate(cmd_list):
+                                #Format commands
+                                cmd = (cmd %
+                                       {'bin'     : self.ut_exec[0],
+                                        'basename': ntpath.basename(self.ut_exec[0])
+                                       }).split(' ')
 
+                                # Remove empty commands
+                                for j, item in enumerate(cmd):
+                                        if not item:
+                                                del cmd[j]
+                                cmd_list[i] = cmd
+                        self.ut_exec = cmd_list
+                else:
+                        self.ut_exec = [self.ut_exec]
                 Logs.debug("ut: running %r", self.ut_exec)
 
-		proc = Utils.subprocess.Popen(self.ut_exec, cwd=cwd, env=fu, stderr=Utils.subprocess.PIPE, stdout=Utils.subprocess.PIPE)
-		(stdout, stderr) = proc.communicate()
+                return_code = 0
+                combined_stdout = ""
+                combined_stderr = ""
 
-		tup = (filename, proc.returncode, stdout, stderr)
-		self.generator.utest_result = tup
+                #Run commands
+                for cmd in self.ut_exec:
+                        if cmd:
+                                proc = Utils.subprocess.Popen(
+                                        cmd,
+                                        cwd=cwd,
+                                        env=fu,
+                                        stderr=Utils.subprocess.PIPE,
+                                        stdout=Utils.subprocess.PIPE)
 
-		testlock.acquire()
-		try:
-			bld = self.generator.bld
-			Logs.debug("ut: %r", tup)
-			try:
-				bld.utest_results.append(tup)
-			except AttributeError:
-				bld.utest_results = [tup]
-		finally:
-			testlock.release()
+                                (stdout, stderr) = proc.communicate()
+                                combined_stdout += stdout
+                                combined_stderr += stderr
+                                if not proc.returncode == 0:
+                                        return_code = proc.returncode
+                                        break
+                tup = (filename, return_code, combined_stdout, combined_stderr)
+                self.generator.utest_result = tup
+
+                testlock.acquire()
+                try:
+                        bld = self.generator.bld
+                        Logs.debug("ut: %r", tup)
+                        try:
+                                bld.utest_results.append(tup)
+                        except AttributeError:
+                                bld.utest_results = [tup]
+                finally:
+                        testlock.release()
 
 def summary(bld):
 	"""
@@ -184,6 +215,12 @@ def options(opt):
                        help='Exec all unit tests', dest='all_tests')
         opt.add_option('--testcmd', action='store', default=False,
                        help = 'Run the unit tests using the test-cmd string'
-                              ' example "--test-cmd="valgrind --error-exitcode=1'
-                              ' %s" to run under valgrind', dest='testcmd')
+                              ' example "--testcmd="valgrind --error-exitcode=1'
+                              ' %(bin)s" to run under valgrind.'
+                              ' "%(bin)s" can be used multiple times if needed.'
+                              ' To only get the basename of the executable,'
+                              ' use "%(basename)".'
+                              ' To execute multiple statements, use "#" to'
+                              ' separate them.',
+                       dest='testcmd')
 
