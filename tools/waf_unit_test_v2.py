@@ -33,7 +33,7 @@ the predefined callback::
 		bld.add_post_fun(waf_unit_test.summary)
 """
 
-import os, sys, ntpath
+import os, sys
 from waflib.TaskGen import feature, after_method
 from waflib import Utils, Task, Logs, Options
 testlock = Utils.threading.Lock()
@@ -104,19 +104,17 @@ class utest(Task.Task):
 
                 testcmd = getattr(Options.options, 'testcmd', False)
                 if testcmd:
-                        cmd_list = testcmd.split('#')
+                        cmd_list = testcmd.split('&&')
                         for i, cmd in enumerate(cmd_list):
                                 #Format commands
                                 cmd = (cmd %
                                        {'bin'     : self.ut_exec[0],
-                                        'basename': ntpath.basename(self.ut_exec[0])
+                                        'basename': os.path.basename(self.ut_exec[0])
                                        }).split(' ')
 
                                 # Remove empty commands
-                                for j, item in enumerate(cmd):
-                                        if not item:
-                                                del cmd[j]
-                                cmd_list[i] = cmd
+                                cmd_list[i] = filter(None, cmd)
+
                         self.ut_exec = cmd_list
                 else:
                         self.ut_exec = [self.ut_exec]
