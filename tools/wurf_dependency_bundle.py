@@ -91,8 +91,6 @@ def options(opt):
     :param opt: the Waf OptionsContext
     """
 
-    opt.load('git')
-
     bundle_opts = opt.add_option_group(OPTIONS_NAME)
 
     add = bundle_opts.add_option
@@ -118,8 +116,8 @@ def configure(conf):
     The configure function for the bundle dependency tool
     :param conf: the configuration context
     """
-
-    conf.load('git')
+    
+    conf.load('wurf_git')
 
     # Get the path where the bundled dependencies should be
     # placed
