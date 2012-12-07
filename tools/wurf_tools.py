@@ -21,7 +21,7 @@ def parse_options(options_string):
         for options in options_string:
             for option in options.split(','):
                 try:
-                    key, value = option.split('=')
+                    key, value = option.split('=', 1)
                     result[key] = value
                 except ValueError, e:
                     result[option] = True
