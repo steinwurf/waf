@@ -21,7 +21,7 @@ def parse_options(options_string):
         for options in options_string:
             for option in options.split(','):
                 try:
-                    key, value = option.split('=')
+                    key, value = option.split('=', 1)
                     result[key] = value
                 except ValueError, e:
                     result[option] = True
@@ -48,27 +48,43 @@ def check_for_duplicate(conf):
 @conf
 def get_tool_option(conf, option):
     check_for_duplicate(conf)
-    value = None
-    if option in conf.env.tool_options:
-        value = conf.env.tool_options[option]
-    elif option in conf.options.tool_options:
-        value = conf.options.tool_options[option]
+
+    # Options may be set in 2 ways:
+    # 1) Stored and persisted during configure
+    # 2) Passed during other commands than configure
+    stored = conf.env.tool_options
+    passed = parse_options(conf.options.tool_options)
+
+    if option in stored:
+        return stored[option]
+    elif option in passed:
+        return passed[option]
     else:
-        conf.fatal('No tool option %s, you can specify tool options as: '
-                   './waf configure --options=KEY=VALUE' % option)
-    return value
+        conf.fatal('Tool option required %s, you can specify tool options as: '
+                   './waf configure --options=KEY=VALUE,KEY=VALUE' % option)
 
 @conf
 def has_tool_option(conf, option):
     check_for_duplicate(conf)
     return option in conf.env.tool_options or option in parse_options(conf.options.tool_options)
 
+load_error = """
+Could not find the external waf-tools. Common reasons
+for this are:
+   1) The external tools repository was not added as
+      an dependency. This is done using the wurf_dependency_bundle
+      tool.
+   2) The external tools dependency was not added under the 'waf-tools'
+      name.
+   3) The waf-tools were not bundled using the --bundle=.. and
+      related functions.
+"""
+
 @conf
 def load_external_tool(conf, category, name):
 
     if not conf.has_dependency_path('waf-tools'):
-        conf.fatal('The external tools require the external-waf-tools'
-                   ' repository to be added as dependency')
+        conf.fatal(load_error)
 
     # Get the path and load the tool
     path = conf.dependency_path('waf-tools')
