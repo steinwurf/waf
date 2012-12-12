@@ -206,7 +206,9 @@ def git_local_clone(ctx, source, destination, **kw):
         git_clone(ctx, source, destination)
 
     else:
-        git_cmd_and_log(ctx, 'clone -l '+source+' '+destination, **kw)
+        # We have to disable hard-links since the do not work on the
+        # AFS file system. We may later revisit this.
+        git_cmd_and_log(ctx, 'clone -l --no-hardlinks '+source+' '+destination, **kw)
 
 
 
