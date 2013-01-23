@@ -3,6 +3,7 @@
 
 import os
 from waflib.Configure import conf
+from waflib import Options
 
 def options(opt):
     tool_opts = opt.add_option_group('external tools')
@@ -28,14 +29,17 @@ def parse_options(options_string):
     return result
 
 def _read_tool_options(conf):
-    conf.env["tool_options"] = parse_options(conf.options.tool_options)
+    conf.env["tool_options"] = parse_options(Options.options.tool_options)
 
 
 def configure(conf):
     _read_tool_options(conf)
 
 def check_for_duplicate(conf):
-    options = parse_options(conf.options.tool_options)
+
+    tool_options = Options.options.tool_options
+    
+    options = parse_options(tool_options)
     for option in options:
         if (option in conf.env['tool_options'] and
             conf.env['tool_options'][option] != options[option]):
@@ -53,7 +57,7 @@ def get_tool_option(conf, option):
     # 1) Stored and persisted during configure
     # 2) Passed during other commands than configure
     stored = conf.env.tool_options
-    passed = parse_options(conf.options.tool_options)
+    passed = parse_options(Options.options.tool_options)
 
     if option in stored:
         return stored[option]
@@ -66,7 +70,7 @@ def get_tool_option(conf, option):
 @conf
 def has_tool_option(conf, option):
     check_for_duplicate(conf)
-    return option in conf.env.tool_options or option in parse_options(conf.options.tool_options)
+    return option in conf.env.tool_options or option in parse_options(Options.options.tool_options)
 
 load_error = """
 Could not find the external waf-tools. Common reasons
