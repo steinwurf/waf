@@ -24,7 +24,7 @@ def parse_options(options_string):
                 try:
                     key, value = option.split('=', 1)
                     result[key] = value
-                except ValueError, e:
+                except ValueError as e:
                     result[option] = True
     return result
 
