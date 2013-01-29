@@ -101,6 +101,10 @@ def options(opt):
     add('--bundle-path', default=DEFAULT_BUNDLE_PATH, dest='bundle_path',
         help="The folder used for downloaded dependencies")
 
+    add('--bundle-use-master', default=False, dest='bundle_master',
+        help="Use the master version of the these bundled dependencies")
+
+
     # add('--bundle-options', dest='bundle_options', default=False,
     #     action='store_true', help='List dependencies which may be bundled')
 
@@ -116,7 +120,7 @@ def configure(conf):
     The configure function for the bundle dependency tool
     :param conf: the configuration context
     """
-    
+
     conf.load('wurf_git')
 
     # Get the path where the bundled dependencies should be
@@ -125,6 +129,9 @@ def configure(conf):
 
     # List all the dependencies to be bundled
     bundle_list = expand_bundle(conf, conf.options.bundle)
+
+    # List all dependencies for which we should use the master
+    bundle_master = expand_bundle(conf, conf.options.bundle_master)
 
     # List all the dependencies with an explicit path
     explicit_list = explicit_dependencies(conf.options)
@@ -145,7 +152,15 @@ def configure(conf):
         Utils.check_dir(bundle_path)
 
         conf.start_msg('Resolve dependency %s' % name)
-        dependency_path = dependencies[name].resolve(conf, bundle_path)
+
+        # Should we use the master
+        use_master = name in bundle_master
+
+        dependency_path = dependencies[name].resolve(
+            ctx = conf,
+            path = bundle_path,
+            use_master = use_master)
+
         conf.end_msg(dependency_path)
 
         conf.env['BUNDLE_DEPENDENCIES'][name] = dependency_path

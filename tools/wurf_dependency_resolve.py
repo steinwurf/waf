@@ -31,11 +31,12 @@ class ResolveGitMajorVersion(object):
         self.git_repository = git_repository
         self.major_version = major_version
 
-    def resolve(self, ctx, path):
+    def resolve(self, ctx, path, use_master):
         """
         Fetches the dependency if necessary.
         :param ctx: A waf ConfigurationContext
         :param path: The path where the dependency should be located
+        :param use_master: If true the master will be used
         """
         path = os.path.abspath(os.path.expanduser(path))
 
@@ -52,6 +53,9 @@ class ResolveGitMajorVersion(object):
             ctx.git_submodule_sync(cwd = master_path)
             ctx.git_submodule_init(cwd = master_path)
             ctx.git_submodule_update(cwd = master_path)
+
+        if use_master:
+            return master_path
 
         tags = ctx.git_tags(cwd = master_path)
 
@@ -151,12 +155,14 @@ class ResolveGitFollowMaster(object):
         self.name = name
         self.git_repository = git_repository
 
-    def resolve(self, ctx, path):
+    def resolve(self, ctx, path, use_master):
         """
         Fetches the dependency if necessary.
         :param ctx: A waf ConfigurationContext
         :param path: The path where the dependency should be located
+        :param use_master: Is ignored for this resolver
         """
+
         path = os.path.abspath(os.path.expanduser(path))
 
         # Do we have the master
