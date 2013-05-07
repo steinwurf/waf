@@ -11,6 +11,7 @@
 from . import semver
 
 import os
+import shutil
 
 class ResolveGitMajorVersion(object):
     """
@@ -40,9 +41,24 @@ class ResolveGitMajorVersion(object):
         """
         path = os.path.abspath(os.path.expanduser(path))
 
-        # Do we have the master
+        # Do we have the master folder?
         master_path = os.path.join(path, self.name + '-master')
 
+        # If yes, we need to verify the remote url in the master folder
+        if os.path.isdir(master_path):
+            remote_url = ctx.git_config_get_remote_url(cwd = master_path)
+            # If it does not match the repository url
+            if remote_url != self.git_repository:
+                # Delete all folders for this dependency
+                folders = []
+                for o in os.listdir(path):
+                    if os.path.isdir(o) and o.startswith(self.name + '-'):
+                        folders.append(o)
+                for folder in folders:
+                    shutil.rmtree(os.path.join(path, folder))
+
+
+        # If the master folder does not exist, do a git clone first
         if not os.path.isdir(master_path):
             ctx.git_clone(self.git_repository, master_path, cwd = path)
 
@@ -79,7 +95,7 @@ class ResolveGitMajorVersion(object):
 
             # If the project contains submodules we also get those
             if ctx.git_has_submodules(tag_path):
-                ctx.git_submodule_sync(cwd = master_path)
+                ctx.git_submodule_sync(cwd = tag_path)
                 ctx.git_submodule_init(cwd = tag_path)
                 ctx.git_submodule_update(cwd = tag_path)
 
