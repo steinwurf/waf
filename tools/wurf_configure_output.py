@@ -41,6 +41,10 @@ class ToolchainConfigurationContext(ConfigurationContext):
                 build_platform = Utils.unversioned_sys_platform()
                 self.out_dir = os.path.join("build", build_platform)
 
+            # Use the _debug postfix for debug builds
+            if self.has_tool_option('cxx_debug'):
+                self.out_dir += '_debug'
+
         super(ToolchainConfigurationContext, self).init_dirs()
 
 
