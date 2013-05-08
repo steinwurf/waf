@@ -11,7 +11,18 @@
 from . import semver
 
 import os
+import re
 import shutil
+
+from waflib.Logs import debug
+
+##def onerror(func, path, exc_info):
+##    # path contains the path of the file that couldn't be removed
+##    # let's just assume that it's read-only and unlink it.
+##    # Usage: shutil.rmtree(full_folder_path, onerror = onerror)
+##    import stat
+##    os.chmod( path, stat.S_IWRITE )
+##    os.unlink( path )
 
 class ResolveGitMajorVersion(object):
     """
@@ -41,26 +52,40 @@ class ResolveGitMajorVersion(object):
         """
         path = os.path.abspath(os.path.expanduser(path))
 
-        # Do we have the master folder?
-        master_path = os.path.join(path, self.name + '-master')
+        # Replace all non-alphanumeric characters with _
+        repo_url = re.sub('[^0-9a-zA-Z]+', '_', self.git_repository)
 
-        # If yes, we need to verify the remote url in the master folder
-        if os.path.isdir(master_path):
-            remote_url = ctx.git_config_get_remote_url(cwd = master_path)
-            # If it does not match the repository url
-            if remote_url != self.git_repository:
-                # Delete all folders for this dependency
-                folders = []
-                for o in os.listdir(path):
-                    if os.path.isdir(o) and o.startswith(self.name + '-'):
-                        folders.append(o)
-                for folder in folders:
-                    shutil.rmtree(os.path.join(path, folder))
+        # The folder for storing different versions of this repository
+        repo_folder = os.path.join(path, self.name + '-' + repo_url)
+
+        if not os.path.exists(repo_folder):
+            ctx.to_log("Creating new repository folder: {}".format(repo_folder))
+            os.makedirs(repo_folder)
+
+        # Do we have the master folder?
+        master_path = os.path.join(repo_folder, 'master')
+
+##        # If yes, we need to verify the remote url in the master folder
+##        if os.path.isdir(master_path):
+##            remote_url = ctx.git_config_get_remote_url(cwd = master_path)
+##            # If it does not match the repository url
+##            if remote_url != self.git_repository:
+##                ctx.to_log("Remote_url mismatch, expected url: {}".format(self.git_repository))
+##                # Delete all folders for this dependency
+##                folders = [ master_path ]
+##                tags = ctx.git_tags(cwd = master_path)
+##                for tag in tags:
+##                    tag_path = os.path.join(path, self.name + '-' + tag)
+##                    if os.path.isdir(tag_path):
+##                        folders.append(tag_path)
+##                for folder in folders:
+##                    ctx.to_log("Deleting folder: {}".format(folder))
+##                    shutil.rmtree(folder, onerror = onerror)
 
 
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(master_path):
-            ctx.git_clone(self.git_repository, master_path, cwd = path)
+            ctx.git_clone(self.git_repository, master_path, cwd = repo_folder)
 
         ctx.git_pull(cwd = master_path)
 
@@ -76,21 +101,21 @@ class ResolveGitMajorVersion(object):
         tags = ctx.git_tags(cwd = master_path)
 
         if len(tags) == 0:
-            ctx.fatal('No version tags specified for %s '
-                      'impossible to track major version' % self.name)
+            ctx.fatal('No version tags specified for %r '
+                      '- impossible to track major version' % self.name)
 
         tag = self.select_tag(tags)
 
         if not tag:
             ctx.fatal('No compatible tags found %r '
-                      'to track major version %d for %s' %
+                      'to track major version %d of %s' %
                       (tags, self.major_version, self.name))
 
         # Do we have the newest tag checked out
-        tag_path = os.path.join(path, self.name + '-' + tag)
+        tag_path = os.path.join(repo_folder, tag)
 
         if not os.path.isdir(tag_path):
-            ctx.git_local_clone(master_path, tag_path, cwd = path)
+            ctx.git_local_clone(master_path, tag_path, cwd = repo_folder)
             ctx.git_checkout(tag, cwd = tag_path)
 
             # If the project contains submodules we also get those
@@ -101,6 +126,7 @@ class ResolveGitMajorVersion(object):
 
 
         return tag_path
+
 
     def select_tag(self, tags):
         """

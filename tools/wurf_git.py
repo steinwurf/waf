@@ -127,13 +127,14 @@ def git_pull(ctx, **kw):
     git_cmd_and_log(ctx, 'pull', **kw)
 
 @conf
-def git_config_get_remote_url(ctx, **kw):
+def git_config(ctx, args, **kw):
     """
-    Runs 'git config --get remote.origin.url' and retuns the output
+    Runs 'git config args' and retuns the output
     :param ctx: Waf Context
     """
-    output = git_cmd_and_log(ctx, 'config --get remote.origin.url', **kw)
-    return output
+    cmd = 'config ' + args
+    output = git_cmd_and_log(ctx, cmd.strip(), **kw)
+    return output.strip()
 
 @conf
 def git_branch(ctx, **kw):
