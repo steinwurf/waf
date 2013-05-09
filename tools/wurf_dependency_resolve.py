@@ -11,7 +11,8 @@
 from . import semver
 
 import os
-import re
+#import re
+import hashlib
 import shutil
 
 from waflib.Logs import debug
@@ -53,10 +54,14 @@ class ResolveGitMajorVersion(object):
         path = os.path.abspath(os.path.expanduser(path))
 
         # Replace all non-alphanumeric characters with _
-        repo_url = re.sub('[^0-9a-zA-Z]+', '_', self.git_repository)
+        #repo_url = re.sub('[^0-9a-zA-Z]+', '_', self.git_repository)
+
+        # Use the first 6 characters of the SHA1 hash of the repository url
+        # to uniquely identify the repository
+        repo_hash = hashlib.sha1(self.git_repository.encode('utf-8')).hexdigest()[:6]
 
         # The folder for storing different versions of this repository
-        repo_folder = os.path.join(path, self.name + '-' + repo_url)
+        repo_folder = os.path.join(path, self.name + '-' + repo_hash)
 
         if not os.path.exists(repo_folder):
             ctx.to_log("Creating new repository folder: {}".format(repo_folder))
