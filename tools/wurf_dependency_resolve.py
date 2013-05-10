@@ -53,12 +53,48 @@ class ResolveGitMajorVersion(object):
         """
         path = os.path.abspath(os.path.expanduser(path))
 
+        # First we get the remote url of the parent project
+        # to see which protocol prefix (https://, git@, git://)
+        # was used when the project was cloned
+        parent_url = 'git@'  # use git over SSH as default protocol
+        try:
+            parent_url = ctx.git_config('--get remote.origin.url', cwd = os.getcwd())
+        except Exception as e:
+            ctx.to_log('Exception when executing git config'
+                       ' - fallback to default protocol: {}'.format(parent_url))
+            ctx.to_log(e)
+
+        #ctx.to_log("Parent project remote_url : {}".format(parent_url))
+
+        repo_url = self.git_repository
+        # Repo url cannot contain a protocol handler
+        # this will be added automatically to match the protocol of the parent project
+        if repo_url.count('://') > 0 or repo_url.count('@') > 0:
+            ctx.fatal('Repository url contains protocol handler: {}'.format(repo_url))
+
+        # Parent project was cloned via https
+        if parent_url.startswith('https://'):
+            repo_url = 'https://' + repo_url
+        # Parent project was cloned via git over SSH
+        elif parent_url.startswith('git@'):
+            if repo_url.startswith('github.com/'):
+                repo_url = repo_url.replace('github.com/', 'github.com:', 1)
+            else:
+                ctx.fatal('Unknown SSH host: {}'.format(repo_url))
+            repo_url = 'git@' + repo_url
+        # Parent project was cloned via read-only git
+        elif parent_url.startswith('git://'):
+            repo_url = 'git://' + repo_url
+        else:
+            ctx.fatal('Unknown protocol: {}'.format(parent_url))
+
+
         # Replace all non-alphanumeric characters with _
         #repo_url = re.sub('[^0-9a-zA-Z]+', '_', self.git_repository)
 
         # Use the first 6 characters of the SHA1 hash of the repository url
         # to uniquely identify the repository
-        repo_hash = hashlib.sha1(self.git_repository.encode('utf-8')).hexdigest()[:6]
+        repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
 
         # The folder for storing different versions of this repository
         repo_folder = os.path.join(path, self.name + '-' + repo_hash)
@@ -90,7 +126,7 @@ class ResolveGitMajorVersion(object):
 
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(master_path):
-            ctx.git_clone(self.git_repository, master_path, cwd = repo_folder)
+            ctx.git_clone(repo_url, master_path, cwd = repo_folder)
 
         ctx.git_pull(cwd = master_path)
 
@@ -187,60 +223,60 @@ class ResolveGitMajorVersion(object):
 
 
 
-class ResolveGitFollowMaster(object):
-    """
-    Follow the master branch
-    """
-
-    def __init__(self, name, git_repository):
-        """
-        Creates a new resolver object
-        :param name: the name of this dependency resolver
-        :param git_repository: URL of the Git repository where the dependency
-                               can be found
-        """
-        self.name = name
-        self.git_repository = git_repository
-
-    def resolve(self, ctx, path, use_master):
-        """
-        Fetches the dependency if necessary.
-        :param ctx: A waf ConfigurationContext
-        :param path: The path where the dependency should be located
-        :param use_master: Is ignored for this resolver
-        """
-
-        path = os.path.abspath(os.path.expanduser(path))
-
-        # Do we have the master
-        master_path = os.path.join(path, self.name + '-master')
-
-        if not os.path.isdir(master_path):
-            ctx.git_clone(self.git_repository, master_path, cwd = path)
-
-        ctx.git_pull(cwd = master_path)
-
-        # If the project contains submodules we also get those
-        if ctx.git_has_submodules(master_path):
-            ctx.git_submodule_sync(cwd = master_path)
-            ctx.git_submodule_init(cwd = master_path)
-            ctx.git_submodule_update(cwd = master_path)
-
-        return master_path
-
-    def __eq__(self, other):
-        return self.git_repository.lower() == other.git_repository.lower()
-
-    def __ne__(self, other):
-        return not self == other
-
-    def __lt__(self, other):
-        return self.git_repository.lower() < other.git_repository.lower()
-
-    def __repr__(self):
-        f = 'ResolveGitFollowMaster(name=%s, git_repository=%s)'
-
-        return f % (self.name, self.git_repository)
+##class ResolveGitFollowMaster(object):
+##    """
+##    Follow the master branch
+##    """
+##
+##    def __init__(self, name, git_repository):
+##        """
+##        Creates a new resolver object
+##        :param name: the name of this dependency resolver
+##        :param git_repository: URL of the Git repository where the dependency
+##                               can be found
+##        """
+##        self.name = name
+##        self.git_repository = git_repository
+##
+##    def resolve(self, ctx, path, use_master):
+##        """
+##        Fetches the dependency if necessary.
+##        :param ctx: A waf ConfigurationContext
+##        :param path: The path where the dependency should be located
+##        :param use_master: Is ignored for this resolver
+##        """
+##
+##        path = os.path.abspath(os.path.expanduser(path))
+##
+##        # Do we have the master
+##        master_path = os.path.join(path, self.name + '-master')
+##
+##        if not os.path.isdir(master_path):
+##            ctx.git_clone(self.git_repository, master_path, cwd = path)
+##
+##        ctx.git_pull(cwd = master_path)
+##
+##        # If the project contains submodules we also get those
+##        if ctx.git_has_submodules(master_path):
+##            ctx.git_submodule_sync(cwd = master_path)
+##            ctx.git_submodule_init(cwd = master_path)
+##            ctx.git_submodule_update(cwd = master_path)
+##
+##        return master_path
+##
+##    def __eq__(self, other):
+##        return self.git_repository.lower() == other.git_repository.lower()
+##
+##    def __ne__(self, other):
+##        return not self == other
+##
+##    def __lt__(self, other):
+##        return self.git_repository.lower() < other.git_repository.lower()
+##
+##    def __repr__(self):
+##        f = 'ResolveGitFollowMaster(name=%s, git_repository=%s)'
+##
+##        return f % (self.name, self.git_repository)
 
 
 
