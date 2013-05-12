@@ -128,7 +128,14 @@ class ResolveGitMajorVersion(object):
         if not os.path.isdir(master_path):
             ctx.git_clone(repo_url, master_path, cwd = repo_folder)
 
-        ctx.git_pull(cwd = master_path)
+        # git pull will fail if the github repository is unavailable
+        # This is not a problem if we have already downloaded
+        # the required major version for this dependency
+        try:
+            ctx.git_pull(cwd = master_path)
+        except Exception as e:
+            ctx.to_log('Exception when executing git pull:')
+            ctx.to_log(e)
 
         # If the project contains submodules we also get those
         if ctx.git_has_submodules(master_path):
