@@ -126,6 +126,15 @@ def git_pull(ctx, **kw):
     """
     git_cmd_and_log(ctx, 'pull', **kw)
 
+@conf
+def git_config(ctx, args, **kw):
+    """
+    Runs 'git config args' and retuns the output
+    :param ctx: Waf Context
+    """
+    cmd = 'config ' + args
+    output = git_cmd_and_log(ctx, cmd.strip(), **kw)
+    return output.strip()
 
 @conf
 def git_branch(ctx, **kw):
@@ -201,14 +210,14 @@ def git_local_clone(ctx, source, destination, **kw):
     Clone a repository
     """
 
-    if Utils.is_win32:
-        ctx.to_log('git local clone: fallback to git clone on win32')
-        git_clone(ctx, source, destination)
+##    if Utils.is_win32:
+##        ctx.to_log('git local clone: fallback to git clone on win32')
+##        git_clone(ctx, source, destination)
+##    else:
 
-    else:
-        # We have to disable hard-links since the do not work on the
-        # AFS file system. We may later revisit this.
-        git_cmd_and_log(ctx, 'clone -l --no-hardlinks '+source+' '+destination, **kw)
+    # We have to disable hard-links since the do not work on the
+    # AFS file system. We may later revisit this.
+    git_cmd_and_log(ctx, 'clone -l --no-hardlinks '+source+' '+destination, **kw)
 
 
 
