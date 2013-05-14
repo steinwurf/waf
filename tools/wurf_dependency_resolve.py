@@ -11,6 +11,19 @@
 from . import semver
 
 import os
+#import re
+import hashlib
+import shutil
+
+from waflib.Logs import debug
+
+##def onerror(func, path, exc_info):
+##    # path contains the path of the file that couldn't be removed
+##    # let's just assume that it's read-only and unlink it.
+##    # Usage: shutil.rmtree(full_folder_path, onerror = onerror)
+##    import stat
+##    os.chmod( path, stat.S_IWRITE )
+##    os.unlink( path )
 
 class ResolveGitMajorVersion(object):
     """
@@ -40,13 +53,89 @@ class ResolveGitMajorVersion(object):
         """
         path = os.path.abspath(os.path.expanduser(path))
 
-        # Do we have the master
-        master_path = os.path.join(path, self.name + '-master')
+        # First we get the remote url of the parent project
+        # to see which protocol prefix (https://, git@, git://)
+        # was used when the project was cloned
+        parent_url = 'git@'  # use git over SSH as default protocol
+        try:
+            parent_url = ctx.git_config('--get remote.origin.url', cwd = os.getcwd())
+        except Exception as e:
+            ctx.to_log('Exception when executing git config'
+                       ' - fallback to default protocol: {}'.format(parent_url))
+            ctx.to_log(e)
 
+        #ctx.to_log("Parent project remote_url : {}".format(parent_url))
+
+        repo_url = self.git_repository
+        # Repo url cannot contain a protocol handler
+        # this will be added automatically to match the protocol of the parent project
+        if repo_url.count('://') > 0 or repo_url.count('@') > 0:
+            ctx.fatal('Repository url contains protocol handler: {}'.format(repo_url))
+
+        # Parent project was cloned via https
+        if parent_url.startswith('https://'):
+            repo_url = 'https://' + repo_url
+        # Parent project was cloned via git over SSH
+        elif parent_url.startswith('git@'):
+            if repo_url.startswith('github.com/'):
+                repo_url = repo_url.replace('github.com/', 'github.com:', 1)
+            else:
+                ctx.fatal('Unknown SSH host: {}'.format(repo_url))
+            repo_url = 'git@' + repo_url
+        # Parent project was cloned via read-only git
+        elif parent_url.startswith('git://'):
+            repo_url = 'git://' + repo_url
+        else:
+            ctx.fatal('Unknown protocol: {}'.format(parent_url))
+
+
+        # Replace all non-alphanumeric characters with _
+        #repo_url = re.sub('[^0-9a-zA-Z]+', '_', self.git_repository)
+
+        # Use the first 6 characters of the SHA1 hash of the repository url
+        # to uniquely identify the repository
+        repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
+
+        # The folder for storing different versions of this repository
+        repo_folder = os.path.join(path, self.name + '-' + repo_hash)
+
+        if not os.path.exists(repo_folder):
+            ctx.to_log("Creating new repository folder: {}".format(repo_folder))
+            os.makedirs(repo_folder)
+
+        # Do we have the master folder?
+        master_path = os.path.join(repo_folder, 'master')
+
+##        # If yes, we need to verify the remote url in the master folder
+##        if os.path.isdir(master_path):
+##            remote_url = ctx.git_config_get_remote_url(cwd = master_path)
+##            # If it does not match the repository url
+##            if remote_url != self.git_repository:
+##                ctx.to_log("Remote_url mismatch, expected url: {}".format(self.git_repository))
+##                # Delete all folders for this dependency
+##                folders = [ master_path ]
+##                tags = ctx.git_tags(cwd = master_path)
+##                for tag in tags:
+##                    tag_path = os.path.join(path, self.name + '-' + tag)
+##                    if os.path.isdir(tag_path):
+##                        folders.append(tag_path)
+##                for folder in folders:
+##                    ctx.to_log("Deleting folder: {}".format(folder))
+##                    shutil.rmtree(folder, onerror = onerror)
+
+
+        # If the master folder does not exist, do a git clone first
         if not os.path.isdir(master_path):
-            ctx.git_clone(self.git_repository, master_path, cwd = path)
+            ctx.git_clone(repo_url, master_path, cwd = repo_folder)
 
-        ctx.git_pull(cwd = master_path)
+        # git pull will fail if the github repository is unavailable
+        # This is not a problem if we have already downloaded
+        # the required major version for this dependency
+        try:
+            ctx.git_pull(cwd = master_path)
+        except Exception as e:
+            ctx.to_log('Exception when executing git pull:')
+            ctx.to_log(e)
 
         # If the project contains submodules we also get those
         if ctx.git_has_submodules(master_path):
@@ -60,31 +149,32 @@ class ResolveGitMajorVersion(object):
         tags = ctx.git_tags(cwd = master_path)
 
         if len(tags) == 0:
-            ctx.fatal('No version tags specified for %s '
-                      'impossible to track major version' % self.name)
+            ctx.fatal('No version tags specified for %r '
+                      '- impossible to track major version' % self.name)
 
         tag = self.select_tag(tags)
 
         if not tag:
             ctx.fatal('No compatible tags found %r '
-                      'to track major version %d for %s' %
+                      'to track major version %d of %s' %
                       (tags, self.major_version, self.name))
 
         # Do we have the newest tag checked out
-        tag_path = os.path.join(path, self.name + '-' + tag)
+        tag_path = os.path.join(repo_folder, tag)
 
         if not os.path.isdir(tag_path):
-            ctx.git_local_clone(master_path, tag_path, cwd = path)
+            ctx.git_local_clone(master_path, tag_path, cwd = repo_folder)
             ctx.git_checkout(tag, cwd = tag_path)
 
             # If the project contains submodules we also get those
             if ctx.git_has_submodules(tag_path):
-                ctx.git_submodule_sync(cwd = master_path)
+                ctx.git_submodule_sync(cwd = tag_path)
                 ctx.git_submodule_init(cwd = tag_path)
                 ctx.git_submodule_update(cwd = tag_path)
 
 
         return tag_path
+
 
     def select_tag(self, tags):
         """
@@ -140,60 +230,60 @@ class ResolveGitMajorVersion(object):
 
 
 
-class ResolveGitFollowMaster(object):
-    """
-    Follow the master branch
-    """
-
-    def __init__(self, name, git_repository):
-        """
-        Creates a new resolver object
-        :param name: the name of this dependency resolver
-        :param git_repository: URL of the Git repository where the dependency
-                               can be found
-        """
-        self.name = name
-        self.git_repository = git_repository
-
-    def resolve(self, ctx, path, use_master):
-        """
-        Fetches the dependency if necessary.
-        :param ctx: A waf ConfigurationContext
-        :param path: The path where the dependency should be located
-        :param use_master: Is ignored for this resolver
-        """
-
-        path = os.path.abspath(os.path.expanduser(path))
-
-        # Do we have the master
-        master_path = os.path.join(path, self.name + '-master')
-
-        if not os.path.isdir(master_path):
-            ctx.git_clone(self.git_repository, master_path, cwd = path)
-
-        ctx.git_pull(cwd = master_path)
-
-        # If the project contains submodules we also get those
-        if ctx.git_has_submodules(master_path):
-            ctx.git_submodule_sync(cwd = master_path)
-            ctx.git_submodule_init(cwd = master_path)
-            ctx.git_submodule_update(cwd = master_path)
-
-        return master_path
-
-    def __eq__(self, other):
-        return self.git_repository.lower() == other.git_repository.lower()
-
-    def __ne__(self, other):
-        return not self == other
-
-    def __lt__(self, other):
-        return self.git_repository.lower() < other.git_repository.lower()
-
-    def __repr__(self):
-        f = 'ResolveGitFollowMaster(name=%s, git_repository=%s)'
-
-        return f % (self.name, self.git_repository)
+##class ResolveGitFollowMaster(object):
+##    """
+##    Follow the master branch
+##    """
+##
+##    def __init__(self, name, git_repository):
+##        """
+##        Creates a new resolver object
+##        :param name: the name of this dependency resolver
+##        :param git_repository: URL of the Git repository where the dependency
+##                               can be found
+##        """
+##        self.name = name
+##        self.git_repository = git_repository
+##
+##    def resolve(self, ctx, path, use_master):
+##        """
+##        Fetches the dependency if necessary.
+##        :param ctx: A waf ConfigurationContext
+##        :param path: The path where the dependency should be located
+##        :param use_master: Is ignored for this resolver
+##        """
+##
+##        path = os.path.abspath(os.path.expanduser(path))
+##
+##        # Do we have the master
+##        master_path = os.path.join(path, self.name + '-master')
+##
+##        if not os.path.isdir(master_path):
+##            ctx.git_clone(self.git_repository, master_path, cwd = path)
+##
+##        ctx.git_pull(cwd = master_path)
+##
+##        # If the project contains submodules we also get those
+##        if ctx.git_has_submodules(master_path):
+##            ctx.git_submodule_sync(cwd = master_path)
+##            ctx.git_submodule_init(cwd = master_path)
+##            ctx.git_submodule_update(cwd = master_path)
+##
+##        return master_path
+##
+##    def __eq__(self, other):
+##        return self.git_repository.lower() == other.git_repository.lower()
+##
+##    def __ne__(self, other):
+##        return not self == other
+##
+##    def __lt__(self, other):
+##        return self.git_repository.lower() < other.git_repository.lower()
+##
+##    def __repr__(self):
+##        f = 'ResolveGitFollowMaster(name=%s, git_repository=%s)'
+##
+##        return f % (self.name, self.git_repository)
 
 
 
