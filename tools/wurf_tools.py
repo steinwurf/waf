@@ -1,11 +1,21 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import os
+import os, sys
 from waflib.Configure import conf
 from waflib import Options
 
+def _check_minimum_python_version(opt, major, minor):
+    if sys.version_info[:2] < (major, minor):
+        opt.fatal("Python version not supported: {0}, "
+                   "required minimum version: {1}.{2}"
+                   .format(sys.version_info[:3], major, minor))
+
 def options(opt):
+    # wurf_tools is loaded first in every project,
+    # therefore it is a good entry point to check the minimum Python version
+    _check_minimum_python_version(opt, 2, 6)
+
     tool_opts = opt.add_option_group('external tools')
 
     tool_opts.add_option(
@@ -28,6 +38,7 @@ def parse_options(options_string):
                     result[option] = True
     return result
 
+
 def _read_tool_options(conf):
     conf.env["tool_options"] = parse_options(Options.options.tool_options)
 
@@ -35,10 +46,11 @@ def _read_tool_options(conf):
 def configure(conf):
     _read_tool_options(conf)
 
+
 def check_for_duplicate(conf):
 
     tool_options = Options.options.tool_options
-    
+
     options = parse_options(tool_options)
     for option in options:
         if (option in conf.env['tool_options'] and
