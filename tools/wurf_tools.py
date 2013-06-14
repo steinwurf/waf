@@ -14,7 +14,7 @@ def _check_minimum_python_version(opt, major, minor):
 def options(opt):
     # wurf_tools is loaded first in every project,
     # therefore it is a good entry point to check the minimum Python version
-    _check_minimum_python_version(opt, 2, 6)
+    _check_minimum_python_version(opt, 2, 7)
 
     tool_opts = opt.add_option_group('external tools')
 
