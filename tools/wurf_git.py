@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import os
+import os, re
 
 from waflib.Configure import conf
 from waflib import Context
@@ -81,6 +81,14 @@ def configure(conf):
     else:
         conf.find_program('git')
 
+    check_minimum_git_version(conf, (1,7,9))
+
+def check_minimum_git_version(conf, minimum):
+    version = conf.git_version()
+    if version[:3] < minimum:
+        conf.fatal("Git version not supported: {0}, "
+                   "required minimum version: {1}"
+                   .format(version, minimum))
 
 @conf
 def git_cmd_and_log(ctx, cmd, **kw):
@@ -99,6 +107,17 @@ def git_cmd_and_log(ctx, cmd, **kw):
 
     return ctx.cmd_and_log(cmd, **kw)
 
+@conf
+def git_version(ctx, **kw):
+    """
+    Runs 'git tag -l' and retuns the version information as a tuple
+    :param ctx: Waf Context
+    """
+    output = git_cmd_and_log(ctx, 'version', **kw).strip()
+    # The output looks like "git version 1.8.1.msysgit.1"
+    # we just extract the integers
+    int_list = [int(s) for s in re.findall('\\d+', output)]
+    return tuple(int_list)
 
 @conf
 def git_tags(ctx, **kw):

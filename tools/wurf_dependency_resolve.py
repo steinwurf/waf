@@ -17,13 +17,6 @@ import shutil
 
 from waflib.Logs import debug
 
-##def onerror(func, path, exc_info):
-##    # path contains the path of the file that couldn't be removed
-##    # let's just assume that it's read-only and unlink it.
-##    # Usage: shutil.rmtree(full_folder_path, onerror = onerror)
-##    import stat
-##    os.chmod( path, stat.S_IWRITE )
-##    os.unlink( path )
 
 class ResolveGitMajorVersion(object):
     """
@@ -31,7 +24,7 @@ class ResolveGitMajorVersion(object):
     major version number i.e. supports tags like 2.0.1
     """
 
-    def __init__(self, name, git_repository, major_version):
+    def __init__(self, name, git_repository, major_version, BRANCH = None):
         """
         Creates a new resolver object
         :param name: the name of this dependency resolver
@@ -39,10 +32,12 @@ class ResolveGitMajorVersion(object):
                                can be found
         :param major_version: The major version number to track (ensures binary
                               compatability)
+        :param BRANCH: the name of a specific git branch for this dependency
         """
         self.name = name
         self.git_repository = git_repository
         self.major_version = major_version
+        self.BRANCH = BRANCH
 
     def resolve(self, ctx, path, use_master):
         """
@@ -106,24 +101,6 @@ class ResolveGitMajorVersion(object):
         # Do we have the master folder?
         master_path = os.path.join(repo_folder, 'master')
 
-##        # If yes, we need to verify the remote url in the master folder
-##        if os.path.isdir(master_path):
-##            remote_url = ctx.git_config_get_remote_url(cwd = master_path)
-##            # If it does not match the repository url
-##            if remote_url != self.git_repository:
-##                ctx.to_log("Remote_url mismatch, expected url: {}".format(self.git_repository))
-##                # Delete all folders for this dependency
-##                folders = [ master_path ]
-##                tags = ctx.git_tags(cwd = master_path)
-##                for tag in tags:
-##                    tag_path = os.path.join(path, self.name + '-' + tag)
-##                    if os.path.isdir(tag_path):
-##                        folders.append(tag_path)
-##                for folder in folders:
-##                    ctx.to_log("Deleting folder: {}".format(folder))
-##                    shutil.rmtree(folder, onerror = onerror)
-
-
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(master_path):
             ctx.git_clone(repo_url, master_path, cwd = repo_folder)
@@ -143,8 +120,40 @@ class ResolveGitMajorVersion(object):
             ctx.git_submodule_init(cwd = master_path)
             ctx.git_submodule_update(cwd = master_path)
 
-        if use_master:
-            return master_path
+        # Do we need a specific branch? (master or development branch)
+        branch = self.BRANCH
+        if use_master: branch = 'master'
+
+        if branch != None:
+            branch_path = os.path.join(repo_folder, branch)
+            # The master is already up-to-date, but the other branches
+            # should be cloned to separate directories
+            if branch != 'master':
+                # If the branch folder does not exist,
+                # then clone from the git repository
+                if not os.path.isdir(branch_path):
+                    ctx.git_clone(repo_url, branch_path, cwd = repo_folder)
+                    ctx.git_checkout(branch, cwd = branch_path)
+                else:
+                    # If the branch folder exists, we need to update it
+                    ctx.git_pull(cwd = branch_path)
+
+                # If the project contains submodules we also get those
+                if ctx.git_has_submodules(branch_path):
+                    ctx.git_submodule_sync(cwd = branch_path)
+                    ctx.git_submodule_init(cwd = branch_path)
+                    ctx.git_submodule_update(cwd = branch_path)
+
+            # The major version of the latest tag should not be larger
+            # than the specified major version
+            tags = ctx.git_tags(cwd = branch_path)
+            latest_tag = tags[-1]
+            if semver.parse(latest_tag)['major'] != self.major_version:
+                ctx.fatal('The latest tag %r in branch %r does not match '
+                          'the required major version %d of %s' %
+                          (latest_tag, branch, self.major_version, self.name))
+
+            return branch_path
 
         tags = ctx.git_tags(cwd = master_path)
 
