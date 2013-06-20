@@ -4,17 +4,16 @@
 """
 Waf tool used to track dependencies. Using git tags to track whether a
 compatible newer version of a specific library is available. The git
-tags must be named after the Semantic Versioning scheme defined here
+tags must be named after the Semantic Versioning scheme defined here:
 www.semver.org
 
 The wscript will look like this:
 
 def options(opt):
-    opt.load('bundle_dependencies')
+    opt.load('wurf_dependency_bundle')
 
 def configure(conf):
-    conf.load('bundle_dependencies')
-
+    conf.load('wurf_dependency_bundle')
 
 """
 
@@ -36,7 +35,7 @@ import sys
 import os
 import shutil
 
-OPTIONS_NAME = 'Dependency options'
+OPTIONS_NAME = 'dependency options'
 """ Name of the options group """
 
 DEFAULT_BUNDLE_PATH = 'bundle_dependencies'
@@ -48,6 +47,7 @@ DEPENDENCY_PATH_KEY = '%s_DEPENDENCY_PATH'
 dependencies = dict()
 """ Dictionary storing the dependency information """
 
+git_protocols = ['git@', 'git://', 'https://']
 
 def add_dependency(opt, resolver):
     """
@@ -90,6 +90,11 @@ def options(opt):
     options context. Options are shown when ./waf -h is invoked
     :param opt: the Waf OptionsContext
     """
+    #Add git protocol options
+    git_opts = opt.add_option_group('git options')
+    git_opts.add_option('--git-protocol', default='git@', dest='git_protocol',
+        help="Use a specific git protocol to download dependencies. "
+             "Supported protocols: {}".format(git_protocols))
 
     bundle_opts = opt.add_option_group(OPTIONS_NAME)
 
@@ -122,6 +127,7 @@ def configure(conf):
     """
 
     conf.load('wurf_git')
+    conf.load('wurf_dependency_resolve')
 
     # Get the path where the bundled dependencies should be
     # placed

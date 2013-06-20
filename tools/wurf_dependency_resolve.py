@@ -9,6 +9,7 @@
 # happens with the waf packaging where all tools end up
 # in the extras folder
 from . import semver
+from . import wurf_dependency_bundle
 
 import os
 #import re
@@ -16,19 +17,6 @@ import hashlib
 import shutil
 
 from waflib.Logs import debug
-
-
-git_protocols = ['git@', 'git://', 'https://']
-
-
-def options(opt):
-    """
-    Add the git protocol options
-    :param opt: the Waf OptionsContext
-    """
-    opt.add_option('--git-protocol', default='git@', dest='git_protocol',
-        help="Force the git protocol to use a specific protocol. "
-              "Supported: {}".format(git_protocols))
 
 
 class ResolveGitMajorVersion(object):
@@ -65,11 +53,12 @@ class ResolveGitMajorVersion(object):
         # to see which protocol prefix (https://, git@, git://)
         # was used when the project was cloned
 
+        # Set default protocol via the --git-protocol option
         parent_url = ctx.options.git_protocol
 
-        if parent_url not in git_protocols:
-            ctx.fatal('Unknown git protocol specified {}, supported protocols '
-                      ' are {}'.format(parent_url, git_protocols))
+##        if parent_url not in git_protocols:
+##            ctx.fatal('Unknown git protocol specified {}, supported protocols '
+##                      ' are {}'.format(parent_url, git_protocols))
 
         try:
             parent_url = ctx.git_config('--get remote.origin.url', cwd = os.getcwd())
@@ -100,7 +89,7 @@ class ResolveGitMajorVersion(object):
         elif parent_url.startswith('git://'):
             repo_url = 'git://' + repo_url
         else:
-            ctx.fatal('Unknown protocol: {}'.format(parent_url))
+            ctx.fatal('Unknown git protocol: {}'.format(parent_url))
 
 
         # Replace all non-alphanumeric characters with _

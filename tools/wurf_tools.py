@@ -16,13 +16,13 @@ def options(opt):
     # therefore it is a good entry point to check the minimum Python version
     _check_minimum_python_version(opt, 2, 7)
 
-    tool_opts = opt.add_option_group('external tools')
+    tool_opts = opt.add_option_group('external tool options')
 
     tool_opts.add_option(
         '--options', default = None, action="append",
         dest='tool_options',
         help="Some external Waf tools requires additional options, you can "
-             "this option multiple times. See more information about the "
+             "use this option multiple times. See more information about the "
              "external tool options here: http:/sdkfjdsl")
 
 
