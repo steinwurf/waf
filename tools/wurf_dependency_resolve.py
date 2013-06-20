@@ -18,6 +18,19 @@ import shutil
 from waflib.Logs import debug
 
 
+git_protocols = ['git@', 'git://', 'https://']
+
+
+def options(opt):
+    """
+    Add the git protocol options
+    :param opt: the Waf OptionsContext
+    """
+    opt.add_option('--git-protocol', default='git@', dest='git_protocol',
+        help="Force the git protocol to use a specific protocol. "
+              "Supported: {}".format(git_protocols))
+
+
 class ResolveGitMajorVersion(object):
     """
     Uses the tagged version numbering to follow a specific
@@ -51,7 +64,13 @@ class ResolveGitMajorVersion(object):
         # First we get the remote url of the parent project
         # to see which protocol prefix (https://, git@, git://)
         # was used when the project was cloned
-        parent_url = 'git@'  # use git over SSH as default protocol
+
+        parent_url = ctx.options.git_protocol
+
+        if parent_url not in git_protocols:
+            ctx.fatal('Unknown git protocol specified {}, supported protocols '
+                      ' are {}'.format(parent_url, git_protocols))
+
         try:
             parent_url = ctx.git_config('--get remote.origin.url', cwd = os.getcwd())
         except Exception as e:
