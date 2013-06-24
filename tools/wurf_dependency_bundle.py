@@ -47,8 +47,6 @@ DEPENDENCY_PATH_KEY = '%s_DEPENDENCY_PATH'
 dependencies = dict()
 """ Dictionary storing the dependency information """
 
-git_protocols = ['git@', 'git://', 'https://']
-
 def add_dependency(opt, resolver):
     """
     Adds a dependency.
@@ -90,11 +88,7 @@ def options(opt):
     options context. Options are shown when ./waf -h is invoked
     :param opt: the Waf OptionsContext
     """
-    #Add git protocol options
-    git_opts = opt.add_option_group('git options')
-    git_opts.add_option('--git-protocol', default='git@', dest='git_protocol',
-        help="Use a specific git protocol to download dependencies. "
-             "Supported protocols: {}".format(git_protocols))
+    opt.load('wurf_dependency_resolve')
 
     bundle_opts = opt.add_option_group(OPTIONS_NAME)
 
@@ -125,8 +119,6 @@ def configure(conf):
     The configure function for the bundle dependency tool
     :param conf: the configuration context
     """
-
-    conf.load('wurf_git')
     conf.load('wurf_dependency_resolve')
 
     # Get the path where the bundled dependencies should be

@@ -18,6 +18,63 @@ import shutil
 
 from waflib.Logs import debug
 
+git_protocols = ['git@', 'git://', 'https://']
+git_protocol_handler = ''
+
+def options(opt):
+    """
+    Add option to specify git protocol
+    Options are shown when ./waf -h is invoked
+    :param opt: the Waf OptionsContext
+    """
+    git_opts = opt.add_option_group('git options')
+    git_opts.add_option('--git-protocol', default='git@', dest='git_protocol',
+        help="Use a specific git protocol to download dependencies. "
+             "Supported protocols: {}".format(git_protocols))
+
+
+def configure(conf):
+    """
+    The configure function for the dependency resolver tool
+    :param conf: the configuration context
+    """
+    # We need to load git to resolve the dependencies
+    conf.load('wurf_git')
+
+    # Get the remote url of the parent project
+    # to see which protocol prefix (https://, git@, git://)
+    # was used when the project was cloned
+    parent_url = None
+    try:
+        parent_url = conf.git_config('--get remote.origin.url', cwd = os.getcwd())
+    except Exception as e:
+        conf.to_log('Exception when executing git config'
+                   ' - fallback to default protocol: {}'.format(parent_url))
+        conf.to_log(e)
+
+    #conf.to_log("Parent project remote_url : {}".format(parent_url))
+
+    global git_protocol_handler
+    if parent_url:
+        # Parent project was cloned via https
+        if parent_url.startswith('https://'):
+            git_protocol_handler = 'https://'
+        # Parent project was cloned via git over SSH
+        elif parent_url.startswith('git@'):
+            git_protocol_handler = 'git@'
+        # Parent project was cloned via read-only git
+        elif parent_url.startswith('git://'):
+            git_protocol_handler = 'git://'
+        else:
+            conf.fatal('Unknown git protocol: {}'.format(parent_url))
+    else:
+        # Set the protocol handler via the --git-protocol option
+        git_protocol_handler = conf.options.git_protocol
+
+    if git_protocol_handler not in git_protocols:
+        conf.fatal('Unknown git protocol specified: {}, supported protocols '
+                  ' are {}'.format(git_protocol_handler, git_protocols))
+
 
 class ResolveGitMajorVersion(object):
     """
@@ -40,6 +97,30 @@ class ResolveGitMajorVersion(object):
         self.major_version = major_version
         self.BRANCH = BRANCH
 
+    def repository_url(self, ctx):
+        """
+        Finds the url for the git repository of the dependency.
+        :param ctx: A waf ConfigurationContext
+        """
+        repo_url = self.git_repository
+        # Repo url cannot contain a protocol handler
+        # that is added automatically to match the protocol of the parent project
+        if repo_url.count('://') > 0 or repo_url.count('@') > 0:
+            ctx.fatal('Repository url contains git protocol handler: {}'.format(repo_url))
+
+        if git_protocol_handler not in git_protocols:
+            ctx.fatal('Unknown git protocol specified: {}, supported protocols '
+                      ' are {}'.format(git_protocol_handler, git_protocols))
+
+        if git_protocol_handler == 'git@':
+            if repo_url.startswith('github.com/'):
+                # Need to modify the url to support git over SSH
+                repo_url = repo_url.replace('github.com/', 'github.com:', 1)
+            else:
+                ctx.fatal('Unknown SSH host: {}'.format(repo_url))
+
+        return git_protocol_handler + repo_url
+
     def resolve(self, ctx, path, use_master):
         """
         Fetches the dependency if necessary.
@@ -49,48 +130,7 @@ class ResolveGitMajorVersion(object):
         """
         path = os.path.abspath(os.path.expanduser(path))
 
-        # First we get the remote url of the parent project
-        # to see which protocol prefix (https://, git@, git://)
-        # was used when the project was cloned
-
-        # Set default protocol via the --git-protocol option
-        parent_url = ctx.options.git_protocol
-
-##        if parent_url not in git_protocols:
-##            ctx.fatal('Unknown git protocol specified {}, supported protocols '
-##                      ' are {}'.format(parent_url, git_protocols))
-
-        try:
-            parent_url = ctx.git_config('--get remote.origin.url', cwd = os.getcwd())
-        except Exception as e:
-            ctx.to_log('Exception when executing git config'
-                       ' - fallback to default protocol: {}'.format(parent_url))
-            ctx.to_log(e)
-
-        #ctx.to_log("Parent project remote_url : {}".format(parent_url))
-
-        repo_url = self.git_repository
-        # Repo url cannot contain a protocol handler
-        # this will be added automatically to match the protocol of the parent project
-        if repo_url.count('://') > 0 or repo_url.count('@') > 0:
-            ctx.fatal('Repository url contains protocol handler: {}'.format(repo_url))
-
-        # Parent project was cloned via https
-        if parent_url.startswith('https://'):
-            repo_url = 'https://' + repo_url
-        # Parent project was cloned via git over SSH
-        elif parent_url.startswith('git@'):
-            if repo_url.startswith('github.com/'):
-                repo_url = repo_url.replace('github.com/', 'github.com:', 1)
-            else:
-                ctx.fatal('Unknown SSH host: {}'.format(repo_url))
-            repo_url = 'git@' + repo_url
-        # Parent project was cloned via read-only git
-        elif parent_url.startswith('git://'):
-            repo_url = 'git://' + repo_url
-        else:
-            ctx.fatal('Unknown git protocol: {}'.format(parent_url))
-
+        repo_url = self.repository_url(ctx)
 
         # Replace all non-alphanumeric characters with _
         #repo_url = re.sub('[^0-9a-zA-Z]+', '_', self.git_repository)

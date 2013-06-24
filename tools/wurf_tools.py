@@ -88,7 +88,7 @@ load_error = """
 Could not find the external waf-tools. Common reasons
 for this are:
    1) The external tools repository was not added as
-      an dependency. This is done using the wurf_dependency_bundle
+      a dependency. This is done using the wurf_dependency_bundle
       tool.
    2) The external tools dependency was not added under the 'waf-tools'
       name.
