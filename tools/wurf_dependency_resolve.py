@@ -195,11 +195,14 @@ class ResolveGitMajorVersion(object):
             # The major version of the latest tag should not be larger
             # than the specified major version
             tags = ctx.git_tags(cwd = branch_path)
-            latest_tag = tags[-1]
-            if semver.parse(latest_tag)['major'] != self.major_version:
-                ctx.fatal('The latest tag %r in branch %r does not match '
-                          'the required major version %d of %s' %
-                          (latest_tag, branch, self.major_version, self.name))
+            for tag in tags:
+                try:
+                    if semver.parse(tag)['major'] > self.major_version:
+                        ctx.fatal('Tag %r in branch %r is newer than '
+                                  'the required major version %r' %
+                                  (tag, branch, self.major_version))
+                except ValueError: # ignore tags we cannot parse
+                    pass
 
             return branch_path
 
