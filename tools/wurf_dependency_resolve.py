@@ -204,7 +204,18 @@ class ResolveGitMajorVersion(object):
 
             return branch_path
 
-        tags = ctx.git_tags(cwd = master_path)
+        tags = []
+        # git tags will fail for standalone dependencies
+        # This is not a problem if the folder is already present
+        # for the required major version of this dependency
+        try:
+            tags = ctx.git_tags(cwd = master_path)
+        except Exception as e:
+            ctx.to_log('Exception when executing git tags:')
+            ctx.to_log(e)
+            # As a fallback, use the existing folder names as tags
+            tags = [d for d in os.listdir(repo_folder)
+                    if os.path.isdir(os.path.join(repo_folder, d))]
 
         if len(tags) == 0:
             ctx.fatal('No version tags specified for %r '
