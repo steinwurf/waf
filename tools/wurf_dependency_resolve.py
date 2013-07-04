@@ -82,7 +82,7 @@ class ResolveGitMajorVersion(object):
     major version number i.e. supports tags like 2.0.1
     """
 
-    def __init__(self, name, git_repository, major_version, BRANCH = None):
+    def __init__(self, name, git_repository, major_version):
         """
         Creates a new resolver object
         :param name: the name of this dependency resolver
@@ -90,12 +90,10 @@ class ResolveGitMajorVersion(object):
                                can be found
         :param major_version: The major version number to track (ensures binary
                               compatability)
-        :param BRANCH: the name of a specific git branch for this dependency
         """
         self.name = name
         self.git_repository = git_repository
         self.major_version = major_version
-        self.BRANCH = BRANCH
 
     def repository_url(self, ctx):
         """
@@ -169,28 +167,28 @@ class ResolveGitMajorVersion(object):
             ctx.git_submodule_update(cwd = master_path)
 
         # Do we need a specific branch? (master or development branch)
-        branch = self.BRANCH
+        branch = None
         if use_master: branch = 'master'
 
         if branch != None:
             branch_path = os.path.join(repo_folder, branch)
             # The master is already up-to-date, but the other branches
             # should be cloned to separate directories
-            if branch != 'master':
-                # If the branch folder does not exist,
-                # then clone from the git repository
-                if not os.path.isdir(branch_path):
-                    ctx.git_clone(repo_url, branch_path, cwd = repo_folder)
-                    ctx.git_checkout(branch, cwd = branch_path)
-                else:
-                    # If the branch folder exists, we need to update it
-                    ctx.git_pull(cwd = branch_path)
-
-                # If the project contains submodules we also get those
-                if ctx.git_has_submodules(branch_path):
-                    ctx.git_submodule_sync(cwd = branch_path)
-                    ctx.git_submodule_init(cwd = branch_path)
-                    ctx.git_submodule_update(cwd = branch_path)
+##            if branch != 'master':
+##                # If the branch folder does not exist,
+##                # then clone from the git repository
+##                if not os.path.isdir(branch_path):
+##                    ctx.git_clone(repo_url, branch_path, cwd = repo_folder)
+##                    ctx.git_checkout(branch, cwd = branch_path)
+##                else:
+##                    # If the branch folder exists, we need to update it
+##                    ctx.git_pull(cwd = branch_path)
+##
+##                # If the project contains submodules we also get those
+##                if ctx.git_has_submodules(branch_path):
+##                    ctx.git_submodule_sync(cwd = branch_path)
+##                    ctx.git_submodule_init(cwd = branch_path)
+##                    ctx.git_submodule_update(cwd = branch_path)
 
             # The major version of the latest tag should not be larger
             # than the specified major version
@@ -232,7 +230,6 @@ class ResolveGitMajorVersion(object):
                 ctx.git_submodule_init(cwd = tag_path)
                 ctx.git_submodule_update(cwd = tag_path)
 
-
         return tag_path
 
 
@@ -248,12 +245,9 @@ class ResolveGitMajorVersion(object):
         valid_tags = []
 
         for t in tags:
-
             try:
-
                 if semver.parse(t)['major'] == self.major_version:
                     valid_tags.append(t)
-
             except ValueError: # ignore tags we cannot parse
                 pass
 
