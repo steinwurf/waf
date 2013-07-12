@@ -81,7 +81,7 @@ def configure(conf):
     else:
         conf.find_program('git')
 
-    check_minimum_git_version(conf, (1,7,9))
+    check_minimum_git_version(conf, (1,7,8))
 
 def check_minimum_git_version(conf, minimum):
     version = conf.git_version()
