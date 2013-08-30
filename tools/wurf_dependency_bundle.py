@@ -44,6 +44,9 @@ DEFAULT_BUNDLE_PATH = 'bundle_dependencies'
 DEPENDENCY_PATH_KEY = '%s_DEPENDENCY_PATH'
 """ Destination of the dependency paths in the options """
 
+DEPENDENCY_CHECKOUT_KEY = '%s_DEPENDENCY_CHECKOUT'
+""" Destination of the dependency checkouts in the options """
+
 dependencies = dict()
 """ Dictionary storing the dependency information """
 
@@ -57,21 +60,18 @@ def add_dependency(opt, resolver):
 
     if name in dependencies:
 
-        if type(resolver) != type(dependencies[name]):
+        if type(resolver) != type(dependencies[name]) or \
+           dependencies[name] != resolver:
             raise Errors.WafError('Incompatible dependency added %r <=> %r '
-                                  % (resolver, dependencies[name]))
-
-        if dependencies[name] != resolver:
-            raise Errors.WafError('Incompatible dependency added %r <=> %r '
-                                  % (resolver, dependencies[name]))
+                                  % (resolver, dependencies[name])) 
     else:
         dependencies[name] = resolver
 
-        bundle_opts = opt.add_option_group(OPTIONS_NAME)
-        bundle_opts.add_option('--%s-path' % name,
-                               dest = DEPENDENCY_PATH_KEY % name,
-                               default=False,
-                               help='path to %s' % name)
+        #bundle_opts = opt.add_option_group(OPTIONS_NAME)
+        #bundle_opts.add_option('--%s-path' % name,
+        #                       dest = DEPENDENCY_PATH_KEY % name,
+        #                       default=False,
+        #                       help='path to %s' % name)
 
 def expand_path(path):
     """
@@ -100,19 +100,16 @@ def options(opt):
     add('--bundle-path', default=DEFAULT_BUNDLE_PATH, dest='bundle_path',
         help="The folder used for downloaded dependencies")
 
-    add('--bundle-use-master', default=False, dest='bundle_master',
-        help="Use the master version of the these bundled dependencies")
+    for dependency in dependencies:
+        add('--%s-path' % dependency,
+            dest=DEPENDENCY_PATH_KEY % dependency,
+            default=False,
+            help='path to %s' % dependency)
 
-
-    # add('--bundle-options', dest='bundle_options', default=False,
-    #     action='store_true', help='List dependencies which may be bundled')
-
-    # add('--bundle-show', dest='bundle_show', default=False,
-    #     action='store_true', help='Show the dependency bundle options')
-
-    for d in dependencies:
-        add('--%s-path' % d, dest = DEPENDENCY_PATH_KEY % d, default=False,
-            help='path to %s' % d)
+        add('--%s-use-checkout' % dependency,
+            dest=DEPENDENCY_CHECKOUT_KEY % dependency,
+            default=False,
+            help='The checkout to use for %s' % dependency)
 
 def configure(conf):
     """
@@ -127,9 +124,6 @@ def configure(conf):
 
     # List all the dependencies to be bundled
     bundle_list = expand_bundle(conf, conf.options.bundle)
-
-    # List all dependencies for which we should use the master
-    bundle_master = expand_bundle(conf, conf.options.bundle_master)
 
     # List all the dependencies with an explicit path
     explicit_list = explicit_dependencies(conf.options)
@@ -151,20 +145,19 @@ def configure(conf):
 
         conf.start_msg('Resolve dependency %s' % name)
 
-        # Should we use the master
-        use_master = name in bundle_master
+        key = DEPENDENCY_CHECKOUT_KEY % name
+        dependency_checkout = getattr(conf.options, key, None)
 
         dependency_path = dependencies[name].resolve(
             ctx = conf,
             path = bundle_path,
-            use_master = use_master)
+            use_checkout = dependency_checkout)
 
         conf.end_msg(dependency_path)
 
         conf.env['BUNDLE_DEPENDENCIES'][name] = dependency_path
 
     for name in explicit_list:
-
         key = DEPENDENCY_PATH_KEY % name
         dependency_path = getattr(conf.options, key)
         dependency_path = expand_path(dependency_path)
