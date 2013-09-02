@@ -6,8 +6,12 @@ of every change, see the Git log.
 
 Latest (major)
 ----------------------------------
-* Updated waf to 1.7.6
-* Enabled custom git checkout of dependencies
+* TBD
+
+4.0.0
+----------------------------------
+* Minor: Updated waf to 1.7.12
+* Major: Enabled custom git checkout of dependencies
 
 3.0.0
 -----
