@@ -249,3 +249,4 @@ def is_toplevel(self):
     :return: true if the current script is the top-level wscript otherwise false
     """
     return self.srcnode == self.path
+

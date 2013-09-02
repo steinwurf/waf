@@ -343,3 +343,5 @@ class ResolveGitMajorVersion(object):
 ##        f = 'ResolveGitFollowMaster(name=%s, git_repository=%s)'
 ##
 ##        return f % (self.name, self.git_repository)
+
+
