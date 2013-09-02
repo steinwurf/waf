@@ -32,7 +32,6 @@ def options(opt):
         help="Use a specific git protocol to download dependencies. "
              "Supported protocols: {}".format(git_protocols))
 
-
 def configure(conf):
     """
     The configure function for the dependency resolver tool
@@ -74,7 +73,6 @@ def configure(conf):
     if git_protocol_handler not in git_protocols:
         conf.fatal('Unknown git protocol specified: {}, supported protocols '
                   ' are {}'.format(git_protocol_handler, git_protocols))
-
 
 class ResolveGitMajorVersion(object):
     """
@@ -167,7 +165,7 @@ class ResolveGitMajorVersion(object):
             ctx.git_submodule_update(cwd = master_path)
 
         # Do we need a specific checkout? (master, commit or dev branch)
-        
+
         if use_checkout:
             checkout_path = os.path.join(repo_folder, use_checkout)
             # The master is already up-to-date, but the other checkouts
@@ -291,8 +289,6 @@ class ResolveGitMajorVersion(object):
 
         return f % (self.name, self.git_repository, self.major_version)
 
-
-
 ##class ResolveGitFollowMaster(object):
 ##    """
 ##    Follow the master branch
@@ -347,13 +343,3 @@ class ResolveGitMajorVersion(object):
 ##        f = 'ResolveGitFollowMaster(name=%s, git_repository=%s)'
 ##
 ##        return f % (self.name, self.git_repository)
-
-
-
-
-
-
-
-
-
-

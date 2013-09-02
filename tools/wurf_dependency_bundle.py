@@ -63,7 +63,7 @@ def add_dependency(opt, resolver):
         if type(resolver) != type(dependencies[name]) or \
            dependencies[name] != resolver:
             raise Errors.WafError('Incompatible dependency added %r <=> %r '
-                                  % (resolver, dependencies[name])) 
+                                  % (resolver, dependencies[name]))
     else:
         dependencies[name] = resolver
 
@@ -80,7 +80,6 @@ def expand_path(path):
     :return: the expanded path
     """
     return os.path.abspath(os.path.expanduser(path))
-
 
 def options(opt):
     """
@@ -166,8 +165,6 @@ def configure(conf):
         conf.env['BUNDLE_DEPENDENCIES'][name] = dependency_path
         conf.end_msg(dependency_path)
 
-
-
 def expand_bundle(conf, arg):
     """
     Expands the bundle arg so that e.g. 'ALL,-gtest' becomes the
@@ -211,7 +208,6 @@ def expand_bundle(conf, arg):
     candidates = [name for name in candidate_score if candidate_score[name] > 0]
     return candidates
 
-
 def explicit_dependencies(options):
     """
     Extracts the names of the dependencies where an explicit
@@ -229,7 +225,6 @@ def explicit_dependencies(options):
 
     return explicit_list
 
-
 @conf
 def has_dependency_path(self, name):
     """
@@ -241,7 +236,6 @@ def has_dependency_path(self, name):
 
     return False
 
-
 @conf
 def dependency_path(self, name):
     """
@@ -249,18 +243,9 @@ def dependency_path(self, name):
     """
     return self.env['BUNDLE_DEPENDENCIES'][name]
 
-
 @conf
 def is_toplevel(self):
     """
     :return: true if the current script is the top-level wscript otherwise false
     """
     return self.srcnode == self.path
-
-
-
-
-
-
-
-
