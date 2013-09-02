@@ -32,7 +32,6 @@ def options(opt):
         help="Use a specific git protocol to download dependencies. "
              "Supported protocols: {}".format(git_protocols))
 
-
 def configure(conf):
     """
     The configure function for the dependency resolver tool
@@ -74,7 +73,6 @@ def configure(conf):
     if git_protocol_handler not in git_protocols:
         conf.fatal('Unknown git protocol specified: {}, supported protocols '
                   ' are {}'.format(git_protocol_handler, git_protocols))
-
 
 class ResolveGitMajorVersion(object):
     """
@@ -119,12 +117,12 @@ class ResolveGitMajorVersion(object):
 
         return git_protocol_handler + repo_url
 
-    def resolve(self, ctx, path, use_master):
+    def resolve(self, ctx, path, use_checkout):
         """
         Fetches the dependency if necessary.
         :param ctx: A waf ConfigurationContext
         :param path: The path where the dependency should be located
-        :param use_master: If true the master will be used
+        :param use_checkout: If not None the given checkout will be used
         """
         path = os.path.abspath(os.path.expanduser(path))
 
@@ -166,43 +164,41 @@ class ResolveGitMajorVersion(object):
             ctx.git_submodule_init(cwd = master_path)
             ctx.git_submodule_update(cwd = master_path)
 
-        # Do we need a specific branch? (master or development branch)
-        branch = None
-        if use_master: branch = 'master'
+        # Do we need a specific checkout? (master, commit or dev branch)
 
-        if branch != None:
-            branch_path = os.path.join(repo_folder, branch)
-            # The master is already up-to-date, but the other branches
+        if use_checkout:
+            checkout_path = os.path.join(repo_folder, use_checkout)
+            # The master is already up-to-date, but the other checkouts
             # should be cloned to separate directories
-##            if branch != 'master':
-##                # If the branch folder does not exist,
-##                # then clone from the git repository
-##                if not os.path.isdir(branch_path):
-##                    ctx.git_clone(repo_url, branch_path, cwd = repo_folder)
-##                    ctx.git_checkout(branch, cwd = branch_path)
-##                else:
-##                    # If the branch folder exists, we need to update it
-##                    ctx.git_pull(cwd = branch_path)
-##
-##                # If the project contains submodules we also get those
-##                if ctx.git_has_submodules(branch_path):
-##                    ctx.git_submodule_sync(cwd = branch_path)
-##                    ctx.git_submodule_init(cwd = branch_path)
-##                    ctx.git_submodule_update(cwd = branch_path)
+            if use_checkout != 'master':
+                # If the checkout folder does not exist,
+                # then clone from the git repository
+                if not os.path.isdir(checkout_path):
+                    ctx.git_clone(repo_url, checkout_path, cwd = repo_folder)
+                    ctx.git_checkout(use_checkout, cwd = checkout_path)
+                else:
+                    # If the checkout folder exists, we may need to update it
+                    ctx.git_pull(cwd = checkout_path)
+
+                # If the project contains submodules we also get those
+                if ctx.git_has_submodules(checkout_path):
+                    ctx.git_submodule_sync(cwd = checkout_path)
+                    ctx.git_submodule_init(cwd = checkout_path)
+                    ctx.git_submodule_update(cwd = checkout_path)
 
             # The major version of the latest tag should not be larger
             # than the specified major version
-            tags = ctx.git_tags(cwd = branch_path)
+            tags = ctx.git_tags(cwd = checkout_path)
             for tag in tags:
                 try:
                     if semver.parse(tag)['major'] > self.major_version:
-                        ctx.fatal('Tag %r in branch %r is newer than '
+                        ctx.fatal('Tag %r in checkout %r is newer than '
                                   'the required major version %r' %
-                                  (tag, branch, self.major_version))
+                                  (tag, use_checkout, self.major_version))
                 except ValueError: # ignore tags we cannot parse
                     pass
 
-            return branch_path
+            return checkout_path
 
         tags = []
         # git tags will fail for standalone dependencies
@@ -293,8 +289,6 @@ class ResolveGitMajorVersion(object):
 
         return f % (self.name, self.git_repository, self.major_version)
 
-
-
 ##class ResolveGitFollowMaster(object):
 ##    """
 ##    Follow the master branch
@@ -349,13 +343,3 @@ class ResolveGitMajorVersion(object):
 ##        f = 'ResolveGitFollowMaster(name=%s, git_repository=%s)'
 ##
 ##        return f % (self.name, self.git_repository)
-
-
-
-
-
-
-
-
-
-
