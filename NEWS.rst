@@ -6,6 +6,10 @@ of every change, see the Git log.
 
 Latest
 ----------------------------------
+* TBD
+
+4.0.1
+----------------------------------
 * Bug: Fixed unnecessary need for specifying explicit dependency paths
 
 4.0.0
