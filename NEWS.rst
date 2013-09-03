@@ -4,9 +4,9 @@ News for External-Waf
 This file lists the major changes between versions. For a more detailed list
 of every change, see the Git log.
 
-Latest (major)
+Latest
 ----------------------------------
-* TBD
+* Bug: Fixed unnecessary need for specifying explicit dependency paths
 
 4.0.0
 ----------------------------------
