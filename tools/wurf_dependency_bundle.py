@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+path = getattr#! /usr/bin/env python
 # encoding: utf-8
 
 """
@@ -219,7 +219,7 @@ def explicit_dependencies(options):
     for name in dependencies:
 
         key = DEPENDENCY_PATH_KEY % name
-        path = getattr(options, key)
+        path = getattr(options, key, None)
 
         if path: explicit_list.append(name)
 
