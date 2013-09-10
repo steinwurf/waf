@@ -8,6 +8,10 @@ Latest
 ----------------------------------
 * TBD
 
+4.1.0
+----------------------------------
+* Minor: Added "ALL" as the default value for the bundle option.
+
 4.0.1
 ----------------------------------
 * Bug: Fixed unnecessary need for specifying explicit dependency paths
