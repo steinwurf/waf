@@ -38,6 +38,9 @@ import shutil
 OPTIONS_NAME = 'dependency options'
 """ Name of the options group """
 
+DEFAULT_BUNDLE = 'ALL'
+""" Name of the default bundle """
+
 DEFAULT_BUNDLE_PATH = 'bundle_dependencies'
 """ Default folder to use for bundled dependencies """
 
@@ -93,7 +96,7 @@ def options(opt):
 
     add = bundle_opts.add_option
 
-    add('--bundle', default=False, dest='bundle',
+    add('--bundle', default=DEFAULT_BUNDLE, dest='bundle',
         help="Which dependencies to bundle")
 
     add('--bundle-path', default=DEFAULT_BUNDLE_PATH, dest='bundle_path',
