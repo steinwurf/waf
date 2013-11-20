@@ -18,7 +18,7 @@ import shutil
 
 from waflib.Logs import debug
 
-git_protocols = ['git@', 'git://', 'https://']
+git_protocols = ['https://', 'git@', 'git://']
 git_protocol_handler = ''
 
 def options(opt):
@@ -28,7 +28,8 @@ def options(opt):
     :param opt: the Waf OptionsContext
     """
     git_opts = opt.add_option_group('git options')
-    git_opts.add_option('--git-protocol', default='git@', dest='git_protocol',
+    git_opts.add_option(
+        '--git-protocol', default='https://', dest='git_protocol',
         help="Use a specific git protocol to download dependencies. "
              "Supported protocols: {}".format(git_protocols))
 
@@ -45,7 +46,8 @@ def configure(conf):
     # was used when the project was cloned
     parent_url = None
     try:
-        parent_url = conf.git_config('--get remote.origin.url', cwd = os.getcwd())
+        parent_url = \
+            conf.git_config(['--get', 'remote.origin.url'], cwd = os.getcwd())
     except Exception as e:
         conf.to_log('Exception when executing git config'
                    ' - fallback to default protocol: {}'.format(parent_url))
@@ -72,7 +74,7 @@ def configure(conf):
 
     if git_protocol_handler not in git_protocols:
         conf.fatal('Unknown git protocol specified: {}, supported protocols '
-                  ' are {}'.format(git_protocol_handler, git_protocols))
+                   'are {}'.format(git_protocol_handler, git_protocols))
 
 class ResolveGitMajorVersion(object):
     """
@@ -99,14 +101,16 @@ class ResolveGitMajorVersion(object):
         :param ctx: A waf ConfigurationContext
         """
         repo_url = self.git_repository
-        # Repo url cannot contain a protocol handler
-        # that is added automatically to match the protocol of the parent project
+        # The repo url cannot contain a protocol handler,
+        # because that is added automatically to match the protocol
+        # that was used for checking out the parent project
         if repo_url.count('://') > 0 or repo_url.count('@') > 0:
-            ctx.fatal('Repository url contains git protocol handler: {}'.format(repo_url))
+            ctx.fatal('Repository URL contains the following '
+                      'git protocol handler: {}'.format(repo_url))
 
         if git_protocol_handler not in git_protocols:
             ctx.fatal('Unknown git protocol specified: {}, supported protocols '
-                      ' are {}'.format(git_protocol_handler, git_protocols))
+                      'are {}'.format(git_protocol_handler, git_protocols))
 
         if git_protocol_handler == 'git@':
             if repo_url.startswith('github.com/'):

@@ -22,8 +22,7 @@ def options(opt):
         '--options', default = None, action="append",
         dest='tool_options',
         help="Some external Waf tools requires additional options, you can "
-             "use this option multiple times. See more information about the "
-             "external tool options here: http:/sdkfjdsl")
+             "use this option multiple times.")
 
 
 def parse_options(options_string):
@@ -82,7 +81,8 @@ def get_tool_option(conf, option):
 @conf
 def has_tool_option(conf, option):
     check_for_duplicate(conf)
-    return option in conf.env.tool_options or option in parse_options(Options.options.tool_options)
+    return (option in conf.env.tool_options or
+           option in parse_options(Options.options.tool_options))
 
 load_error = """
 Could not find the external waf-tools. Common reasons
@@ -104,6 +104,6 @@ def load_external_tool(conf, category, name):
 
     # Get the path and load the tool
     path = conf.dependency_path('waf-tools')
-
-    conf.load(name, os.path.join(path, category))
+    conf.to_log('Waf tools path:'+os.path.join(path, category))
+    conf.load([name], tooldir=[os.path.join(path, category)])
 
