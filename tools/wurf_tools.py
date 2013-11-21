@@ -104,6 +104,6 @@ def load_external_tool(conf, category, name):
 
     # Get the path and load the tool
     path = conf.dependency_path('waf-tools')
-    conf.to_log('Waf tools path:'+os.path.join(path, category))
+
     conf.load([name], tooldir=[os.path.join(path, category)])
 
