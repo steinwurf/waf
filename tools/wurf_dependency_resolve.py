@@ -24,14 +24,19 @@ git_protocol_handler = ''
 def options(opt):
     """
     Add option to specify git protocol
-    Options are shown when ./waf -h is invoked
+    Options are shown when "python waf -h" is invoked
     :param opt: the Waf OptionsContext
     """
     git_opts = opt.add_option_group('git options')
+
     git_opts.add_option(
         '--git-protocol', default='https://', dest='git_protocol',
         help="Use a specific git protocol to download dependencies. "
-             "Supported protocols: {}".format(git_protocols))
+             "Supported protocols: {0}".format(git_protocols))
+
+    git_opts.add_option(
+        '--check-git-version', default=True, dest='check_git_version',
+        help="Specifies if the minimum git version is checked")
 
 def configure(conf):
     """
@@ -41,6 +46,10 @@ def configure(conf):
     # We need to load git to resolve the dependencies
     conf.load('wurf_git')
 
+    # Check if git meets the minimum requirements
+    if conf.options.check_git_version == True:
+        conf.git_check_minimum_version((1,7,0))
+
     # Get the remote url of the parent project
     # to see which protocol prefix (https://, git@, git://)
     # was used when the project was cloned
@@ -49,11 +58,9 @@ def configure(conf):
         parent_url = \
             conf.git_config(['--get', 'remote.origin.url'], cwd = os.getcwd())
     except Exception as e:
-        conf.to_log('Exception when executing git config'
-                   ' - fallback to default protocol: {}'.format(parent_url))
+        conf.to_log('Exception when executing git config - fallback to '
+                    'default protocol! parent_url: {0}'.format(parent_url))
         conf.to_log(e)
-
-    #conf.to_log("Parent project remote_url : {}".format(parent_url))
 
     global git_protocol_handler
     if parent_url:
@@ -67,7 +74,7 @@ def configure(conf):
         elif parent_url.startswith('git://'):
             git_protocol_handler = 'git://'
         else:
-            conf.fatal('Unknown git protocol: {}'.format(parent_url))
+            conf.fatal('Unknown git protocol: {0}'.format(parent_url))
     else:
         # Set the protocol handler via the --git-protocol option
         git_protocol_handler = conf.options.git_protocol

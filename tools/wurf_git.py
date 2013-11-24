@@ -69,6 +69,14 @@ def find_git_win32(conf):
     else:
         conf.find_program('git')
 
+def options(opt):
+    """
+    Add option to specify git protocol
+    Options are shown when ./waf -h is invoked
+    :param opt: the Waf OptionsContext
+    """
+    git_opts = opt.add_option_group('git options')
+
 
 def configure(conf):
     """
@@ -81,9 +89,13 @@ def configure(conf):
     else:
         conf.find_program('git')
 
-    check_minimum_git_version(conf, (1,7,0))
-
-def check_minimum_git_version(conf, minimum):
+@conf
+def git_check_minimum_version(conf, minimum):
+    """
+    Checks the minimum version of git
+    :param ctx: Waf context
+    :param args: The required minimum version as a tuple
+    """
     version = conf.git_version()
     if version[:3] < minimum:
         conf.fatal("Git version not supported: {0}, "
