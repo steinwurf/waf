@@ -18,19 +18,25 @@ import shutil
 
 from waflib.Logs import debug
 
-git_protocols = ['git@', 'git://', 'https://']
+git_protocols = ['https://', 'git@', 'git://']
 git_protocol_handler = ''
 
 def options(opt):
     """
     Add option to specify git protocol
-    Options are shown when ./waf -h is invoked
+    Options are shown when "python waf -h" is invoked
     :param opt: the Waf OptionsContext
     """
     git_opts = opt.add_option_group('git options')
-    git_opts.add_option('--git-protocol', default='git@', dest='git_protocol',
+
+    git_opts.add_option(
+        '--git-protocol', default='https://', dest='git_protocol',
         help="Use a specific git protocol to download dependencies. "
-             "Supported protocols: {}".format(git_protocols))
+             "Supported protocols: {0}".format(git_protocols))
+
+    git_opts.add_option(
+        '--check-git-version', default=True, dest='check_git_version',
+        help="Specifies if the minimum git version is checked")
 
 def configure(conf):
     """
@@ -40,18 +46,21 @@ def configure(conf):
     # We need to load git to resolve the dependencies
     conf.load('wurf_git')
 
+    # Check if git meets the minimum requirements
+    if conf.options.check_git_version == True:
+        conf.git_check_minimum_version((1,7,0))
+
     # Get the remote url of the parent project
     # to see which protocol prefix (https://, git@, git://)
     # was used when the project was cloned
     parent_url = None
     try:
-        parent_url = conf.git_config('--get remote.origin.url', cwd = os.getcwd())
+        parent_url = \
+            conf.git_config(['--get', 'remote.origin.url'], cwd = os.getcwd())
     except Exception as e:
-        conf.to_log('Exception when executing git config'
-                   ' - fallback to default protocol: {}'.format(parent_url))
+        conf.to_log('Exception when executing git config - fallback to '
+                    'default protocol! parent_url: {0}'.format(parent_url))
         conf.to_log(e)
-
-    #conf.to_log("Parent project remote_url : {}".format(parent_url))
 
     global git_protocol_handler
     if parent_url:
@@ -65,14 +74,14 @@ def configure(conf):
         elif parent_url.startswith('git://'):
             git_protocol_handler = 'git://'
         else:
-            conf.fatal('Unknown git protocol: {}'.format(parent_url))
+            conf.fatal('Unknown git protocol: {0}'.format(parent_url))
     else:
         # Set the protocol handler via the --git-protocol option
         git_protocol_handler = conf.options.git_protocol
 
     if git_protocol_handler not in git_protocols:
         conf.fatal('Unknown git protocol specified: {}, supported protocols '
-                  ' are {}'.format(git_protocol_handler, git_protocols))
+                   'are {}'.format(git_protocol_handler, git_protocols))
 
 class ResolveGitMajorVersion(object):
     """
@@ -99,14 +108,16 @@ class ResolveGitMajorVersion(object):
         :param ctx: A waf ConfigurationContext
         """
         repo_url = self.git_repository
-        # Repo url cannot contain a protocol handler
-        # that is added automatically to match the protocol of the parent project
+        # The repo url cannot contain a protocol handler,
+        # because that is added automatically to match the protocol
+        # that was used for checking out the parent project
         if repo_url.count('://') > 0 or repo_url.count('@') > 0:
-            ctx.fatal('Repository url contains git protocol handler: {}'.format(repo_url))
+            ctx.fatal('Repository URL contains the following '
+                      'git protocol handler: {}'.format(repo_url))
 
         if git_protocol_handler not in git_protocols:
             ctx.fatal('Unknown git protocol specified: {}, supported protocols '
-                      ' are {}'.format(git_protocol_handler, git_protocols))
+                      'are {}'.format(git_protocol_handler, git_protocols))
 
         if git_protocol_handler == 'git@':
             if repo_url.startswith('github.com/'):
@@ -288,60 +299,3 @@ class ResolveGitMajorVersion(object):
         f = 'ResolveGitMajorVersion(name=%s, git_repository=%s, major_version=%s)'
 
         return f % (self.name, self.git_repository, self.major_version)
-
-##class ResolveGitFollowMaster(object):
-##    """
-##    Follow the master branch
-##    """
-##
-##    def __init__(self, name, git_repository):
-##        """
-##        Creates a new resolver object
-##        :param name: the name of this dependency resolver
-##        :param git_repository: URL of the Git repository where the dependency
-##                               can be found
-##        """
-##        self.name = name
-##        self.git_repository = git_repository
-##
-##    def resolve(self, ctx, path, use_master):
-##        """
-##        Fetches the dependency if necessary.
-##        :param ctx: A waf ConfigurationContext
-##        :param path: The path where the dependency should be located
-##        :param use_master: Is ignored for this resolver
-##        """
-##
-##        path = os.path.abspath(os.path.expanduser(path))
-##
-##        # Do we have the master
-##        master_path = os.path.join(path, self.name + '-master')
-##
-##        if not os.path.isdir(master_path):
-##            ctx.git_clone(self.git_repository, master_path, cwd = path)
-##
-##        ctx.git_pull(cwd = master_path)
-##
-##        # If the project contains submodules we also get those
-##        if ctx.git_has_submodules(master_path):
-##            ctx.git_submodule_sync(cwd = master_path)
-##            ctx.git_submodule_init(cwd = master_path)
-##            ctx.git_submodule_update(cwd = master_path)
-##
-##        return master_path
-##
-##    def __eq__(self, other):
-##        return self.git_repository.lower() == other.git_repository.lower()
-##
-##    def __ne__(self, other):
-##        return not self == other
-##
-##    def __lt__(self, other):
-##        return self.git_repository.lower() < other.git_repository.lower()
-##
-##    def __repr__(self):
-##        f = 'ResolveGitFollowMaster(name=%s, git_repository=%s)'
-##
-##        return f % (self.name, self.git_repository)
-
-

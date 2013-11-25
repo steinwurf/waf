@@ -69,6 +69,14 @@ def find_git_win32(conf):
     else:
         conf.find_program('git')
 
+def options(opt):
+    """
+    Add option to specify git protocol
+    Options are shown when ./waf -h is invoked
+    :param opt: the Waf OptionsContext
+    """
+    git_opts = opt.add_option_group('git options')
+
 
 def configure(conf):
     """
@@ -81,9 +89,13 @@ def configure(conf):
     else:
         conf.find_program('git')
 
-    check_minimum_git_version(conf, (1,7,8))
-
-def check_minimum_git_version(conf, minimum):
+@conf
+def git_check_minimum_version(conf, minimum):
+    """
+    Checks the minimum version of git
+    :param ctx: Waf context
+    :param args: The required minimum version as a tuple
+    """
     version = conf.git_version()
     if version[:3] < minimum:
         conf.fatal("Git version not supported: {0}, "
@@ -91,21 +103,21 @@ def check_minimum_git_version(conf, minimum):
                    .format(version, minimum))
 
 @conf
-def git_cmd_and_log(ctx, cmd, **kw):
+def git_cmd_and_log(ctx, args, **kw):
     """
     Runs a git command
+    :param ctx: Waf Context
+    :param args: Program arguments as a list
     """
-
-    cmd = Utils.to_list(cmd)
 
     if not 'GIT' in ctx.env:
         raise Errors.WafError('The git program must be available')
 
     git_cmd = ctx.env['GIT']
 
-    cmd = [git_cmd] + cmd
+    args = [git_cmd] + args
 
-    return ctx.cmd_and_log(cmd, **kw)
+    return ctx.cmd_and_log(args, **kw)
 
 @conf
 def git_version(ctx, **kw):
@@ -113,7 +125,7 @@ def git_version(ctx, **kw):
     Runs 'git tag -l' and retuns the version information as a tuple
     :param ctx: Waf Context
     """
-    output = git_cmd_and_log(ctx, 'version', **kw).strip()
+    output = git_cmd_and_log(ctx, ['version'], **kw).strip()
     # The output looks like "git version 1.8.1.msysgit.1"
     # we just extract the integers
     int_list = [int(s) for s in re.findall('\\d+', output)]
@@ -125,7 +137,7 @@ def git_tags(ctx, **kw):
     Runs 'git tag -l' and retuns the tags
     :param ctx: Waf Context
     """
-    o = git_cmd_and_log(ctx, 'tag -l', **kw)
+    o = git_cmd_and_log(ctx, ['tag','-l'], **kw)
     tags = o.split('\n')
     return [t for t in tags if t != '']
 
@@ -135,7 +147,7 @@ def git_checkout(ctx, branch, **kw):
     """
     Runs 'git checkout branch'
     """
-    git_cmd_and_log(ctx, 'checkout ' + branch, **kw)
+    git_cmd_and_log(ctx, ['checkout', branch], **kw)
 
 
 @conf
@@ -143,7 +155,7 @@ def git_pull(ctx, **kw):
     """
     Runs 'git pull'
     """
-    git_cmd_and_log(ctx, 'pull', **kw)
+    git_cmd_and_log(ctx, ['pull'], **kw)
 
 @conf
 def git_config(ctx, args, **kw):
@@ -151,8 +163,7 @@ def git_config(ctx, args, **kw):
     Runs 'git config args' and retuns the output
     :param ctx: Waf Context
     """
-    cmd = 'config ' + args
-    output = git_cmd_and_log(ctx, cmd.strip(), **kw)
+    output = git_cmd_and_log(ctx, ['config'] + args, **kw)
     return output.strip()
 
 @conf
@@ -162,7 +173,7 @@ def git_branch(ctx, **kw):
     additional branches
     """
 
-    o = git_cmd_and_log(ctx, 'branch', **kw)
+    o = git_cmd_and_log(ctx, ['branch'], **kw)
 
     branch = o.split('\n')
     branch = [b for b in branch if b != '']
@@ -196,7 +207,7 @@ def git_submodule_init(ctx, **kw):
     """
     Runs 'git submodule init'
     """
-    git_cmd_and_log(ctx, 'submodule init', **kw)
+    git_cmd_and_log(ctx, ['submodule', 'init'], **kw)
 
 
 @conf
@@ -204,7 +215,7 @@ def git_submodule_update(ctx, **kw):
     """
     Runs 'git submodule update'
     """
-    git_cmd_and_log(ctx, 'submodule update', **kw)
+    git_cmd_and_log(ctx, ['submodule', 'update'], **kw)
 
 
 @conf
@@ -212,7 +223,7 @@ def git_submodule_sync(ctx, **kw):
     """
     Runs 'git submodule sync'
     """
-    git_cmd_and_log(ctx, 'submodule sync', **kw)
+    git_cmd_and_log(ctx, ['submodule', 'sync'], **kw)
 
 
 @conf
@@ -220,7 +231,7 @@ def git_clone(ctx, source, destination, **kw):
     """
     Clone a repository
     """
-    git_cmd_and_log(ctx, 'clone '+source+' '+destination, **kw)
+    git_cmd_and_log(ctx, ['clone', source, destination], **kw)
 
 
 @conf
@@ -236,7 +247,8 @@ def git_local_clone(ctx, source, destination, **kw):
 
     # We have to disable hard-links since the do not work on the
     # AFS file system. We may later revisit this.
-    git_cmd_and_log(ctx, 'clone -l --no-hardlinks '+source+' '+destination, **kw)
+    git_cmd_and_log(
+        ctx, ['clone', '-l', '--no-hardlinks', source, destination], **kw)
 
 
 
