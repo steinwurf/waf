@@ -17,6 +17,7 @@ import hashlib
 import shutil
 
 from waflib.Logs import debug
+from waflib.Logs import warn
 
 git_protocols = ['https://', 'git@', 'git://']
 git_protocol_handler = ''
@@ -63,21 +64,19 @@ def configure(conf):
         conf.to_log(e)
 
     global git_protocol_handler
-    if parent_url:
-        # Parent project was cloned via https
-        if parent_url.startswith('https://'):
-            git_protocol_handler = 'https://'
-        # Parent project was cloned via git over SSH
-        elif parent_url.startswith('git@'):
-            git_protocol_handler = 'git@'
-        # Parent project was cloned via read-only git
-        elif parent_url.startswith('git://'):
-            git_protocol_handler = 'git://'
-        # Parent project was cloned with unsupported protocol, use defaults
-        else:
-            git_protocol_handler = conf.options.git_protocol
+
+    # Check if parent protocol is supported
+    for g in git_protocols:
+        if parent_url and parent_url.startswith(g):
+            git_protocol_handler = g
+            break
     else:
+        # Unsupported parent protocol, using default
         # Set the protocol handler via the --git-protocol option
+        warn("Using default git protocol ({}). Use --git-protocol="
+                     "[proto] to assign another protocol for dependencies. "
+                     "Supported protocols: {}".format(conf.options.git_protocol,
+                                                      git_protocols))
         git_protocol_handler = conf.options.git_protocol
 
     if git_protocol_handler not in git_protocols:
