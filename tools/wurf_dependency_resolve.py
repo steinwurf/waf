@@ -73,6 +73,10 @@ def configure(conf):
         # Parent project was cloned via read-only git
         elif parent_url.startswith('git://'):
             git_protocol_handler = 'git://'
+        # Parent project was cloned with SSH via non-github repository,
+        # use the --git-protocol option to resolve dependency repositories
+        elif parent_url.startswith('ssh://'):
+            git_protocol_handler = conf.options.git_protocol
         else:
             conf.fatal('Unknown git protocol: {0}'.format(parent_url))
     else:
