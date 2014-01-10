@@ -6,7 +6,10 @@ of every change, see the Git log.
 
 Latest
 ----------------------------------
-* TBD
+* Changed behaviour of dependency resolver when choosing git protocol.
+  Git protocol of parent project is used if supported, but falls back on
+  ``https://`` if the protocol is unsupported. Protocol can still be
+  specified through command line option.
 
 4.1.0
 ----------------------------------
@@ -38,5 +41,3 @@ Latest
 * Added new tool for following git dependencies. Supports dependency
   resolving based on Semantic Versioning (semver.org)
 * Added simple tests of the build tools
-
-
