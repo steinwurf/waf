@@ -17,6 +17,7 @@ import hashlib
 import shutil
 
 from waflib.Logs import debug
+from waflib.Logs import warn
 
 git_protocols = ['https://', 'git@', 'git://']
 git_protocol_handler = ''
@@ -30,7 +31,7 @@ def options(opt):
     git_opts = opt.add_option_group('git options')
 
     git_opts.add_option(
-        '--git-protocol', default='https://', dest='git_protocol',
+        '--git-protocol', default=None, dest='git_protocol',
         help="Use a specific git protocol to download dependencies. "
              "Supported protocols: {0}".format(git_protocols))
 
@@ -63,21 +64,25 @@ def configure(conf):
         conf.to_log(e)
 
     global git_protocol_handler
-    if parent_url:
-        # Parent project was cloned via https
-        if parent_url.startswith('https://'):
-            git_protocol_handler = 'https://'
-        # Parent project was cloned via git over SSH
-        elif parent_url.startswith('git@'):
-            git_protocol_handler = 'git@'
-        # Parent project was cloned via read-only git
-        elif parent_url.startswith('git://'):
-            git_protocol_handler = 'git://'
-        else:
-            conf.fatal('Unknown git protocol: {0}'.format(parent_url))
-    else:
-        # Set the protocol handler via the --git-protocol option
+
+    if conf.options.git_protocol:
         git_protocol_handler = conf.options.git_protocol
+
+    else:
+    # Check if parent protocol is supported
+        for g in git_protocols:
+            if parent_url and parent_url.startswith(g):
+                git_protocol_handler = g
+                break
+        else:
+            git_protocol_handler = 'https://'
+            # Unsupported parent protocol, using default
+            # Set the protocol handler via the --git-protocol option
+            warn("Using default git protocol ({}) for dependencies. "
+                 "Use --git-protocol=[proto] to assign another protocol "
+                 "for dependencies. "
+                 "Supported protocols: {}".format(git_protocol_handler,
+                                                  git_protocols))
 
     if git_protocol_handler not in git_protocols:
         conf.fatal('Unknown git protocol specified: {}, supported protocols '
