@@ -31,7 +31,7 @@ def options(opt):
     git_opts = opt.add_option_group('git options')
 
     git_opts.add_option(
-        '--git-protocol', default='https://', dest='git_protocol',
+        '--git-protocol', default=None, dest='git_protocol',
         help="Use a specific git protocol to download dependencies. "
              "Supported protocols: {0}".format(git_protocols))
 
@@ -65,19 +65,24 @@ def configure(conf):
 
     global git_protocol_handler
 
-    # Check if parent protocol is supported
-    for g in git_protocols:
-        if parent_url and parent_url.startswith(g):
-            git_protocol_handler = g
-            break
-    else:
-        # Unsupported parent protocol, using default
-        # Set the protocol handler via the --git-protocol option
-        warn("Using default git protocol ({}). Use --git-protocol="
-                     "[proto] to assign another protocol for dependencies. "
-                     "Supported protocols: {}".format(conf.options.git_protocol,
-                                                      git_protocols))
+    if conf.options.git_protocol:
         git_protocol_handler = conf.options.git_protocol
+
+    else:
+    # Check if parent protocol is supported
+        for g in git_protocols:
+            if parent_url and parent_url.startswith(g):
+                git_protocol_handler = g
+                break
+        else:
+            git_protocol_handler = 'https://'
+            # Unsupported parent protocol, using default
+            # Set the protocol handler via the --git-protocol option
+            warn("Using default git protocol ({}) for dependencies. "
+                 "Use --git-protocol=[proto] to assign another protocol "
+                 "for dependencies. "
+                 "Supported protocols: {}".format(git_protocol_handler,
+                                                  git_protocols))
 
     if git_protocol_handler not in git_protocols:
         conf.fatal('Unknown git protocol specified: {}, supported protocols '
