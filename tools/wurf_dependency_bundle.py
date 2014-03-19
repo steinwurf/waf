@@ -123,7 +123,7 @@ def configure(conf):
     explicit_list = explicit_dependencies(conf.options)
 
     # Make sure that no dependencies were both explicitly specified
-    # and specifiede as bundled
+    # and specified as bundled
     overlap = set(bundle_list).intersection(set(explicit_list))
 
     if len(overlap) > 0:
