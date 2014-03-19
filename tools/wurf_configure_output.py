@@ -23,10 +23,10 @@ class ToolchainConfigurationContext(ConfigurationContext):
         # Waf calls this function to set the output directory.
         # Waf sets the output dir in the following order
         # 1) Check whether the -o option has been specified
-        # 2) Check whether the wscript has an out varialble defined
-        # 3) Fallback and use the name of the lock-file
+        # 2) Check whether the wscript has an out variable defined
+        # 3) Fall-back and use the name of the lock-file
         #
-        # In order to not suprise anybody we will disallow the out variable
+        # In order to not surprise anybody we will disallow the out variable
         # but allow our output dir to be overwritten by using the -o option
 
         assert(getattr(Context.g_module, Context.OUT, None) is None)

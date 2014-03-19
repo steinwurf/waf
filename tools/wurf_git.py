@@ -125,7 +125,7 @@ def git_cmd_and_log(ctx, args, **kw):
 @conf
 def git_version(ctx, **kw):
     """
-    Runs 'git tag -l' and retuns the version information as a tuple
+    Runs 'git tag -l' and returns the version information as a tuple
     :param ctx: Waf Context
     """
     output = git_cmd_and_log(ctx, ['version'], **kw).strip()
@@ -138,7 +138,7 @@ def git_version(ctx, **kw):
 @conf
 def git_tags(ctx, **kw):
     """
-    Runs 'git tag -l' and retuns the tags
+    Runs 'git tag -l' and returns the tags
     :param ctx: Waf Context
     """
     o = git_cmd_and_log(ctx, ['tag', '-l'], **kw)
@@ -165,7 +165,7 @@ def git_pull(ctx, **kw):
 @conf
 def git_config(ctx, args, **kw):
     """
-    Runs 'git config args' and retuns the output
+    Runs 'git config args' and returns the output
     :param ctx: Waf Context
     """
     output = git_cmd_and_log(ctx, ['config'] + args, **kw)
