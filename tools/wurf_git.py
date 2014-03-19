@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import os, re
+import os
+import re
 
 from waflib.Configure import conf
-from waflib import Context
 from waflib import Utils
 from waflib import Errors
 
@@ -35,8 +35,7 @@ def find_in_winreg():
         (reg_value, reg_type) = _winreg.QueryValueEx(reg_key,
                                                      'InstallLocation')
 
-
-    except WindowsError as e:
+    except WindowsError:
 
         try:
             reg_key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
@@ -65,9 +64,10 @@ def find_git_win32(conf):
 
     if path:
         path_list = [path, os.path.join(path, 'bin')]
-        conf.find_program('git', path_list = path_list)
+        conf.find_program('git', path_list=path_list)
     else:
         conf.find_program('git')
+
 
 def options(opt):
     """
@@ -75,7 +75,7 @@ def options(opt):
     Options are shown when ./waf -h is invoked
     :param opt: the Waf OptionsContext
     """
-    git_opts = opt.add_option_group('git options')
+    opt.add_option_group('git options')
 
 
 def configure(conf):
@@ -89,6 +89,7 @@ def configure(conf):
     else:
         conf.find_program('git')
 
+
 @conf
 def git_check_minimum_version(conf, minimum):
     """
@@ -101,6 +102,7 @@ def git_check_minimum_version(conf, minimum):
         conf.fatal("Git version not supported: {0}, "
                    "required minimum version: {1}"
                    .format(version, minimum))
+
 
 @conf
 def git_cmd_and_log(ctx, args, **kw):
@@ -119,6 +121,7 @@ def git_cmd_and_log(ctx, args, **kw):
 
     return ctx.cmd_and_log(args, **kw)
 
+
 @conf
 def git_version(ctx, **kw):
     """
@@ -131,13 +134,14 @@ def git_version(ctx, **kw):
     int_list = [int(s) for s in re.findall('\\d+', output)]
     return tuple(int_list)
 
+
 @conf
 def git_tags(ctx, **kw):
     """
     Runs 'git tag -l' and retuns the tags
     :param ctx: Waf Context
     """
-    o = git_cmd_and_log(ctx, ['tag','-l'], **kw)
+    o = git_cmd_and_log(ctx, ['tag', '-l'], **kw)
     tags = o.split('\n')
     return [t for t in tags if t != '']
 
@@ -157,6 +161,7 @@ def git_pull(ctx, **kw):
     """
     git_cmd_and_log(ctx, ['pull'], **kw)
 
+
 @conf
 def git_config(ctx, args, **kw):
     """
@@ -165,6 +170,7 @@ def git_config(ctx, args, **kw):
     """
     output = git_cmd_and_log(ctx, ['config'] + args, **kw)
     return output.strip()
+
 
 @conf
 def git_branch(ctx, **kw):
@@ -240,17 +246,12 @@ def git_local_clone(ctx, source, destination, **kw):
     Clone a repository
     """
 
-##    if Utils.is_win32:
+# if Utils.is_win32:
 ##        ctx.to_log('git local clone: fallback to git clone on win32')
 ##        git_clone(ctx, source, destination)
-##    else:
+# else:
 
     # We have to disable hard-links since the do not work on the
     # AFS file system. We may later revisit this.
     git_cmd_and_log(
         ctx, ['clone', '-l', '--no-hardlinks', source, destination], **kw)
-
-
-
-
-

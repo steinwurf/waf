@@ -18,22 +18,10 @@ def configure(conf):
 """
 
 from waflib.Configure import conf
-from waflib.Configure import ConfigurationContext
-from waflib.Options import OptionsContext
-from waflib.ConfigSet import ConfigSet
-
-import waflib.Options as Opt
-
-from waflib import Logs
-from waflib import Options
 from waflib import Utils
-from waflib import Scripting
-from waflib import Context
 from waflib import Errors
 
-import sys
 import os
-import shutil
 
 OPTIONS_NAME = 'dependency options'
 """ Name of the options group """
@@ -53,6 +41,7 @@ DEPENDENCY_CHECKOUT_KEY = '%s_DEPENDENCY_CHECKOUT'
 dependencies = dict()
 """ Dictionary storing the dependency information """
 
+
 def add_dependency(opt, resolver):
     """
     Adds a dependency.
@@ -71,10 +60,11 @@ def add_dependency(opt, resolver):
         dependencies[name] = resolver
 
         #bundle_opts = opt.add_option_group(OPTIONS_NAME)
-        #bundle_opts.add_option('--%s-path' % name,
+        # bundle_opts.add_option('--%s-path' % name,
         #                       dest = DEPENDENCY_PATH_KEY % name,
         #                       default=False,
         #                       help='path to %s' % name)
+
 
 def expand_path(path):
     """
@@ -83,6 +73,7 @@ def expand_path(path):
     :return: the expanded path
     """
     return os.path.abspath(os.path.expanduser(path))
+
 
 def options(opt):
     """
@@ -112,6 +103,7 @@ def options(opt):
             dest=DEPENDENCY_CHECKOUT_KEY % dependency,
             default=False,
             help='The checkout to use for %s' % dependency)
+
 
 def configure(conf):
     """
@@ -151,9 +143,9 @@ def configure(conf):
         dependency_checkout = getattr(conf.options, key, None)
 
         dependency_path = dependencies[name].resolve(
-            ctx = conf,
-            path = bundle_path,
-            use_checkout = dependency_checkout)
+            ctx=conf,
+            path=bundle_path,
+            use_checkout=dependency_checkout)
 
         conf.end_msg(dependency_path)
 
@@ -167,6 +159,7 @@ def configure(conf):
         conf.start_msg('User resolve dependency %s' % name)
         conf.env['BUNDLE_DEPENDENCIES'][name] = dependency_path
         conf.end_msg(dependency_path)
+
 
 def expand_bundle(conf, arg):
     """
@@ -208,8 +201,10 @@ def expand_bundle(conf, arg):
             check_candidate(a)
             candidate_score[a] += 1
 
-    candidates = [name for name in candidate_score if candidate_score[name] > 0]
+    candidates = [
+        name for name in candidate_score if candidate_score[name] > 0]
     return candidates
+
 
 def explicit_dependencies(options):
     """
@@ -224,9 +219,11 @@ def explicit_dependencies(options):
         key = DEPENDENCY_PATH_KEY % name
         path = getattr(options, key, None)
 
-        if path: explicit_list.append(name)
+        if path:
+            explicit_list.append(name)
 
     return explicit_list
+
 
 @conf
 def has_dependency_path(self, name):
@@ -239,6 +236,7 @@ def has_dependency_path(self, name):
 
     return False
 
+
 @conf
 def dependency_path(self, name):
     """
@@ -246,10 +244,10 @@ def dependency_path(self, name):
     """
     return self.env['BUNDLE_DEPENDENCIES'][name]
 
+
 @conf
 def is_toplevel(self):
     """
-    :return: true if the current script is the top-level wscript otherwise false
+    Returns true if the current script is the top-level wscript
     """
     return self.srcnode == self.path
-

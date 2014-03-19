@@ -5,20 +5,19 @@
 # directory of waf. This is mainly to support cross-
 # compilation into separated output directories.
 
-import os, sys, inspect, ast
+import os
 
 from waflib import Utils
 from waflib import Context
 from waflib import Options
-from waflib import Errors
 
-from waflib.Configure import conf
 from waflib.Configure import ConfigurationContext
 
 
 class ToolchainConfigurationContext(ConfigurationContext):
+
     '''configures the project'''
-    cmd='configure'
+    cmd = 'configure'
 
     def init_dirs(self):
         # Waf calls this function to set the output directory.
@@ -30,7 +29,7 @@ class ToolchainConfigurationContext(ConfigurationContext):
         # In order to not suprise anybody we will disallow the out variable
         # but allow our output dir to be overwritten by using the -o option
 
-        assert(getattr(Context.g_module,Context.OUT,None) == None)
+        assert(getattr(Context.g_module, Context.OUT, None) is None)
 
         if not Options.options.out:
 
@@ -46,5 +45,3 @@ class ToolchainConfigurationContext(ConfigurationContext):
                 self.out_dir += '_debug'
 
         super(ToolchainConfigurationContext, self).init_dirs()
-
-
