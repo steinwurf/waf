@@ -245,12 +245,6 @@ def git_local_clone(ctx, source, destination, **kw):
     """
     Clone a repository
     """
-
-# if Utils.is_win32:
-##        ctx.to_log('git local clone: fallback to git clone on win32')
-##        git_clone(ctx, source, destination)
-# else:
-
     # We have to disable hard-links since the do not work on the
     # AFS file system. We may later revisit this.
     git_cmd_and_log(

@@ -55,13 +55,13 @@ def check_for_duplicate(conf):
 
     options = parse_options(tool_options)
     for option in options:
-        if (option in conf.env['tool_options'] and
-                conf.env['tool_options'][option] != options[option]):
-            conf.fatal("Redefined option '%s' from %s to '%s', "
-                       "re-run configure, to override the old value."
-                       % (option,
-                          conf.env['tool_options'][option],
-                          options[option]))
+        if option in conf.env['tool_options']:
+                if conf.env['tool_options'][option] != options[option]:
+                    conf.fatal("Redefined option '{}' from {} to '{}', re-run "
+                               "configure, to override the old value.".format(
+                                   option,
+                                   conf.env['tool_options'][option],
+                                   options[option]))
 
 
 @conf

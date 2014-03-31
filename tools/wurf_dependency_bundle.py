@@ -59,12 +59,6 @@ def add_dependency(opt, resolver):
     else:
         dependencies[name] = resolver
 
-        #bundle_opts = opt.add_option_group(OPTIONS_NAME)
-        # bundle_opts.add_option('--%s-path' % name,
-        #                       dest = DEPENDENCY_PATH_KEY % name,
-        #                       default=False,
-        #                       help='path to %s' % name)
-
 
 def expand_path(path):
     """
@@ -201,8 +195,7 @@ def expand_bundle(conf, arg):
             check_candidate(a)
             candidate_score[a] += 1
 
-    candidates = [
-        name for name in candidate_score if candidate_score[name] > 0]
+    candidates = [n for n in candidate_score if candidate_score[n] > 0]
     return candidates
 
 

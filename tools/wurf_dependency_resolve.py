@@ -122,9 +122,9 @@ class ResolveGitMajorVersion(object):
                       'git protocol handler: {}'.format(repo_url))
 
         if git_protocol_handler not in git_protocols:
-            ctx.fatal((
-                'Unknown git protocol specified: {}, supported protocols '
-                'are {}').format(git_protocol_handler, git_protocols))
+            ctx.fatal('Unknown git protocol specified: {}, supported '
+                      'protocols are {}'.format(git_protocol_handler,
+                                                git_protocols))
 
         if git_protocol_handler == 'git@':
             if repo_url.startswith('github.com/'):
