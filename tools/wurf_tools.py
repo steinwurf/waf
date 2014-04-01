@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import os, sys
+import os
+import sys
 from waflib.Configure import conf
 from waflib import Options
+
 
 def _check_minimum_python_version(opt, major, minor):
     if sys.version_info[:2] < (major, minor):
         opt.fatal("Python version not supported: {0}, "
-                   "required minimum version: {1}.{2}"
-                   .format(sys.version_info[:3], major, minor))
+                  "required minimum version: {1}.{2}"
+                  .format(sys.version_info[:3], major, minor))
+
 
 def options(opt):
     # wurf_tools is loaded first in every project,
@@ -19,7 +22,7 @@ def options(opt):
     tool_opts = opt.add_option_group('external tool options')
 
     tool_opts.add_option(
-        '--options', default = None, action="append",
+        '--options', default=None, action="append",
         dest='tool_options',
         help="Some external Waf tools requires additional options, you can "
              "use this option multiple times.")
@@ -33,7 +36,7 @@ def parse_options(options_string):
                 try:
                     key, value = option.split('=', 1)
                     result[key] = value
-                except ValueError as e:
+                except ValueError:
                     result[option] = True
     return result
 
@@ -52,13 +55,14 @@ def check_for_duplicate(conf):
 
     options = parse_options(tool_options)
     for option in options:
-        if (option in conf.env['tool_options'] and
-            conf.env['tool_options'][option] != options[option]):
-            conf.fatal("Redefined option '%s' from %s to '%s', "
-                       "re-run configure, to override the old value."
-                       % (option,
-                          conf.env['tool_options'][option],
-                          options[option]))
+        if option in conf.env['tool_options']:
+                if conf.env['tool_options'][option] != options[option]:
+                    conf.fatal("Redefined option '{}' from {} to '{}', re-run "
+                               "configure, to override the old value.".format(
+                                   option,
+                                   conf.env['tool_options'][option],
+                                   options[option]))
+
 
 @conf
 def get_tool_option(conf, option):
@@ -78,11 +82,12 @@ def get_tool_option(conf, option):
         conf.fatal('Tool option required %s, you can specify tool options as: '
                    './waf configure --options=KEY=VALUE,KEY=VALUE' % option)
 
+
 @conf
 def has_tool_option(conf, option):
     check_for_duplicate(conf)
     return (option in conf.env.tool_options or
-           option in parse_options(Options.options.tool_options))
+            option in parse_options(Options.options.tool_options))
 
 load_error = """
 Could not find the external waf-tools. Common reasons
@@ -96,6 +101,7 @@ for this are:
       related functions.
 """
 
+
 @conf
 def load_external_tool(conf, category, name):
 
@@ -106,4 +112,3 @@ def load_external_tool(conf, category, name):
     path = conf.dependency_path('waf-tools')
 
     conf.load([name], tooldir=[os.path.join(path, category)])
-
