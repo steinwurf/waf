@@ -117,7 +117,7 @@ def git_cmd_and_log(ctx, args, **kw):
 
     git_cmd = ctx.env['GIT']
 
-    args = [git_cmd] + args
+    args = git_cmd + args
 
     return ctx.cmd_and_log(args, **kw)
 
