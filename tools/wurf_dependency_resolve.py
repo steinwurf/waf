@@ -102,7 +102,7 @@ class ResolveGitMajorVersion(object):
         :param git_repository: URL of the Git repository where the dependency
                                can be found
         :param major_version: The major version number to track (ensures binary
-                              compatability)
+                              compatibility)
         """
         self.name = name
         self.git_repository = git_repository
@@ -146,9 +146,6 @@ class ResolveGitMajorVersion(object):
 
         repo_url = self.repository_url(ctx)
 
-        # Replace all non-alphanumeric characters with _
-        #repo_url = re.sub('[^0-9a-zA-Z]+', '_', self.git_repository)
-
         # Use the first 6 characters of the SHA1 hash of the repository url
         # to uniquely identify the repository
         repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
@@ -178,10 +175,7 @@ class ResolveGitMajorVersion(object):
             ctx.to_log(e)
 
         # If the project contains submodules we also get those
-        if ctx.git_has_submodules(master_path):
-            ctx.git_submodule_sync(cwd=master_path)
-            ctx.git_submodule_init(cwd=master_path)
-            ctx.git_submodule_update(cwd=master_path)
+        ctx.git_get_submodules(master_path)
 
         # Do we need a specific checkout? (master, commit or dev branch)
 
@@ -200,10 +194,7 @@ class ResolveGitMajorVersion(object):
                     ctx.git_pull(cwd=checkout_path)
 
                 # If the project contains submodules we also get those
-                if ctx.git_has_submodules(checkout_path):
-                    ctx.git_submodule_sync(cwd=checkout_path)
-                    ctx.git_submodule_init(cwd=checkout_path)
-                    ctx.git_submodule_update(cwd=checkout_path)
+                ctx.git_get_submodules(checkout_path)
 
             # The major version of the latest tag should not be larger
             # than the specified major version
@@ -231,6 +222,8 @@ class ResolveGitMajorVersion(object):
             # As a fallback, use the existing folder names as tags
             tags = [d for d in os.listdir(repo_folder)
                     if os.path.isdir(os.path.join(repo_folder, d))]
+            ctx.to_log('Using the following fallback tags:')
+            ctx.to_log(tags)
 
         if len(tags) == 0:
             ctx.fatal('No version tags specified for %r '
@@ -251,10 +244,7 @@ class ResolveGitMajorVersion(object):
             ctx.git_checkout(tag, cwd=tag_path)
 
             # If the project contains submodules we also get those
-            if ctx.git_has_submodules(tag_path):
-                ctx.git_submodule_sync(cwd=tag_path)
-                ctx.git_submodule_init(cwd=tag_path)
-                ctx.git_submodule_update(cwd=tag_path)
+            ctx.git_get_submodules(tag_path)
 
         return tag_path
 
