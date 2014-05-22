@@ -92,7 +92,6 @@ def configure(conf):
 
 
 class ResolveVersion(object):
-
     """
     Uses the tagged version numbering to follow a specific version number i.e
     supports tags like 2.0.1
