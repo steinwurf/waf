@@ -1,10 +1,23 @@
-.dependency_config
-.lock*
+# For projects that use Waf for building: http://code.google.com/p/waf/
+waf-*
+.waf-*
+.lock-*
 build
 bundle_dependencies
-.waf*
-*.s
-*~
+
+# Emacs temp / auto save
 \#*#
-*.out
-*.pyc
+*.#*
+*~
+
+# Visual Studio ignore
+*.bat
+*.sln
+*.suo
+*.user
+*.ncb
+*.sdf
+*.opensdf
+*.log
+VSProjects
+*.pyproj
