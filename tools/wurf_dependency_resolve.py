@@ -11,7 +11,6 @@
 from . import semver
 
 import os
-#import re
 import hashlib
 
 from waflib.Logs import warn

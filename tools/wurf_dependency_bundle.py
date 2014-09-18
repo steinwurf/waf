@@ -154,6 +154,14 @@ def configure(conf):
         conf.env['BUNDLE_DEPENDENCIES'][name] = dependency_path
         conf.end_msg(dependency_path)
 
+    for dependency in dependencies:
+        conf.recurse_helper(dependency)
+
+
+def build(bld):
+    for dependency in dependencies:
+        bld.recurse_helper(dependency)
+
 
 def expand_bundle(conf, arg):
     """
@@ -244,3 +252,12 @@ def is_toplevel(self):
     Returns true if the current script is the top-level wscript
     """
     return self.srcnode == self.path
+
+
+@conf
+def recurse_helper(self, name):
+    if not self.has_dependency_path(name):
+        self.fatal('Load a tool to find %s as system dependency' % name)
+    else:
+        p = self.dependency_path(name)
+        self.recurse([p])
