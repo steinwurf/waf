@@ -26,23 +26,23 @@ import os
 OPTIONS_NAME = 'dependency options'
 """ Name of the options group """
 
-DEFAULT_BUNDLE = 'ALL'
-""" Name of the default bundle """
-
 DEFAULT_BUNDLE_PATH = 'bundle_dependencies'
 """ Default folder to use for bundled dependencies """
 
-DEPENDENCY_PATH_KEY = '%s_DEPENDENCY_PATH'
+USE_PATH_KEY = 'use_path'
 """ Destination of the dependency paths in the options """
 
-DEPENDENCY_CHECKOUT_KEY = '%s_DEPENDENCY_CHECKOUT'
+USE_CHECKOUT_KEY = 'use_checkout'
 """ Destination of the dependency checkouts in the options """
 
 dependencies = dict()
-""" Dictionary storing the dependency information """
+""" Dictionary for storing the dependency information """
+
+toplevel_dependencies = []
+""" List to store top-level dependencies """
 
 
-def add_dependency(opt, resolver):
+def add_dependency(conf, resolver):
     """
     Adds a dependency.
     :param resolver: a resolver object which is responsible for downloading
@@ -51,13 +51,26 @@ def add_dependency(opt, resolver):
     name = resolver.name
 
     if name in dependencies:
-
         if type(resolver) != type(dependencies[name]) or \
            dependencies[name] != resolver:
-            raise Errors.WafError('Incompatible dependency added %r <=> %r '
-                                  % (resolver, dependencies[name]))
+            conf.fatal('Incompatible dependency resolvers %r <=> %r '
+                       % (resolver, dependencies[name]))
     else:
         dependencies[name] = resolver
+        # Top-level dependencies must be enumerated in the specified order,
+        # because waf-tools must be resolved and recursed first to define the
+        # necessary tools for the other dependencies
+        if conf.is_toplevel():
+            toplevel_dependencies.append(name)
+
+    # Top-level dependencies cannot be resolved immediately
+    if not conf.is_toplevel():
+        # Skip dependencies that were already resolved
+        if not name in conf.env['BUNDLE_DEPENDENCIES']:
+            # Resolve this dependency defined by another dependency
+            resolve_dependency(conf, name)
+            # Recurse into this dependency
+            conf.recurse_helper(name)
 
 
 def expand_path(path):
@@ -81,60 +94,56 @@ def options(opt):
 
     add = bundle_opts.add_option
 
-    add('--bundle', default=DEFAULT_BUNDLE, dest='bundle',
-        help="Which dependencies to bundle")
-
     add('--bundle-path', default=DEFAULT_BUNDLE_PATH, dest='bundle_path',
         help="The folder used for downloaded dependencies")
 
-    for dependency in dependencies:
-        add('--%s-path' % dependency,
-            dest=DEPENDENCY_PATH_KEY % dependency,
-            default=False,
-            help='path to %s' % dependency)
+    add('--use-path', default=None, action="append", dest='use_path',
+        help='Use manual path to listed dependencies')
 
-        add('--%s-use-checkout' % dependency,
-            dest=DEPENDENCY_CHECKOUT_KEY % dependency,
-            default=False,
-            help='The checkout to use for %s' % dependency)
+    add('--use-checkout', default=None, action="append", dest='use_checkout',
+        help='Use specific checkout to listed dependencies')
 
 
-def configure(conf):
-    """
-    The configure function for the bundle dependency tool
-    :param conf: the configuration context
-    """
-    conf.load('wurf_dependency_resolve')
+def parse_options(options_string):
+    result = {}
+    if options_string:
+        for options in options_string:
+            for option in options.split(','):
+                try:
+                    key, value = option.split('=', 1)
+                    result[key] = value
+                except ValueError:
+                    result[option] = True
 
-    # Get the path where the bundled dependencies should be
-    # placed
-    bundle_path = expand_path(conf.options.bundle_path)
+    return result
 
-    # List all the dependencies to be bundled
-    bundle_list = expand_bundle(conf, conf.options.bundle)
 
-    # List all the dependencies with an explicit path
-    explicit_list = explicit_dependencies(conf.options)
+def resolve_dependency(conf, name):
 
-    # Make sure that no dependencies were both explicitly specified
-    # and specified as bundled
-    overlap = set(bundle_list).intersection(set(explicit_list))
+    # If the user specified a path for this dependency
+    if name in conf.env[USE_PATH_KEY]:
 
-    if len(overlap) > 0:
-        conf.fatal("Overlapping dependencies %r" % overlap)
+        dependency_path = conf.env[USE_PATH_KEY][name]
+        dependency_path = expand_path(dependency_path)
 
-    conf.env['BUNDLE_DEPENDENCIES'] = dict()
+        conf.start_msg('User resolve dependency %s' % name)
+        conf.env['BUNDLE_DEPENDENCIES'][name] = dependency_path
+        conf.end_msg(dependency_path)
 
-    # Loop over all dependencies and fetch the ones
-    # specified in the bundle_list
-    for name in bundle_list:
+    else:
 
+        # Download the dependency to bundle_path
+
+        # Get the path where the bundled dependencies should be placed
+        bundle_path = expand_path(conf.options.bundle_path)
         Utils.check_dir(bundle_path)
 
         conf.start_msg('Resolve dependency %s' % name)
 
-        key = DEPENDENCY_CHECKOUT_KEY % name
-        dependency_checkout = getattr(conf.options, key, None)
+        dependency_checkout = None
+
+        if name in conf.env[USE_CHECKOUT_KEY]:
+            dependency_checkout = conf.env[USE_CHECKOUT_KEY][name]
 
         dependency_path = dependencies[name].resolve(
             ctx=conf,
@@ -145,85 +154,31 @@ def configure(conf):
 
         conf.env['BUNDLE_DEPENDENCIES'][name] = dependency_path
 
-    for name in explicit_list:
-        key = DEPENDENCY_PATH_KEY % name
-        dependency_path = getattr(conf.options, key)
-        dependency_path = expand_path(dependency_path)
 
-        conf.start_msg('User resolve dependency %s' % name)
-        conf.env['BUNDLE_DEPENDENCIES'][name] = dependency_path
-        conf.end_msg(dependency_path)
+def configure(conf):
+    """
+    The configure function for the bundle dependency tool
+    :param conf: the configuration context
+    """
+    conf.load('wurf_dependency_resolve')
 
-    for dependency in dependencies:
+    conf.env[USE_PATH_KEY] = parse_options(conf.options.use_path)
+    conf.env[USE_CHECKOUT_KEY] = parse_options(conf.options.use_checkout)
+
+    conf.env['BUNDLE_DEPENDENCIES'] = dict()
+
+    # Enumerate the top-level dependencies defined in the project's wscript
+    # These dependencies might include their own dependencies in the process
+    for dependency in toplevel_dependencies:
+
+        resolve_dependency(conf, dependency)
         conf.recurse_helper(dependency)
 
 
 def build(bld):
-    for dependency in dependencies:
+
+    for dependency in bld.env['BUNDLE_DEPENDENCIES']:
         bld.recurse_helper(dependency)
-
-
-def expand_bundle(conf, arg):
-    """
-    Expands the bundle arg so that e.g. 'ALL,-gtest' becomes the
-    right set of dependencies
-    :param arg: list of bundle dependencies arguments
-    """
-    if not arg:
-        return []
-
-    arg = arg.split(',')
-
-    if 'NONE' in arg and 'ALL' in arg:
-        conf.fatal('Cannot specify both ALL and NONE as dependencies')
-
-    candidate_score = dict([(name, 0) for name in dependencies])
-
-    def check_candidate(c):
-        if c not in candidate_score:
-            conf.fatal('Cannot bundle %s, since it is not specified as a'
-                       ' dependency' % c)
-
-    for a in arg:
-
-        if a == 'ALL':
-            for candidate in candidate_score:
-                candidate_score[candidate] += 1
-            continue
-
-        if a == 'NONE':
-            continue
-
-        if a.startswith('-'):
-            a = a[1:]
-            check_candidate(a)
-            candidate_score[a] -= 1
-
-        else:
-            check_candidate(a)
-            candidate_score[a] += 1
-
-    candidates = [n for n in candidate_score if candidate_score[n] > 0]
-    return candidates
-
-
-def explicit_dependencies(options):
-    """
-    Extracts the names of the dependencies where an explicit
-    path have been that have been specified
-    :param options: the OptParser object where Waf stores the build options
-    """
-    explicit_list = []
-
-    for name in dependencies:
-
-        key = DEPENDENCY_PATH_KEY % name
-        path = getattr(options, key, None)
-
-        if path:
-            explicit_list.append(name)
-
-    return explicit_list
 
 
 @conf
@@ -260,4 +215,6 @@ def recurse_helper(self, name):
         self.fatal('Load a tool to find %s as system dependency' % name)
     else:
         p = self.dependency_path(name)
-        self.recurse([p])
+        # Some projects might not have a wscript file in their root folder
+        if os.path.isfile(os.path.join(p, 'wscript')):
+            self.recurse([p])
