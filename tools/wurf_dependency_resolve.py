@@ -127,9 +127,12 @@ class ResolveGitMajorVersion(object):
                                                 git_protocols))
 
         if git_protocol_handler == 'git@':
+            # Need to modify the url to support git over SSH
             if repo_url.startswith('github.com/'):
-                # Need to modify the url to support git over SSH
                 repo_url = repo_url.replace('github.com/', 'github.com:', 1)
+            elif repo_url.startswith('bitbucket.org/'):
+                repo_url = repo_url.replace(
+                    'bitbucket.org/', 'bitbucket.org:', 1)
             else:
                 ctx.fatal('Unknown SSH host: {}'.format(repo_url))
 
@@ -168,7 +171,7 @@ class ResolveGitMajorVersion(object):
         if not os.path.isdir(master_path):
             ctx.git_clone(repo_url, master_path, cwd=repo_folder)
 
-        # git pull will fail if the github repository is unavailable
+        # git pull will fail if the repository is unavailable
         # This is not a problem if we have already downloaded
         # the required major version for this dependency
         try:
