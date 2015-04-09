@@ -1,6 +1,6 @@
 [submodule "waf"]
     path = waf
-    url = https://code.google.com/p/waf/
+    url = https://github.com/waf-project/waf.git
     ignore = dirty
 [submodule "python-semver"]
     path = python-semver

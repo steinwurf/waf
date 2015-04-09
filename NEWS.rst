@@ -6,7 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Patch: Moved Waf submodule from Google Code to Github. Run
+  ``git submodule sync`` to update your existing repository.
 
 4.1.0
 -----
