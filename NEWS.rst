@@ -6,13 +6,14 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Updated waf to 1.8.8.
 * Patch: Moved Waf submodule from Google Code to Github. Run
   ``git submodule sync`` to update your existing repository.
 
 4.1.0
 -----
 * Patch: Do not pull the dependency right after cloning it.
-* Minor: Changed behaviour of dependency resolver when choosing git protocol.
+* Minor: Changed behavior of dependency resolver when choosing git protocol.
   Git protocol of parent project is used if supported, but falls back on
   ``https://`` if the protocol is unsupported. Protocol can still be
   specified through command line option.
