@@ -29,19 +29,17 @@ OPTIONS_NAME = 'dependency options'
 DEFAULT_BUNDLE_PATH = 'bundle_dependencies'
 """ Default folder to use for bundled dependencies """
 
-USE_PATH_KEY = 'use_path'
-""" Destination of the dependency paths in the options """
+DEPENDENCY_PATH_KEY = '%s-path'
+""" Key to the dependency paths in the options """
 
-USE_CHECKOUT_KEY = 'use_checkout'
-""" Destination of the dependency checkouts in the options """
+DEPENDENCY_CHECKOUT_KEY = '%s-checkout'
+""" Key to the dependency checkouts in the options """
 
 dependencies = dict()
 """ Dictionary for storing the dependency information """
 
-toplevel_dependencies = []
-""" List to store top-level dependencies """
 
-
+@conf
 def add_dependency(conf, resolver):
     """
     Adds a dependency.
@@ -50,6 +48,9 @@ def add_dependency(conf, resolver):
     """
     name = resolver.name
 
+    if len(dependencies) == 0 and name != 'waf-tools':
+        conf.fatal('waf-tools should be added before other dependencies')
+
     if name in dependencies:
         if type(resolver) != type(dependencies[name]) or \
            dependencies[name] != resolver:
@@ -57,17 +58,10 @@ def add_dependency(conf, resolver):
                        % (resolver, dependencies[name]))
     else:
         dependencies[name] = resolver
-        # Top-level dependencies must be enumerated in the specified order,
-        # because waf-tools must be resolved and recursed first to define the
-        # necessary tools for the other dependencies
-        if conf.is_toplevel():
-            toplevel_dependencies.append(name)
 
-    # Top-level dependencies cannot be resolved immediately
-    if not conf.is_toplevel():
         # Skip dependencies that were already resolved
         if not name in conf.env['BUNDLE_DEPENDENCIES']:
-            # Resolve this dependency defined by another dependency
+            # Resolve this dependency immediately
             resolve_dependency(conf, name)
             # Recurse into this dependency
             conf.recurse_helper(name)
@@ -97,33 +91,15 @@ def options(opt):
     add('--bundle-path', default=DEFAULT_BUNDLE_PATH, dest='bundle_path',
         help="The folder used for downloaded dependencies")
 
-    add('--use-path', default=None, action="append", dest='use_path',
-        help='Use manual path to listed dependencies')
-
-    add('--use-checkout', default=None, action="append", dest='use_checkout',
-        help='Use specific checkout to listed dependencies')
-
-
-def parse_options(options_string):
-    result = {}
-    if options_string:
-        for options in options_string:
-            for option in options.split(','):
-                try:
-                    key, value = option.split('=', 1)
-                    result[key] = value
-                except ValueError:
-                    result[option] = True
-
-    return result
-
 
 def resolve_dependency(conf, name):
 
     # If the user specified a path for this dependency
-    if name in conf.env[USE_PATH_KEY]:
+    key = DEPENDENCY_PATH_KEY % name
+    dependency_path = getattr(conf.options, key, None)
 
-        dependency_path = conf.env[USE_PATH_KEY][name]
+    if dependency_path:
+
         dependency_path = expand_path(dependency_path)
 
         conf.start_msg('User resolve dependency %s' % name)
@@ -131,7 +107,6 @@ def resolve_dependency(conf, name):
         conf.end_msg(dependency_path)
 
     else:
-
         # Download the dependency to bundle_path
 
         # Get the path where the bundled dependencies should be placed
@@ -140,10 +115,8 @@ def resolve_dependency(conf, name):
 
         conf.start_msg('Resolve dependency %s' % name)
 
-        dependency_checkout = None
-
-        if name in conf.env[USE_CHECKOUT_KEY]:
-            dependency_checkout = conf.env[USE_CHECKOUT_KEY][name]
+        key = DEPENDENCY_CHECKOUT_KEY % name
+        dependency_checkout = getattr(conf.options, key, None)
 
         dependency_path = dependencies[name].resolve(
             ctx=conf,
@@ -162,17 +135,7 @@ def configure(conf):
     """
     conf.load('wurf_dependency_resolve')
 
-    conf.env[USE_PATH_KEY] = parse_options(conf.options.use_path)
-    conf.env[USE_CHECKOUT_KEY] = parse_options(conf.options.use_checkout)
-
     conf.env['BUNDLE_DEPENDENCIES'] = dict()
-
-    # Enumerate the top-level dependencies defined in the project's wscript
-    # These dependencies might include their own dependencies in the process
-    for dependency in toplevel_dependencies:
-
-        resolve_dependency(conf, dependency)
-        conf.recurse_helper(dependency)
 
 
 def build(bld):
