@@ -81,9 +81,8 @@ def configure(conf):
 
             warn("Using default git protocol ({}) for dependencies. "
                  "Use --git-protocol=[proto] to assign another protocol "
-                 "for dependencies. "
-                 "Supported protocols: {}".format(git_protocol_handler,
-                                                  git_protocols))
+                 "for dependencies. Supported protocols: {}".format(
+                 git_protocol_handler, git_protocols))
 
     if git_protocol_handler not in git_protocols:
         conf.fatal('Unknown git protocol specified: "{}", supported protocols '
@@ -208,17 +207,15 @@ class ResolveVersion(object):
                 # If the project contains submodules we also get those
                 ctx.git_get_submodules(checkout_path)
 
-            # The major version of the latest tag should not be larger than or
-            # equal to the specified major version
+            # The major version of the latest tag should not be larger than
+            # the specified major version
             tags = ctx.git_tags(cwd=checkout_path)
             for tag in tags:
                 try:
                     if semver.parse(tag)['major'] > self.major:
-                        ctx.fatal(
-                            "Tag {} in checkout {} is newer than the required "
-                            "major version {}".format(tag,
-                                                      use_checkout,
-                                                      self.major))
+                        ctx.fatal("Tag {} in checkout {} is newer than the "
+                                  "required major version {}".format(
+                                  tag, use_checkout, self.major))
                 except ValueError:  # ignore tags we cannot parse
                     pass
 
