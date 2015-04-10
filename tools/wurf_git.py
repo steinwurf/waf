@@ -200,6 +200,18 @@ def git_branch(ctx, **kw):
 
 
 @conf
+def git_get_submodules(ctx, repository_dir):
+    """
+    Runs 'git submodule sync', 'git submodule init', and 'git submodule update'
+    unless the repository doesn't have submodules.
+    """
+    if ctx.git_has_submodules(repository_dir):
+        ctx.git_submodule_sync(cwd=repository_dir)
+        ctx.git_submodule_init(cwd=repository_dir)
+        ctx.git_submodule_update(cwd=repository_dir)
+
+
+@conf
 def git_has_submodules(ctx, repository_dir):
     """
     Returns true if the repository contains the .gitmodules file
