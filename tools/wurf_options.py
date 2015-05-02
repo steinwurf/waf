@@ -57,7 +57,7 @@ class WurfOptions(Options.OptionsContext):
         ctx.opt = self
         # If active_resolvers is true, then the dependency resolvers are
         # allowed to download the dependencies. If it is false, then the
-        # dependency bundle will only enumerate the previously resolved
+        # dependency bundle will only recurse into the previously resolved
         # dependencies to fetch the options from these.
         ctx.active_resolvers = 'configure' in sys.argv and not show_help
         try:
