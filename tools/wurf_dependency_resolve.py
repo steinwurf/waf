@@ -26,7 +26,7 @@ def options(opt):
     Options are shown when "python waf -h" is invoked
     :param opt: the Waf OptionsContext
     """
-    git_opts = opt.add_option_group('git options')
+    git_opts = opt.add_option_group('Git options')
 
     git_opts.add_option(
         '--git-protocol', default=None, dest='git_protocol',
@@ -35,20 +35,20 @@ def options(opt):
 
     git_opts.add_option(
         '--check-git-version', default=True, dest='check_git_version',
-        help="Specifies if the minimum git version is checked")
+        help="Specifies if the minimum git version should be checked")
 
 
-def configure(conf):
+def resolve(ctx):
     """
-    The configure function for the dependency resolver tool
-    :param conf: the configuration context
+    The resolve function for the dependency resolver tool
+    :param ctx: the resolve context
     """
     # We need to load git to resolve the dependencies
-    conf.load('wurf_git')
+    ctx.load('wurf_git')
 
     # Check if git meets the minimum requirements
-    if conf.options.check_git_version:
-        conf.git_check_minimum_version((1, 7, 0))
+    if ctx.options.check_git_version:
+        ctx.git_check_minimum_version((1, 7, 0))
 
     # Get the remote url of the parent project
     # to see which protocol prefix (https://, git@, git://)
@@ -56,16 +56,16 @@ def configure(conf):
     parent_url = None
     try:
         parent_url = \
-            conf.git_config(['--get', 'remote.origin.url'], cwd=os.getcwd())
+            ctx.git_config(['--get', 'remote.origin.url'], cwd=os.getcwd())
     except Exception as e:
-        conf.to_log('Exception when executing git config - fallback to '
+        ctx.to_log('Exception when executing git config - fallback to '
                     'default protocol! parent_url: {0}'.format(parent_url))
-        conf.to_log(e)
+        ctx.to_log(e)
 
     global git_protocol_handler
 
-    if conf.options.git_protocol:
-        git_protocol_handler = conf.options.git_protocol
+    if ctx.options.git_protocol:
+        git_protocol_handler = ctx.options.git_protocol
 
     else:
         # Check if parent protocol is supported
@@ -85,7 +85,7 @@ def configure(conf):
                  git_protocol_handler, git_protocols))
 
     if git_protocol_handler not in git_protocols:
-        conf.fatal('Unknown git protocol specified: "{}", supported protocols '
+        ctx.fatal('Unknown git protocol specified: "{}", supported protocols '
                    'are {}'.format(git_protocol_handler, git_protocols))
 
 

@@ -20,10 +20,11 @@ def configure(conf):
 from waflib.Configure import conf
 from waflib import Utils
 from waflib import Errors
+from waflib import ConfigSet
 
 import os
 
-OPTIONS_NAME = 'dependency options'
+OPTIONS_NAME = 'Dependency options'
 """ Name of the options group """
 
 DEFAULT_BUNDLE_PATH = 'bundle_dependencies'
@@ -38,6 +39,8 @@ DEPENDENCY_CHECKOUT_KEY = '%s-checkout'
 dependencies = dict()
 """ Dictionary for storing the dependency information """
 
+dependency_paths = []
+""" List to store the dependency paths """
 
 @conf
 def add_dependency(conf, resolver):
@@ -56,15 +59,30 @@ def add_dependency(conf, resolver):
            dependencies[name] != resolver:
             conf.fatal('Incompatible dependency resolvers %r <=> %r '
                        % (resolver, dependencies[name]))
-    else:
+
+    # Skip dependencies that were already resolved
+    if name not in dependencies:
+
         dependencies[name] = resolver
 
-        # Skip dependencies that were already resolved
-        if not name in conf.env['BUNDLE_DEPENDENCIES']:
+        bundle_opts = conf.opt.get_option_group(OPTIONS_NAME)
+        add = bundle_opts.add_option
+
+        add('--%s-path' % name,
+            dest=DEPENDENCY_PATH_KEY % name,
+            default=False,
+            help='Path to %s' % name)
+
+        add('--%s-use-checkout' % name,
+            dest=DEPENDENCY_CHECKOUT_KEY % name,
+            default=False,
+            help='The checkout to use for %s' % name)
+
+        if conf.active_resolvers:
             # Resolve this dependency immediately
-            resolve_dependency(conf, name)
+            path = resolve_dependency(conf, name)
             # Recurse into this dependency
-            conf.recurse_helper(name)
+            conf.recurse([path])
 
 
 def expand_path(path):
@@ -89,7 +107,8 @@ def options(opt):
     add = bundle_opts.add_option
 
     add('--bundle-path', default=DEFAULT_BUNDLE_PATH, dest='bundle_path',
-        help="The folder used for downloaded dependencies")
+        help='The folder where the bundled dependencies are downloaded. '
+             'Default folder: "{}"'.format(DEFAULT_BUNDLE_PATH))
 
 
 def resolve_dependency(conf, name):
@@ -103,7 +122,6 @@ def resolve_dependency(conf, name):
         dependency_path = expand_path(dependency_path)
 
         conf.start_msg('User resolve dependency %s' % name)
-        conf.env['BUNDLE_DEPENDENCIES'][name] = dependency_path
         conf.end_msg(dependency_path)
 
     else:
@@ -125,7 +143,42 @@ def resolve_dependency(conf, name):
 
         conf.end_msg(dependency_path)
 
-        conf.env['BUNDLE_DEPENDENCIES'][name] = dependency_path
+    dependency_paths.append(dependency_path)
+    return dependency_path
+
+
+def resolve(ctx):
+    """
+    The resolve function for the bundle dependency tool
+    :param conf: the resolve context
+    """
+    if ctx.active_resolvers:
+        ctx.load('wurf_dependency_resolve')
+        ctx.env['DEPENDENCY_PATHS'] = []
+    else:
+        # Reload the environment from a previously completed resolve step
+        try:
+            path = os.path.join(ctx.bldnode.abspath(), 'resolve.config.py')
+            ctx.env = ConfigSet.ConfigSet(path)
+        except EnvironmentError:
+            pass
+
+
+def post_resolve(ctx):
+    """
+    This function runs after the resolve step is completed
+    :param conf: the resolve context
+    """
+    if ctx.active_resolvers:
+        # Save the environment that was created during the active resolve step
+        ctx.env['DEPENDENCY_PATHS'] = dependency_paths
+        path = os.path.join(ctx.bldnode.abspath(), 'resolve.config.py')
+        ctx.env.store(path)
+    else:
+        # Go through the previously resolved dependencies to fetch the
+        # options defined in their resolve functions
+        for path in ctx.env['DEPENDENCY_PATHS']:
+            ctx.recurse([path])
 
 
 def configure(conf):
@@ -133,51 +186,12 @@ def configure(conf):
     The configure function for the bundle dependency tool
     :param conf: the configuration context
     """
-    conf.load('wurf_dependency_resolve')
-
-    conf.env['BUNDLE_DEPENDENCIES'] = dict()
+    conf.env['DEPENDENCY_PATHS'] = dependency_paths
+    for path in dependency_paths:
+        conf.recurse([path])
 
 
 def build(bld):
 
-    for dependency in bld.env['BUNDLE_DEPENDENCIES']:
-        bld.recurse_helper(dependency)
-
-
-@conf
-def has_dependency_path(self, name):
-    """
-    Returns true if the dependency has been specified
-    """
-
-    if name in self.env['BUNDLE_DEPENDENCIES']:
-        return True
-
-    return False
-
-
-@conf
-def dependency_path(self, name):
-    """
-    Returns the dependency path
-    """
-    return self.env['BUNDLE_DEPENDENCIES'][name]
-
-
-@conf
-def is_toplevel(self):
-    """
-    Returns true if the current script is the top-level wscript
-    """
-    return self.srcnode == self.path
-
-
-@conf
-def recurse_helper(self, name):
-    if not self.has_dependency_path(name):
-        self.fatal('Load a tool to find %s as system dependency' % name)
-    else:
-        p = self.dependency_path(name)
-        # Some projects might not have a wscript file in their root folder
-        if os.path.isfile(os.path.join(p, 'wscript')):
-            self.recurse([p])
+    for path in bld.env['DEPENDENCY_PATHS']:
+        bld.recurse([path])
