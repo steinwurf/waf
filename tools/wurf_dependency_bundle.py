@@ -33,7 +33,7 @@ DEFAULT_BUNDLE_PATH = 'bundle_dependencies'
 DEPENDENCY_PATH_KEY = '%s-path'
 """ Key to the dependency paths in the options """
 
-DEPENDENCY_CHECKOUT_KEY = '%s-checkout'
+DEPENDENCY_CHECKOUT_KEY = '%s-use-checkout'
 """ Key to the dependency checkouts in the options """
 
 dependencies = dict()
