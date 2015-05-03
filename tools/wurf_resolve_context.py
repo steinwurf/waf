@@ -33,8 +33,11 @@ class ResolveContext(ConfigurationContext):
         self.bldnode = self.path.make_node('build')
         self.bldnode.mkdir()
 
-        path = os.path.join(self.bldnode.abspath(), 'resolve.log')
-        self.logger = Logs.make_logger(path, 'cfg')
+        # Create a log file if this is an "active" resolve step
+        if self.active_resolvers:
+            path = os.path.join(self.bldnode.abspath(), 'resolve.log')
+            self.logger = Logs.make_logger(path, 'cfg')
+
         # Directly call Context.execute() to avoid the side effects of
         # ConfigurationContext.execute()
         Context.Context.execute(self)

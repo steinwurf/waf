@@ -43,11 +43,13 @@ dependency_paths = []
 """ List to store the dependency paths """
 
 @conf
-def add_dependency(ctx, resolver):
+def add_dependency(ctx, resolver, recursive_resolve=True):
     """
     Adds a dependency.
     :param resolver: a resolver object which is responsible for downloading
                      the dependency if necessary
+    :param recursive_resolve: specifies if it is allowed to recurse into the
+                     dependency wscript after the dependency is resolved
     """
     name = resolver.name
 
@@ -84,12 +86,15 @@ def add_dependency(ctx, resolver):
             # Resolve this dependency immediately
             path = resolve_dependency(ctx, name)
             # Recurse into this dependency
-            ctx.recurse([path])
+            if recursive_resolve:
+                ctx.recurse([path])
         # Otherwise check if we already stored the path to this dependency
         # when we resolved it (during an "active" resolve step)
         elif name in ctx.env['DEPENDENCY_DICT']:
             path = ctx.env['DEPENDENCY_DICT'][name]
-            ctx.recurse([path])
+            # Recurse into this dependency
+            if recursive_resolve:
+                ctx.recurse([path])
 
 
 def expand_path(path):
