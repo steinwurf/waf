@@ -7,14 +7,7 @@ compatible newer version of a specific library is available. The git
 tags must be named after the Semantic Versioning scheme defined here:
 www.semver.org
 
-The wscript will look like this:
-
-def options(opt):
-    opt.load('wurf_dependency_bundle')
-
-def configure(conf):
-    conf.load('wurf_dependency_bundle')
-
+This tool is loaded automatically in "wurf_common_tools".
 """
 
 from waflib.Configure import conf
