@@ -7,15 +7,19 @@ from waflib import Options
 
 def options(opt):
 
-    opt.add_option('--standalone_archive', action='store', default=None,
-                   help='Name of the standalone archive, e.g. test_archive')
+    opts = opt.add_option_group('Standalone archive options')
 
-    opt.add_option('--standalone_algo', action='store', default='zip',
-                   help='valid algo types are zip, tar.bz2 and tar.gz')
+    opts.add_option('--standalone_archive', action='store', default=None,
+                    help='Name of the standalone archive')
+
+    opts.add_option('--standalone_algo', action='store', default='zip',
+                    help='Compression algorithm of the standalone archive. '
+                         'Possible values: zip, tar.bz2, tar.gz')
 
 
 class Standalone(Dist):
 
+    '''creates a standalone archive that contains the bundled dependencies'''
     cmd = 'standalone'
 
     def __init__(self, **kw):
@@ -34,8 +38,3 @@ class Standalone(Dist):
 
         return self.base_path.ant_glob(
             '**/*', dir=True, excl=excludes.split(' '))
-
-
-def standalone(ctx):
-        """Makes an archive for redistributing the sources"""
-        pass
