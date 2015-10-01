@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Updated waf to 1.8.14.
 * Minor: Updated waf to 1.8.8.
 * Patch: Moved Waf submodule from Google Code to Github. Run
   ``git submodule sync`` to update your existing repository.
