@@ -37,8 +37,8 @@ def resolve(ctx):
 When a dependency is added, wurf_dependency_bundle tries to resolve the
 project. This only happens if this is an active resolve step, i.e. if
 "configure" is given in the waf commands. In a passive resolve step, the
-tool only enumerates the dependencies that the previously resolved
-dependencies to fetch the options from these.
+tool only enumerates the  previously resolved dependencies to fetch the
+options from these.
 
 After downloading/resolving a dependency, we also recurse into the wscript
 of that dependency where the "resolve" function adds the dependencies of
@@ -48,9 +48,8 @@ the original option parser using "ctx.opt":
 
 def resolve(ctx):
     opts = ctx.opt.add_option_group('Makespec options')
-    opts.add_option(
-        '--cxx_mkspec', default=None, dest='cxx_mkspec',
-        help="C++ make specification")
+    opts.add_option('--cxx_mkspec', default=None, dest='cxx_mkspec',
+                    help="C++ make specification")
 """
 
 
