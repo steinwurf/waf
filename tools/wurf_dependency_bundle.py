@@ -10,12 +10,13 @@ www.semver.org
 This tool is loaded automatically in "wurf_common_tools".
 """
 
+import os
+
 from waflib.Configure import conf
 from waflib import Utils
 from waflib import Errors
 from waflib import ConfigSet
 
-import os
 
 OPTIONS_NAME = 'Dependency options'
 """ Name of the options group """
@@ -30,10 +31,14 @@ DEPENDENCY_CHECKOUT_KEY = '%s-use-checkout'
 """ Key to the dependency checkouts in the options """
 
 dependencies = dict()
-""" Dictionary for storing the dependency information """
+""" Dictionary that stores the dependency resolvers """
 
-dependency_paths = []
-""" List to store the dependency paths """
+dependency_dict = dict()
+""" Dictionary to store and access the dependency paths by name """
+
+dependency_list = []
+""" List to store the dependency paths in the order of their definition """
+
 
 @conf
 def add_dependency(ctx, resolver, recursive_resolve=True):
@@ -149,7 +154,7 @@ def resolve_dependency(ctx, name):
         ctx.end_msg(dependency_path)
 
     ctx.env['DEPENDENCY_DICT'][name] = dependency_path
-    dependency_paths.append(dependency_path)
+    dependency_list.append(dependency_path)
     return dependency_path
 
 
@@ -180,6 +185,8 @@ def post_resolve(ctx):
     :param ctx: the resolve context
     """
     if ctx.active_resolvers:
+        # The dependency_dict will be needed in later steps
+        dependency_dict.update(ctx.env['DEPENDENCY_DICT'])
         # Save the environment that was created during the active resolve step
         path = os.path.join(ctx.bldnode.abspath(), 'resolve.config.py')
         ctx.env.store(path)
@@ -190,12 +197,13 @@ def configure(conf):
     The configure function for the bundle dependency tool
     :param conf: the configuration context
     """
-    # Copy the dependency_paths list (that was filled during the resolve step)
+    # Copy the dependency dict and list (that were filled in the resolve step)
     # to the persistent environment of the real ConfigurationContext
-    conf.env['DEPENDENCY_PATHS'] = dependency_paths
-    # Note that the dependencies will be enumerated in the same order as
+    conf.env['DEPENDENCY_LIST'] = dependency_list
+    conf.env['DEPENDENCY_DICT'] = dependency_dict
+    # The dependencies will be enumerated in the same order as
     # they were defined in the wscripts (waf-tools must be the first)
-    for path in conf.env['DEPENDENCY_PATHS']:
+    for path in conf.env['DEPENDENCY_LIST']:
         conf.recurse([path])
 
 
@@ -203,5 +211,21 @@ def build(bld):
     # The BuildContext reloads the environment of the ConfigurationContext,
     # so the dependencies will be enumerated in the same order as
     # in the configure step
-    for path in bld.env['DEPENDENCY_PATHS']:
+    for path in bld.env['DEPENDENCY_LIST']:
         bld.recurse([path])
+
+
+@conf
+def has_dependency_path(self, name):
+    """
+    Returns true if the dependency has been specified
+    """
+    return name in self.env['DEPENDENCY_DICT']
+
+
+@conf
+def dependency_path(self, name):
+    """
+    Returns the dependency path
+    """
+    return self.env['DEPENDENCY_DICT'][name]
