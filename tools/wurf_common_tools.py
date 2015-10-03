@@ -62,9 +62,9 @@ def get_tool_option(conf, option):
     current = Options.options.__dict__
     stored = conf.env.stored_options
 
-    if option in current:
+    if option in current and current[option] != None:
         return current[option]
-    elif option in stored:
+    elif option in stored and stored[option] != None:
         return stored[option]
     else:
         conf.fatal('Missing option: %s' % option)
@@ -75,9 +75,9 @@ def has_tool_option(conf, option):
     current = Options.options.__dict__
     stored = conf.env.stored_options
 
-    if option in current:
-        return (current[option] != None)
-    elif option in stored:
-        return (stored[option] != None)
+    if option in current and current[option] != None:
+        return True
+    elif option in stored and stored[option] != None:
+        return True
     else:
         return False
