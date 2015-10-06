@@ -6,6 +6,10 @@ of every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+5.0.0
+-----
 * Major: Added wurf_options to allow the definition of options in dependencies.
 * Major: Dependencies are resolved recursively in the ``resolve`` step.
 * Major: wurf_tools was replaced by wurf_common_tools that loads the commonly
