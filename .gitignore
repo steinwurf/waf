@@ -1,6 +1,8 @@
-# For projects that use Waf for building: http://code.google.com/p/waf/
+# waf projects
 waf-*
+waf3-*
 .waf-*
+.waf3-*
 .lock-*
 build
 bundle_dependencies
@@ -9,6 +11,9 @@ bundle_dependencies
 \#*#
 *.#*
 *~
+
+# Python
+*.pyc
 
 # Visual Studio ignore
 *.bat

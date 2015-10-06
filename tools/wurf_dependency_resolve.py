@@ -8,13 +8,13 @@
 # same folder as the dependency_resolve. Note, that this
 # happens with the waf packaging where all tools end up
 # in the extras folder
-from . import semver
+try:
+    from . import semver
+except:
+    import semver
 
 import os
-#import re
 import hashlib
-
-from waflib.Logs import warn
 
 git_protocols = ['https://', 'git@', 'git://']
 git_protocol_handler = ''
@@ -26,7 +26,7 @@ def options(opt):
     Options are shown when "python waf -h" is invoked
     :param opt: the Waf OptionsContext
     """
-    git_opts = opt.add_option_group('git options')
+    git_opts = opt.add_option_group('Git options')
 
     git_opts.add_option(
         '--git-protocol', default=None, dest='git_protocol',
@@ -35,20 +35,20 @@ def options(opt):
 
     git_opts.add_option(
         '--check-git-version', default=True, dest='check_git_version',
-        help="Specifies if the minimum git version is checked")
+        help="Specifies if the minimum git version should be checked")
 
 
-def configure(conf):
+def resolve(ctx):
     """
-    The configure function for the dependency resolver tool
-    :param conf: the configuration context
+    The resolve function for the dependency resolver tool
+    :param ctx: the resolve context
     """
     # We need to load git to resolve the dependencies
-    conf.load('wurf_git')
+    ctx.load('wurf_git')
 
     # Check if git meets the minimum requirements
-    if conf.options.check_git_version:
-        conf.git_check_minimum_version((1, 7, 0))
+    if ctx.options.check_git_version:
+        ctx.git_check_minimum_version((1, 7, 0))
 
     # Get the remote url of the parent project
     # to see which protocol prefix (https://, git@, git://)
@@ -56,19 +56,19 @@ def configure(conf):
     parent_url = None
     try:
         parent_url = \
-            conf.git_config(['--get', 'remote.origin.url'], cwd=os.getcwd())
+            ctx.git_config(['--get', 'remote.origin.url'], cwd=os.getcwd())
     except Exception as e:
-        conf.to_log('Exception when executing git config - fallback to '
+        ctx.to_log('Exception when executing git config - fallback to '
                     'default protocol! parent_url: {0}'.format(parent_url))
-        conf.to_log(e)
+        ctx.to_log(e)
 
     global git_protocol_handler
 
-    if conf.options.git_protocol:
-        git_protocol_handler = conf.options.git_protocol
+    if ctx.options.git_protocol:
+        git_protocol_handler = ctx.options.git_protocol
 
     else:
-    # Check if parent protocol is supported
+        # Check if parent protocol is supported
         for g in git_protocols:
             if parent_url and parent_url.startswith(g):
                 git_protocol_handler = g
@@ -77,38 +77,42 @@ def configure(conf):
             git_protocol_handler = 'https://'
             # Unsupported parent protocol, using default
             # Set the protocol handler via the --git-protocol option
+            from waflib.Logs import warn
+
             warn("Using default git protocol ({}) for dependencies. "
                  "Use --git-protocol=[proto] to assign another protocol "
-                 "for dependencies. "
-                 "Supported protocols: {}".format(git_protocol_handler,
-                                                  git_protocols))
+                 "for dependencies. Supported protocols: {}".format(
+                 git_protocol_handler, git_protocols))
 
     if git_protocol_handler not in git_protocols:
-        conf.fatal('Unknown git protocol specified: {}, supported protocols '
+        ctx.fatal('Unknown git protocol specified: "{}", supported protocols '
                    'are {}'.format(git_protocol_handler, git_protocols))
 
 
-class ResolveGitMajorVersion(object):
-
+class ResolveVersion(object):
     """
-    Uses the tagged version numbering to follow a specific
-    major version number i.e. supports tags like 2.0.1
+    Uses the tagged version numbering to follow a specific version number i.e
+    supports tags like 2.0.1
     """
 
-    def __init__(self, name, git_repository, major_version):
+    def __init__(self, name, git_repository, major, minor=None, patch=None):
         """
         Creates a new resolver object
         :param name: the name of this dependency resolver
         :param git_repository: URL of the Git repository where the dependency
                                can be found
-        :param major_version: The major version number to track (ensures binary
-                              compatability)
+        :param major: The major version number to track (ensures binary
+                      compatibility), None for newest
+        :param minor: The minor version number to track, None for newest
+        :param patch: The patch version number to track, None for newest
         """
         self.name = name
         self.git_repository = git_repository
-        self.major_version = major_version
+        self.major = major
+        self.minor = minor
+        self.patch = patch
 
-    def repository_url(self, ctx):
+    def repository_url(self, ctx, protocol_handler):
         """
         Finds the url for the git repository of the dependency.
         :param ctx: A waf ConfigurationContext
@@ -121,12 +125,12 @@ class ResolveGitMajorVersion(object):
             ctx.fatal('Repository URL contains the following '
                       'git protocol handler: {}'.format(repo_url))
 
-        if git_protocol_handler not in git_protocols:
-            ctx.fatal('Unknown git protocol specified: {}, supported '
-                      'protocols are {}'.format(git_protocol_handler,
+        if protocol_handler not in git_protocols:
+            ctx.fatal('Unknown git protocol specified: "{}", supported '
+                      'protocols are {}'.format(protocol_handler,
                                                 git_protocols))
 
-        if git_protocol_handler == 'git@':
+        if protocol_handler == 'git@':
             # Need to modify the url to support git over SSH
             if repo_url.startswith('github.com/'):
                 repo_url = repo_url.replace('github.com/', 'github.com:', 1)
@@ -136,7 +140,7 @@ class ResolveGitMajorVersion(object):
             else:
                 ctx.fatal('Unknown SSH host: {}'.format(repo_url))
 
-        return git_protocol_handler + repo_url
+        return protocol_handler + repo_url
 
     def resolve(self, ctx, path, use_checkout):
         """
@@ -147,10 +151,7 @@ class ResolveGitMajorVersion(object):
         """
         path = os.path.abspath(os.path.expanduser(path))
 
-        repo_url = self.repository_url(ctx)
-
-        # Replace all non-alphanumeric characters with _
-        #repo_url = re.sub('[^0-9a-zA-Z]+', '_', self.git_repository)
+        repo_url = self.repository_url(ctx, git_protocol_handler)
 
         # Use the first 6 characters of the SHA1 hash of the repository url
         # to uniquely identify the repository
@@ -178,17 +179,14 @@ class ResolveGitMajorVersion(object):
             try:
                 # git pull will fail if the repository is unavailable
                 # This is not a problem if we have already downloaded
-                # the required major version for this dependency
+                # the required version for this dependency
                 ctx.git_pull(cwd=master_path)
             except Exception as e:
                 ctx.to_log('Exception when executing git pull:')
                 ctx.to_log(e)
 
         # If the project contains submodules we also get those
-        if ctx.git_has_submodules(master_path):
-            ctx.git_submodule_sync(cwd=master_path)
-            ctx.git_submodule_init(cwd=master_path)
-            ctx.git_submodule_update(cwd=master_path)
+        ctx.git_get_submodules(master_path)
 
         # Do we need a specific checkout? (master, commit or dev branch)
 
@@ -207,20 +205,17 @@ class ResolveGitMajorVersion(object):
                     ctx.git_pull(cwd=checkout_path)
 
                 # If the project contains submodules we also get those
-                if ctx.git_has_submodules(checkout_path):
-                    ctx.git_submodule_sync(cwd=checkout_path)
-                    ctx.git_submodule_init(cwd=checkout_path)
-                    ctx.git_submodule_update(cwd=checkout_path)
+                ctx.git_get_submodules(checkout_path)
 
-            # The major version of the latest tag should not be larger
-            # than the specified major version
+            # The major version of the latest tag should not be larger than
+            # the specified major version
             tags = ctx.git_tags(cwd=checkout_path)
             for tag in tags:
                 try:
-                    if semver.parse(tag)['major'] > self.major_version:
-                        ctx.fatal('Tag %r in checkout %r is newer than '
-                                  'the required major version %r' %
-                                  (tag, use_checkout, self.major_version))
+                    if semver.parse(tag)['major'] > self.major:
+                        ctx.fatal("Tag {} in checkout {} is newer than the "
+                                  "required major version {}".format(
+                                  tag, use_checkout, self.major))
                 except ValueError:  # ignore tags we cannot parse
                     pass
 
@@ -229,7 +224,7 @@ class ResolveGitMajorVersion(object):
         tags = []
         # git tags will fail for standalone dependencies
         # This is not a problem if the folder is already present
-        # for the required major version of this dependency
+        # for the required version of this dependency
         try:
             tags = ctx.git_tags(cwd=master_path)
         except Exception as e:
@@ -238,17 +233,18 @@ class ResolveGitMajorVersion(object):
             # As a fallback, use the existing folder names as tags
             tags = [d for d in os.listdir(repo_folder)
                     if os.path.isdir(os.path.join(repo_folder, d))]
+            ctx.to_log('Using the following fallback tags:')
+            ctx.to_log(tags)
 
         if len(tags) == 0:
-            ctx.fatal('No version tags specified for %r '
-                      '- impossible to track major version' % self.name)
+            ctx.fatal("No version tags specified for {} - impossible to track "
+                      "version".format(self.name))
 
         tag = self.select_tag(tags)
 
         if not tag:
-            ctx.fatal('No compatible tags found %r '
-                      'to track major version %d of %s' %
-                      (tags, self.major_version, self.name))
+            ctx.fatal("No compatible tags found {} to track major version {} "
+                      "of {}".format(tags, self.major, self.name))
 
         # Do we have the newest tag checked out
         tag_path = os.path.join(repo_folder, tag)
@@ -258,28 +254,30 @@ class ResolveGitMajorVersion(object):
             ctx.git_checkout(tag, cwd=tag_path)
 
             # If the project contains submodules we also get those
-            if ctx.git_has_submodules(tag_path):
-                ctx.git_submodule_sync(cwd=tag_path)
-                ctx.git_submodule_init(cwd=tag_path)
-                ctx.git_submodule_update(cwd=tag_path)
+            ctx.git_get_submodules(tag_path)
 
         return tag_path
 
     def select_tag(self, tags):
         """
         Compare the available tags and return the newest tag for the
-        specific major version.
-        :param tags: list of availabe tags
+        specific version.
+        :param tags: list of available tags
         :return: the tag to use or None if not tag is compatible
         """
 
-        # Get tags with matching major version
+        # Get tags with matching version
         valid_tags = []
 
-        for t in tags:
+        for tag in tags:
             try:
-                if semver.parse(t)['major'] == self.major_version:
-                    valid_tags.append(t)
+                t = semver.parse(tag)
+                if (self.major is not None and t['major'] != self.major) or \
+                   (self.minor is not None and t['minor'] != self.minor) or \
+                   (self.patch is not None and t['patch'] != self.patch):
+                    continue
+
+                valid_tags.append(tag)
             except ValueError:  # ignore tags we cannot parse
                 pass
 
@@ -287,8 +285,9 @@ class ResolveGitMajorVersion(object):
             return None
 
         # Now figure out which version is the newest. We may only
-        # use versions with the same major version as self.major_version
-        # to ensure compatibility see rules at semver.org
+        # use versions meeting the version requirement as specified by
+        # self.major, self.minor, and self.patch, to ensure compatibility see
+        # rules at semver.org
 
         best_match = valid_tags[0]
 
@@ -299,18 +298,33 @@ class ResolveGitMajorVersion(object):
         return best_match
 
     def __eq__(self, other):
-        return ((self.git_repository.lower(), self.major_version) ==
-                (other.git_repository.lower(), other.major_version))
+        s = (self.git_repository.lower(),
+             self.major,
+             self.minor,
+             self.patch)
+        o = (other.git_repository.lower(),
+             other.major,
+             other.minor,
+             other.patch)
+        return s == o
 
     def __ne__(self, other):
         return not self == other
 
     def __lt__(self, other):
-        return ((self.git_repository.lower(), self.major_version) <
-                (other.git_repository.lower(), other.major_version))
+        s = (self.git_repository.lower(),
+             self.major,
+             self.minor,
+             self.patch)
+        o = (other.git_repository.lower(),
+             other.major,
+             other.minor,
+             other.patch)
+        return s < o
 
     def __repr__(self):
-        f = ('ResolveGitMajorVersion(name={}, git_repository={}, '
-             'major_version={})')
+        f = ('ResolveVersion(name={}, git_repository={}, major={}, minor={}, '
+             'patch={})')
 
-        return f.format(self.name, self.git_repository, self.major_version)
+        return f.format(
+            self.name, self.git_repository, self.major, self.minor, self.patch)

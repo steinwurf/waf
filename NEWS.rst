@@ -6,6 +6,11 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Added wurf_options to allow the definition of options in dependencies.
+* Major: Dependencies are resolved recursively in the ``resolve`` step.
+* Major: wurf_tools was replaced by wurf_common_tools that loads the commonly
+  used tools automatically.
+* Minor: Updated waf to 1.8.14.
 * Minor: Updated waf to 1.8.8.
 * Patch: Moved Waf submodule from Google Code to Github. Run
   ``git submodule sync`` to update your existing repository.

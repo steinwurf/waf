@@ -55,7 +55,7 @@ def find_in_winreg():
         return ''
 
 
-def find_git_win32(conf):
+def find_git_win32(ctx):
     """
     Attempt to find the git binary on windows
     :param conf: a Waf ConfigurationContext
@@ -64,30 +64,21 @@ def find_git_win32(conf):
 
     if path:
         path_list = [path, os.path.join(path, 'bin')]
-        conf.find_program('git', path_list=path_list)
+        ctx.find_program('git', path_list=path_list)
     else:
-        conf.find_program('git')
+        ctx.find_program('git')
 
 
-def options(opt):
-    """
-    Add option to specify git protocol
-    Options are shown when ./waf -h is invoked
-    :param opt: the Waf OptionsContext
-    """
-    opt.add_option_group('git options')
-
-
-def configure(conf):
+def resolve(ctx):
     """
     Attempts to locate the git binary
     :param conf: a Waf ConfigurationContext
     """
 
     if Utils.is_win32:
-        find_git_win32(conf)
+        find_git_win32(ctx)
     else:
-        conf.find_program('git')
+        ctx.find_program('git')
 
 
 @conf
@@ -197,6 +188,18 @@ def git_branch(ctx, **kw):
         ctx.fatal('Failed to locate current branch')
 
     return current, others
+
+
+@conf
+def git_get_submodules(ctx, repository_dir):
+    """
+    Runs 'git submodule sync', 'git submodule init', and 'git submodule update'
+    unless the repository doesn't have submodules.
+    """
+    if ctx.git_has_submodules(repository_dir):
+        ctx.git_submodule_sync(cwd=repository_dir)
+        ctx.git_submodule_init(cwd=repository_dir)
+        ctx.git_submodule_update(cwd=repository_dir)
 
 
 @conf
