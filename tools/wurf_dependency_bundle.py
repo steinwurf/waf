@@ -211,7 +211,9 @@ def build(bld):
     # The BuildContext reloads the environment of the ConfigurationContext,
     # so the dependencies will be enumerated in the same order as
     # in the configure step
-    for path in bld.env['DEPENDENCY_LIST']:
+    # We need to build the dependencies in the reveresed order they were
+    # appended to ensure that dependencies dependencies are available.
+    for path in reversed(bld.env['DEPENDENCY_LIST']):
         bld.recurse([path])
 
 
