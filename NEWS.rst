@@ -6,7 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Patch: Reversed dependency build order.
 
 5.0.0
 -----
