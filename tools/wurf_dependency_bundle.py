@@ -11,6 +11,8 @@ This tool is loaded automatically in "wurf_common_tools".
 """
 
 import os
+import sys
+import argparse
 
 from waflib.Configure import conf
 from waflib import Utils
@@ -123,9 +125,10 @@ def options(opt):
 
 def resolve_dependency(ctx, name):
 
-    # If the user specified a path for this dependency
-    key = DEPENDENCY_PATH_KEY % name
-    dependency_path = getattr(ctx.options, key, None)
+    p = argparse.ArgumentParser()
+    p.add_argument('--%s-path' % name, dest='dependency_path', type=str)
+    args, unknown = p.parse_known_args(args=sys.argv[1:])
+    dependency_path = args.dependency_path
 
     if dependency_path:
 
