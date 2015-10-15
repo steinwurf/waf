@@ -72,12 +72,12 @@ def add_dependency(ctx, resolver, recursive_resolve=True):
 
         add('--%s-path' % name,
             dest=DEPENDENCY_PATH_KEY % name,
-            default=False,
+            default=None,
             help='Path to %s' % name)
 
         add('--%s-use-checkout' % name,
             dest=DEPENDENCY_CHECKOUT_KEY % name,
-            default=False,
+            default=None,
             help='The checkout to use for %s' % name)
 
         # The dependency resolvers are allowed to download dependencies
@@ -124,7 +124,10 @@ def options(opt):
 
 
 def resolve_dependency(ctx, name):
-
+    # The --%s-path option is parsed directly here, since we want to allow
+    # option arguments without the = sign, e.g. --xy-path my-path-to-xy
+    # We cannot use ctx.options where --xy-path would be handled as a
+    # standalone boolean option (which has no arguments)
     p = argparse.ArgumentParser()
     p.add_argument('--%s-path' % name, dest='dependency_path', type=str)
     args, unknown = p.parse_known_args(args=sys.argv[1:])
@@ -146,8 +149,13 @@ def resolve_dependency(ctx, name):
 
         ctx.start_msg('Resolve dependency %s' % name)
 
-        key = DEPENDENCY_CHECKOUT_KEY % name
-        dependency_checkout = getattr(ctx.options, key, None)
+        # The --%s-use-checkout option is parsed directly, since we want to
+        # allow option arguments without the = sign
+        p = argparse.ArgumentParser()
+        p.add_argument('--%s-use-checkout' % name, dest='dependency_checkout',
+                       type=str)
+        args, unknown = p.parse_known_args(args=sys.argv[1:])
+        dependency_checkout = args.dependency_checkout
 
         dependency_path = dependencies[name].resolve(
             ctx=ctx,
