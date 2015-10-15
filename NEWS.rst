@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Allow option arguments without the = sign for the options that are
+  defined and used in the resolve step (--%s-path and --%s-use-checkout).
 * Patch: Reversed dependency build order.
 
 5.0.0
