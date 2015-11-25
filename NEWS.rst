@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Allow optional dependencies that might not be resolved if they are
+  unavailable to the user.
 * Minor: Allow option arguments without the = sign for the options that are
   defined and used in the resolve step (--%s-path and --%s-use-checkout).
 * Patch: Reversed dependency build order.
