@@ -16,6 +16,7 @@ import argparse
 
 from waflib.Configure import conf
 from waflib import Utils
+from waflib import Logs
 from waflib import Errors
 from waflib import ConfigSet
 
@@ -43,13 +44,15 @@ dependency_list = []
 
 
 @conf
-def add_dependency(ctx, resolver, recursive_resolve=True):
+def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
     """
     Adds a dependency.
     :param resolver: a resolver object which is responsible for downloading
                      the dependency if necessary
     :param recursive_resolve: specifies if it is allowed to recurse into the
                      dependency wscript after the dependency is resolved
+    :param optional: specifies if this dependency is optional (an optional
+                     dependency might not be resolved if unavailable)
     """
     name = resolver.name
 
@@ -84,9 +87,9 @@ def add_dependency(ctx, resolver, recursive_resolve=True):
         # if this is an "active" resolve step
         if ctx.active_resolvers:
             # Resolve this dependency immediately
-            path = resolve_dependency(ctx, name)
+            path = resolve_dependency(ctx, name, optional)
             # Recurse into this dependency
-            if recursive_resolve:
+            if recursive_resolve and path:
                 ctx.recurse([path])
         # Otherwise check if we already stored the path to this dependency
         # when we resolved it (during an "active" resolve step)
@@ -123,7 +126,7 @@ def options(opt):
              'Default folder: "{}"'.format(DEFAULT_BUNDLE_PATH))
 
 
-def resolve_dependency(ctx, name):
+def resolve_dependency(ctx, name, optional=False):
     # The --%s-path option is parsed directly here, since we want to allow
     # option arguments without the = sign, e.g. --xy-path my-path-to-xy
     # We cannot use ctx.options where --xy-path would be handled as a
@@ -157,15 +160,33 @@ def resolve_dependency(ctx, name):
         args, unknown = p.parse_known_args(args=sys.argv[1:])
         dependency_checkout = args.dependency_checkout
 
-        dependency_path = dependencies[name].resolve(
-            ctx=ctx,
-            path=bundle_path,
-            use_checkout=dependency_checkout)
+        # Try to resolve this dependency
+        try:
+            dependency_path = dependencies[name].resolve(
+                ctx=ctx,
+                path=bundle_path,
+                use_checkout=dependency_checkout)
+        except Exception as e:
+            ctx.to_log('Exception when resolving dependency: {}'.format(name))
+            ctx.to_log(e)
+            if optional:
+                # An optional dependency might be unavailable if the user
+                # does not have a license to access the repository, so we just
+                # print the status message and continue
+                ctx.end_msg('Unavailable', color='RED')
+            else:
+                # A non-optional dependency must be resolved
+                repo_url = dependencies[name].repository_url(ctx, 'https://')
+                ctx.fatal('Error: the "{}" dependency is not available. '
+                          'Please check that you have a valid Steinwurf '
+                          'license and you can access the repository at: '
+                          '{}'.format(name, repo_url))
+        else:
+            ctx.end_msg(dependency_path)
 
-        ctx.end_msg(dependency_path)
-
-    ctx.env['DEPENDENCY_DICT'][name] = dependency_path
-    dependency_list.append(dependency_path)
+    if dependency_path:
+        ctx.env['DEPENDENCY_DICT'][name] = dependency_path
+        dependency_list.append(dependency_path)
     return dependency_path
 
 
