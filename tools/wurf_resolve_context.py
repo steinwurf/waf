@@ -38,6 +38,11 @@ class ResolveContext(ConfigurationContext):
             path = os.path.join(self.bldnode.abspath(), 'resolve.log')
             self.logger = Logs.make_logger(path, 'cfg')
 
+        # Make sure that the resolve function of the wurf_common_tools have
+        # been executed. This removes the need for individual wscripts to
+        # call ctx.load('wurf_common_tools')
+        self.load('wurf_common_tools')
+
         # Directly call Context.execute() to avoid the side effects of
         # ConfigurationContext.execute()
         Context.Context.execute(self)
