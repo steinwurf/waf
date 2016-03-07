@@ -7,6 +7,9 @@ top-level wscript of a project like this:
 
     import waflib.extras.wurf_options
 
+This step can be done automatically by building a custom waf binary and
+using the --prelude statement (see more here http://bit.ly/1Te4mRz).
+
 The tool overrides the 'parse_args' function to allow the definition of
 options in dependencies. The passed options are parsed twice. The first time
 all options are allowed as it is not possible to validate options that are not
@@ -62,6 +65,20 @@ from waflib import Options
 
 
 class WurfOptions(Options.OptionsContext):
+
+    def execute(self):
+
+        # Execute the context, this will go out and invoke the option(...)
+        # function defined in the wscript. We have some extra tools that
+        # also define the option(...) function to avoid having to call load
+        # in all wscripts to initialize those, we can do it here.
+
+        self.load('wurf_common_tools')
+
+        # Now invoke execute to recurse in to the option(...) function of
+        # the wscript (if it is defined)
+        super(WurfOptions, self).execute()
+
 
     def parse_args(self):
 
