@@ -99,6 +99,34 @@ def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
             if recursive_resolve:
                 ctx.recurse([path])
 
+@conf
+def add_git_semver_dependency(ctx, name, git_repository, major, minor=None,
+                              patch=None, recursive_resolve=True,
+                              optional=False):
+    """
+
+    Adds ResolveVersion dependency (this function exists only such that
+    wscripts do not have to perform an import to access the ResolveVersion
+    class)..
+
+    :param name: the name of this dependency resolver
+    :param git_repository: URL of the Git repository where the dependency
+                           can be found
+    :param major: The major version number to track (ensures binary
+                  compatibility), None for newest
+    :param minor: The minor version number to track, None for newest
+    :param patch: The patch version number to track, None for newest
+                  the dependency if necessary
+    :param recursive_resolve: specifies if it is allowed to recurse into the
+                              dependency wscript after the dependency is
+                              resolved
+    :param optional: specifies if this dependency is optional (an optional
+                     dependency might not be resolved if unavailable)
+    """
+    import waflib.extras.wurf_dependency_resolve as resolve
+    ctx.add_dependency(
+        resolve.ResolveVersion(name, git_repository, major, minor, patch),
+        recursive_resolve, optional)
 
 def expand_path(path):
     """
