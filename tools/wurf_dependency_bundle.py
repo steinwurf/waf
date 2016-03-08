@@ -104,10 +104,9 @@ def add_git_semver_dependency(ctx, name, git_repository, major, minor=None,
                               patch=None, recursive_resolve=True,
                               optional=False):
     """
-
     Adds ResolveVersion dependency (this function exists only such that
     wscripts do not have to perform an import to access the ResolveVersion
-    class)..
+    class).
 
     :param name: the name of this dependency resolver
     :param git_repository: URL of the Git repository where the dependency
