@@ -1,8 +1,5 @@
 # Make sure we can load the bundle_dependency.py
 import sys
-sys.path.append('../../tools')
-sys.path.append('../../python-semver')
-
 import unittest
 import wurf_dependency_resolve as dr
 import mock

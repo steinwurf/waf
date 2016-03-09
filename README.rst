@@ -38,6 +38,12 @@ Tools
 Loadable Steinwurf tools should start with the ``wurf_`` prefix
 to distinguish them from standard waf tools.
 
+Tests
+=====
 
+To ensure that the tools work as intended way we provide a set of
+tests. To run the tests invoke::
 
+      tox
 
+See tox documentation here: https://tox.readthedocs.org/en/latest/
