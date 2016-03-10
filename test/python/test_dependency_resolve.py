@@ -1,9 +1,10 @@
-# Make sure we can load the bundle_dependency.py
 import sys
-import unittest
-import wurf_dependency_resolve as dr
-import mock
 import os
+
+import unittest
+import mock
+
+import wurf_dependency_resolve as dr
 
 
 class TestResolveGitMajorVersion(unittest.TestCase):

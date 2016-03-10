@@ -1,7 +1,7 @@
 [submodule "waf"]
-    path = waf
+	path = third_party/waf
     url = https://github.com/waf-project/waf.git
     ignore = dirty
 [submodule "python-semver"]
-    path = python-semver
+	path = third_party/python-semver
     url = https://github.com/k-bx/python-semver.git
