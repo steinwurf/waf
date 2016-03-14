@@ -8,13 +8,28 @@ from waflib import Build
 top = '.'
 
 def resolve(ctx):
-    pass
+
+    ctx.add_git_semver_dependency(
+        name='waf-tools',
+        git_repository='github.com/steinwurf/waf-tools.git',
+        major=3)
+
+    ctx.add_git_commit_dependency(
+        name='waf',
+        git_repository='github.com/waf-project/waf.git',
+        commit='waf-1.8.14',
+        recursive_resolve=False)
 
 def configure(conf):
 
+    # Lets get rid of this load as well at some point
+    conf.load('wurf_common_tools')
+    print(conf.env)
+
     # Ensure that the waf-light program is available in the in the
-    # third_party/waf folder. This is used to build the waf binary.
-    conf.find_program('waf-light', path_list=['third_party/waf'])
+    # waf folder. This is used to build the waf binary.
+    conf.find_program('waf-light',
+        path_list=[conf.dependency_path('waf')])
 
     # Make sure we tox used for running unit tests
     conf.find_program('tox')
@@ -30,6 +45,7 @@ def build(bld):
     # Invoke tox to run all the pure Python unit tests
     bld(rule='tox')
 
+    # Make a build group will ensure that
     bld.add_group()
 
     # We need to invoke the waf-light from within the third_party/waf
