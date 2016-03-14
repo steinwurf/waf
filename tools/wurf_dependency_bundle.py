@@ -66,7 +66,18 @@ def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
                        % (resolver, dependencies[name]))
 
     # Skip dependencies that were already resolved
+    #
+    # @todo: Should we check here that the dependencies are compatible
+    # e.g. for the semver dependency that they have the same major version
+    # requirement?
     if name not in dependencies:
+
+        # We store information about a dependency as a dictionary in the
+        # context environment
+        ctx.env['DEPENDENCY_DICT'][name] = dict()
+        ctx.env['DEPENDENCY_DICT'][name]['recurse'] = recursive_resolve
+
+        # ctx.env['DEPENDENCY_LIST'].append({'name':name,'recurse':recursive_resolve})
 
         dependencies[name] = resolver
 
@@ -94,7 +105,7 @@ def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
         # Otherwise check if we already stored the path to this dependency
         # when we resolved it (during an "active" resolve step)
         elif name in ctx.env['DEPENDENCY_DICT']:
-            path = ctx.env['DEPENDENCY_DICT'][name]
+            path = ctx.env['DEPENDENCY_DICT'][name]['path']
             # Recurse into this dependency
             if recursive_resolve:
                 ctx.recurse([path])
@@ -239,7 +250,8 @@ def resolve_dependency(ctx, name, optional=False):
             ctx.end_msg(dependency_path)
 
     if dependency_path:
-        ctx.env['DEPENDENCY_DICT'][name] = dependency_path
+        ctx.env['DEPENDENCY_DICT'][name]['path'] = dependency_path
+
         dependency_list.append(dependency_path)
     return dependency_path
 
@@ -255,6 +267,7 @@ def resolve(ctx):
         ctx.load('wurf_dependency_resolve')
         # Create a dictionary to store the resolved dependency paths by name
         ctx.env['DEPENDENCY_DICT'] = dict()
+        ctx.env['DEPENDENCY_LIST'] = list()
     else:
         # Reload the environment from a previously completed resolve step
         # if resolve.config.py exists in the build directory
@@ -289,8 +302,16 @@ def configure(conf):
     conf.env['DEPENDENCY_DICT'] = dependency_dict
     # The dependencies will be enumerated in the same order as
     # they were defined in the wscripts (waf-tools must be the first)
-    for path in conf.env['DEPENDENCY_LIST']:
-        conf.recurse([path])
+    # for path in conf.env['DEPENDENCY_LIST']:
+        # conf.recurse([path])
+
+    print(conf.env)
+
+    # The previous code above now commented defines that there must be a
+    # certain order in the dependencies, lets try without
+    for name,config in conf.env['DEPENDENCY_DICT'].iteritems():
+        if config['recurse']:
+            conf.recurse(config['path'])
 
 
 def build(bld):
@@ -298,8 +319,14 @@ def build(bld):
     # so the DEPENDENCY_LIST will be the same, but in the build step we
     # recurse into the dependencies in the reverse order to avoid potential
     # issues with tasks that are defined by a dependency of a dependency.
-    for path in reversed(bld.env['DEPENDENCY_LIST']):
-        bld.recurse([path])
+    # for path in reversed(bld.env['DEPENDENCY_LIST']):
+        # bld.recurse([path])
+
+    # The previous code above now commented defines that there must be a
+    # certain order in the dependencies, lets try without
+    for name,config in conf.env['DEPENDENCY_DICT'].iteritems():
+        if config['recurse']:
+            conf.recurse(config['path'])
 
 
 @conf
@@ -315,4 +342,4 @@ def dependency_path(self, name):
     """
     Returns the dependency path
     """
-    return self.env['DEPENDENCY_DICT'][name]
+    return self.env['DEPENDENCY_DICT'][name]['path']

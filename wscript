@@ -53,12 +53,12 @@ def build(bld):
     # executable was started - so we need to start it from the right
     # folder. Using cwd we can make sure the python process is lauched in
     # the right directory.
-    bld(rule='python waf-light --make-waf', cwd='third_party/waf')
+    bld(rule='python waf-light --make-waf', cwd=bld.dependency_path('waf'))
 
     bld.add_group()
 
     # Copy the waf binary to build directory
     bld(features='subst',
-        source='third_party/waf/waf',
+        source=os.path.join(bld.dependency_path('waf'), 'waf'),
         target=bld.bldnode.make_node('waf'),
         is_copy=True)
