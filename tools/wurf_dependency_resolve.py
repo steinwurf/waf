@@ -79,10 +79,10 @@ def resolve(ctx):
             # Set the protocol handler via the --git-protocol option
             from waflib.Logs import warn
 
-            warn("Using default git protocol ({}) for dependencies. "
-                 "Use --git-protocol=[proto] to assign another protocol "
-                 "for dependencies. Supported protocols: {}".format(
-                 git_protocol_handler, git_protocols))
+            warn("Using default git protocol ({}) to resolve dependencies. "
+                 "Use --git-protocol=[proto] to select another protocol. "
+                 "Supported protocols: {}".format(git_protocol_handler,
+                                                  git_protocols))
 
     if git_protocol_handler not in git_protocols:
         ctx.fatal('Unknown git protocol specified: "{}", supported protocols '
@@ -131,14 +131,10 @@ class ResolveVersion(object):
                                                 git_protocols))
 
         if protocol_handler == 'git@':
-            # Need to modify the url to support git over SSH
-            if repo_url.startswith('github.com/'):
-                repo_url = repo_url.replace('github.com/', 'github.com:', 1)
-            elif repo_url.startswith('bitbucket.org/'):
-                repo_url = repo_url.replace(
-                    'bitbucket.org/', 'bitbucket.org:', 1)
-            else:
-                ctx.fatal('Unknown SSH host: {}'.format(repo_url))
+            # Replace the first / with : in the url to support git over SSH
+            # For example, 'github.com/steinwurf/boost.git' becomes
+            # 'github.com:steinwurf/boost.git'
+            repo_url = repo_url.replace('/', ':', 1)
 
         return protocol_handler + repo_url
 
