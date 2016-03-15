@@ -64,7 +64,7 @@ from waflib import Context
 from waflib import Options
 
 
-class WurfOptions(Options.OptionsContext):
+class WurfOptionsContext(Options.OptionsContext):
 
     def execute(self):
 
@@ -77,7 +77,7 @@ class WurfOptions(Options.OptionsContext):
 
         # Now invoke execute to recurse in to the option(...) function of
         # the wscript (if it is defined)
-        super(WurfOptions, self).execute()
+        super(WurfOptionsContext, self).execute()
 
 
     def parse_args(self):
@@ -154,4 +154,4 @@ class WurfOptions(Options.OptionsContext):
         # again after adding options from dependencies during the execution
         # of the resolve step. At this point, optparse will know about all
         # the supported options, so it can validate those.
-        super(WurfOptions, self).parse_args()
+        super(WurfOptionsContext, self).parse_args()

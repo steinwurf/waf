@@ -305,7 +305,8 @@ def configure(conf):
     # for path in conf.env['DEPENDENCY_LIST']:
         # conf.recurse([path])
 
-    print(conf.env)
+    # @todo remove below print
+    #print(conf.env)
 
     # The previous code above now commented defines that there must be a
     # certain order in the dependencies, lets try without

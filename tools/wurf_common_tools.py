@@ -7,19 +7,11 @@ from waflib.Configure import conf
 from waflib import Options
 
 
-def _check_minimum_python_version(opt, major, minor):
-    if sys.version_info[:2] < (major, minor):
-        opt.fatal("Python version not supported: {0}, "
-                  "required minimum version: {1}.{2}"
-                  .format(sys.version_info[:3], major, minor))
 
 
 def options(opt):
-    # wurf_common_tools is loaded first in every project,
-    # therefore it is a good entry point to check the minimum Python version
-    _check_minimum_python_version(opt, 2, 7)
 
-    opt.load('wurf_resolve_context')
+
     opt.load('wurf_configure_output')
     opt.load('wurf_dependency_bundle')
     opt.load('wurf_standalone')

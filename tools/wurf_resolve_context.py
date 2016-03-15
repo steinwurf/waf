@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import sys
 
 from waflib import Utils
 from waflib import Context
@@ -10,15 +11,14 @@ from waflib import Logs
 
 from waflib.Configure import ConfigurationContext
 
-
-class ResolveContext(ConfigurationContext):
+class WurfResolveContext(ConfigurationContext):
 
     '''resolves the dependencies specified in the wscript's resolve function'''
     cmd = 'resolve'
     fun = 'resolve'
 
     def __init__(self, **kw):
-        super(ResolveContext, self).__init__(**kw)
+        super(WurfResolveContext, self).__init__(**kw)
 
     def load(self, tool_list, *k, **kw):
 
