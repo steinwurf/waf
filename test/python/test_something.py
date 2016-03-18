@@ -12,24 +12,25 @@ def run_command(args):
 
 
 
-class TestCLI:
+class TestDir:
     def __init__(self, request, tmpdir):
-        self.tmpdir = tmpdir#tmpdir.mkdir('data')
+        self.tmpdir = tmpdir
         print(tmpdir)
 
     def copy_file(self, filename):
-        path = py.path.local(filename)
-        path.copy(self.tmpdir)
-        print(path)
+        # Copy the file to the tmpdir
+        filepath = py.path.local(filename)
+        filepath.copy(self.tmpdir)
+        print(filepath)
         print("SHHHHOT")
 
 
 
 @pytest.fixture
-def test_cli(request, tmpdir):
-    return TestCLI(request, tmpdir)
+def testdir(request, tmpdir):
+    return TestDir(request, tmpdir)
 
-def test_copy_files(test_cli):
-    test_cli.copy_file('test/prog1/wscript')
+def test_copy_file(testdir):
+    testdir.copy_file('test/prog1/wscript')
     #command = [sys.executable, 'waf', 'build', '-v']
     #run_command(command)
