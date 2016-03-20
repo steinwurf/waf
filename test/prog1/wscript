@@ -4,49 +4,14 @@
 APPNAME = 'prog1'
 VERSION = '1.0.0'
 
-
-def recurse_helper(ctx, dependency):
-    if not ctx.has_dependency_path(dependency):
-        ctx.fatal('Load a tool to find %s as system dependency' % dependency)
-    else:
-        p = ctx.dependency_path(dependency)
-        ctx.recurse(p)
-
+def resolve(ctx):
+    pass
 
 def options(opt):
-
-    opt.load('toolchain_cxx')
-    opt.load('dependency_bundle')
-
-    import waflib.extras.dependency_bundle as bundle
-    import waflib.extras.dependency_resolve as resolve
-
-    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
-        name='gtest',
-        git_repository='git://github.com/steinwurf/external-gtest.git',
-        major_version=1))
-
-    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
-        name='fifi',
-        git_repository='git://github.com/steinwurf/fifi.git',
-        major_version=1))
-
+    pass
 
 def configure(conf):
-
-    conf.load('toolchain_cxx')
-    conf.load('dependency_bundle')
-
-    recurse_helper(conf, 'fifi')
-    recurse_helper(conf, 'gtest')
-
+    pass
 
 def build(bld):
-
-    # Build dependency
-    recurse_helper(bld, 'fifi')
-    recurse_helper(bld, 'gtest')
-
-    bld.program(source='main.cpp',
-                target='prog1',
-                use='gtest')
+    pass
