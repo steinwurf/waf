@@ -68,15 +68,6 @@ def build(bld):
     # step. This is manipulated using the post_mode.
     bld.post_mode = Build.POST_LAZY
 
-    # Invoke tox to run all the pure Python unit tests. Tox creates
-    # virtualenvs for different setups and runs unit tests in them. See the
-    # tox.ini to see the configuration used and see
-    # https://tox.readthedocs.org/ for more information about tox.
-    bld(rule='tox')
-
-    # Make a build group will ensure that
-    bld.add_group()
-
     # We need to invoke the waf-light from within the third_party/waf
     # folder as waf-light will look for wscript in the folder where the
     # executable was started - so we need to start it from the right
@@ -98,3 +89,13 @@ def build(bld):
             os.path.join(bld.dependency_path('waf'), 'waf')),
         target=bld.bldnode.make_node('waf'),
         is_copy=True)
+
+    # Make a build group will ensure that
+    bld.add_group()
+
+
+    # Invoke tox to run all the pure Python unit tests. Tox creates
+    # virtualenvs for different setups and runs unit tests in them. See the
+    # tox.ini to see the configuration used and see
+    # https://tox.readthedocs.org/ for more information about tox.
+    bld(rule='tox')

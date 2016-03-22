@@ -69,7 +69,7 @@ class CheckOutput:
         """
         return '\n'.join(self.output)
 
-    class RunResult:
+class RunResult:
     """ Stores the results from running a command
 
     Attributes:
