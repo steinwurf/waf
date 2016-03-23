@@ -47,6 +47,7 @@ dependency_list = []
 def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
     """
     Adds a dependency.
+
     :param resolver: a resolver object which is responsible for downloading
                      the dependency if necessary
     :param recursive_resolve: specifies if it is allowed to recurse into the
@@ -59,6 +60,7 @@ def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
     if len(dependencies) == 0 and name != 'waf-tools':
         ctx.fatal('waf-tools should be added before other dependencies')
 
+    # The dependency already exists lets check that these are compatible
     if name in dependencies:
         if type(resolver) != type(dependencies[name]) or \
            dependencies[name] != resolver:

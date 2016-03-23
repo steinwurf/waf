@@ -98,4 +98,7 @@ def build(bld):
     # virtualenvs for different setups and runs unit tests in them. See the
     # tox.ini to see the configuration used and see
     # https://tox.readthedocs.org/ for more information about tox.
+    #
+    # We run tox at the end since we will use the freshly built waf binary
+    # in some of the tests.
     bld(rule='tox')

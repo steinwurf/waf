@@ -63,14 +63,16 @@ class CheckOutput:
         return len(match_lines) > 0
 
     def __str__(self):
-        """ Generate the string representation of the output.
+        """
+        Generate the string representation of the output.
 
         :return: A string representing the output.
         """
         return '\n'.join(self.output)
 
 class RunResult:
-    """ Stores the results from running a command
+    """
+    Stores the results from running a command
 
     Attributes:
 
@@ -121,6 +123,11 @@ class TestDir:
 
         for f in files:
             self.copy_file(f)
+
+    def write_file(self, filename, content):
+
+        f = self.tempdir.join(filename)
+        f.write(content)
 
 
     def run(self, *args):
