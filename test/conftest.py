@@ -1,1 +1,1 @@
-from fixtures.testdirectory import testdirectory
+from fixtures.test_directory import test_directory

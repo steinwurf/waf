@@ -3,8 +3,9 @@ import py
 import glob
 import subprocess
 import time
+import os
 
-import runresult
+from . import runresult
 
 class TestDirectory:
     """Testing code by invoking executable which potentially creates and deletes
@@ -35,31 +36,13 @@ class TestDirectory:
     behavior.
 
     inspiration: http://search.cpan.org/~sanbeg/Test-Directory-0.041/lib/Test/Directory.pm
-
-    Then, whenever something in the
-    directory is changes, use the test methods to verify that the change
-    happened as expected. At any time, it is simple to verify that the
-    contents of the directory are exactly as expected.
-
-    Test::Directory implements an object-oriented interface for managing
-    test directories. It tracks which files it knows about (by creating
-    or testing them via its API), and can report if any files were
-    missing or unexpectedly added.
-
-    There are two flavors of methods for interacting with the
-    directory. Utility methods simply return a value (i.e. the number of
-    files/errors) with no output, while the Test functions use
-    Test::Builder to produce the approriate test results and diagnostics
-    for the test harness.
-
-    The directory will be automatically cleaned up when the object goes
-    out of scope; see the clean method below for details.
     """
     def __init__(self, tmpdir):
         self.tmpdir = tmpdir
 
     def dir(self):
-        return self.tmpdir
+        """ :return: The path to the temporary directory as a string"""
+        return str(self.tmpdir)
 
     def copy_file(self, filename):
 
@@ -91,13 +74,25 @@ class TestDirectory:
         f.write(content)
 
 
-    def run(self, *args):
-        """Runs the command in the test directory
+    def run(self, *args, **kwargs):
+        """Runs the command in the test directory.
+
+        If 'env' is not passed as keyword argument use a copy of the
+        current environment.
 
         :param args: List of arguments
+        :param kwargs: Keyword arguments passed to Popen(...)
 
         :return: A RunResult object representing the result of the command
         """
+
+        if 'env' in kwargs:
+            env = kwargs
+            del kwargs['env']
+        else:
+            env = os.environ.copy()
+
+        print(env)
 
         start_time = time.time()
 
@@ -107,6 +102,8 @@ class TestDirectory:
                     # Need to decode the stdout and stderr with the correct
                     # character encoding (http://stackoverflow.com/a/28996987)
                     universal_newlines=True,
+
+                    env=env,
 
                     # Sets the current working directory to the path of
                     # the tmpdir
@@ -118,7 +115,3 @@ class TestDirectory:
 
         return runresult.RunResult(' '.join(args),
             stdout, stderr, popen.returncode, end_time - start_time)
-
-@pytest.fixture
-def testdirectory(tmpdir):
-    return TestDirectory(tmpdir)

@@ -1,4 +1,4 @@
-import checkoutput
+from . import checkoutput
 
 # String used when printing a RunResult
 run_string = """RunResult

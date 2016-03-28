@@ -1,0 +1,21 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+APPNAME = 'project_gtest'
+VERSION = '1.0.0'
+
+def resolve(ctx):
+    pass
+     # ctx.add_git_semver_dependency(
+     #        name='gtest',
+     #        git_repository='github.com/steinwurf/gtest.git',
+     #        major=3)
+
+def options(opt):
+    pass
+
+def configure(conf):
+    pass
+
+def build(bld):
+    pass
