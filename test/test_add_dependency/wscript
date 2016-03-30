@@ -5,12 +5,23 @@ APPNAME = 'test_add_dependency'
 VERSION = '1.0.0'
 
 import mock
+import os
 
 def resolve(ctx):
 
     resolver = mock.Mock()
+    resolver.name = 'test-dependency'
 
-    ctx.add_dependency(resolver)
+    def mock_resolve(ctx, path, use_checkout):
+        """ Mocking the resolve function which is the one called when
+        fetching a dependency"""
+        return os.path.join(path, resolver.name)
+
+    resolver.resolve = mock.Mock(side_effect=mock_resolve)
+
+    ctx.add_dependency(resolver, recursive_resolve=False)
+
+    assert ctx.has_dependency_path(resolver.name)
 
 def options(opt):
     pass

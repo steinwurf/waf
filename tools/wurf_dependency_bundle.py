@@ -57,8 +57,10 @@ def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
     """
     name = resolver.name
 
-    if len(dependencies) == 0 and name != 'waf-tools':
-        ctx.fatal('waf-tools should be added before other dependencies')
+    # @todo removing the requirement to have waf-tools first. Not sure this
+    #       is really needed anymore
+    # if len(dependencies) == 0 and name != 'waf-tools':
+    #     ctx.fatal('waf-tools should be added before other dependencies')
 
     # The dependency already exists lets check that these are compatible
     if name in dependencies:
@@ -345,4 +347,5 @@ def dependency_path(self, name):
     """
     Returns the dependency path
     """
+
     return self.env['DEPENDENCY_DICT'][name]['path']

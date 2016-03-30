@@ -8,3 +8,7 @@ def test_add_dependency(test_directory):
     r = test_directory.run('python', 'waf', 'configure')
 
     assert r.returncode == 0, str(r)
+
+    r = test_directory.run('python', 'waf', 'build')
+
+    assert r.returncode == 0, str(r)
