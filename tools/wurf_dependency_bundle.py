@@ -62,12 +62,45 @@ def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
     # if len(dependencies) == 0 and name != 'waf-tools':
     #     ctx.fatal('waf-tools should be added before other dependencies')
 
-    # The dependency already exists lets check that these are compatible
+
     if name in dependencies:
-        if type(resolver) != type(dependencies[name]) or \
-           dependencies[name] != resolver:
+        # The dependency already exists lets check that these are compatible.
+        # @todo checking the type may be done in the resolvers equality operator
+        #       then we can skip the type check here
+        if type(dependencies[name]) != type(resolver):
+            ctx.fatal('Incompatible dependency resolver types %r <=> %r for %s'
+                        % (type(resolver), type(dependencies[name])), name)
+
+        if dependencies[name] != resolver:
             ctx.fatal('Incompatible dependency resolvers %r <=> %r '
-                       % (resolver, dependencies[name]))
+                        % (dependencies[name], resolver))
+
+    if not ctx.active_resolvers:
+        # This is not an active resolve step so just check that the
+        # dependency exists
+
+        if optional:
+            return
+
+        if name not in ctx.env['DEPENDENCY_DICT']:
+            ctx.fatal('Non optional dependency %s missing - please reconfigure'
+                          % name)
+
+        if 'path' not in ctx.env['DEPENDENCY_DICT'][name]:
+            ctx.fatal('Non optional dependency %s missing path - please reconfigure'
+                          % name)
+
+        # @todo add other options here
+
+
+
+
+    # We store information about a dependency as a dictionary in the
+    # context environment
+    if name not in ctx.env['DEPENDENCY_DICT']:
+            ctx.env['DEPENDENCY_DICT'][name] = dict()
+    ctx.env['DEPENDENCY_DICT'][name]['recurse'] = recursive_resolve
+
 
     # Skip dependencies that were already resolved
     #
@@ -75,11 +108,6 @@ def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
     # e.g. for the semver dependency that they have the same major version
     # requirement?
     if name not in dependencies:
-
-        # We store information about a dependency as a dictionary in the
-        # context environment
-        ctx.env['DEPENDENCY_DICT'][name] = dict()
-        ctx.env['DEPENDENCY_DICT'][name]['recurse'] = recursive_resolve
 
         # ctx.env['DEPENDENCY_LIST'].append({'name':name,'recurse':recursive_resolve})
 
