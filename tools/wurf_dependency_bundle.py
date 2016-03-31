@@ -109,6 +109,8 @@ def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
         # Otherwise check if we already stored the path to this dependency
         # when we resolved it (during an "active" resolve step)
         elif name in ctx.env['DEPENDENCY_DICT']:
+            print("WOT: {}".format(ctx.env))
+            print("WOOOOT: {}".format(ctx.env['DEPENDENCY_DICT'][name]))
             path = ctx.env['DEPENDENCY_DICT'][name]['path']
             # Recurse into this dependency
             if recursive_resolve:
@@ -255,44 +257,44 @@ def resolve_dependency(ctx, name, optional=False):
 
     if dependency_path:
         ctx.env['DEPENDENCY_DICT'][name]['path'] = dependency_path
-
         dependency_list.append(dependency_path)
+
     return dependency_path
 
+# @todo moved to wurf_resolve_context
+# def resolve(ctx):
+#     """
+#     The resolve function for the bundle dependency tool
+#     :param ctx: the resolve context
+#     """
+#     if ctx.active_resolvers:
+#         # wurf_dependency_resolve and wurf_git are only loaded if this is
+#         # an "active" resolve step (i.e. if we are configuring the project)
+#         ctx.load('wurf_dependency_resolve')
+#         # Create a dictionary to store the resolved dependency paths by name
+#         ctx.env['DEPENDENCY_DICT'] = dict()
+#         ctx.env['DEPENDENCY_LIST'] = list()
+#     else:
+#         # Reload the environment from a previously completed resolve step
+#         # if resolve.config.py exists in the build directory
+#         try:
+#             path = os.path.join(ctx.bldnode.abspath(), 'resolve.config.py')
+#             ctx.env = ConfigSet.ConfigSet(path)
+#         except EnvironmentError:
+#             pass
 
-def resolve(ctx):
-    """
-    The resolve function for the bundle dependency tool
-    :param ctx: the resolve context
-    """
-    if ctx.active_resolvers:
-        # wurf_dependency_resolve and wurf_git are only loaded if this is
-        # an "active" resolve step (i.e. if we are configuring the project)
-        ctx.load('wurf_dependency_resolve')
-        # Create a dictionary to store the resolved dependency paths by name
-        ctx.env['DEPENDENCY_DICT'] = dict()
-        ctx.env['DEPENDENCY_LIST'] = list()
-    else:
-        # Reload the environment from a previously completed resolve step
-        # if resolve.config.py exists in the build directory
-        try:
-            path = os.path.join(ctx.bldnode.abspath(), 'resolve.config.py')
-            ctx.env = ConfigSet.ConfigSet(path)
-        except EnvironmentError:
-            pass
-
-
-def post_resolve(ctx):
-    """
-    This function runs after the resolve step is completed
-    :param ctx: the resolve context
-    """
-    if ctx.active_resolvers:
-        # The dependency_dict will be needed in later steps
-        dependency_dict.update(ctx.env['DEPENDENCY_DICT'])
-        # Save the environment that was created during the active resolve step
-        path = os.path.join(ctx.bldnode.abspath(), 'resolve.config.py')
-        ctx.env.store(path)
+# @todo delete
+# def post_resolve(ctx):
+#     """
+#     This function runs after the resolve step is completed
+#     :param ctx: the resolve context
+#     """
+#     if ctx.active_resolvers:
+#         # The dependency_dict will be needed in later steps
+#         dependency_dict.update(ctx.env['DEPENDENCY_DICT'])
+#         # Save the environment that was created during the active resolve step
+#         path = os.path.join(ctx.bldnode.abspath(), 'resolve.config.py')
+#         ctx.env.store(path)
 
 
 def configure(conf):
