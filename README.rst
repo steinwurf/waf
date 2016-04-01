@@ -47,3 +47,9 @@ tests. To run the tests invoke::
       tox
 
 See tox documentation here: https://tox.readthedocs.org/en/latest/
+
+
+Bundle dependencies
+===================
+
+The basic
