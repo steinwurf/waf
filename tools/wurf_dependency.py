@@ -2,18 +2,32 @@
 # encoding: utf-8
 
 import json
+import os
 
 class WurfDependency:
+    """Defines a dependency.
+
+    A dependency can be many things:
+
+        1. A software library needed.
+        2. Resources such as images etc.
+        3. Ect.
+
+
+
+    """
+
     def __init__(self, name, resolver, recurse=True, optional=False):
+
+        assert name
+        assert resolver
 
         self.name = name
         self.resolver = resolver
 
-        self.config = ConfigSet.ConfigSet()
-        self.config.recurse = recurse
-        self.config.optional = optional
-        self.config.resolver_hash = resolver.hash()
-        self.config.path = None
+        self.recurse = recurse
+        self.optional = optional
+        self.path = None
 
     def resolve(self, ctx):
         """Resolve the dependency.
@@ -21,31 +35,85 @@ class WurfDependency:
         :param ctx: Context object used during resolving
         """
 
+        assert ctx.cmd == 'resolve', "Non-resolve context use in resolve step"
+
         path = ctx.dependency_path()
 
-        dependency_hash = resolver.hash()
-        dependency_path = os.path.join(path, self.name + '-' + dependency_hash)
+        resolver_hash = self.resolver.hash()
 
-        if not os.path.exists(dependency_path):
+        # Limit the hash to 8 characters. The reason for this is to avoid a
+        # too long folder name for the dependency. But still keep it long
+        # enough to minize chances of two names conflicting.
+        assert len(resolver_hash) > 0
+
+        if len(resolver_hash) > 8:
+            resolver_hash = resolver_hash[:8]
+
+        resolver_path = os.path.join(path, self.name + '-' + resolver_hash)
+
+        if not os.path.exists(resolver_path):
+
             ctx.to_log(
-                "Creating new dependency path: {}".format(dependency_path))
-            os.makedirs(dependency_path)
+                "Creating new resolver path: {}".format(resolver_path))
+            os.makedirs(resolver_path)
 
-        self.config.path = resolver.resolve(ctx.dependency_path())
+        ctx.start_msg('Resolve dependency %s' % self.name)
+
+        try:
+            self.path = resolver.resolve(ctx, resolver_path)
+        except Exception as e:
+            ctx.to_log('Exception when resolving dependency: '
+                       '{}'.format(self.name))
+
+            ctx.to_log(e)
+
+            if self.optional:
+                # An optional dependency might be unavailable if the user
+                # does not have a license to access the repository, so we just
+                # print the status message and continue
+                ctx.end_msg('Unavailable', color='RED')
+            else:
+                location = self.resolver.location()
+                ctx.fatal('Error: the "{}" dependency is not available. '
+                          'Please check that you have a connectivity '
+                          'and you can access the dependency at: '
+                          '{}'.format(self.name, location))
+        else:
+            ctx.end_msg(self.path)
+
+        if self.path and self.recurse:
+            ctx.recurse(self.path)
 
     def store(self, path):
         """Stores information about the dependency."""
 
-        config_path = os.path.join(path, name + '.resolve.py')
+        assert not self.optional and not self.path,('Cannot store non optional '
+                                                    'config without a valid '
+                                                    'path')
+
+        config_path = os.path.join(path, name + '.resolve.json')
 
         with open(config_path, 'w') as config_file:
-            json.dump(self.config, config_file)
+            json.dump(to_config(), config_file)
 
 
     def load(self, path):
-        """ Loads information about the dependency."""
+        """Loads information about the dependency.
 
-        config_path = os.path.join(path, name + '.resolve.py')
+        :Args:
+            path (string): Path to where information about dependencies are
+                stored.
+
+        :Raises:
+            Will raise an exception if no information about the dependency
+            can be found or if that information is detected out-of-date. In
+            which case dependencies should be resolved again.
+        """
+
+        assert self.path == None, ('Dependency {} has a path, '
+                                   'in a non-resolve step.'.format(self.name))
+
+        config_path = os.path.join(path, name + '.resolve.json')
 
         with open(config_path, 'r') as config_file:
             config = json.load(config_file)
@@ -54,20 +122,21 @@ class WurfDependency:
             raise Exception('Invalid %s config %s <=> %s'
                                 % (self.name, self.config, config))
 
-        self.config = config
+        if 'path' in config:
+            self.path = config['path']
 
 
     def validate_config(self, config):
         """Check that the config is valid."""
 
         # Check that the stored dependency settings match the ones added
-        if self.config.recurse != config.recurse:
+        if self.recurse != config['recurse']:
             return False
 
-        if self.config.optional != config.optional:
+        if self.optional != config['optional']:
             return False
 
-        if self.resolver_hash != config.resolver_hash:
+        if self.resolver.hash() != config['resolver_hash']:
             return False
 
         if not config.optional and not config.path:
@@ -76,6 +145,25 @@ class WurfDependency:
 
         return True
 
+    def to_config(self):
+        """Returns a dict representing the configuration of the dependency."""
+
+        config = {}
+        config['recurse'] = self.recurse
+        config['optional'] = self.optional
+        config['path'] = self.path
+
+        # We also store the hash of the resolver this ensures that we can
+        # detect inconsistencies between the potentially downloaded
+        # dependency and the resolver.
+        #
+        # As an example somebody might update the URL of a dependency, in
+        # which case we cannot use the stored dependency anymore and need
+        # to resolve the dependency again. On the other hand if the
+        # resolver hash matches what we stored we know that nothing changed.
+        config['resolver_hash'] = self.resolver.hash()
+
+        return config
 
     def exists(self):
         pass
