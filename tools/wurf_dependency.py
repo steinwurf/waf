@@ -60,12 +60,8 @@ class WurfDependency:
         ctx.start_msg('Resolve dependency %s' % self.name)
 
         try:
-            self.path = resolver.resolve(ctx, resolver_path)
+            self.path = self.resolver.resolve(ctx, resolver_path)
         except Exception as e:
-            ctx.to_log('Exception when resolving dependency: '
-                       '{}'.format(self.name))
-
-            ctx.to_log(e)
 
             if self.optional:
                 # An optional dependency might be unavailable if the user
@@ -73,31 +69,33 @@ class WurfDependency:
                 # print the status message and continue
                 ctx.end_msg('Unavailable', color='RED')
             else:
-                location = self.resolver.location()
-                ctx.fatal('Error: the "{}" dependency is not available. '
-                          'Please check that you have a connectivity '
-                          'and you can access the dependency at: '
-                          '{}'.format(self.name, location))
+                # Re-raise the exception
+                raise
         else:
             ctx.end_msg(self.path)
 
         if self.path and self.recurse:
             ctx.recurse(self.path)
 
-    def store(self, path):
+    def store(self, ctx):
         """Stores information about the dependency."""
 
-        assert not self.optional and not self.path,('Cannot store non optional '
-                                                    'config without a valid '
-                                                    'path')
+        assert self.path,('Cannot store config without a valid path')
 
-        config_path = os.path.join(path, name + '.resolve.json')
+        # We store configs in the build/ folder of the project
+        build_path = ctx.build_path()
+
+        if not os.path.exists(build_path):
+            ctx.fatal('Build path not found {} for storing dependency config '
+                      '{}'.format(path, self.name))
+
+        config_path = os.path.join(build_path, self.name + '.resolve.json')
 
         with open(config_path, 'w') as config_file:
-            json.dump(to_config(), config_file)
+            json.dump(self.to_config(), config_file)
 
 
-    def load(self, path):
+    def load(self, ctx):
         """Loads information about the dependency.
 
         :Args:
@@ -110,17 +108,28 @@ class WurfDependency:
             which case dependencies should be resolved again.
         """
 
+        # We load configs from the build/ folder of the project
+        build_path = ctx.build_path()
+
+        if not os.path.exists(build_path):
+            ctx.fatal('Build path not found {} for loading dependency config '
+                      '{}'.format(build_path, self.name))
+
         assert self.path == None, ('Dependency {} has a path, '
                                    'in a non-resolve step.'.format(self.name))
 
-        config_path = os.path.join(path, name + '.resolve.json')
+        config_path = os.path.join(build_path, self.name + '.resolve.json')
+
+        if not os.path.isfile(config_path):
+            ctx.fatal('Could not load config {} for dependency '
+                      '{}'.format(config_path, self.name))
 
         with open(config_path, 'r') as config_file:
             config = json.load(config_file)
 
         if not validate_config(config):
-            raise Exception('Invalid %s config %s <=> %s'
-                                % (self.name, self.config, config))
+            ctx.fatal('Invalid %s config %s <=> %s'
+                      % (self.name, self.config, config))
 
         if 'path' in config:
             self.path = config['path']

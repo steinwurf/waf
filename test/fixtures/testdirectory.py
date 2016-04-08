@@ -40,6 +40,9 @@ class TestDirectory:
     def __init__(self, tmpdir):
         self.tmpdir = tmpdir
 
+    def mkdir(self, name):
+        return TestDirectory(self.tmpdir.mkdir(name))
+
     def path(self):
         """ :return: The path to the temporary directory as a string"""
         return str(self.tmpdir)

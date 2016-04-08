@@ -13,3 +13,6 @@ def test_directory(tmpdir):
 def test_fixture(test_directory):
     """ Unit test for the test_directory fixture"""
     assert os.path.exists(test_directory.path())
+
+    subdir = test_directory.mkdir('sub')
+    assert os.path.exists(subdir.path())

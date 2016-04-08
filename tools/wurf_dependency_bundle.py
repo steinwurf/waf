@@ -20,6 +20,7 @@ from waflib import Logs
 from waflib import Errors
 from waflib import ConfigSet
 
+from wurf_dependency import WurfDependency
 
 OPTIONS_NAME = 'Dependency options'
 """ Name of the options group """
@@ -42,10 +43,13 @@ dependency_dict = dict()
 dependency_list = []
 """ List to store the dependency paths in the order of their definition """
 
+
+
 @conf
-def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
-    """
-    Adds a dependency.
+def add_dependency(ctx, name, resolver, recurse=True, optional=False):
+    """Adds a dependency.
+
+    :param name: The name of the dependency. Must be unique.
 
     :param resolver: a resolver object which is responsible for downloading
                      the dependency if necessary
@@ -54,51 +58,39 @@ def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
     :param optional: specifies if this dependency is optional (an optional
                      dependency might not be resolved if unavailable)
     """
-    name = resolver.name
 
-    # @todo removing the requirement to have waf-tools first. Not sure this
-    #       is really needed anymore
-    # if len(dependencies) == 0 and name != 'waf-tools':
-    #     ctx.fatal('waf-tools should be added before other dependencies')
-
+    dependency = WurfDependency(name, resolver, recurse, optional)
 
     if name in dependencies:
-        # The dependency already exists lets check that these are compatible.
-        # @todo checking the type may be done in the resolvers equality operator
-        #       then we can skip the type check here
-        if type(dependencies[name]) != type(resolver):
-            ctx.fatal('Incompatible dependency resolver types %r <=> %r for %s'
-                        % (type(resolver), type(dependencies[name])), name)
+        # The dependency already exists lets check that these are
+        # compatible. If they are we have nothing else to do since it
+        # should have been resolved.
 
-        if dependencies[name] != resolver:
-            ctx.fatal('Incompatible dependency resolvers %r <=> %r '
-                        % (dependencies[name], resolver))
-
-    if not ctx.active_resolvers:
-        # This is not an active resolve step so just check that the
-        # dependency exists
-
-        if optional:
+        if dependency != dependencies[name]:
+            ctx.fatal('Incompatible dependencies with same name %r <=> %r'
+                        % (dependency, dependencies[name]))
+        else:
             return
 
-        if name not in ctx.env['DEPENDENCY_DICT']:
-            ctx.fatal('Non optional dependency %s missing - please reconfigure'
-                          % name)
+    if not ctx.active_resolvers:
+        # We are not actively trying to resolve dependencies so we just try
+        # to load it
 
-        if 'path' not in ctx.env['DEPENDENCY_DICT'][name]:
-            ctx.fatal('Non optional dependency %s missing path - please reconfigure'
-                          % name)
+        dependency.load(ctx)
+        return
 
-        # @todo add other options here
+    # We are actively resolving
+    dependency.resolve(ctx)
+    dependency.store(ctx)
 
+    # Everything went fine store the dependency
+    dependencies[name] = dependency
 
-
-
-    # We store information about a dependency as a dictionary in the
-    # context environment
-    if name not in ctx.env['DEPENDENCY_DICT']:
-            ctx.env['DEPENDENCY_DICT'][name] = dict()
-    ctx.env['DEPENDENCY_DICT'][name]['recurse'] = recursive_resolve
+    # # We store information about a dependency as a dictionary in the
+    # # context environment
+    # if name not in ctx.env['DEPENDENCY_DICT']:
+    #         ctx.env['DEPENDENCY_DICT'][name] = dict()
+    # ctx.env['DEPENDENCY_DICT'][name]['recurse'] = recurse
 
 
     # Skip dependencies that were already resolved
@@ -106,42 +98,44 @@ def add_dependency(ctx, resolver, recursive_resolve=True, optional=False):
     # @todo: Should we check here that the dependencies are compatible
     # e.g. for the semver dependency that they have the same major version
     # requirement?
-    if name not in dependencies:
 
-        # ctx.env['DEPENDENCY_LIST'].append({'name':name,'recurse':recursive_resolve})
+    # @todo Removed this while we integrate the new depenency stuff
+    # if name not in dependencies:
 
-        dependencies[name] = resolver
+    #     # ctx.env['DEPENDENCY_LIST'].append({'name':name,'recurse':recursive_resolve})
 
-        bundle_opts = ctx.opt.get_option_group(OPTIONS_NAME)
-        add = bundle_opts.add_option
+    #     dependencies[name] = resolver
 
-        add('--%s-path' % name,
-            dest=DEPENDENCY_PATH_KEY % name,
-            default=None,
-            help='Path to %s' % name)
+    #     bundle_opts = ctx.opt.get_option_group(OPTIONS_NAME)
+    #     add = bundle_opts.add_option
 
-        add('--%s-use-checkout' % name,
-            dest=DEPENDENCY_CHECKOUT_KEY % name,
-            default=None,
-            help='The checkout to use for %s' % name)
+    #     add('--%s-path' % name,
+    #         dest=DEPENDENCY_PATH_KEY % name,
+    #         default=None,
+    #         help='Path to %s' % name)
 
-        # The dependency resolvers are allowed to download dependencies
-        # if this is an "active" resolve step
-        if ctx.active_resolvers:
-            # Resolve this dependency immediately
-            path = resolve_dependency(ctx, name, optional)
-            # Recurse into this dependency
-            if recursive_resolve and path:
-                ctx.recurse([path])
-        # Otherwise check if we already stored the path to this dependency
-        # when we resolved it (during an "active" resolve step)
-        elif name in ctx.env['DEPENDENCY_DICT']:
-            print("WOT: {}".format(ctx.env))
-            print("WOOOOT: {}".format(ctx.env['DEPENDENCY_DICT'][name]))
-            path = ctx.env['DEPENDENCY_DICT'][name]['path']
-            # Recurse into this dependency
-            if recursive_resolve:
-                ctx.recurse([path])
+    #     add('--%s-use-checkout' % name,
+    #         dest=DEPENDENCY_CHECKOUT_KEY % name,
+    #         default=None,
+    #         help='The checkout to use for %s' % name)
+
+    #     # The dependency resolvers are allowed to download dependencies
+    #     # if this is an "active" resolve step
+    #     if ctx.active_resolvers:
+    #         # Resolve this dependency immediately
+    #         path = resolve_dependency(ctx, name, optional)
+    #         # Recurse into this dependency
+    #         if recursive_resolve and path:
+    #             ctx.recurse([path])
+    #     # Otherwise check if we already stored the path to this dependency
+    #     # when we resolved it (during an "active" resolve step)
+    #     elif name in ctx.env['DEPENDENCY_DICT']:
+    #         print("WOT: {}".format(ctx.env))
+    #         print("WOOOOT: {}".format(ctx.env['DEPENDENCY_DICT'][name]))
+    #         path = ctx.env['DEPENDENCY_DICT'][name]['path']
+    #         # Recurse into this dependency
+    #         if recursive_resolve:
+    #             ctx.recurse([path])
 
 @conf
 def add_git_semver_dependency(ctx, name, git_repository, major, minor=None,
@@ -287,6 +281,10 @@ def resolve_dependency(ctx, name, optional=False):
         dependency_list.append(dependency_path)
 
     return dependency_path
+
+@conf
+def build_path(ctx):
+    return ctx.bldnode.abspath()
 
 # @todo moved to wurf_resolve_context
 # def resolve(ctx):
