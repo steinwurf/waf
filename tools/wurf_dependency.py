@@ -37,7 +37,7 @@ class WurfDependency:
 
         assert ctx.cmd == 'resolve', "Non-resolve context use in resolve step"
 
-        path = ctx.dependency_path()
+        path = ctx.bundle_path()
 
         resolver_hash = self.resolver.hash()
 
@@ -82,14 +82,14 @@ class WurfDependency:
 
         assert self.path,('Cannot store config without a valid path')
 
-        # We store configs in the build/ folder of the project
-        build_path = ctx.build_path()
+        # We typically store configs in the build/ folder of the project
+        p = ctx.bundle_config_path()
 
-        if not os.path.exists(build_path):
-            ctx.fatal('Build path not found {} for storing dependency config '
-                      '{}'.format(path, self.name))
+        if not os.path.exists(p):
+            ctx.fatal('Bundle config path not found {} for storing dependency '
+                      '{}'.format(p, self.name))
 
-        config_path = os.path.join(build_path, self.name + '.resolve.json')
+        config_path = os.path.join(p, self.name + '.resolve.json')
 
         with open(config_path, 'w') as config_file:
             json.dump(self.to_config(), config_file)
@@ -108,17 +108,17 @@ class WurfDependency:
             which case dependencies should be resolved again.
         """
 
-        # We load configs from the build/ folder of the project
-        build_path = ctx.build_path()
+        # We typically store configs in the build/ folder of the project
+        p = ctx.bundle_config_path()
 
-        if not os.path.exists(build_path):
-            ctx.fatal('Build path not found {} for loading dependency config '
-                      '{}'.format(build_path, self.name))
+        if not os.path.exists(p):
+            ctx.fatal('Bundle config path not found {} for loading dependency '
+                      '{}'.format(p, self.name))
 
         assert self.path == None, ('Dependency {} has a path, '
                                    'in a non-resolve step.'.format(self.name))
 
-        config_path = os.path.join(build_path, self.name + '.resolve.json')
+        config_path = os.path.join(p, self.name + '.resolve.json')
 
         if not os.path.isfile(config_path):
             ctx.fatal('Could not load config {} for dependency '
