@@ -91,3 +91,39 @@ class WurfResolveContext(ConfigurationContext):
             # resolve step
             path = os.path.join(self.bldnode.abspath(), 'resolve.config.py')
             self.env.store(path)
+
+    def bundle_config_path(self):
+        """Returns the bundle config path.
+
+        The bundle config path will be used to store/load configuration for
+        the different dependencies that are resolved.
+        """
+
+        return self.bldnode.abspath()
+
+    def bundle_path(self):
+        """Returns the bundle path.
+
+        The bundle path is used by the different resolvers to download
+        the dependencies i.e. it represents the path in the file system
+        where all bundled dependencies are stored.
+        """
+        return os.path.join(self.path.abspath(), 'bundle_dependencies')
+
+
+    def add_dependency(self, name, resolver, recurse=True, optional=False):
+        """Adds a dependency.
+
+        :param name: The name of the dependency. Must be unique.
+
+        :param resolver: a resolver object which is responsible for downloading
+                     the dependency if necessary
+        :param recursive_resolve: specifies if it is allowed to recurse into the
+        dependency wscript after the dependency is resolved
+        :param optional: specifies if this dependency is optional (an optional
+                     dependency might not be resolved if unavailable)
+        """
+
+
+
+        dependency = WurfDependency(name, resolver, recurse, optional)

@@ -18,7 +18,11 @@ class WurfDependency:
     """
 
     def __init__(self, name, resolver, recurse=True, optional=False):
+        """Creates a new WurfDependency object.
 
+
+
+        """
         assert name
         assert resolver
 
@@ -29,6 +33,50 @@ class WurfDependency:
         self.optional = optional
         self.path = None
 
+
+    def select_resolve_action(self, ctx):
+
+        if self.parse_user_path():
+            return WurfResolveAction.USER
+
+        if ctx.active_resolvers:
+            return WurfResolveAction.FETCH
+
+        return WurfResolveAction.LOAD
+
+
+    def parse_user_path(self):
+        # The --%s-path option is parsed directly here, since we want to allow
+        # option arguments without the = sign, e.g. --xy-path my-path-to-xy
+        # We cannot use ctx.options where --xy-path would be handled as a
+        # standalone boolean option (which has no arguments)
+        p = argparse.ArgumentParser()
+        p.add_argument('--%s-path' % self.name, dest='user_path', type=str)
+        args, unknown = p.parse_known_args(args=sys.argv[1:])
+
+        return args.user_path
+
+    def active_resolve(self, ctx):
+
+        action = select_resolve_action(ctx)
+
+        if action == WurfResolveAction.USER:
+            self.user(ctx)
+
+        elif action == WurfResolveAction.FETCH:
+            self.fetch(ctx)
+
+        elif action == WurfResolveAction.LOAD:
+            self.load(ctx)
+
+        if self.optional and not self.path:
+            return
+        else:
+            assert self.path
+
+        if self.recurse:
+            ctx.recurse(self.path)
+
     def resolve(self, ctx):
         """Resolve the dependency.
 
@@ -36,8 +84,6 @@ class WurfDependency:
         """
 
         assert ctx.cmd == 'resolve', "Non-resolve context use in resolve step"
-
-        path = ctx.bundle_path()
 
         resolver_hash = self.resolver.hash()
 
@@ -49,7 +95,8 @@ class WurfDependency:
         if len(resolver_hash) > 8:
             resolver_hash = resolver_hash[:8]
 
-        resolver_path = os.path.join(path, self.name + '-' + resolver_hash)
+        resolver_path = os.path.join(
+            ctx.bundle_path(), self.name + '-' + resolver_hash)
 
         if not os.path.exists(resolver_path):
 
@@ -127,7 +174,7 @@ class WurfDependency:
         with open(config_path, 'r') as config_file:
             config = json.load(config_file)
 
-        if not validate_config(config):
+        if not self.validate_config(config):
             ctx.fatal('Invalid %s config %s <=> %s'
                       % (self.name, self.config, config))
 
@@ -148,7 +195,7 @@ class WurfDependency:
         if self.resolver.hash() != config['resolver_hash']:
             return False
 
-        if not config.optional and not config.path:
+        if not self.optional and not config['path']:
             # The dependency is not optional so it should have a path
             return False
 

@@ -72,6 +72,12 @@ def add_dependency(ctx, name, resolver, recurse=True, optional=False):
         else:
             return
 
+    # if ctx.explicit_dependency_path(name):
+    #     # The user specified a path for this dependency
+    #     dependency.path = ctx.explicit_dependency_path(name)
+    #     dependency.store(ctx)
+
+
     if not ctx.active_resolvers:
         # We are not actively trying to resolve dependencies so we just try
         # to load it
@@ -282,13 +288,14 @@ def resolve_dependency(ctx, name, optional=False):
 
     return dependency_path
 
-@conf
-def build_path(ctx):
-    return ctx.bldnode.abspath()
 
-# @todo moved to wurf_resolve_context
-# def resolve(ctx):
-#     """
+# @conf
+# def bundle_path(ctx)
+
+    # @todo moved to wurf_resolve_context
+    # def resolve(ctx):
+    #
+#    """
 #     The resolve function for the bundle dependency tool
 #     :param ctx: the resolve context
 #     """

@@ -12,12 +12,13 @@ def resolve(ctx):
     resolver = mock.Mock()
     resolver.name = 'test-dependency'
 
-    def mock_resolve(ctx, path, use_checkout):
+    def mock_resolve(ctx, path):
         """ Mocking the resolve function which is the one called when
         fetching a dependency"""
         return os.path.join(path, resolver.name)
 
     resolver.resolve.side_effect=mock_resolve
+    resolver.hash.return_value='h4sh'
 
     ctx.add_dependency('test-dependency', resolver, recurse=False)
 

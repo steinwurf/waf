@@ -58,7 +58,7 @@ def test_wurf_dependency_resolve_success(test_directory, recurse, optional):
 
     ctx = mock.Mock()
     ctx.cmd = 'resolve'
-    ctx.dependency_path.return_value=test_directory.path()
+    ctx.bundle_path.return_value=test_directory.path()
 
     d.resolve(ctx)
 
@@ -92,7 +92,7 @@ def test_wurf_dependency_resolve_failure(test_directory, recurse, optional):
 
     ctx = mock.Mock()
     ctx.cmd = 'resolve'
-    ctx.dependency_path.return_value=test_directory.path()
+    ctx.bundle_path.return_value=test_directory.path()
     ctx.fatal.side_effect=Exception()
 
     try:
@@ -131,7 +131,7 @@ def test_wurf_dependency_store_has_path(test_directory, recurse, optional):
     build_directory = test_directory.mkdir('build')
 
     ctx = mock.Mock()
-    ctx.build_path.return_value = build_directory.path()
+    ctx.bundle_config_path.return_value = build_directory.path()
 
     abc_directory = test_directory.mkdir('abc')
     d.path = abc_directory.path()
@@ -176,7 +176,7 @@ def test_wurf_dependency_load_no_path(test_directory, recurse, optional):
     """
     resolver = mock.Mock()
     ctx = mock.Mock()
-    ctx.build_path.return_value = os.path.join(
+    ctx.bundle_config_path.return_value = os.path.join(
         test_directory.path(), 'nonexisting')
     ctx.fatal.side_effect = Exception()
 
