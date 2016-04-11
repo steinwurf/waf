@@ -34,27 +34,15 @@ class WurfDependency:
         self.path = None
 
 
-    def select_resolve_action(self, ctx):
+    def load_path(ctx):
 
-        if self.parse_user_path():
-            return WurfResolveAction.USER
+        pass
 
-        if ctx.active_resolvers:
-            return WurfResolveAction.FETCH
+    def user_path(path):
+        pass
 
-        return WurfResolveAction.LOAD
+    def
 
-
-    def parse_user_path(self):
-        # The --%s-path option is parsed directly here, since we want to allow
-        # option arguments without the = sign, e.g. --xy-path my-path-to-xy
-        # We cannot use ctx.options where --xy-path would be handled as a
-        # standalone boolean option (which has no arguments)
-        p = argparse.ArgumentParser()
-        p.add_argument('--%s-path' % self.name, dest='user_path', type=str)
-        args, unknown = p.parse_known_args(args=sys.argv[1:])
-
-        return args.user_path
 
     def active_resolve(self, ctx):
 

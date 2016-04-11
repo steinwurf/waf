@@ -111,6 +111,24 @@ class WurfResolveContext(ConfigurationContext):
         return os.path.join(self.path.abspath(), 'bundle_dependencies')
 
 
+    def select_resolve_action(self):
+        """Select the appropriate action for how to resolve a dependency.
+
+        This function serves as the extension point to support further
+        resolve actions e.g. such as frozen dependencies. The idea
+        behind frozen dependencies are to lock down the specific version
+        of a dependency to ensure that it never changes. By distributing
+        a .frozen file all developers use the exact same version.
+        """
+
+        if self.parse_user_path():
+            return WurfResolveAction.USER
+
+        if self.active_resolvers:
+            return WurfResolveAction.FETCH
+
+        return WurfResolveAction.LOAD
+
     def add_dependency(self, name, resolver, recurse=True, optional=False):
         """Adds a dependency.
 
@@ -124,6 +142,39 @@ class WurfResolveContext(ConfigurationContext):
                      dependency might not be resolved if unavailable)
         """
 
+        if name in dependencies:
+
+            if reolver.hash() != resolver[name].hash():
+                self.fatal("Mismatch between resolvers fr")
+
+
+            if True:
+                pass
+
+            return
+
+        action = self.select_resolve_action()
+
+        if action == WurfResolveAction.USER:
+            dependency = WurfDependency(name, self.parse_user_path(), recurse, optional)
+
+        elif action == WurfResolveAction.FETCH:
+            self.fetch(ctx)
+
+        elif action == WurfResolveAction.LOAD:
+
+
+        if self.optional and not self.path:
+            return
+        else:
+            assert self.path
+
+        if self.recurse:
+            ctx.recurse(self.path)
+
 
 
         dependency = WurfDependency(name, resolver, recurse, optional)
+
+
+    def user_dependency(
