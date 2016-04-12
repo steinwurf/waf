@@ -110,6 +110,10 @@ class WurfResolveContext(ConfigurationContext):
         """
         return os.path.join(self.path.abspath(), 'bundle_dependencies')
 
+    def resolve_user_path(self):
+        """
+        """
+        pass
 
     def select_resolve_action(self):
         """Select the appropriate action for how to resolve a dependency.
@@ -142,26 +146,32 @@ class WurfResolveContext(ConfigurationContext):
                      dependency might not be resolved if unavailable)
         """
 
+        dependency = WurfDependency(name, resolver, recurse, optional)
+
         if name in dependencies:
+            # The dependency already exists lets check that these are
+            # compatible. If they are we have nothing else to do since it
+            # should have been resolved.
 
-            if reolver.hash() != resolver[name].hash():
-                self.fatal("Mismatch between resolvers fr")
-
-
-            if True:
-                pass
-
-            return
+            if dependency != dependencies[name]:
+                ctx.fatal('Incompatible dependencies with same name %r <=> %r'
+                            % (dependency, dependencies[name]))
+            else:
+                return
 
         action = self.select_resolve_action()
 
         if action == WurfResolveAction.USER:
-            dependency = WurfDependency(name, self.parse_user_path(), recurse, optional)
+
+
+
+            dependency.set_path(self.parse_user_path())
 
         elif action == WurfResolveAction.FETCH:
-            self.fetch(ctx)
+            depenency.resolve(self)
 
         elif action == WurfResolveAction.LOAD:
+            dependency.load(
 
 
         if self.optional and not self.path:
@@ -177,4 +187,5 @@ class WurfResolveContext(ConfigurationContext):
         dependency = WurfDependency(name, resolver, recurse, optional)
 
 
-    def user_dependency(
+    def user_dependency(self):
+        pass

@@ -34,28 +34,12 @@ class WurfDependency:
         self.path = None
 
 
-    def load_path(ctx):
 
-        pass
+    def resolve(self, ctx):
 
-    def user_path(path):
-        pass
+        assert ctx.cmd == 'resolve', "Non-resolve context use in resolve step"
 
-    def
-
-
-    def active_resolve(self, ctx):
-
-        action = select_resolve_action(ctx)
-
-        if action == WurfResolveAction.USER:
-            self.user(ctx)
-
-        elif action == WurfResolveAction.FETCH:
-            self.fetch(ctx)
-
-        elif action == WurfResolveAction.LOAD:
-            self.load(ctx)
+        dispatch_resolve(ctx)
 
         if self.optional and not self.path:
             return
@@ -65,13 +49,53 @@ class WurfDependency:
         if self.recurse:
             ctx.recurse(self.path)
 
-    def resolve(self, ctx):
-        """Resolve the dependency.
+
+
+    def dispatch_resolve(self, ctx):
+
+        action = self.select_resolve_action(ctx)
+
+        if action == WurfResolveAction.USER:
+            self.action_user(ctx)
+
+        elif action == WurfResolveAction.FETCH:
+            self.action_fetch(ctx)
+
+        elif action == WurfResolveAction.LOAD:
+            self.action_load(ctx)
+
+
+    def select_resolve_action(self, ctx):
+        """Select the appropriate action for how to resolve a dependency.
+
+        This function serves as the extension point to support further
+        resolve actions e.g. such as frozen dependencies. The idea
+        behind frozen dependencies are to lock down the specific version
+        of a dependency to ensure that it never changes. By distributing
+        a .frozen file all developers use the exact same version.
+        """
+
+        if ctx.is_active_resolve:
+
+            if ctx.has_user_defined_dependency_path(self.name):
+                return WurfResolveAction.USER
+            else:
+                return WurfResolveAction.FETCH
+
+        return WurfResolveAction.LOAD
+
+    def action_user(self, ctx):
+        """
+        """
+        ctx.start_msg('User resolve dependency %s' % self.name)
+        self.path = ctx.user_defined_dependency_path(ctx)
+        ctx.end_msg(self.path)
+
+    def action_fetch(self, ctx):
+        """Fetch the dependency using the resolver.
 
         :param ctx: Context object used during resolving
         """
-
-        assert ctx.cmd == 'resolve', "Non-resolve context use in resolve step"
 
         resolver_hash = self.resolver.hash()
 
@@ -131,7 +155,7 @@ class WurfDependency:
 
 
     def load(self, ctx):
-        """Loads information about the dependency.
+        """Load information about the dependency.
 
         :Args:
             path (string): Path to where information about dependencies are
