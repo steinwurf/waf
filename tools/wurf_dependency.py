@@ -34,35 +34,37 @@ class WurfDependency:
         self.path = None
 
 
-
     def resolve(self, ctx):
 
         assert ctx.cmd == 'resolve', "Non-resolve context use in resolve step"
 
-        dispatch_resolve(ctx)
+        if ctx.is_active_resolve():
+            self.active_resolve(ctx)
+        else:
+            self.load(ctx)
 
         if self.optional and not self.path:
+            # The dependency is optional and we did manage to get a path,
+            # so lets get outta here!
             return
-        else:
-            assert self.path
+
+        assert self.path
 
         if self.recurse:
             ctx.recurse(self.path)
 
 
+    def active_resolve(self, ctx):
 
-    def dispatch_resolve(self, ctx):
+        self.action = self.select_resolve_action(ctx)
 
-        action = self.select_resolve_action(ctx)
+        if self.action == WurfResolveAction.USER:
+            self.user_defined_dependency_path(ctx)
 
-        if action == WurfResolveAction.USER:
-            self.action_user(ctx)
+        elif self.action == WurfResolveAction.FETCH:
+            self.optional_fetch(ctx)
 
-        elif action == WurfResolveAction.FETCH:
-            self.action_fetch(ctx)
-
-        elif action == WurfResolveAction.LOAD:
-            self.action_load(ctx)
+        self.store(ctx)
 
 
     def select_resolve_action(self, ctx):
@@ -75,23 +77,50 @@ class WurfDependency:
         a .frozen file all developers use the exact same version.
         """
 
-        if ctx.is_active_resolve:
+        assert ctx.is_active_resolve():
 
-            if ctx.has_user_defined_dependency_path(self.name):
-                return WurfResolveAction.USER
-            else:
-                return WurfResolveAction.FETCH
+        if ctx.has_user_defined_dependency_path(self.name):
+            return WurfResolveAction.USER
+        else:
+            return WurfResolveAction.FETCH
 
-        return WurfResolveAction.LOAD
 
-    def action_user(self, ctx):
-        """
+    def user_defined_dependency_path(self, ctx):
+        """The user has specified the dependency path.
+
+        We do not support an optional version of this action. The reason
+        is that if the user specifies a path it must exist.
         """
         ctx.start_msg('User resolve dependency %s' % self.name)
         self.path = ctx.user_defined_dependency_path(ctx)
+
+        if not os.path.exists(self.path):
+            ctx.fatal('FAAAAAAAAAIIILL')
+
         ctx.end_msg(self.path)
 
-    def action_fetch(self, ctx):
+
+    def optional_fetch(self, ctx):
+        """Try to fetch the dependency. If dependency is optional allow failure.
+        """
+
+        try:
+            self.fetch(ctx)
+        except Exception as e:
+
+            if self.optional:
+                # An optional dependency might be unavailable if the user
+                # does not have a license to access the repository, so we just
+                # print the status message and continue
+                ctx.end_msg('Unavailable', color='RED')
+            else:
+                # Re-raise the exception
+                raise
+        else:
+            ctx.end_msg(self.path)
+
+
+    def fetch(self, ctx):
         """Fetch the dependency using the resolver.
 
         :param ctx: Context object used during resolving
@@ -111,33 +140,15 @@ class WurfDependency:
             ctx.bundle_path(), self.name + '-' + resolver_hash)
 
         if not os.path.exists(resolver_path):
-
             ctx.to_log(
                 "Creating new resolver path: {}".format(resolver_path))
             os.makedirs(resolver_path)
 
-        ctx.start_msg('Resolve dependency %s' % self.name)
+        self.path = self.resolver.resolve(ctx, resolver_path)
 
-        try:
-            self.path = self.resolver.resolve(ctx, resolver_path)
-        except Exception as e:
-
-            if self.optional:
-                # An optional dependency might be unavailable if the user
-                # does not have a license to access the repository, so we just
-                # print the status message and continue
-                ctx.end_msg('Unavailable', color='RED')
-            else:
-                # Re-raise the exception
-                raise
-        else:
-            ctx.end_msg(self.path)
-
-        if self.path and self.recurse:
-            ctx.recurse(self.path)
 
     def store(self, ctx):
-        """Stores information about the dependency."""
+        """Store information about the dependency."""
 
         assert self.path,('Cannot store config without a valid path')
 
