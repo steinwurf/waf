@@ -72,8 +72,11 @@ class TestDirectory:
             self.copy_file(f)
 
     def write_file(self, filename, content):
+        """Writes a file in the temporary directory.
 
-        f = self.tempdir.join(filename)
+        """
+
+        f = self.tmpdir.join(filename)
         f.write(content)
 
 

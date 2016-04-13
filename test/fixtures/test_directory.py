@@ -16,3 +16,9 @@ def test_fixture(test_directory):
 
     subdir = test_directory.mkdir('sub')
     assert os.path.exists(subdir.path())
+
+    subdir.write_file('ok.txt', 'hello_world')
+
+    ok_path = os.path.join(subdir.path(), 'ok.txt')
+
+    assert os.path.isfile(ok_path)

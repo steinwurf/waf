@@ -65,22 +65,36 @@ from wurf_dependency import WurfDependency
 
 @pytest.mark.parametrize("recurse", [True, False])
 @pytest.mark.parametrize("optional", [True, False])
-def test_wurf_dependency_case_one(test_directory, recurse, optional):
+@pytest.mark.parametrize("config_file", [True, False])
+def test_wurf_dependency_load_fail(test_directory, recurse, optional,
+                                   config_file):
     """Case one tests the following setup:
 
     is_active_resolve = False
     recurse = true | false
     optional = true | false
-    config = valid | invalid
     config_file = exists | missing
+    config = valid | invalid
+
+    When something fails it will call ctx.fatal(...) so we can group all
+    the above permutations into two categories, the ones that will
+    eventually call ctx.fatal and those that will not.
+
+    Should call ctx.fatal(...):
+
+    1. recurse = true | false, optional = true | false, config_file = missing
+       config = N/A
+    2. recurse = true | false, optional = true | false, config_file = exists,
+       config = invalid
+
+    Note to above when config_file is missing the validity of the config
+    if irrelevant (thus the N/A).
 
     Basically when this is not an active resolve step the dependency
     information should be loaded from a config file.
     """
 
     resolver = mock.Mock()
-    resolver.hash.return_value='h4sh'
-    resolver.resolve.return_value='dummy_path'
 
     d = WurfDependency('abc', resolver, recurse=recurse, optional=optional)
 
@@ -88,171 +102,280 @@ def test_wurf_dependency_case_one(test_directory, recurse, optional):
     ctx.cmd = 'resolve'
     ctx.bundle_config_path.return_value=test_directory.path()
     ctx.is_active_resolve.return_value=False
+    ctx.fatal.side_effect = Exception()
 
-    d.resolve(ctx)
+    if config_file:
+        # If the config file should exist we write an invalid one
+        test_directory.write_file('abc.resolve.json', '{"na":"na"}')
 
-    resolver_path = os.path.join(test_directory.path(), 'abc-h4sh')
-    resolver.resolve.assert_called_once_with(ctx, resolver_path)
-
-    assert d.path == 'dummy_path'
-    assert os.path.exists(resolver_path)
-    assert ctx.start_msg.call_count == 1
-
-    assert ctx.end_msg.call_count == 1
-
-    # Check whether ctx.recurse() was called
-    if recurse:
-        ctx.recurse.assert_called_once_with('dummy_path')
-    else:
-        assert not ctx.recurse.called
-
-@pytest.mark.parametrize("recurse", [True, False])
-@pytest.mark.parametrize("optional", [True, False])
-def test_wurf_dependency_resolve_failure(test_directory, recurse, optional):
-    # 1. resolve failure recurse=False, optional=False
-
-    resolver = mock.Mock()
-    resolver.hash.return_value='h4sh'
-
-    # Calling resolve will raise an exception
-    resolver.resolve.side_effect=Exception('Boom!')
-
-    d = WurfDependency('abc', resolver, recurse=recurse, optional=optional)
-
-    ctx = mock.Mock()
-    ctx.cmd = 'resolve'
-    ctx.bundle_path.return_value=test_directory.path()
-    ctx.fatal.side_effect=Exception()
-
-    try:
+    with pytest.raises(Exception):
         d.resolve(ctx)
-    except:
-        # If the dependency is not optional we should see an exception now
-        assert not optional
 
-    else:
-        # We do not expect an exception if the dependency is optional
-        assert optional
-        assert ctx.start_msg.call_count == 1
-        assert ctx.end_msg.call_count == 1
-
-    resolver_path = os.path.join(test_directory.path(), 'abc-h4sh')
-    resolver.resolve.assert_called_once_with(ctx, resolver_path)
-
-    assert d.path is None
-    assert os.path.exists(resolver_path)
-
-    # Check recurse is never called since we don't have a path - resolved
-    # failed ;)
-    assert not ctx.recurse.called
+    assert ctx.fatal.call_count == 1
 
 
 @pytest.mark.parametrize("recurse", [True, False])
 @pytest.mark.parametrize("optional", [True, False])
-def test_wurf_dependency_store_has_path(test_directory, recurse, optional):
-    """Tests store(...) function of WurfDependency when a path is available."""
+def test_wurf_dependency_load_success(test_directory, recurse, optional):
+    """Case one tests the following setup:
+
+    is_active_resolve = False
+    recurse = true | false
+    optional = true | false
+    config_file = exists | missing
+    config = valid | invalid
+
+    When tings do not fail
+
+    1. recurse = true | false, optional = true | false, config_file = exists
+       config = valid
+
+    """
+
+    resolver = mock.Mock()
+
+    d = WurfDependency('abc', resolver, recurse=recurse, optional=optional)
+
+#     ctx = mock.Mock()
+#     ctx.cmd = 'resolve'
+#     ctx.bundle_config_path.return_value=test_directory.path()
+#     ctx.is_active_resolve.return_value=False
+#     ctx.fatal.side_effect = Exception()
+
+#     if config_file:
+#         # If the config file should exist we write an invalid one
+#         test_directory.write_file('abc.resolve.json', '{"name":"bla"}')
+
+#     with pytest.raises(Exception):
+#         d.resolve(ctx)
+
+#     assert ctx.fatal.call_count == 1
+
+
+def test_wurf_dependency_validate_config(test_directory):
+    """Simple test of the validate_config function."""
 
     resolver = mock.Mock()
     resolver.hash.return_value='h4sh'
 
-    d = WurfDependency('abc', resolver, recurse=recurse, optional=optional)
+    # First a test where optional is True
 
-    build_directory = test_directory.mkdir('build')
+    d = WurfDependency('abc', resolver, recurse=True, optional=True)
 
-    ctx = mock.Mock()
-    ctx.bundle_config_path.return_value = build_directory.path()
+    config = {'recurse': False, 'optional': None,
+              'resolver_hash': None, 'path': None}
 
-    abc_directory = test_directory.mkdir('abc')
-    d.path = abc_directory.path()
+    assert d.validate_config(config) == False
 
-    d.store(ctx)
+    config = {'recurse': True, 'optional': False,
+              'resolver_hash': None, 'path': None}
 
-    json_path = os.path.join(build_directory.path(), 'abc.resolve.json')
-    assert os.path.isfile(json_path)
+    assert d.validate_config(config) == False
 
-    # Lets read back the stored json file and see that every things works
-    with open(json_path, 'r') as json_file:
-        data = json.load(json_file)
+    config = {'recurse': True, 'optional': True,
+              'resolver_hash': 'h3sh', 'path': None}
 
-    assert data['optional'] == optional
-    assert data['recurse'] == recurse
-    assert data['path'] == abc_directory.path()
-    assert data['resolver_hash'] == 'h4sh'
+    assert d.validate_config(config) == False
 
-@pytest.mark.parametrize("recurse", [True, False])
-@pytest.mark.parametrize("optional", [True, False])
-def test_wurf_dependency_store_no_path(test_directory, recurse, optional):
-    """ Tests the store(...) function of WurfDependency when no path is available.
+    config = {'recurse': True, 'optional': True,
+              'resolver_hash': 'h4sh', 'path': None}
 
-    When there is no path we expect an assert to fire.
-    """
-    resolver = mock.Mock()
-    ctx = mock.Mock()
-    ctx.fatal.side_effect = Exception()
+    assert d.validate_config(config) == True
 
-    d = WurfDependency('abc', resolver, recurse=recurse, optional=optional)
+    config = {'recurse': True, 'optional': True,
+              'resolver_hash': 'h4sh', 'path': 'bla'}
 
-    with pytest.raises(Exception):
-        d.store(ctx)
+    assert d.validate_config(config) == False
 
+    config = {'recurse': True, 'optional': True,
+              'resolver_hash': 'h4sh', 'path': test_directory.path()}
 
-@pytest.mark.parametrize("recurse", [True, False])
-@pytest.mark.parametrize("optional", [True, False])
-def test_wurf_dependency_load_no_path(test_directory, recurse, optional):
-    """ Tests the load(...) function of WurfDependency with missing load path.
+    assert d.validate_config(config) == True
 
-    The path where the dependency configuration should be stored is missing.
-    """
-    resolver = mock.Mock()
-    ctx = mock.Mock()
-    ctx.bundle_config_path.return_value = os.path.join(
-        test_directory.path(), 'nonexisting')
-    ctx.fatal.side_effect = Exception()
+    # Secondly a test where optional is False
 
-    d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
+    d = WurfDependency('abc', resolver, recurse=True, optional=False)
 
-    with pytest.raises(Exception):
-        d.load(ctx)
+    config = {'recurse': False, 'optional': None,
+              'resolver_hash': None, 'path': None}
 
+    assert d.validate_config(config) == False
 
-@pytest.mark.parametrize("recurse", [True, False])
-@pytest.mark.parametrize("optional", [True, False])
-def test_wurf_dependency_load_with_dependency_path(test_directory, recurse,
-                                                   optional):
-    """Tests the load(...) function of WurfDependency which already has a path.
+    config = {'recurse': True, 'optional': True,
+              'resolver_hash': None, 'path': None}
 
-    It is a programming error to load a dependency twice or to load after
-    reolve.
-    """
-    d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
-    d.path = test_directory.path()
+    assert d.validate_config(config) == False
 
-    with pytest.raises(AssertionError):
-        d.load(path)
+    config = {'recurse': True, 'optional': False,
+              'resolver_hash': 'h3sh', 'path': None}
+
+    assert d.validate_config(config) == False
+
+    config = {'recurse': True, 'optional': False,
+              'resolver_hash': 'h4sh', 'path': None}
+
+    assert d.validate_config(config) == False
+
+    config = {'recurse': True, 'optional': False,
+              'resolver_hash': 'h4sh', 'path': 'bla'}
+
+    assert d.validate_config(config) == False
+
+    config = {'recurse': True, 'optional': False,
+              'resolver_hash': 'h4sh', 'path': test_directory.path()}
+
+    assert d.validate_config(config) == True
 
 
-@pytest.mark.parametrize("recurse", [True, False])
-@pytest.mark.parametrize("optional", [True, False])
-def test_wurf_dependency_load_with_dependency_path(test_directory, recurse,
-                                                   optional):
-    """If we try to load from a path where the config file does not exist
-    it should raise an exception.
-    """
-    d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
-
-    with pytest.raises(Exception):
-        d.load(test_directory)
 
 
 # @pytest.mark.parametrize("recurse", [True, False])
 # @pytest.mark.parametrize("optional", [True, False])
-# def test_wurf_dependency_load_with_dependency_path(test_directory):
+# def test_wurf_dependency_resolve_failure(test_directory, recurse, optional):
+#     # 1. resolve failure recurse=False, optional=False
+
+#     resolver = mock.Mock()
+#     resolver.hash.return_value='h4sh'
+
+#     # Calling resolve will raise an exception
+#     resolver.resolve.side_effect=Exception('Boom!')
+
+#     d = WurfDependency('abc', resolver, recurse=recurse, optional=optional)
+
+#     ctx = mock.Mock()
+#     ctx.cmd = 'resolve'
+#     ctx.bundle_path.return_value=test_directory.path()
+#     ctx.fatal.side_effect=Exception()
+
+#     try:
+#         d.resolve(ctx)
+#     except:
+#         # If the dependency is not optional we should see an exception now
+#         assert not optional
+
+#     else:
+#         # We do not expect an exception if the dependency is optional
+#         assert optional
+#         assert ctx.start_msg.call_count == 1
+#         assert ctx.end_msg.call_count == 1
+
+#     resolver_path = os.path.join(test_directory.path(), 'abc-h4sh')
+#     resolver.resolve.assert_called_once_with(ctx, resolver_path)
+
+#     assert d.path is None
+#     assert os.path.exists(resolver_path)
+
+#     # Check recurse is never called since we don't have a path - resolved
+#     # failed ;)
+#     assert not ctx.recurse.called
+
+
+# @pytest.mark.parametrize("recurse", [True, False])
+# @pytest.mark.parametrize("optional", [True, False])
+# def test_wurf_dependency_store_has_path(test_directory, recurse, optional):
+#     """Tests store(...) function of WurfDependency when a path is available."""
+
+#     resolver = mock.Mock()
+#     resolver.hash.return_value='h4sh'
+
+#     d = WurfDependency('abc', resolver, recurse=recurse, optional=optional)
+
+#     build_directory = test_directory.mkdir('build')
+
+#     ctx = mock.Mock()
+#     ctx.bundle_config_path.return_value = build_directory.path()
+
+#     abc_directory = test_directory.mkdir('abc')
+#     d.path = abc_directory.path()
+
+#     d.store(ctx)
+
+#     json_path = os.path.join(build_directory.path(), 'abc.resolve.json')
+#     assert os.path.isfile(json_path)
+
+#     # Lets read back the stored json file and see that every things works
+#     with open(json_path, 'r') as json_file:
+#         data = json.load(json_file)
+
+#     assert data['optional'] == optional
+#     assert data['recurse'] == recurse
+#     assert data['path'] == abc_directory.path()
+#     assert data['resolver_hash'] == 'h4sh'
+
+# @pytest.mark.parametrize("recurse", [True, False])
+# @pytest.mark.parametrize("optional", [True, False])
+# def test_wurf_dependency_store_no_path(test_directory, recurse, optional):
+#     """ Tests the store(...) function of WurfDependency when no path is available.
+
+#     When there is no path we expect an assert to fire.
+#     """
+#     resolver = mock.Mock()
+#     ctx = mock.Mock()
+#     ctx.fatal.side_effect = Exception()
+
+#     d = WurfDependency('abc', resolver, recurse=recurse, optional=optional)
+
+#     with pytest.raises(Exception):
+#         d.store(ctx)
+
+
+# @pytest.mark.parametrize("recurse", [True, False])
+# @pytest.mark.parametrize("optional", [True, False])
+# def test_wurf_dependency_load_no_path(test_directory, recurse, optional):
+#     """ Tests the load(...) function of WurfDependency with missing load path.
+
+#     The path where the dependency configuration should be stored is missing.
+#     """
+#     resolver = mock.Mock()
+#     ctx = mock.Mock()
+#     ctx.bundle_config_path.return_value = os.path.join(
+#         test_directory.path(), 'nonexisting')
+#     ctx.fatal.side_effect = Exception()
+
+#     d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
+
+#     with pytest.raises(Exception):
+#         d.load(ctx)
+
+
+# @pytest.mark.parametrize("recurse", [True, False])
+# @pytest.mark.parametrize("optional", [True, False])
+# def test_wurf_dependency_load_with_dependency_path(test_directory, recurse,
+#                                                    optional):
+#     """Tests the load(...) function of WurfDependency which already has a path.
+
+#     It is a programming error to load a dependency twice or to load after
+#     reolve.
+#     """
+#     d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
+#     d.path = test_directory.path()
+
+#     with pytest.raises(AssertionError):
+#         d.load(path)
+
+
+# @pytest.mark.parametrize("recurse", [True, False])
+# @pytest.mark.parametrize("optional", [True, False])
+# def test_wurf_dependency_load_with_dependency_path(test_directory, recurse,
+#                                                    optional):
 #     """If we try to load from a path where the config file does not exist
 #     it should raise an exception.
 #     """
 #     d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
 
-    # test_directory.write_file(
+#     with pytest.raises(Exception):
+#         d.load(test_directory)
 
-    # with pytest.raises(Exception)
-    #     d.load(test_directory)
+
+# # @pytest.mark.parametrize("recurse", [True, False])
+# # @pytest.mark.parametrize("optional", [True, False])
+# # def test_wurf_dependency_load_with_dependency_path(test_directory):
+# #     """If we try to load from a path where the config file does not exist
+# #     it should raise an exception.
+# #     """
+# #     d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
+
+#     # test_directory.write_file(
+
+#     # with pytest.raises(Exception)
+#     #     d.load(test_directory)

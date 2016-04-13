@@ -186,8 +186,9 @@ class WurfDependency:
             ctx.fatal('Bundle config path not found {} for loading dependency '
                       '{}'.format(p, self.name))
 
-        assert self.path == None, ('Dependency {} has a path, '
-                                   'in a non-resolve step.'.format(self.name))
+        if self.path == None:
+            ctx.fatal('Dependency {} has a path, '
+                      'in a non-resolve step.'.format(self.name))
 
         config_path = os.path.join(p, self.name + '.resolve.json')
 
@@ -209,6 +210,19 @@ class WurfDependency:
     def validate_config(self, config):
         """Check that the config is valid."""
 
+        # Check that the correct keys are present
+        if not 'recurse' in config:
+            return False
+
+        if not 'optional' in config:
+            return False
+
+        if not 'resolver_hash' in config:
+            return False
+
+        if not 'path' in config:
+            return False
+
         # Check that the stored dependency settings match the ones added
         if self.recurse != config['recurse']:
             return False
@@ -221,6 +235,11 @@ class WurfDependency:
 
         if not self.optional and not config['path']:
             # The dependency is not optional so it should have a path
+            return False
+
+        if config['path'] and not os.path.exists(config['path']):
+            # If a path is specified it should also exist in the file
+            # system
             return False
 
         return True
