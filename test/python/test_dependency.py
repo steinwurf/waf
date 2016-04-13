@@ -43,12 +43,40 @@ from wurf_dependency import WurfDependency
 #
 # Read more about pytest paramerterize here:
 # https://pytest.org/latest/parametrize.html
-
+#
+# Testing the resolve functionality should cover the following states:
+#
+# 1. is_active_resolve=False, recurse=True|False, optional=True|False
+#
+# 2. is_active_resolve=True, action=FETCH, resolve=Failure, recurse=True|False,
+#    optional=True|False
+#
+# 3. is_active_resolve=True, action=FETCH, resolve=Success, recurse=True|False,
+#    optional=True|False
+#
+# 4. is_active_resolve=True, action=USER, path=available, recurse=True|False,
+#    optional=True|False
+#
+# 5. is_active_resolve=True, action=USER, path=unavailable, recurse=True|False,
+#    optional=True|False
+#
+#
+#
 
 @pytest.mark.parametrize("recurse", [True, False])
 @pytest.mark.parametrize("optional", [True, False])
-def test_wurf_dependency_resolve_success(test_directory, recurse, optional):
-    # 1. resolve success recurse=True|False, optional=True|False
+def test_wurf_dependency_case_one(test_directory, recurse, optional):
+    """Case one tests the following setup:
+
+    is_active_resolve = False
+    recurse = true | false
+    optional = true | false
+    config = valid | invalid
+    config_file = exists | missing
+
+    Basically when this is not an active resolve step the dependency
+    information should be loaded from a config file.
+    """
 
     resolver = mock.Mock()
     resolver.hash.return_value='h4sh'
@@ -58,7 +86,8 @@ def test_wurf_dependency_resolve_success(test_directory, recurse, optional):
 
     ctx = mock.Mock()
     ctx.cmd = 'resolve'
-    ctx.bundle_path.return_value=test_directory.path()
+    ctx.bundle_config_path.return_value=test_directory.path()
+    ctx.is_active_resolve.return_value=False
 
     d.resolve(ctx)
 

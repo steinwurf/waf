@@ -55,6 +55,7 @@ class WurfDependency:
 
 
     def active_resolve(self, ctx):
+        """Actively resolve the dependency."""
 
         self.action = self.select_resolve_action(ctx)
 
@@ -77,7 +78,7 @@ class WurfDependency:
         a .frozen file all developers use the exact same version.
         """
 
-        assert ctx.is_active_resolve():
+        assert ctx.is_active_resolve()
 
         if ctx.has_user_defined_dependency_path(self.name):
             return WurfResolveAction.USER

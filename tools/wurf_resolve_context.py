@@ -145,47 +145,43 @@ class WurfResolveContext(ConfigurationContext):
         :param optional: specifies if this dependency is optional (an optional
                      dependency might not be resolved if unavailable)
         """
-
-        dependency = WurfDependency(name, resolver, recurse, optional)
-
-        if name in dependencies:
-            # The dependency already exists lets check that these are
-            # compatible. If they are we have nothing else to do since it
-            # should have been resolved.
-
-            if dependency != dependencies[name]:
-                ctx.fatal('Incompatible dependencies with same name %r <=> %r'
-                            % (dependency, dependencies[name]))
-            else:
-                return
-
-        action = self.select_resolve_action()
-
-        if action == WurfResolveAction.USER:
-
-
-
-            dependency.set_path(self.parse_user_path())
-
-        elif action == WurfResolveAction.FETCH:
-            depenency.resolve(self)
-
-        elif action == WurfResolveAction.LOAD:
-            dependency.load(
-
-
-        if self.optional and not self.path:
-            return
-        else:
-            assert self.path
-
-        if self.recurse:
-            ctx.recurse(self.path)
-
-
-
-        dependency = WurfDependency(name, resolver, recurse, optional)
-
-
-    def user_dependency(self):
         pass
+        #dependency = WurfDependency(name, resolver, recurse, optional)
+
+        # if name in dependencies:
+        #     # The dependency already exists lets check that these are
+        #     # compatible. If they are we have nothing else to do since it
+        #     # should have been resolved.
+
+        #     if dependency != dependencies[name]:
+        #         ctx.fatal('Incompatible dependencies with same name %r <=> %r'
+        #                     % (dependency, dependencies[name]))
+        #     else:
+        #         return
+
+        # action = self.select_resolve_action()
+
+        # if action == WurfResolveAction.USER:
+
+
+
+        #     dependency.set_path(self.parse_user_path())
+
+        # elif action == WurfResolveAction.FETCH:
+        #     depenency.resolve(self)
+
+        # elif action == WurfResolveAction.LOAD:
+        #     dependency.load(
+
+
+        # if self.optional and not self.path:
+        #     return
+        # else:
+        #     assert self.path
+
+        # if self.recurse:
+        #     ctx.recurse(self.path)
+
+
+
+        # dependency = WurfDependency(name, resolver, recurse, optional)
