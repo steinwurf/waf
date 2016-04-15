@@ -63,6 +63,40 @@ from wurf_dependency import WurfDependency
 #
 #
 
+@mock.patch.object(WurfDependency, 'active_resolve')
+@mock.patch.object(WurfDependency, 'load')
+@pytest.mark.parametrize("path", [None, "/okdoki"])
+@pytest.mark.parametrize("recurse", [True, False])
+@pytest.mark.parametrize("optional", [True, False])
+@pytest.mark.parametrize("active", [True, False])
+def test_wurf_dependency_resolve(mock_load, mock_active_resolve, path,
+                                 recurse, optional, active):
+
+    d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
+    d.path = path
+
+    ctx = mock.Mock()
+    ctx.cmd = 'resolve'
+    ctx.is_active_resolve.return_value=active
+    ctx.fatal.side_effect=Exception("boom!")
+
+    if not path and not optional:
+        with pytest.raises(Exception):
+            d.resolve(ctx)
+    else:
+        d.resolve(ctx)
+
+    if active:
+        assert mock_active_resolve.called
+        assert not mock_load.called
+    else:
+        assert not mock_active_resolve.called
+        assert mock_load.called
+
+    if path and recurse:
+        assert ctx.recurse.called
+
+
 @pytest.mark.parametrize("recurse", [True, False])
 @pytest.mark.parametrize("optional", [True, False])
 @pytest.mark.parametrize("config_file", [True, False])
