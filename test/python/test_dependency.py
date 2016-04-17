@@ -97,55 +97,164 @@ def test_wurf_dependency_resolve(mock_load, mock_active_resolve, path,
         assert ctx.recurse.called
 
 
+@mock.patch.object(WurfDependency, 'user_defined_dependency_path')
+@mock.patch.object(WurfDependency, 'optional_fetch')
+@mock.patch.object(WurfDependency, 'store')
+@pytest.mark.parametrize("user_defined", [True, False])
 @pytest.mark.parametrize("recurse", [True, False])
 @pytest.mark.parametrize("optional", [True, False])
-@pytest.mark.parametrize("config_file", [True, False])
-def test_wurf_dependency_load_fail(test_directory, recurse, optional,
-                                   config_file):
-    """Case one tests the following setup:
+def test_wurf_dependency_active_resolve(mock_store, mock_optional_fetch,
+                                        mock_user_defined_dependency_path,
+                                        user_defined, recurse, optional):
 
-    is_active_resolve = False
-    recurse = true | false
-    optional = true | false
-    config_file = exists | missing
-    config = valid | invalid
+    d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
 
-    When something fails it will call ctx.fatal(...) so we can group all
-    the above permutations into two categories, the ones that will
-    eventually call ctx.fatal and those that will not.
+    ctx = mock.Mock()
+    ctx.has_user_defined_dependency_path.return_value=user_defined
 
-    Should call ctx.fatal(...):
+    d.active_resolve(ctx)
 
-    1. recurse = true | false, optional = true | false, config_file = missing
-       config = N/A
-    2. recurse = true | false, optional = true | false, config_file = exists,
-       config = invalid
+    if user_defined:
+        mock_user_defined_dependency_path.assert_called_once_with(ctx)
+        assert not mock_optional_fetch.called
+    else:
+        assert not mock_user_defined_dependency_path.called
+        mock_optional_fetch.assert_called_once_with(ctx)
 
-    Note to above when config_file is missing the validity of the config
-    if irrelevant (thus the N/A).
+    ctx.has_user_defined_dependency_path.assert_called_once_with('abc')
+    mock_store.assert_called_once_with(ctx)
 
-    Basically when this is not an active resolve step the dependency
-    information should be loaded from a config file.
-    """
+
+@mock.patch('wurf_dependency.os.path')
+@pytest.mark.parametrize("recurse", [True, False])
+@pytest.mark.parametrize("optional", [True, False])
+@pytest.mark.parametrize("path_exists", [True, False])
+@pytest.mark.parametrize("path", ['/tmp', '/okdoki'])
+def test_wurf_dependency_user_defined_dependency_path(mock_path, recurse,
+                                                      optional, path_exists,
+                                                      path):
+
+    d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
+
+    ctx = mock.Mock()
+    ctx.user_defined_dependency_path.return_value=path
+    ctx.fatal.side_effect=Exception('boom')
+
+    mock_path.exists.return_value=path_exists
+
+    try:
+        d.user_defined_dependency_path(ctx)
+    except:
+        assert not path_exists
+    else:
+        assert path_exists
+
+    assert ctx.start_msg.call_count == 1
+    ctx.user_defined_dependency_path.assert_called_once_with(ctx)
+
+    mock_path.exists.assert_called_once_with(path)
+
+    if path_exists:
+        assert ctx.end_msg.call_count == 1
+        assert ctx.fatal.call_count == 0
+    else:
+        assert ctx.end_msg.call_count == 0
+        assert ctx.fatal.call_count == 1
+
+
+@mock.patch.object(WurfDependency, 'fetch')
+@pytest.mark.parametrize("recurse", [True, False])
+@pytest.mark.parametrize("optional", [True, False])
+@pytest.mark.parametrize("fetch_exception", [True, False])
+def test_wurf_dependency_optional_fetch(mock_fetch, recurse,
+                                        optional, fetch_exception):
+
+    d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
+
+    if fetch_exception:
+        mock_fetch.side_effect=Exception('booom')
+
+    ctx = mock.Mock()
+
+    try:
+        d.optional_fetch(ctx)
+    except:
+
+        assert fetch_exception
+        assert not optional
+
+    else:
+
+        if fetch_exception:
+            assert optional
+
+        assert ctx.start_msg.call_count == 1
+        assert ctx.end_msg.call_count == 1
+
+    mock_fetch.assert_called_once_with(ctx)
+
+
+@mock.patch.object(WurfDependency, 'resolver_path')
+@mock.patch('wurf_dependency.os.path')
+@mock.patch('wurf_dependency.os')
+@pytest.mark.parametrize("recurse", [True, False])
+@pytest.mark.parametrize("optional", [True, False])
+@pytest.mark.parametrize("path_exists", [True, False])
+@pytest.mark.parametrize("resolver_path", ['/tmp', '/okdoki'])
+def test_wurf_dependency_fetch(mock_os, mock_os_path, mock_resolver_path,
+                               recurse, optional, path_exists, resolver_path):
 
     resolver = mock.Mock()
+    resolver.resolve.return_value='/tmp'
 
     d = WurfDependency('abc', resolver, recurse=recurse, optional=optional)
 
+    mock_resolver_path.return_value=resolver_path
+    mock_os_path.exists.return_value=path_exists
+
     ctx = mock.Mock()
-    ctx.cmd = 'resolve'
-    ctx.bundle_config_path.return_value=test_directory.path()
-    ctx.is_active_resolve.return_value=False
-    ctx.fatal.side_effect = Exception()
+    d.fetch(ctx)
 
-    if config_file:
-        # If the config file should exist we write an invalid one
-        test_directory.write_file('abc.resolve.json', '{"na":"na"}')
+    mock_os_path.exists.assert_called_once_with(resolver_path)
 
-    with pytest.raises(Exception):
-        d.resolve(ctx)
+    if not path_exists:
+        mock_os.makedirs.assert_called_once_with(resolver_path)
+    else:
+        assert mock_os.makedirs.call_count == 0
 
-    assert ctx.fatal.call_count == 1
+    resolver.resolve.assert_called_once_with(ctx, resolver_path)
+    assert d.path == '/tmp'
+
+
+@mock.patch.object(WurfDependency, 'resolver_path')
+@pytest.mark.parametrize("recurse", [True, False])
+@pytest.mark.parametrize("optional", [True, False])
+def test_wurf_dependency_resolver_path(mock_os, mock_os_path, mock_resolver_path,
+                                recurse, optional, path_exists, resolver_path):
+
+    resolver = mock.Mock()
+    resolver.resolve.return_value='/tmp'
+
+    d = WurfDependency('abc', resolver, recurse=recurse, optional=optional)
+
+    mock_resolver_path.return_value=resolver_path
+    mock_os_path.exists.return_value=path_exists
+
+    ctx = mock.Mock()
+    d.fetch(ctx)
+
+    mock_os_path.exists.assert_called_once_with(resolver_path)
+
+    if not path_exists:
+        mock_os.makedirs.assert_called_once_with(resolver_path)
+    else:
+        assert mock_os.makedirs.call_count == 0
+
+    resolver.resolve.assert_called_once_with(ctx, resolver_path)
+    assert d.path == '/tmp'
+
+
+
 
 
 @pytest.mark.parametrize("recurse", [True, False])

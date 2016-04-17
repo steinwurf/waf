@@ -55,35 +55,20 @@ class WurfDependency:
 
 
     def active_resolve(self, ctx):
-        """Actively resolve the dependency."""
+        """Actively resolve the dependency.
 
-        self.action = self.select_resolve_action(ctx)
+        This function chooses the "active" resolve action. In case of
+        later extension this would be the place to add in support for
+        further resolve actions.
+        """
 
-        if self.action == WurfResolveAction.USER:
+        if ctx.has_user_defined_dependency_path(self.name):
             self.user_defined_dependency_path(ctx)
 
-        elif self.action == WurfResolveAction.FETCH:
+        else:
             self.optional_fetch(ctx)
 
         self.store(ctx)
-
-
-    def select_resolve_action(self, ctx):
-        """Select the appropriate action for how to resolve a dependency.
-
-        This function serves as the extension point to support further
-        resolve actions e.g. such as frozen dependencies. The idea
-        behind frozen dependencies are to lock down the specific version
-        of a dependency to ensure that it never changes. By distributing
-        a .frozen file all developers use the exact same version.
-        """
-
-        assert ctx.is_active_resolve()
-
-        if ctx.has_user_defined_dependency_path(self.name):
-            return WurfResolveAction.USER
-        else:
-            return WurfResolveAction.FETCH
 
 
     def user_defined_dependency_path(self, ctx):
@@ -105,9 +90,13 @@ class WurfDependency:
         """Try to fetch the dependency. If dependency is optional allow failure.
         """
 
+        ctx.start_msg('Resolve dependency %s' % self.name)
+
         try:
             self.fetch(ctx)
         except Exception as e:
+
+            ctx.to_log("Exception while fetching dependency: {}".format(e))
 
             if self.optional:
                 # An optional dependency might be unavailable if the user
@@ -127,6 +116,18 @@ class WurfDependency:
         :param ctx: Context object used during resolving
         """
 
+        resolver_path = self.resolver_path(ctx)
+
+        if not os.path.exists(resolver_path):
+            ctx.to_log(
+                "Creating new resolver path: {}".format(resolver_path))
+            os.makedirs(resolver_path)
+
+        self.path = self.resolver.resolve(ctx, resolver_path)
+
+
+    def resolver_path(self):
+
         resolver_hash = self.resolver.hash()
 
         # Limit the hash to 8 characters. The reason for this is to avoid a
@@ -140,12 +141,8 @@ class WurfDependency:
         resolver_path = os.path.join(
             ctx.bundle_path(), self.name + '-' + resolver_hash)
 
-        if not os.path.exists(resolver_path):
-            ctx.to_log(
-                "Creating new resolver path: {}".format(resolver_path))
-            os.makedirs(resolver_path)
+        return resolver_path
 
-        self.path = self.resolver.resolve(ctx, resolver_path)
 
 
     def store(self, ctx):
