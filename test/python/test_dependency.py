@@ -226,73 +226,64 @@ def test_wurf_dependency_fetch(mock_os, mock_os_path, mock_resolver_path,
     assert d.path == '/tmp'
 
 
-@mock.patch.object(WurfDependency, 'resolver_path')
 @pytest.mark.parametrize("recurse", [True, False])
 @pytest.mark.parametrize("optional", [True, False])
-def test_wurf_dependency_resolver_path(mock_os, mock_os_path, mock_resolver_path,
-                                recurse, optional, path_exists, resolver_path):
+def test_wurf_dependency_resolver_path(recurse, optional):
 
     resolver = mock.Mock()
-    resolver.resolve.return_value='/tmp'
+    resolver.hash.return_value='h4sh'
 
     d = WurfDependency('abc', resolver, recurse=recurse, optional=optional)
-
-    mock_resolver_path.return_value=resolver_path
-    mock_os_path.exists.return_value=path_exists
 
     ctx = mock.Mock()
-    d.fetch(ctx)
+    ctx.bundle_path.return_value='/tmp'
 
-    mock_os_path.exists.assert_called_once_with(resolver_path)
+    p = d.resolver_path(ctx)
 
-    if not path_exists:
-        mock_os.makedirs.assert_called_once_with(resolver_path)
-    else:
-        assert mock_os.makedirs.call_count == 0
-
-    resolver.resolve.assert_called_once_with(ctx, resolver_path)
-    assert d.path == '/tmp'
-
-
-
-
-
-@pytest.mark.parametrize("recurse", [True, False])
-@pytest.mark.parametrize("optional", [True, False])
-def test_wurf_dependency_load_success(test_directory, recurse, optional):
-    """Case one tests the following setup:
-
-    is_active_resolve = False
-    recurse = true | false
-    optional = true | false
-    config_file = exists | missing
-    config = valid | invalid
-
-    When tings do not fail
-
-    1. recurse = true | false, optional = true | false, config_file = exists
-       config = valid
-
-    """
+    assert p == '/tmp/abc-h4sh'
 
     resolver = mock.Mock()
+    resolver.hash.return_value='1234567890'
 
     d = WurfDependency('abc', resolver, recurse=recurse, optional=optional)
 
-#     ctx = mock.Mock()
-#     ctx.cmd = 'resolve'
-#     ctx.bundle_config_path.return_value=test_directory.path()
-#     ctx.is_active_resolve.return_value=False
-#     ctx.fatal.side_effect = Exception()
+    ctx = mock.Mock()
+    ctx.bundle_path.return_value='/tmp'
 
-#     if config_file:
-#         # If the config file should exist we write an invalid one
-#         test_directory.write_file('abc.resolve.json', '{"name":"bla"}')
+    p = d.resolver_path(ctx)
 
-#     with pytest.raises(Exception):
-#         d.resolve(ctx)
+    assert p == '/tmp/abc-12345678'
 
-#     assert ctx.fatal.call_count == 1
+
+
+@pytest.mark.parametrize("optional,exists",[
+    (True, False),(True, True),(False, True)])
+def test_wurf_dependency_store_load(test_directory, optional, exists):
+
+    bundle_dir = test_directory.mkdir('bundle')
+    dependency_dir = test_directory.mkdir('dependency')
+
+    resolver = mock.Mock()
+    resolver.hash.return_value='h4sh'
+
+    ctx = mock.Mock()
+    ctx.bundle_config_path.return_value=bundle_dir.path()
+    ctx.fatal.side_effect=Exception('boom')
+
+    d_store = WurfDependency('abc', resolver, recurse=True, optional=optional)
+
+    if exists:
+        d_store.path = dependency_dir.path()
+
+    d_store.store(ctx)
+
+    d_load = WurfDependency('abc', resolver, recurse=True, optional=optional)
+    d_load.load(ctx)
+
+    if exists:
+        assert d_load.path == dependency_dir.path()
+    else:
+        assert d_load.path == ""
 
 
 def test_wurf_dependency_validate_config(test_directory):
@@ -301,22 +292,22 @@ def test_wurf_dependency_validate_config(test_directory):
     resolver = mock.Mock()
     resolver.hash.return_value='h4sh'
 
+    # Check that we fail if the keys are not present
+    config = {}
+
     # First a test where optional is True
 
-    d = WurfDependency('abc', resolver, recurse=True, optional=True)
 
-    config = {'recurse': False, 'optional': None,
-              'resolver_hash': None, 'path': None}
 
-    assert d.validate_config(config) == False
-
-    config = {'recurse': True, 'optional': False,
-              'resolver_hash': None, 'path': None}
+    config = {'resolver_hash': '', 'path': ''}
 
     assert d.validate_config(config) == False
 
-    config = {'recurse': True, 'optional': True,
-              'resolver_hash': 'h3sh', 'path': None}
+    config = {'resolver_hash': 'h4sh', 'path': ''}
+
+    assert d.validate_config(config) == False
+
+    config = {'resolver_hash': 'h3sh', 'path': None}
 
     assert d.validate_config(config) == False
 

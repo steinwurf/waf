@@ -9,12 +9,19 @@ class WurfDependency:
 
     A dependency can be many things:
 
-        1. A software library needed.
-        2. Resources such as images etc.
-        3. Ect.
+    1. A software library needed.
+    2. Resources such as images etc.
+    3. Ect.
 
+    Error handling policy: In the following code we will use two
+    approaches to deal with errors either we will use an assert or we
+    will call ctx.fatal. The reason for using on or the other is the following:
 
+    If the cause of the error should have been checked somewhere else we
+    use an assert if the error cannot be checked elsewhere we use ctx.fatal.
 
+    Note on unit tests: We will in the unit tests not test conditions
+    that lead to assertion errors.
     """
 
     def __init__(self, name, resolver, recurse=True, optional=False):
@@ -31,7 +38,7 @@ class WurfDependency:
 
         self.recurse = recurse
         self.optional = optional
-        self.path = None
+        self.path = ""
 
 
     def resolve(self, ctx):
@@ -126,7 +133,7 @@ class WurfDependency:
         self.path = self.resolver.resolve(ctx, resolver_path)
 
 
-    def resolver_path(self):
+    def resolver_path(self, ctx):
 
         resolver_hash = self.resolver.hash()
 
@@ -144,23 +151,31 @@ class WurfDependency:
         return resolver_path
 
 
-
     def store(self, ctx):
         """Store information about the dependency."""
 
-        assert self.path,('Cannot store config without a valid path')
+        assert self.optional or os.path.exists(self.path), \
+            'Non optional dependencies must have a path'
+
+        config = {
+            'name': self.name,
+            'path': self.path,
+            'optional': self.optional,
+            'recurse': self.recurse,
+            'resolver_hash': self.resolver.hash()
+            }
 
         # We typically store configs in the build/ folder of the project
         p = ctx.bundle_config_path()
 
-        if not os.path.exists(p):
-            ctx.fatal('Bundle config path not found {} for storing dependency '
-                      '{}'.format(p, self.name))
+        assert os.path.exists(p), \
+            'Bundle config path not found {} for storing dependency '\
+            '{}'.format(p, self.name)
 
         config_path = os.path.join(p, self.name + '.resolve.json')
 
         with open(config_path, 'w') as config_file:
-            json.dump(self.to_config(), config_file)
+            json.dump(config, config_file)
 
 
     def load(self, ctx):
@@ -179,13 +194,12 @@ class WurfDependency:
         # We typically store configs in the build/ folder of the project
         p = ctx.bundle_config_path()
 
-        if not os.path.exists(p):
-            ctx.fatal('Bundle config path not found {} for loading dependency '
-                      '{}'.format(p, self.name))
+        assert os.path.exists(p), \
+            'Bundle config path not found {} for loading dependency '\
+            '{}'.format(p, self.name)
 
-        if self.path == None:
-            ctx.fatal('Dependency {} has a path, '
-                      'in a non-resolve step.'.format(self.name))
+        assert not self.path, \
+            'Dependency {} has path, in a non-resolve step.'.format(self.name)
 
         config_path = os.path.join(p, self.name + '.resolve.json')
 
@@ -197,8 +211,7 @@ class WurfDependency:
             config = json.load(config_file)
 
         if not self.validate_config(config):
-            ctx.fatal('Invalid %s config %s <=> %s'
-                      % (self.name, self.config, config))
+            ctx.fatal('Invalid %s config %s.'.format(self.name, config))
 
         if 'path' in config:
             self.path = config['path']
@@ -208,6 +221,10 @@ class WurfDependency:
         """Check that the config is valid."""
 
         # Check that the correct keys are present
+
+        if not 'name' in config:
+            return False
+
         if not 'recurse' in config:
             return False
 
@@ -221,6 +238,9 @@ class WurfDependency:
             return False
 
         # Check that the stored dependency settings match the ones added
+        if self.name != config['name']:
+            return False
+
         if self.recurse != config['recurse']:
             return False
 
