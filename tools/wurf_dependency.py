@@ -213,8 +213,7 @@ class WurfDependency:
         if not self.validate_config(config):
             ctx.fatal('Invalid %s config %s.'.format(self.name, config))
 
-        if 'path' in config:
-            self.path = config['path']
+        self.path = config['path']
 
 
     def validate_config(self, config):
@@ -265,6 +264,7 @@ class WurfDependency:
         """Returns a dict representing the configuration of the dependency."""
 
         config = {}
+        config['name'] = self.name
         config['recurse'] = self.recurse
         config['optional'] = self.optional
         config['path'] = self.path
@@ -285,6 +285,11 @@ class WurfDependency:
         pass
 
     def __eq__(self, other):
+
+        self_config = self.to_config()
+        other_config = other.to_config()
+
+
 
         if self.name != other.name:
             return False

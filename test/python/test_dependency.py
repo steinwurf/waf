@@ -292,73 +292,30 @@ def test_wurf_dependency_validate_config(test_directory):
     resolver = mock.Mock()
     resolver.hash.return_value='h4sh'
 
-    # Check that we fail if the keys are not present
-    config = {}
-
-    # First a test where optional is True
-
-
-
-    config = {'resolver_hash': '', 'path': ''}
-
-    assert d.validate_config(config) == False
-
-    config = {'resolver_hash': 'h4sh', 'path': ''}
-
-    assert d.validate_config(config) == False
-
-    config = {'resolver_hash': 'h3sh', 'path': None}
-
-    assert d.validate_config(config) == False
-
-    config = {'recurse': True, 'optional': True,
-              'resolver_hash': 'h4sh', 'path': None}
-
-    assert d.validate_config(config) == True
-
-    config = {'recurse': True, 'optional': True,
-              'resolver_hash': 'h4sh', 'path': 'bla'}
-
-    assert d.validate_config(config) == False
-
-    config = {'recurse': True, 'optional': True,
-              'resolver_hash': 'h4sh', 'path': test_directory.path()}
-
-    assert d.validate_config(config) == True
-
-    # Secondly a test where optional is False
-
     d = WurfDependency('abc', resolver, recurse=True, optional=False)
 
-    config = {'recurse': False, 'optional': None,
-              'resolver_hash': None, 'path': None}
-
-    assert d.validate_config(config) == False
-
-    config = {'recurse': True, 'optional': True,
-              'resolver_hash': None, 'path': None}
-
-    assert d.validate_config(config) == False
-
-    config = {'recurse': True, 'optional': False,
-              'resolver_hash': 'h3sh', 'path': None}
-
-    assert d.validate_config(config) == False
-
-    config = {'recurse': True, 'optional': False,
-              'resolver_hash': 'h4sh', 'path': None}
-
-    assert d.validate_config(config) == False
-
-    config = {'recurse': True, 'optional': False,
-              'resolver_hash': 'h4sh', 'path': 'bla'}
-
-    assert d.validate_config(config) == False
-
-    config = {'recurse': True, 'optional': False,
+    config = {'name': 'abc', 'recurse': True, 'optional': False,
               'resolver_hash': 'h4sh', 'path': test_directory.path()}
 
     assert d.validate_config(config) == True
+
+    config = {'name': 'abc', 'recurse': True, 'optional': False,
+              'resolver_hash': 'h4sh', 'path': ""}
+
+    assert d.validate_config(config) == False
+
+    d = WurfDependency('abc', resolver, recurse=True, optional=True)
+
+    config = {'name': 'abc', 'recurse': True, 'optional': True,
+              'resolver_hash': 'h4sh', 'path': test_directory.path()}
+
+    assert d.validate_config(config) == True
+
+    config = {'name': 'abc', 'recurse': True, 'optional': True,
+              'resolver_hash': 'h4sh', 'path': ""}
+
+    assert d.validate_config(config) == True
+
 
 
 
