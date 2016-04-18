@@ -63,95 +63,25 @@ import copy
 from waflib import Context
 from waflib import Options
 
+import wurf_resolve_context
+
 
 class WurfOptionsContext(Options.OptionsContext):
 
     def execute(self):
 
-        # Execute the context, this will go out and invoke the option(...)
-        # function defined in the wscript. We have some extra tools that
-        # also define the option(...) function to avoid having to call load
-        # in all wscripts to initialize those, we can do it here.
-
-        self.load('wurf_common_tools')
-
-        # Now invoke execute to recurse in to the option(...) function of
-        # the wscript (if it is defined)
-        super(WurfOptionsContext, self).execute()
-
-
-    def parse_args(self):
-
-        # First, we create a deep copy of the original parser of the
-        # OptionsContext, because we will modify the options and arguments
-        # of this copied parser, and these changes should not affect the
-        # original parser
-        extra_parser = copy.deepcopy(self.parser)
-
-        # Get the option strings that were defined in waflib/Options.py or
-        # in the options function of the top-level wscript.
-        # These are the "pre-defined" options
-        optstrings = \
-            [x.get_opt_string() for x in extra_parser._get_all_options()]
-
-        # Create a group for the extra options that were passed but are not
-        # defined at this point, because they come from a yet-to-be-resolved
-        # dependency. Essentially, we just make optparse eat any option
-        # strings that start with "--"
-        extra_opts = extra_parser.add_option_group('Extra options')
-
-        # Go though the arguments that start with --
-        for arg in sys.argv[1:]:
-            if arg.startswith('--'):
-                key = arg.split('=', 1)[0]
-                # Ignore the pre-defined options
-                if key not in optstrings:
-                    # Handle key-value pairs and boolean options differently
-                    if '=' in arg:
-                        extra_opts.add_option(key, default=None,
-                                              dest=key[2:])
-                    else:
-                        extra_opts.add_option(key, default=False,
-                                              action='store_true',
-                                              dest=key[2:])
-
-        # Copy the arguments array. This copy might be modified if we have
-        # to remove the help flags for the extra_parser.
-        args = sys.argv[:]
-        show_help = '-h' in sys.argv or '--help' in sys.argv
-
-        # Note that parse_args will print the help text and exit the
-        # application if the help flags are present. This would prevent us
-        # from fetching options from dependencies during the resolve step.
-        if show_help:
-            if '-h' in args: args.remove('-h')
-            if '--help' in args: args.remove('--help')
-
-        # Call the extra_parser where the extra options are allowed and the
-        # help flags are removed. Note that Options.options must be properly
-        # initialized before we can create the resolve context.
-        (Options.options, leftover_args) = extra_parser.parse_args(args)
-
         # Create and execute the resolve context
         ctx = Context.create_context('resolve')
-        ctx.options = Options.options # provided for convenience
         ctx.cmd = 'resolve'
-        # The original OptionsContext can be used to add options in the
-        # resolve functions of the dependencies. These options will be handled
-        # as normal options when we call parse_args on the original parser.
-        ctx.opt = self
-        # If active_resolvers is true, then the dependency resolvers are
-        # allowed to download the dependencies. If it is false, then the
-        # dependency bundle will only recurse into the previously resolved
-        # dependencies to fetch the options from these.
-        ctx.active_resolvers = 'configure' in sys.argv and not show_help
+
         try:
             ctx.execute()
         finally:
             ctx.finalize()
 
-        # Call the parse_args of the super class to parse all the arguments
-        # again after adding options from dependencies during the execution
-        # of the resolve step. At this point, optparse will know about all
-        # the supported options, so it can validate those.
-        super(WurfOptionsContext, self).parse_args()
+        # Call options in all dependencies
+        wurf_resolve_context.recurse_dependencies(self)
+
+        # Now invoke execute to recurse in to the option(...) function of
+        # the wscript (if it is defined)
+        super(WurfOptionsContext, self).execute()

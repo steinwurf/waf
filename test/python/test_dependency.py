@@ -93,20 +93,21 @@ def test_wurf_dependency_resolve(mock_load, mock_active_resolve, path,
         assert mock_load.called
 
 
-@mock.patch.object(WurfDependency, 'user_defined_dependency_path')
+@mock.patch.object(WurfDependency, '_parse_user_defined_dependency_path')
 @mock.patch.object(WurfDependency, 'optional_fetch')
 @mock.patch.object(WurfDependency, 'store')
-@pytest.mark.parametrize("user_defined", [True, False])
 @pytest.mark.parametrize("recurse", [True, False])
 @pytest.mark.parametrize("optional", [True, False])
+@pytest.mark.parametrize("has_path", [True, False])
 def test_wurf_dependency_active_resolve(mock_store, mock_optional_fetch,
-                                        mock_user_defined_dependency_path,
-                                        user_defined, recurse, optional):
+                                        mock_parse_user, recurse, optional,
+                                        has_path, test_directory):
+
+    mock_parse_user.return_value = ""
 
     d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
 
     ctx = mock.Mock()
-    ctx.has_user_defined_dependency_path.return_value=user_defined
 
     d._active_resolve(ctx)
 

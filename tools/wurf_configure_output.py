@@ -17,7 +17,7 @@ from waflib.Configure import ConfigurationContext
 class ToolchainConfigurationContext(ConfigurationContext):
 
     '''configures the project'''
-    cmd = 'configure'
+
 
     def init_dirs(self):
         # Waf calls this function to set the output directory.

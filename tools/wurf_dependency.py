@@ -3,6 +3,8 @@
 
 import json
 import os
+import argparse
+import sys
 
 class WurfDependency:
     """Defines a dependency.
@@ -33,7 +35,7 @@ class WurfDependency:
         assert name
         assert resolver
 
-        self.name = name
+        self._name = name
         self.resolver = resolver
 
         self._recurse = recurse
@@ -70,7 +72,6 @@ class WurfDependency:
 
         ctx.recurse(self._path)
 
-
     def _active_resolve(self, ctx):
         """Actively resolve the dependency.
 
@@ -79,22 +80,45 @@ class WurfDependency:
         further resolve actions.
         """
 
-        if ctx.has_user_defined_dependency_path(self.name):
-            self.user_defined_dependency_path(ctx)
+        self._path = self._parse_user_defined_dependency_path()
+
+        if self._path:
+
+            ctx.start_msg('User resolve dependency %s' % self._name)
+
+            if not os.path.exists(self._path):
+                ctx.fatal('FAAAAAAAAAIIILL')
+
+            ctx.end_msg(self._path)
 
         else:
             self.optional_fetch(ctx)
 
         self.store(ctx)
 
+    def add_options(self, ctx):
+        pass
 
-    def user_defined_dependency_path(self, ctx):
+    def _parse_user_defined_dependency_path(self):
         """The user has specified the dependency path.
 
         We do not support an optional version of this action. The reason
         is that if the user specifies a path it must exist.
         """
-        ctx.start_msg('User resolve dependency %s' % self.name)
+        p = argparse.ArgumentParser()
+        p.add_argument('--%s-path' % self._name, dest='dependency_path',
+                       default="", type=str)
+        args, unknown = p.parse_known_args(args=sys.argv[1:])
+
+        return args.dependency_path
+
+    def has_user_defined_dependency_path(self, name):
+
+        return self.user_defined_dependency_path(name)
+
+
+
+        ctx.start_msg('User resolve dependency %s' % self._name)
         self._path = ctx.user_defined_dependency_path(ctx)
 
         if not os.path.exists(self._path):
@@ -107,7 +131,7 @@ class WurfDependency:
         """Try to fetch the dependency. If dependency is optional allow failure.
         """
 
-        ctx.start_msg('Resolve dependency %s' % self.name)
+        ctx.start_msg('Resolve dependency %s' % self._name)
 
         try:
             self.fetch(ctx)
@@ -156,7 +180,7 @@ class WurfDependency:
             resolver_hash = resolver_hash[:8]
 
         resolver_path = os.path.join(
-            ctx.bundle_path(), self.name + '-' + resolver_hash)
+            ctx.bundle_path(), self._name + '-' + resolver_hash)
 
         return resolver_path
 
@@ -168,7 +192,7 @@ class WurfDependency:
             'Non optional dependencies must have a path'
 
         config = {
-            'name': self.name,
+            'name': self._name,
             'path': self._path,
             'optional': self.optional,
             'recurse': self._recurse,
@@ -180,9 +204,9 @@ class WurfDependency:
 
         assert os.path.exists(p), \
             'Bundle config path not found {} for storing dependency '\
-            '{}'.format(p, self.name)
+            '{}'.format(p, self._name)
 
-        config_path = os.path.join(p, self.name + '.resolve.json')
+        config_path = os.path.join(p, self._name + '.resolve.json')
 
         with open(config_path, 'w') as config_file:
             json.dump(config, config_file)
@@ -206,16 +230,16 @@ class WurfDependency:
 
         assert os.path.exists(p), \
             'Bundle config path not found {} for loading dependency '\
-            '{}'.format(p, self.name)
+            '{}'.format(p, self._name)
 
         assert not self._path, \
-            'Dependency {} has path, in a non-resolve step.'.format(self.name)
+            'Dependency {} has path, in a non-resolve step.'.format(self._name)
 
-        config_path = os.path.join(p, self.name + '.resolve.json')
+        config_path = os.path.join(p, self._name + '.resolve.json')
 
         if not os.path.isfile(config_path):
             ctx.fatal('Could not load config {} for dependency '
-                      '{}'.format(config_path, self.name))
+                      '{}'.format(config_path, self._name))
 
         with open(config_path, 'r') as config_file:
             config = json.load(config_file)
@@ -223,7 +247,7 @@ class WurfDependency:
         try:
             self._validate_config(config)
         except:
-            ctx.fatal('Invalid %s config %s.'.format(self.name, config))
+            ctx.fatal('Invalid %s config %s.'.format(self._name, config))
         else:
             self._path = config['path']
 
@@ -232,7 +256,7 @@ class WurfDependency:
         """Check that the config is valid."""
 
         # Check that the stored dependency settings match the ones added
-        if self.name != config['name']:
+        if self._name != config['name']:
             return False
 
         if self._recurse != config['recurse']:
@@ -258,7 +282,7 @@ class WurfDependency:
 
     def __eq__(self, other):
 
-        if self.name != other.name:
+        if self._name != other._name:
             return False
 
         if self._recurse != other._recurse:
