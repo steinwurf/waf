@@ -63,8 +63,8 @@ from wurf_dependency import WurfDependency
 #
 #
 
-@mock.patch.object(WurfDependency, 'active_resolve')
-@mock.patch.object(WurfDependency, 'load')
+@mock.patch.object(WurfDependency, '_active_resolve')
+@mock.patch.object(WurfDependency, '_load')
 @pytest.mark.parametrize("path", [None, "/okdoki"])
 @pytest.mark.parametrize("recurse", [True, False])
 @pytest.mark.parametrize("optional", [True, False])
@@ -73,12 +73,11 @@ def test_wurf_dependency_resolve(mock_load, mock_active_resolve, path,
                                  recurse, optional, active):
 
     d = WurfDependency('abc', mock.Mock(), recurse=recurse, optional=optional)
-    d.path = path
+    d._path = path
 
     ctx = mock.Mock()
     ctx.cmd = 'resolve'
     ctx.is_active_resolve.return_value=active
-    ctx.fatal.side_effect=Exception("boom!")
 
     if not path and not optional:
         with pytest.raises(Exception):
@@ -92,9 +91,6 @@ def test_wurf_dependency_resolve(mock_load, mock_active_resolve, path,
     else:
         assert not mock_active_resolve.called
         assert mock_load.called
-
-    if path and recurse:
-        assert ctx.recurse.called
 
 
 @mock.patch.object(WurfDependency, 'user_defined_dependency_path')
@@ -112,7 +108,7 @@ def test_wurf_dependency_active_resolve(mock_store, mock_optional_fetch,
     ctx = mock.Mock()
     ctx.has_user_defined_dependency_path.return_value=user_defined
 
-    d.active_resolve(ctx)
+    d._active_resolve(ctx)
 
     if user_defined:
         mock_user_defined_dependency_path.assert_called_once_with(ctx)
@@ -223,7 +219,7 @@ def test_wurf_dependency_fetch(mock_os, mock_os_path, mock_resolver_path,
         assert mock_os.makedirs.call_count == 0
 
     resolver.resolve.assert_called_once_with(ctx, resolver_path)
-    assert d.path == '/tmp'
+    assert d._path == '/tmp'
 
 
 @pytest.mark.parametrize("recurse", [True, False])
@@ -273,17 +269,17 @@ def test_wurf_dependency_store_load(test_directory, optional, exists):
     d_store = WurfDependency('abc', resolver, recurse=True, optional=optional)
 
     if exists:
-        d_store.path = dependency_dir.path()
+        d_store._path = dependency_dir.path()
 
     d_store.store(ctx)
 
     d_load = WurfDependency('abc', resolver, recurse=True, optional=optional)
-    d_load.load(ctx)
+    d_load._load(ctx)
 
     if exists:
-        assert d_load.path == dependency_dir.path()
+        assert d_load._path == dependency_dir.path()
     else:
-        assert d_load.path == ""
+        assert d_load._path == ""
 
 
 def test_wurf_dependency_validate_config(test_directory):
@@ -297,25 +293,34 @@ def test_wurf_dependency_validate_config(test_directory):
     config = {'name': 'abc', 'recurse': True, 'optional': False,
               'resolver_hash': 'h4sh', 'path': test_directory.path()}
 
-    assert d.validate_config(config) == True
+    assert d._validate_config(config) == True
 
     config = {'name': 'abc', 'recurse': True, 'optional': False,
               'resolver_hash': 'h4sh', 'path': ""}
 
-    assert d.validate_config(config) == False
+    assert d._validate_config(config) == False
 
     d = WurfDependency('abc', resolver, recurse=True, optional=True)
 
     config = {'name': 'abc', 'recurse': True, 'optional': True,
               'resolver_hash': 'h4sh', 'path': test_directory.path()}
 
-    assert d.validate_config(config) == True
+    assert d._validate_config(config) == True
 
     config = {'name': 'abc', 'recurse': True, 'optional': True,
               'resolver_hash': 'h4sh', 'path': ""}
 
-    assert d.validate_config(config) == True
+    assert d._validate_config(config) == True
 
+def test_wurf_dependency_equal():
+    """Simple test of the validate_config function."""
+
+    resolver = mock.Mock()
+    resolver.hash.return_value='h4sh'
+
+    d = WurfDependency('abc', resolver, recurse=True, optional=False)
+
+    assert d == d
 
 
 

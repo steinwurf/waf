@@ -36,9 +36,9 @@ class WurfDependency:
         self.name = name
         self.resolver = resolver
 
-        self.recurse = recurse
+        self._recurse = recurse
         self.optional = optional
-        self.path = ""
+        self._path = ""
 
 
     def resolve(self, ctx):
@@ -46,22 +46,32 @@ class WurfDependency:
         assert ctx.cmd == 'resolve', "Non-resolve context use in resolve step"
 
         if ctx.is_active_resolve():
-            self.active_resolve(ctx)
+            self._active_resolve(ctx)
         else:
-            self.load(ctx)
+            self._load(ctx)
 
-        if self.optional and not self.path:
+        if self.optional and not self._path:
             # The dependency is optional and we did manage to get a path,
             # so lets get outta here!
             return
 
-        assert self.path
+        assert self._path
 
-        if self.recurse:
-            ctx.recurse(self.path)
+    def is_recurse(self):
+        return self._recurse
+
+    def has_path(self):
+        return self._path != ""
+
+    def recurse(self, ctx):
+
+        assert self.is_recurse()
+        assert self.has_path()
+
+        ctx.recurse(self._path)
 
 
-    def active_resolve(self, ctx):
+    def _active_resolve(self, ctx):
         """Actively resolve the dependency.
 
         This function chooses the "active" resolve action. In case of
@@ -85,12 +95,12 @@ class WurfDependency:
         is that if the user specifies a path it must exist.
         """
         ctx.start_msg('User resolve dependency %s' % self.name)
-        self.path = ctx.user_defined_dependency_path(ctx)
+        self._path = ctx.user_defined_dependency_path(ctx)
 
-        if not os.path.exists(self.path):
+        if not os.path.exists(self._path):
             ctx.fatal('FAAAAAAAAAIIILL')
 
-        ctx.end_msg(self.path)
+        ctx.end_msg(self._path)
 
 
     def optional_fetch(self, ctx):
@@ -114,7 +124,7 @@ class WurfDependency:
                 # Re-raise the exception
                 raise
         else:
-            ctx.end_msg(self.path)
+            ctx.end_msg(self._path)
 
 
     def fetch(self, ctx):
@@ -130,7 +140,7 @@ class WurfDependency:
                 "Creating new resolver path: {}".format(resolver_path))
             os.makedirs(resolver_path)
 
-        self.path = self.resolver.resolve(ctx, resolver_path)
+        self._path = self.resolver.resolve(ctx, resolver_path)
 
 
     def resolver_path(self, ctx):
@@ -154,14 +164,14 @@ class WurfDependency:
     def store(self, ctx):
         """Store information about the dependency."""
 
-        assert self.optional or os.path.exists(self.path), \
+        assert self.optional or os.path.exists(self._path), \
             'Non optional dependencies must have a path'
 
         config = {
             'name': self.name,
-            'path': self.path,
+            'path': self._path,
             'optional': self.optional,
-            'recurse': self.recurse,
+            'recurse': self._recurse,
             'resolver_hash': self.resolver.hash()
             }
 
@@ -178,7 +188,7 @@ class WurfDependency:
             json.dump(config, config_file)
 
 
-    def load(self, ctx):
+    def _load(self, ctx):
         """Load information about the dependency.
 
         :Args:
@@ -198,7 +208,7 @@ class WurfDependency:
             'Bundle config path not found {} for loading dependency '\
             '{}'.format(p, self.name)
 
-        assert not self.path, \
+        assert not self._path, \
             'Dependency {} has path, in a non-resolve step.'.format(self.name)
 
         config_path = os.path.join(p, self.name + '.resolve.json')
@@ -210,37 +220,22 @@ class WurfDependency:
         with open(config_path, 'r') as config_file:
             config = json.load(config_file)
 
-        if not self.validate_config(config):
+        try:
+            self._validate_config(config)
+        except:
             ctx.fatal('Invalid %s config %s.'.format(self.name, config))
+        else:
+            self._path = config['path']
 
-        self.path = config['path']
 
-
-    def validate_config(self, config):
+    def _validate_config(self, config):
         """Check that the config is valid."""
-
-        # Check that the correct keys are present
-
-        if not 'name' in config:
-            return False
-
-        if not 'recurse' in config:
-            return False
-
-        if not 'optional' in config:
-            return False
-
-        if not 'resolver_hash' in config:
-            return False
-
-        if not 'path' in config:
-            return False
 
         # Check that the stored dependency settings match the ones added
         if self.name != config['name']:
             return False
 
-        if self.recurse != config['recurse']:
+        if self._recurse != config['recurse']:
             return False
 
         if self.optional != config['optional']:
@@ -260,44 +255,19 @@ class WurfDependency:
 
         return True
 
-    def to_config(self):
-        """Returns a dict representing the configuration of the dependency."""
-
-        config = {}
-        config['name'] = self.name
-        config['recurse'] = self.recurse
-        config['optional'] = self.optional
-        config['path'] = self.path
-
-        # We also store the hash of the resolver this ensures that we can
-        # detect inconsistencies between the potentially downloaded
-        # dependency and the resolver.
-        #
-        # As an example somebody might update the URL of a dependency, in
-        # which case we cannot use the stored dependency anymore and need
-        # to resolve the dependency again. On the other hand if the
-        # resolver hash matches what we stored we know that nothing changed.
-        config['resolver_hash'] = self.resolver.hash()
-
-        return config
-
-    def exists(self):
-        pass
 
     def __eq__(self, other):
-
-        self_config = self.to_config()
-        other_config = other.to_config()
-
-
 
         if self.name != other.name:
             return False
 
-        if type(self.resolver) != type(other.resolver):
+        if self._recurse != other._recurse:
             return False
 
-        if self.config.table != other.config.table:
+        if self.optional != other.optional:
+            return False
+
+        if self.resolver.hash() != other.resolver.hash():
             return False
 
         return True

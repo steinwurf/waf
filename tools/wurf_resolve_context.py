@@ -3,6 +3,7 @@
 
 import os
 import sys
+import argparse
 
 from waflib import Utils
 from waflib import Context
@@ -11,6 +12,13 @@ from waflib import Logs
 from waflib import ConfigSet
 
 from waflib.Configure import ConfigurationContext
+
+from wurf_dependency import WurfDependency
+
+
+dependencies = dict()
+""" Dictionary that stores the dependencies resolved """
+
 
 class WurfResolveContext(ConfigurationContext):
 
@@ -115,23 +123,29 @@ class WurfResolveContext(ConfigurationContext):
         """
         pass
 
-    def select_resolve_action(self):
-        """Select the appropriate action for how to resolve a dependency.
+    def is_active_resolve(self):
 
-        This function serves as the extension point to support further
-        resolve actions e.g. such as frozen dependencies. The idea
-        behind frozen dependencies are to lock down the specific version
-        of a dependency to ensure that it never changes. By distributing
-        a .frozen file all developers use the exact same version.
-        """
+        show_help = '-h' in sys.argv or '--help' in sys.argv
 
-        if self.parse_user_path():
-            return WurfResolveAction.USER
+        # If active_resolvers is true, then the dependency resolvers are
+        # allowed to download the dependencies. If it is false, then the
+        # dependency bundle will only recurse into the previously resolved
+        # dependencies to fetch the options from these.
+        return  'configure' in sys.argv and not show_help
 
-        if self.active_resolvers:
-            return WurfResolveAction.FETCH
+    def user_defined_dependency_path(self, name):
 
-        return WurfResolveAction.LOAD
+        p = argparse.ArgumentParser()
+        p.add_argument('--%s-path' % name, dest='dependency_path',
+                       default="", type=str)
+        args, unknown = p.parse_known_args(args=sys.argv[1:])
+
+        return args.dependency_path
+
+    def has_user_defined_dependency_path(self, name):
+
+        return self.user_defined_dependency_path(name)
+
 
     def add_dependency(self, name, resolver, recurse=True, optional=False):
         """Adds a dependency.
@@ -145,19 +159,26 @@ class WurfResolveContext(ConfigurationContext):
         :param optional: specifies if this dependency is optional (an optional
                      dependency might not be resolved if unavailable)
         """
-        pass
-        #dependency = WurfDependency(name, resolver, recurse, optional)
 
-        # if name in dependencies:
-        #     # The dependency already exists lets check that these are
-        #     # compatible. If they are we have nothing else to do since it
-        #     # should have been resolved.
+        dependency = WurfDependency(name, resolver, recurse, optional)
 
-        #     if dependency != dependencies[name]:
-        #         ctx.fatal('Incompatible dependencies with same name %r <=> %r'
-        #                     % (dependency, dependencies[name]))
-        #     else:
-        #         return
+        if name in dependencies:
+            # The dependency already exists lets check that these are
+            # compatible. If they are we have nothing else to do since it
+            # should have been resolved.
+
+            if dependency != dependencies[name]:
+                ctx.fatal('Incompatible dependencies with same name %r <=> %r'
+                            % (dependency, dependencies[name]))
+            else:
+                return
+
+        dependency.resolve(self)
+
+        if dependency.has_path() and dependency.is_recurse():
+            dependency.recurse(self)
+
+        dependencies[name] = dependency
 
         # action = self.select_resolve_action()
 

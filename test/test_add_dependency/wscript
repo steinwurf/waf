@@ -15,7 +15,9 @@ def resolve(ctx):
     def mock_resolve(ctx, path):
         """ Mocking the resolve function which is the one called when
         fetching a dependency"""
-        return os.path.join(path, resolver.name)
+        p = os.path.join(path, resolver.name)
+        os.makedirs(p)
+        return p
 
     resolver.resolve.side_effect=mock_resolve
     resolver.hash.return_value='h4sh'
