@@ -25,7 +25,7 @@ def recurse_dependencies(ctx):
 
         ctx.to_log("Recurse dependency {}".format(name))
 
-        if dependency.has_path() and dependency.is_recurse():
+        if dependency.has_path() and dependency.requires_recurse():
             dependency.recurse(ctx)
 
         if ctx.cmd == 'options':
@@ -127,7 +127,7 @@ class WurfResolveContext(Context.Context):
 
         dependency.resolve(self)
 
-        if dependency.has_path() and dependency.is_recurse():
+        if dependency.has_path() and dependency.requires_recurse():
             dependency.recurse(self)
 
         dependencies[name] = dependency
