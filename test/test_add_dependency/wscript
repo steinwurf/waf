@@ -24,8 +24,21 @@ def resolve(ctx):
 
     ctx.add_dependency('test-dependency', resolver, recurse=False)
 
-    # @todo enable
-    #assert ctx.has_dependency_path(resolver.name)
+    def libfoo_resolve(ctx, path):
+        """ Mocking the resolve function which is the one called when
+        fetching a dependency"""
+        p = os.path.join(path, 'libfoo')
+
+        print('libfoo_resolve: {}'.format(p))
+
+        return p
+
+    foo_resolver = mock.Mock()
+    foo_resolver.resolve.side_effect = libfoo_resolve
+    foo_resolver.hash.return_value = 'h4sh'
+
+    ctx.add_dependency('libfoo', foo_resolver, optional=False, recurse=True)
+
 
 def options(opt):
     pass

@@ -71,6 +71,21 @@ class TestDirectory:
         for f in files:
             self.copy_file(f)
 
+    def copy_dir(self, directory):
+        """Copy a directory into the test directory."""
+
+        # From: http://stackoverflow.com/a/3925147
+        name = os.path.basename(os.path.normpath(directory))
+
+        # We need to create the directory
+        target_dir = self.tmpdir.mkdir(name)
+
+        source_dir = py.path.local(directory)
+        source_dir.copy(target_dir)
+
+        print("Copy Dir: {} -> {}".format(source_dir, target_dir))
+
+
     def write_file(self, filename, content):
         """Writes a file in the temporary directory.
 
@@ -119,5 +134,5 @@ class TestDirectory:
 
         end_time = time.time()
 
-        return runresult.RunResult(' '.join(args),
+        return runresult.RunResult(' '.join(args), self.path(),
             stdout, stderr, popen.returncode, end_time - start_time)

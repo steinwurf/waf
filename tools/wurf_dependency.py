@@ -80,8 +80,11 @@ class WurfDependency:
     def recurse(self, ctx):
         """Recurse the depedency."""
 
-        assert self.is_recurse()
+        assert self.requires_recurse()
         assert self.has_path()
+
+        ctx.to_log("Recurse for {}: cmd={}, path={}".format(
+            self._name, ctx.cmd, self._path))
 
         ctx.recurse(self._path)
 
@@ -143,6 +146,7 @@ class WurfDependency:
         later extension this would be the place to add in support for
         further resolve actions.
         """
+        ctx.to_log("Active resolve for {}".format(self._name))
 
         self._path = self._parse_user_defined_dependency_path()
 
@@ -261,6 +265,8 @@ class WurfDependency:
             can be found or if that information is detected out-of-date. In
             which case dependencies should be resolved again.
         """
+
+        ctx.to_log("Load resolve for {}".format(self._name))
 
         # We typically store configs in the build/ folder of the project
         p = ctx.bundle_config_path()
