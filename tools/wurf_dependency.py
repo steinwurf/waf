@@ -66,7 +66,6 @@ class WurfDependency:
 
         assert self._path
 
-
     def requires_recurse(self):
         """Return True if the dependency should be recursed otherwise False."""
         return self._recurse
@@ -86,7 +85,7 @@ class WurfDependency:
         ctx.to_log("Recurse for {}: cmd={}, path={}".format(
             self._name, ctx.cmd, self._path))
 
-        ctx.recurse(self._path)
+        ctx.recurse([self._path])
 
 
     def add_options(self, ctx):
@@ -292,7 +291,11 @@ class WurfDependency:
         except:
             ctx.fatal('Invalid %s config %s.'.format(self._name, config))
         else:
-            self._path = config['path']
+            # Waf internally works with paths as str objects, so to make
+            # sure we have the right type we are explicit here. In python
+            # 2.7 we would have a unicode object here whereas in Python 3.x
+            # we get a str object.
+            self._path = str(config['path'])
 
 
     def _validate_config(self, config):

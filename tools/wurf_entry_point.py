@@ -25,7 +25,16 @@ def _check_minimum_python_version(major, minor):
 # therefore it is a good entry point to check the minimum Python version
 _check_minimum_python_version(2, 7)
 
-# The options context runs automatically every time waf is invoked.
+# A general note on the Context. Waf uses a meta-classes registration
+# system for the Context classes. This means that to register e.g. a new
+# ConfigurationContext it is enough to simply import the module where the
+# context class is defined. When the Python interpreter sees the definition
+# waf will auto-register that this should be the new
+# ConfigurationContext. Below we will import a number of modules containing
+# our custom contexts.
+#
+# The options context is instantiated automatically every time waf is
+# invoked.
 #
 # It will recurse out in the options(...) functions defined in the
 # wscript. We have customized it to launch the wurf_resolve_context which
@@ -33,3 +42,7 @@ _check_minimum_python_version(2, 7)
 # dependencies.
 import waflib.extras.wurf_options_context
 import waflib.extras.wurf_resolve_context
+
+# Ensure that WurfConfigurationContext is used instead of the standard Waf
+# ConfigurationContext
+import waflib.extras.wurf_configuration_context

@@ -10,6 +10,7 @@ from waflib import Context
 from waflib import Options
 from waflib import Logs
 from waflib import ConfigSet
+from waflib import Node
 
 from wurf_dependency import WurfDependency
 
@@ -17,7 +18,13 @@ from wurf_dependency import WurfDependency
 # To create the tree. https://gist.github.com/hrldcpr/2012250
 
 dependencies = dict()
-""" Dictionary that stores the dependencies resolved """
+"""Dictionary that stores the dependencies resolved.
+
+The dictionary will be initialized by the WurfResolveContext and can be
+used by all other contexts or tools that need to access the
+dependencies. The idea is that this will be the single place to look to
+figure out which dependencies exist.
+"""
 
 def recurse_dependencies(ctx):
 
@@ -54,7 +61,7 @@ class WurfResolveContext(Context.Context):
 
         # Directly call Context.execute() to avoid the side effects of
         # ConfigurationContext.execute()
-        Context.Context.execute(self)
+        super(WurfResolveContext, self).execute()
 
 
     def bundle_config_path(self):

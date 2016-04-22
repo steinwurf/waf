@@ -29,8 +29,6 @@ def resolve(ctx):
         fetching a dependency"""
         p = os.path.join(path, 'libfoo')
 
-        print('libfoo_resolve: {}'.format(p))
-
         return p
 
     foo_resolver = mock.Mock()
@@ -45,6 +43,7 @@ def options(opt):
 
 def configure(conf):
     pass
+
 
 def build(bld):
     pass

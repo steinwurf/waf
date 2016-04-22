@@ -65,7 +65,6 @@ from waflib import Options
 
 import wurf_resolve_context
 
-
 class WurfOptionsContext(Options.OptionsContext):
 
     def execute(self):
@@ -84,4 +83,7 @@ class WurfOptionsContext(Options.OptionsContext):
 
         # Now invoke execute to recurse in to the option(...) function of
         # the wscript (if it is defined)
+        #
+        # This will also call parse_args(...) so we need to have recursed
+        # the dependencies options(...) functions first.
         super(WurfOptionsContext, self).execute()

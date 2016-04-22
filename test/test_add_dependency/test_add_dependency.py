@@ -21,4 +21,4 @@ def test_add_dependency(test_directory):
 
     assert r.returncode == 0, str(r)
 
-    print(test_directory.path())
+    print(str(r))

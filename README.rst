@@ -53,3 +53,38 @@ Bundle dependencies
 ===================
 
 The basic
+
+
+Fixing unit tests
+=================
+
+If some of the unit tests fail, it may sometimes be helpful to be able to
+go the test folder and e.g. invoke the waf commands manually. We are using
+Tox to ensure that our tests run in a specific environment, so if we want
+to use the same environment e.g. with a specific version of the Python
+interpreter you need to activate it.
+
+Example
+-------
+
+Say we run the test and see the following::
+
+  ______________________________ summary _______________________________
+  py27: commands succeeded
+  ERROR:   py31: commands failed
+  ERROR:   py34: commands failed
+
+Seems we have a problem related to Python 3.x support. The names `py31` and
+`py34` refers to the environment where the failed tests ran. Lets say we
+want to try to manually run the failing commands in the
+`py31`environment. Tox uses virtualenv and stores these in `.tox` in the
+project root folder, to activate it we run::
+
+  $ source .tox/py31/bin/activate
+
+You should now use the right version of the Python interpreter and have
+access to all the test dependencies (if any). So you can navigate to the
+directory where the tests failed and play around. Once you are done exit
+the virtualenv by running::
+
+  $ deactivate
