@@ -76,16 +76,9 @@ class WurfDependency:
         return self._path != ""
 
 
-    def recurse(self, ctx):
-        """Recurse the depedency."""
-
-        assert self.requires_recurse()
-        assert self.has_path()
-
-        ctx.to_log("Recurse for {}: cmd={}, path={}".format(
-            self._name, ctx.cmd, self._path))
-
-        ctx.recurse([self._path])
+    def path(self):
+        """Return the path to the dependency."""
+        return self._path
 
 
     def add_options(self, ctx):

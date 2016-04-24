@@ -9,18 +9,16 @@ import os
 
 def resolve(ctx):
 
-    resolver = mock.Mock()
-    resolver.name = 'test-dependency'
-
     def mock_resolve(ctx, path):
         """ Mocking the resolve function which is the one called when
         fetching a dependency"""
-        p = os.path.join(path, resolver.name)
+        p = os.path.join(path, 'test-dependency')
         os.makedirs(p)
         return p
 
-    resolver.resolve.side_effect=mock_resolve
-    resolver.hash.return_value='h4sh'
+    resolver = mock.Mock()
+    resolver.resolve.side_effect = mock_resolve
+    resolver.hash.return_value = 'h4sh'
 
     ctx.add_dependency('test-dependency', resolver, recurse=False)
 

@@ -1,6 +1,6 @@
 #include "foo.h"
 
-std::string whoooth()
+std::string foo::whoooth()
 {
     return "foobar";
 }
