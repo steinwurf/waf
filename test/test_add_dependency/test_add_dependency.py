@@ -13,6 +13,9 @@ def test_add_dependency(test_directory):
     libfoo_directory = bundle_directory.mkdir('libfoo-h4sh')
     libfoo_directory.copy_dir('test/test_add_dependency/libfoo')
 
+    libfoo_directory = bundle_directory.mkdir('libbar-h4sh')
+    libfoo_directory.copy_dir('test/test_add_dependency/libbar')
+
     r = test_directory.run('python', 'waf', 'configure', '-v')
 
     assert r.returncode == 0, str(r)

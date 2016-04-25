@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-APPNAME = 'libfoo'
+APPNAME = 'libbar'
 VERSION = '1.0.0'
 
 def resolve(ctx):
@@ -15,5 +15,6 @@ def configure(conf):
 
 def build(bld):
     bld.shlib(features='cxx',
-              source='src/foo/foo.cpp',
+              target='bar',
+              source='src/foo/bar.cpp',
               export_includes='src')
