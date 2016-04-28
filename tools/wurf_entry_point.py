@@ -21,7 +21,7 @@ def _check_minimum_python_version(major, minor):
             "required minimum version: {1}.{2}"
             .format(sys.version_info[:3], major, minor))
 
-# wurf_common_tools is loaded first in every project,
+# wurf_entry_point is loaded first in every project,
 # therefore it is a good entry point to check the minimum Python version
 _check_minimum_python_version(2, 7)
 
