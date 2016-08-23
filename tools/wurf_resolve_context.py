@@ -13,6 +13,7 @@ from waflib import ConfigSet
 from waflib import Node
 
 from wurf_dependency import WurfDependency
+from wurf_git_semver_resolver import WurfSemverGitSResolver
 
 
 # To create the tree. https://gist.github.com/hrldcpr/2012250
@@ -62,6 +63,8 @@ class WurfResolveContext(Context.Context):
         # Create a log file if this is an "active" resolve step
         path = os.path.join(self.bldnode.abspath(), 'resolve.log')
         self.logger = Logs.make_logger(path, 'cfg')
+
+        self.logger.debug('Test')
 
         # Directly call Context.execute() to avoid the side effects of
         # ConfigurationContext.execute()
@@ -146,3 +149,31 @@ class WurfResolveContext(Context.Context):
             self.recurse(dependency.path())
 
         dependencies[name] = dependency
+
+
+    def add_git_semver_dependency(self, name, git_repository, major, minor=None,
+                                  patch=None, recursive_resolve=True,
+                                  optional=False):
+        """
+        Adds ResolveVersion dependency (this function exists only such that
+        wscripts do not have to perform an import to access the ResolveVersion
+        class).
+
+        :param name: the name of this dependency resolver
+        :param git_repository: URL of the Git repository where the dependency
+                               can be found
+        :param major: The major version number to track (ensures binary
+                      compatibility), None for newest
+        :param minor: The minor version number to track, None for newest
+        :param patch: The patch version number to track, None for newest
+                      the dependency if necessary
+        :param recursive_resolve: specifies if it is allowed to recurse into the
+                                  dependency wscript after the dependency is
+                                  resolved
+        :param optional: specifies if this dependency is optional (an optional
+                         dependency might not be resolved if unavailable)
+        """
+
+        self.add_dependency(
+            WurfSemverGitSResolver(name, git_repository, major, minor, patch),
+            recursive_resolve, optional)
