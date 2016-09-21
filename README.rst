@@ -54,6 +54,50 @@ Bundle dependencies
 
 The basic
 
+Design
+======
+
+The basic idea to extend waf with the capability of fetching/downloading
+dependencies of projects automatically.
+
+```
+class Resolver:
+
+    def options(self, ctx):
+        ctx.add_option('')
+
+    def resolve(self, ctx):
+        print(ctx.options.foo)
+
+
+class Resolver:
+
+    def options(self, ctx):
+        ctx.add_option('')
+
+    def resolve(self, ctx):
+        print(ctx.options.foo)
+```
+
+Log output
+==========
+
+`waf` supports logging output in the tools and basic zone filtering. You can
+use it as follows:
+
+```
+from waflib import Logs
+
+...
+
+def some_function(param_one, param_two):
+    Log.debug('wurf: In some_function')
+
+```
+
+In the above example `wurf` is the zone so if you wIn our tools we use `wurf`
+
+
 
 Fixing unit tests
 =================

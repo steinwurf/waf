@@ -86,4 +86,19 @@ class WurfOptionsContext(Options.OptionsContext):
         #
         # This will also call parse_args(...) so we need to have recursed
         # the dependencies options(...) functions first.
+        print("BLABAL 1")
+
+        # Using the %default placeholder:
+        #    http://stackoverflow.com/a/1254491/1717320
+        self.add_option('--bundle-path', default='bundle_dependencies',
+            dest='bundle_path',
+            help='The folder where the bundled dependencies are downloaded.'
+                 '[default: %default]')
+
         super(WurfOptionsContext, self).execute()
+        print("BLABAL 2")
+
+    def add_option(self, *k, **kw):
+
+        print(k)
+        super(WurfOptionsContext, self).add_option(*k, **kw)

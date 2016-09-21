@@ -8,11 +8,12 @@ from waflib import Build
 top = '.'
 
 def resolve(ctx):
+    pass
 
-    ctx.add_git_semver_dependency(
-        name='waf-tools',
-        git_repository='github.com/steinwurf/waf-tools.git',
-        major=3)
+    # ctx.add_git_semver_dependency(
+        # name='waf-tools',
+        # git_repository='github.com/steinwurf/waf-tools.git',
+        # major=3)
 
     ctx.add_git_commit_dependency(
         name='waf',
@@ -20,11 +21,11 @@ def resolve(ctx):
         commit='waf-1.8.14',
         recursive_resolve=False)
 
-    ctx.add_git_commit_dependency(
-        name='python-semver',
-        git_repository='github.com/k-bx/python-semver.git',
-        commit='2.4.1',
-        recursive_resolve=False)
+    # ctx.add_git_commit_dependency(
+        # name='python-semver',
+        # git_repository='github.com/k-bx/python-semver.git',
+        # commit='2.4.1',
+        # recursive_resolve=False)
 
 def configure(conf):
 
