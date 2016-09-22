@@ -6,6 +6,50 @@ import os
 import argparse
 import sys
 
+
+class WurfDependency2(object):
+
+    def __init__(self, name):
+        self.name = name
+        self.optional = False
+        self.recurse = True
+        self.resolvers = []
+        self.post_resolvers = []
+
+    def add_options(opt):
+
+        for resolver in self.resolvers:
+            resolver.add_options(opt)
+
+        for post_resolver in self.post_resolvers:
+            post_resolver.add_options(opt)
+
+    def resolve(self, ctx, cwd):
+
+        path = self.resolve_path(ctx, cwd)
+
+        for post_resolver in self.post_resolvers:
+
+            path = self.resolve(ctx, cwd, path)
+
+        return path
+
+
+    def resolve_path(self, ctx, cwd):
+
+        for resolver in self.resolvers:
+
+            try:
+                path = resolver.resolve(ctx, cwd)
+            except:
+                print("failed resolve")
+            return path
+        else:
+            raise RuntimeError("Not resolve worked...")
+
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
 class WurfDependency:
     """Defines a dependency.
 

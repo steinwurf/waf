@@ -56,7 +56,8 @@ class WurfResolveContext(Context.Context):
 
     def execute(self):
 
-        # Create the nodes that will be used during the resolve step
+        # Create the nodes that will be used during the resolve step. The build
+        # directory is also used by the waf BuildContext
         self.bldnode = self.path.make_node('build')
         self.bldnode.mkdir()
 
@@ -68,6 +69,11 @@ class WurfResolveContext(Context.Context):
 
         # Directly call Context.execute() to avoid the side effects of
         # ConfigurationContext.execute()
+        #
+        # Calling the context execute will call the resolve(...) functions in
+        # the wscripts. These will in turn call add_dependency(...) which will
+        # trigger loading the dependency.
+
         super(WurfResolveContext, self).execute()
 
 
@@ -139,7 +145,9 @@ class WurfResolveContext(Context.Context):
             else:
                 return
 
+        # We have not already seen this dependency lets resolve
         dependency.resolve(self)
+        dependencies[name] = dependency
 
         if dependency.has_path() and dependency.requires_recurse():
 
@@ -148,7 +156,7 @@ class WurfResolveContext(Context.Context):
 
             self.recurse(dependency.path())
 
-        dependencies[name] = dependency
+
 
 
     def add_git_semver_dependency(self, name, git_repository, major, minor=None,
