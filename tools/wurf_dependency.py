@@ -16,7 +16,7 @@ class WurfDependency2(object):
         self.resolvers = []
         self.post_resolvers = []
 
-    def add_options(opt):
+    def add_options(self, opt):
 
         for resolver in self.resolvers:
             resolver.add_options(opt)
@@ -26,7 +26,7 @@ class WurfDependency2(object):
 
     def resolve(self, ctx, cwd):
 
-        path = self.resolve_path(ctx, cwd)
+        path = self.__resolve_path(ctx, cwd)
 
         for post_resolver in self.post_resolvers:
 
@@ -35,20 +35,32 @@ class WurfDependency2(object):
         return path
 
 
-    def resolve_path(self, ctx, cwd):
+    def __resolve_path(self, ctx, cwd):
 
         for resolver in self.resolvers:
 
             try:
                 path = resolver.resolve(ctx, cwd)
-            except:
-                print("failed resolve")
+            except Exception as e:
+                ctx.to_log("Exception while using resolver: {} {}".format(
+                    resolver, e))
             return path
         else:
             raise RuntimeError("Not resolve worked...")
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+
+
+
+
+
+
+
+
+
+
 
 class WurfDependency:
     """Defines a dependency.
