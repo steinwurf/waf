@@ -35,8 +35,4 @@ def test_wurf_dependency_parser_no_name():
     parser = WurfDependencyParser(None)
 
     with pytest.raises(Exception):
-
-        try:
-            parser.parse_json(noname)
-        except:
-         pass
+        parser.parse_json(noname)
