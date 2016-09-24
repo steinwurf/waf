@@ -6,7 +6,6 @@ import os
 import argparse
 import sys
 
-
 class WurfDependency2(object):
 
     def __init__(self, name):
@@ -30,7 +29,7 @@ class WurfDependency2(object):
 
         for post_resolver in self.post_resolvers:
 
-            path = self.resolve(ctx, cwd, path)
+            path = post_resolver.resolve(ctx, cwd, path)
 
         return path
 
@@ -44,9 +43,10 @@ class WurfDependency2(object):
             except Exception as e:
                 ctx.to_log("Exception while using resolver: {} {}".format(
                     resolver, e))
-            return path
+            else:
+                return path
         else:
-            raise RuntimeError("Not resolve worked...")
+            raise RuntimeError("No resolve worked...")
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
