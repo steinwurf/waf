@@ -20,10 +20,14 @@ def test_wurf_dependency_parser():
         expect = ["patches/patch01.patch", "patches/patch02.patch"]
         assert(expect == patches)
 
+    def dependency_factory(name):
+        assert(name == "waf")
+
     actions = {'sources': parse_sources, 'optional': parse_optional,
                'patches': parse_patches}
 
-    parser = WurfDependencyParser(actions)
+    parser = WurfDependencyParser(parse_actions=actions,
+        dependency_factory=dependency_factory)
 
     dependency = parser.parse_json(waf)
 
@@ -32,7 +36,7 @@ def test_wurf_dependency_parser_no_name():
     noname = '{"optional": true, "patches": ["patches/patch01.patch", \
                "patches/patch02.patch"], "sources": [{"url":"gitrepo.git"}]}'
 
-    parser = WurfDependencyParser(None)
+    parser = WurfDependencyParser(parse_actions=None, dependency_factory=None)
 
     with pytest.raises(Exception):
         parser.parse_json(noname)

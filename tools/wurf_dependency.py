@@ -8,8 +8,9 @@ import sys
 
 class WurfDependency2(object):
 
-    def __init__(self, name):
+    def __init__(self, name, log):
         self.name = name
+        self.log = log
         self.optional = False
         self.recurse = True
         self.resolvers = []
@@ -41,7 +42,7 @@ class WurfDependency2(object):
             try:
                 path = resolver.resolve(ctx, cwd)
             except Exception as e:
-                ctx.to_log("Exception while using resolver: {} {}".format(
+                self.log.info("Exception while using resolver: {} {}".format(
                     resolver, e))
             else:
                 return path

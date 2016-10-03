@@ -5,7 +5,8 @@ from wurf_dependency import WurfDependency2
 
 def test_wurf_dependency_add_options():
 
-    dependency = WurfDependency2("test")
+    log = mock.Mock()
+    dependency = WurfDependency2(name="test", log=mock.Mock())
 
     opt = mock.Mock()
 
@@ -25,7 +26,7 @@ def test_wurf_dependency_resolve_no_resolvers():
     Tests that an exception is raised if there are no resolvers.
     """
 
-    dependency = WurfDependency2("test")
+    dependency = WurfDependency2(name="test", log=mock.Mock())
 
     ctx = mock.Mock()
     cwd = '/tmp'
@@ -38,8 +39,7 @@ def test_wurf_dependency_resolve_success():
     """
     Tests that everything works if a resolver succeeds
     """
-
-    dependency = WurfDependency2("test")
+    dependency = WurfDependency2(name="test", log=mock.Mock())
 
     ctx = mock.Mock()
     cwd = '/tmp'
@@ -63,7 +63,7 @@ def test_wurf_dependency_resolve_failure():
     Tests that an exception is thrown if no resolvers work
     """
 
-    dependency = WurfDependency2("test")
+    dependency = WurfDependency2(name="test", log=mock.Mock())
 
     ctx = mock.Mock()
     cwd = '/tmp'
@@ -84,7 +84,7 @@ def test_wurf_dependency_post_resolve():
     properly.
     """
 
-    dependency = WurfDependency2("test")
+    dependency = WurfDependency2(name="test", log=mock.Mock())
 
     ctx = mock.Mock()
     cwd = '/tmp'
@@ -117,7 +117,7 @@ def test_wurf_dependency_resolve_add_options():
     Tests that add_options is called on both resolvers and post_resolvers
     """
 
-    dependency = WurfDependency2("test")
+    dependency = WurfDependency2(name="test", log=mock.Mock())
 
     opt = mock.Mock()
 

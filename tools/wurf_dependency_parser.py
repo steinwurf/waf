@@ -1,11 +1,35 @@
 import json
 
-from wurf_dependency import WurfDependency2
-
 class WurfDependencyParser(object):
+    """
+    Creates a dependency and based on a JSON/dict object calls actions to
+    initialize the dependency.
 
-    def __init__(self, parse_actions):
+    Take the following JSON:
+
+        waf = '{"name":"waf", "patches": ["patches/patch01.patch",
+                "patches/patch02.patch"], "optional":true,
+                "sources":[{"url":"gitrepo.git", "commit": "sha1"}]}'
+
+    The dependency parser will for each top-level key:
+
+         patches, optional, sources
+
+    Call a parse action to initialize the dependency. A parse action is a
+    callable object which takes as first argument the dependency and as second
+    argument the value passed for the specific key.
+
+    Example:
+
+        def parse_optional(dependency, optional):
+            pass
+
+    Is a valid parse action for the "optional" key.
+    """
+
+    def __init__(self, parse_actions, dependency_factory):
         self.parse_actions = parse_actions
+        self.dependency_factory = dependency_factory
 
     def parse_json(self, data):
 
@@ -22,12 +46,10 @@ class WurfDependencyParser(object):
         # not try to find a parse action for it..
         del data['name']
 
-        dependency = WurfDependency2(name)
+        dependency = self.dependency_factory(name=name)
 
         for key, value  in data.items():
             action = self.parse_actions[key]
-
-            # Take the key and pass it as a keyword argument to the action
-            action(dependency=dependency, **{key: value})
+            action(dependency, value)
 
         return dependency
