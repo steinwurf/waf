@@ -15,11 +15,11 @@ def resolve(ctx):
         # git_repository='github.com/steinwurf/waf-tools.git',
         # major=3)
 
-    ctx.add_git_commit_dependency(
-        name='waf',
-        git_repository='github.com/waf-project/waf.git',
-        commit='waf-1.8.14',
-        recursive_resolve=False)
+    #ctx.add_git_commit_dependency(
+    #    name='waf',
+    #    git_repository='github.com/waf-project/waf.git',
+    #    commit='waf-1.8.14',
+    #    recursive_resolve=False)
 
     # ctx.add_git_commit_dependency(
         # name='python-semver',
@@ -30,12 +30,12 @@ def resolve(ctx):
 def configure(conf):
 
     # Lets get rid of this load as well at some point
-    conf.load('wurf_common_tools')
+    #conf.load('wurf_common_tools')
 
     # Ensure that the waf-light program is available in the in the
     # waf folder. This is used to build the waf binary.
-    conf.find_program('waf-light',
-        path_list=[conf.dependency_path('waf')])
+    #conf.find_program('waf-light',
+    #    path_list=[conf.dependency_path('waf')])
 
     # Make sure we tox used for running unit tests
     conf.find_program('tox')
@@ -67,32 +67,32 @@ def build(bld):
     # different tasks. We can ask waf to lazily do this because the waf
     # binary is not created until after we run the waf-light build
     # step. This is manipulated using the post_mode.
-    bld.post_mode = Build.POST_LAZY
+    #bld.post_mode = Build.POST_LAZY
 
     # We need to invoke the waf-light from within the third_party/waf
     # folder as waf-light will look for wscript in the folder where the
     # executable was started - so we need to start it from the right
     # folder. Using cwd we can make sure the python process is lauched in
     # the right directory.
-    tools = bld.path.ant_glob('tools/*.py')
-    tools += [bld.root.find_node(
-        os.path.join(bld.dependency_path('python-semver'), 'semver.py'))]
+    #tools = bld.path.ant_glob('tools/*.py')
+    #tools += [bld.root.find_node(
+    #    os.path.join(bld.dependency_path('python-semver'), 'semver.py'))]
 
-    bld(rule=build_waf_binary,
-        source=tools,
-        cwd=bld.dependency_path('waf'))
+    #bld(rule=build_waf_binary,
+    #    source=tools,
+    #    cwd=bld.dependency_path('waf'))
 
-    bld.add_group()
+    #bld.add_group()
 
     # Copy the waf binary to build directory
-    bld(features='subst',
-        source=bld.root.find_node(
-            os.path.join(bld.dependency_path('waf'), 'waf')),
-        target=bld.bldnode.make_node('waf'),
-        is_copy=True)
+    #bld(features='subst',
+    #    source=bld.root.find_node(
+    #        os.path.join(bld.dependency_path('waf'), 'waf')),
+    #    target=bld.bldnode.make_node('waf'),
+    #    is_copy=True)
 
     # Make a build group will ensure that
-    bld.add_group()
+    #bld.add_group()
 
 
     # Invoke tox to run all the pure Python unit tests. Tox creates
@@ -102,4 +102,16 @@ def build(bld):
     #
     # We run tox at the end since we will use the freshly built waf binary
     # in some of the tests.
-    bld(rule='tox')
+
+    my_env = bld.env.derive()
+    my_env.env = os.environ
+
+    tools_path = os.path.join(os.getcwd(), 'tools')
+    semver_path = os.path.join(os.getcwd(), 'third_party', 'python-semver')
+
+    my_env.env.update({'PYTHONPATH': ':'.join([tools_path, semver_path])})
+
+    #print(my_env)
+    #print(bld.env)
+    bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
+    bld(rule='tox', env=my_env, always=True)
