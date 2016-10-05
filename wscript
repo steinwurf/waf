@@ -101,6 +101,8 @@ def build(bld):
         target=bld.bldnode.make_node('waf'),
         is_copy=True)
 
+
+
     #bld(features='subst',
     #    source=bld.root.find_node(
     #        os.path.join(bld.dependency_path('waf'), 'waf')),
@@ -109,6 +111,7 @@ def build(bld):
 
     # Make a build group will ensure that
     bld.add_group()
+
 
 
     # Invoke tox to run all the pure Python unit tests. Tox creates

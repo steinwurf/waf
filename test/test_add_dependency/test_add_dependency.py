@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from wurf_determine_git_directory import wurf_determine_git_directory
-
 def test_add_dependency(test_directory):
     """ Integration testing of adding a dependency."""
 
@@ -14,15 +12,8 @@ def test_add_dependency(test_directory):
     # placed there.
     bundle_directory = test_directory.mkdir('bundle_dependencies')
 
-    # The following name is a "hardcoded" implementation defined name.
-    #
-    libfoo = wurf_determine_git_directory(
-        name='links',
-        checkout='master',
-        source='https://gitlab.com/steinwurf/links.git')
 
-    libfoo_directory = bundle_directory.mkdir(libfoo+'-clone')
-    libfoo_directory.copy_dir('test/test_add_dependency/libfoo')
+    bundle_directory.copy_dir('test/test_add_dependency/libfoo')
 
     ##libfoo_directory = bundle_directory.mkdir('libbar-h4sh')
     #libfoo_directory.copy_dir('test/test_add_dependency/libbar')

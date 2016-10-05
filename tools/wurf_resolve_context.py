@@ -137,6 +137,7 @@ class WurfResolveContext(Context.Context):
 
         print("ADD dependency")
         print(kwargs)
+        assert(0)
         return
 
         dependency = WurfDependency(name, resolver, recurse, optional)
