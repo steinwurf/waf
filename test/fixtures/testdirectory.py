@@ -41,6 +41,8 @@ class TestDirectory:
         self.tmpdir = tmpdir
 
     def mkdir(self, name):
+        """Create a sub-directory in the temporary / test dir.
+        """
         return TestDirectory(self.tmpdir.mkdir(name))
 
     def path(self):

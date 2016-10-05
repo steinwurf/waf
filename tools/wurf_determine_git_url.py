@@ -2,8 +2,10 @@
 # encoding: utf-8
 
 try:
+    # python 2
     from urlparse import urlsplit
 except:
+    # Python 3 (urlsplit was move in Python 3)
     from urllib.parse import urlsplit
 
 # Nice regex http://stackoverflow.com/a/22312124/1717320

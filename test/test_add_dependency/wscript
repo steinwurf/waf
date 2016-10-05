@@ -6,21 +6,35 @@ VERSION = '1.0.0'
 
 import mock
 import os
+import shutil
+
+import wurf_determine_git_directory
 
 def resolve(ctx):
 
-    def mock_resolve(ctx, path):
+    # Replace git clone
+    ctx.git_clone = mock.Mock()
+    #ctx.
+    return
+
+    def fake_git_clone(ctx, source, destination):
         """ Mocking the resolve function which is the one called when
         fetching a dependency"""
-        p = os.path.join(path, 'test-dependency')
-        os.makedirs(p)
+        libfoo = wurf_determine_git_directory(
+            name='links',
+            checkout='master',
+            source='https://gitlab.com/steinwurf/links.git')
+
+        # The source directory is create by the test directory
+        src_dir libfoo+'-clone'
+
         return p
 
     resolver = mock.Mock()
     resolver.resolve.side_effect = mock_resolve
     resolver.hash.return_value = 'h4sh'
 
-    ctx.add_dependency('test-dependency', resolver, recurse=False)
+    ctx.add_dependency(name='test-dependency', recurse=False)
 
     def libfoo_resolve(ctx, path):
         """ Mocking the resolve function which is the one called when
@@ -33,8 +47,9 @@ def resolve(ctx):
     foo_resolver.resolve.side_effect = libfoo_resolve
     foo_resolver.hash.return_value = 'h4sh'
 
-    ctx.add_dependency('libfoo', foo_resolver, optional=False, recurse=True)
+    ctx.add_dependency(name='libfoo', resolver=foo_resolver, optional=False, recurse=True)
 
+    assert(0)
 
 def options(opt):
     pass

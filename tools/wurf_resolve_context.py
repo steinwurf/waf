@@ -76,6 +76,9 @@ class WurfResolveContext(Context.Context):
 
         super(WurfResolveContext, self).execute()
 
+    def create_resolvers():
+        pass
+
 
     def bundle_config_path(self):
         """Returns the bundle config path.
@@ -119,7 +122,7 @@ class WurfResolveContext(Context.Context):
         return self.user_defined_dependency_path(name)
 
 
-    def add_dependency(self, name, resolver, recurse=True, optional=False):
+    def add_dependency(self, **kwargs):
         """Adds a dependency.
 
         :param name: The name of the dependency. Must be unique.
@@ -131,6 +134,10 @@ class WurfResolveContext(Context.Context):
         :param optional: specifies if this dependency is optional (an optional
                      dependency might not be resolved if unavailable)
         """
+
+        print("ADD dependency")
+        print(kwargs)
+        return
 
         dependency = WurfDependency(name, resolver, recurse, optional)
 

@@ -41,8 +41,8 @@ _check_minimum_python_version(2, 7)
 # first recurses the resolve(...) functions to fetch any defined
 # dependencies.
 import waflib.extras.wurf_options_context
-import waflib.extras.wurf_resolve_context
+#import waflib.extras.wurf_resolve_context
 
 # Ensure that WurfConfigurationContext is used instead of the standard Waf
 # ConfigurationContext
-import waflib.extras.wurf_configuration_context
+#import waflib.extras.wurf_configuration_context

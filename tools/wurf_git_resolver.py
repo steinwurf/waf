@@ -4,6 +4,8 @@
 import hashlib
 import os
 
+from wurf_determine_git_url import wurf_determine_git_url
+
 class WurfGitSResolver(object):
     """
     Base Git Resolver functionality. Clones/pulls a git repository.
@@ -29,19 +31,21 @@ class WurfGitSResolver(object):
         """
         cwd = os.path.abspath(os.path.expanduser(cwd))
 
-
+        repo_url = wurf_determine_git_url(
+            url=self.url,
+            preferred_scheme=ctx.git_default_scheme())
 
         # Use the first 6 characters of the SHA1 hash of the repository url
         # to uniquely identify the repository
-        repo_hash = hashlib.sha1(self.url.encode('utf-8')).hexdigest()[:6]
+        repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
 
         # The folder for storing different versions of this repository
-        repo_name = self.name + '-' + repo_hash + '-master'
+        repo_name = self.name + '-master-' + repo_hash
         repo_path = os.path.join(cwd, repo_name)
 
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(repo_path):
-            ctx.git_clone(repo_url, repo_name, cwd=cwd)
+            ctx.git_clone(source=repo_url, destination=repo_name, cwd=cwd)
         else:
 
             # We only want to pull if we haven't just cloned. This avoids
@@ -58,7 +62,7 @@ class WurfGitSResolver(object):
                 self.log.info(e)
 
         # If the project contains submodules we also get those
-        ctx.git_get_submodules(repo_path)
+        ctx.git_get_submodules(repository_dir=repo_path)
 
         return repo_path
 

@@ -56,7 +56,7 @@ def build_waf_binary(tsk):
     prelude = '\timport waflib.extras.wurf_entry_point'
 
     # Build the command to execute
-    command = "python waf-light --make-waf --prelude='{}' --tools={}".format(
+    command = "python waf-light configure build --make-waf --prelude='{}' --tools={}".format(
         prelude, tool_paths)
 
     return tsk.exec_command(command, cwd=wd)
@@ -80,11 +80,27 @@ def build(bld):
 
     #bld(rule=build_waf_binary,
     #    source=tools,
-    #    cwd=bld.dependency_path('waf'))
+    #    cwd=bld.dependency_path('waf'),
+    #    always=True)
 
-    #bld.add_group()
+    tools = ['tools/wurf_entry_point.py',
+             'tools/wurf_options_context.py',
+             'tools/wurf_resolve_context.py']
+
+    bld(rule=build_waf_binary,
+        source=tools,
+        cwd='/home/mvp/dev/steinwurf/waf/temp_clones/waf',
+        always=True)
+
+    bld.add_group()
 
     # Copy the waf binary to build directory
+    bld(features='subst',
+        source=bld.root.find_node(
+            os.path.join('/home/mvp/dev/steinwurf/waf/temp_clones/waf', 'waf')),
+        target=bld.bldnode.make_node('waf'),
+        is_copy=True)
+
     #bld(features='subst',
     #    source=bld.root.find_node(
     #        os.path.join(bld.dependency_path('waf'), 'waf')),
@@ -92,7 +108,7 @@ def build(bld):
     #    is_copy=True)
 
     # Make a build group will ensure that
-    #bld.add_group()
+    bld.add_group()
 
 
     # Invoke tox to run all the pure Python unit tests. Tox creates
@@ -113,5 +129,5 @@ def build(bld):
 
     #print(my_env)
     #print(bld.env)
-    bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
+    #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
     bld(rule='tox', env=my_env, always=True)
