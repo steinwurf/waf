@@ -29,16 +29,18 @@ def resolve(ctx):
 
     ctx.git_clone = fake_git_clone
 
-    ctx.add_dependency(
-        name='libfoo',
-        recurse=False,
-        optional=False,
-        sources=[{'type': 'git_checkout', 
-                  'url': 'fake.com/libfoo.git',
-                  'checkout': 'some-branch'}])
+
+    # ctx.add_dependency(
+    #     name='libfoo',
+    #     recurse=False,
+    #     optional=False,
+    #     sources=[{'type': 'git_checkout',
+    #               'url': 'fake.com/libfoo.git',
+    #               'checkout': 'some-branch'}])
 
 
 def options(opt):
+
     pass
 
 def configure(conf):
