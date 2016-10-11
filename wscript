@@ -48,6 +48,10 @@ def build_waf_binary(tsk):
     # Get the working directory
     wd = getattr(tsk, 'cwd', None)
 
+    # Tools dir
+    tools_dir = getattr(tsk.generator, 'tools_dir', None)
+    print("tools_dir {}".format(tools_dir))
+
     # Get the absolute path to all the tools (passed as input to the task)
     tool_paths = [t.abspath() for t in tsk.inputs]
     tool_paths = ','.join(tool_paths)
@@ -87,9 +91,12 @@ def build(bld):
              'tools/wurf_options_context.py',
              'tools/wurf_resolve_context.py']
 
+    tools_dir = ['temp_clones/shutilwhich/shutilwhich']
+
     bld(rule=build_waf_binary,
         source=tools,
         cwd='/home/mvp/dev/steinwurf/waf/temp_clones/waf',
+        tools_dir=tools_dir,
         always=True)
 
     bld.add_group()
