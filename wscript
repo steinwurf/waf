@@ -50,10 +50,11 @@ def build_waf_binary(tsk):
 
     # Tools dir
     tools_dir = getattr(tsk.generator, 'tools_dir', None)
+    tools_dir = [os.path.abspath(os.path.expanduser(d)) for d in tools_dir]
     print("tools_dir {}".format(tools_dir))
 
     # Get the absolute path to all the tools (passed as input to the task)
-    tool_paths = [t.abspath() for t in tsk.inputs]
+    tool_paths = [t.abspath() for t in tsk.inputs] + tools_dir
     tool_paths = ','.join(tool_paths)
 
     # The prelude option
@@ -134,10 +135,11 @@ def build(bld):
 
     tools_path = os.path.join(os.getcwd(), 'tools')
     semver_path = os.path.join(os.getcwd(), 'third_party', 'python-semver')
+    shutil_path = os.path.join(os.getcwd(), 'temp_clones', 'shutilwhich')
 
-    my_env.env.update({'PYTHONPATH': ':'.join([tools_path, semver_path])})
+    my_env.env.update({'PYTHONPATH': ':'.join([tools_path, semver_path, shutil_path])})
 
     #print(my_env)
     #print(bld.env)
-    #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
+    bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
     bld(rule='tox', env=my_env, always=True)
