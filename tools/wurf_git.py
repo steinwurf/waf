@@ -63,6 +63,27 @@ class Git(object):
         """
         return os.path.isfile(os.path.join(cwd, '.gitmodules'))
 
+    def sync_submodules(self, cwd):
+        """
+        Runs 'git submodule sync' in the directory cwd
+        """
+        args = [self.git_binary, 'submodule', 'sync']
+        self.ctx.cmd_and_log(args, cwd=cwd)
+
+    def init_submodules(self, cwd):
+        """
+        Runs 'git submodule init' in the directory cwd
+        """
+        args = [self.git_binary, 'submodule', 'init']
+        self.ctx.cmd_and_log(args, cwd=cwd)
+
+    def update_submodules(self, cwd):
+        """
+        Runs 'git submodule update' in the directory cwd
+        """
+        args = [self.git_binary, 'submodule', 'update']
+        self.ctx.cmd_and_log(args, cwd=cwd)
+
     def pull_submodules(self, cwd):
         """
         Runs 'git submodule sync', 'git submodule init', and 'git submodule update'
@@ -72,28 +93,6 @@ class Git(object):
             self.sync_submodules(cwd=cwd)
             self.init_submodules(cwd=cwd)
             self.update_submodules(cwd=cwd)
-
-    def sync_submodules(self, cwd):
-        """
-        Runs 'git submodule sync'
-        """
-        args = [self.git_binary, 'submodule', 'sync']
-        self.ctx.cmd_and_log(args, cwd=cwd)
-
-    def init_submodules(self, cwd):
-        """
-        Runs 'git submodule init'
-        """
-        args = [self.git_binary, 'submodule', 'init']
-        self.ctx.cmd_and_log(args, cwd=cwd)
-
-    def update_submodules(self, cwd):
-        """
-        Runs 'git submodule update'
-        """
-        args = [self.git_binary, 'submodule', 'update']
-        self.ctx.cmd_and_log(args, cwd=cwd)
-
 
 # try:
 #     import _winreg
