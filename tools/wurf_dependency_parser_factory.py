@@ -7,20 +7,33 @@ from wurf_source_parser_action import WurfSourceParserAction
 from wurf_optional_parser_action import wurf_optional_parser_action
 from wurf_recurse_parser_action import wurf_recurse_parser_action
 
+
+class WurfSourceParserFactory(object):
+    
+    def __init__(self, git_factory, log):
+        self.git_factory = git_factory
+        self.log = log
+        
+    def build(self):
+        
+
 class WurfDependencyParserFactory(object):
     """
 
     """
 
-    def __init__(self):
-        self.parse_actions = parse_actions
-        self.dependency_factory = dependency_factory
+    def __init__(self, git_factory, log):
+        self.git_factory = git_factory
+        self.log
 
     def build(self):
 
-
+        
 
         def parse_git_commit(dependency, url, commit):
+            
+            git = self.git_factory()
+            git_resolver = WurfGitSResolver(git, log)
 
 
 
