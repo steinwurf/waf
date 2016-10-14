@@ -7,7 +7,7 @@ import mock
 import pytest
 import json
 
-from wurf_dependency import WurfDependency
+# from wurf_dependency import WurfDependency
 
 # Lets enumerate the test cases for resolve(...)
 #
@@ -63,250 +63,250 @@ from wurf_dependency import WurfDependency
 #
 #
 
-@mock.patch.object(WurfDependency, '_active_resolve')
-@mock.patch.object(WurfDependency, '_load')
-@pytest.mark.parametrize("path", [None, "/okdoki"])
-@pytest.mark.parametrize("optional", [True, False])
-@pytest.mark.parametrize("active", [True, False])
-def test_wurf_dependency_resolve(mock_load, mock_active_resolve, path,
-                                 optional, active):
-
-    d = WurfDependency('abc', mock.Mock(), optional=optional)
-    d._path = path
-
-    ctx = mock.Mock()
-    ctx.cmd = 'resolve'
-    ctx.is_active_resolve.return_value=active
-
-    if not path and not optional:
-        with pytest.raises(Exception):
-            d.resolve(ctx)
-    else:
-        d.resolve(ctx)
-
-    if active:
-        assert mock_active_resolve.called
-        assert not mock_load.called
-    else:
-        assert not mock_active_resolve.called
-        assert mock_load.called
-
-
-@mock.patch.object(WurfDependency, '_parse_user_defined_dependency_path')
-@mock.patch.object(WurfDependency, '_optional_fetch')
-@mock.patch.object(WurfDependency, '_store')
-@pytest.mark.parametrize("is_user_defined", [True, False])
-def test_wurf_dependency_active_resolve(mock_store,
-                                        mock_optional_fetch,
-                                        mock_parse_user,
-                                        is_user_defined, test_directory):
-
-    # Setup
-    if is_user_defined:
-        mock_parse_user.return_value = test_directory.path()
-    else:
-        mock_parse_user.return_value = ""
-
-    d = WurfDependency('abc', mock.Mock())
-
-    ctx = mock.Mock()
-
-    # Invoke the _active_resolve function
-    d._active_resolve(ctx)
-
-    # Check
-    mock_parse_user.assert_called_once_with()
-
-    if is_user_defined:
-        assert d._path == test_directory.path()
-        assert not mock_optional_fetch.called
-    else:
-        assert d._path == ""
-        mock_optional_fetch.assert_called_once_with(ctx)
-
-    mock_store.assert_called_once_with(ctx)
-
-
-@mock.patch('wurf_dependency.sys')
-@pytest.mark.parametrize("option,expected",[
-    (['bla'], ''),
-    (['bla','--abc-path=/tmp'], '/tmp'),
-    (['bla','--abc-path', '/tmp'], '/tmp'),
-    (['bla','--ab-path=/tmp'], ''),
-    (['bla','--ab-path=/tmp','--abc-path', '/tmp'], '/tmp')])
-def test_wurf_dependency_parse_user_defined_dependency_path(
-        mock_sys, option, expected):
-
-    # Setup
-    d = WurfDependency('abc', mock.Mock())
-    mock_sys.argv = option
-
-    # Invoke
-    path = d._parse_user_defined_dependency_path()
-
-    assert path == expected
-
-
-@mock.patch.object(WurfDependency, '_fetch')
-@pytest.mark.parametrize("optional", [True, False])
-@pytest.mark.parametrize("fetch_exception", [True, False])
-def test_wurf_dependency_optional_fetch(mock_fetch,
-                                        optional, fetch_exception):
-
-    d = WurfDependency('abc', mock.Mock(), optional=optional)
-
-    if fetch_exception:
-        mock_fetch.side_effect=Exception('booom')
-
-    ctx = mock.Mock()
-
-    try:
-        d._optional_fetch(ctx)
-    except:
-
-        assert fetch_exception
-        assert not optional
-
-    else:
-
-        if fetch_exception:
-            assert optional
-
-        assert ctx.start_msg.call_count == 1
-        assert ctx.end_msg.call_count == 1
-
-    mock_fetch.assert_called_once_with(ctx)
-
-
-@mock.patch.object(WurfDependency, '_resolver_path')
-@mock.patch('wurf_dependency.os.path')
-@mock.patch('wurf_dependency.os')
-@pytest.mark.parametrize("path_exists", [True, False])
-@pytest.mark.parametrize("resolver_path", ['/tmp', '/okdoki'])
-def test_wurf_dependency_fetch(mock_os, mock_os_path, mock_resolver_path,
-                               path_exists, resolver_path):
-
-    resolver = mock.Mock()
-    resolver.resolve.return_value='/tmp5'
-
-    d = WurfDependency('abc', resolver)
-
-    mock_resolver_path.return_value=resolver_path
-    mock_os_path.exists.return_value=path_exists
-
-    ctx = mock.Mock()
-    d._fetch(ctx)
-
-    mock_os_path.exists.assert_called_once_with(resolver_path)
-
-    if not path_exists:
-        mock_os.makedirs.assert_called_once_with(resolver_path)
-    else:
-        assert mock_os.makedirs.call_count == 0
-
-    resolver.resolve.assert_called_once_with(ctx, resolver_path)
-    assert d._path == '/tmp5'
-
-
-def test_wurf_dependency_resolver_path():
-
-    resolver = mock.Mock()
-    resolver.hash.return_value='h4sh'
-
-    d = WurfDependency('abc', resolver)
-
-    ctx = mock.Mock()
-    ctx.bundle_path.return_value='/tmp'
-
-    p = d._resolver_path(ctx)
-
-    assert p == '/tmp/abc-h4sh'
-
-    resolver = mock.Mock()
-    resolver.hash.return_value='1234567890'
-
-    d = WurfDependency('abc', resolver)
-
-    ctx = mock.Mock()
-    ctx.bundle_path.return_value='/tmp'
-
-    p = d._resolver_path(ctx)
-
-    assert p == '/tmp/abc-12345678'
-
-
-
-@pytest.mark.parametrize("optional,exists",[
-    (True, False),(True, True),(False, True)])
-def test_wurf_dependency_store_load(test_directory, optional, exists):
-
-    bundle_dir = test_directory.mkdir('bundle')
-    dependency_dir = test_directory.mkdir('dependency')
-
-    resolver = mock.Mock()
-    resolver.hash.return_value='h4sh'
-
-    ctx = mock.Mock()
-    ctx.bundle_config_path.return_value=bundle_dir.path()
-    ctx.fatal.side_effect=Exception('boom')
-
-    d_store = WurfDependency('abc', resolver, recurse=True, optional=optional)
-
-    if exists:
-        d_store._path = dependency_dir.path()
-
-    d_store._store(ctx)
-
-    d_load = WurfDependency('abc', resolver, recurse=True, optional=optional)
-    d_load._load(ctx)
-
-    if exists:
-        assert d_load._path == dependency_dir.path()
-    else:
-        assert d_load._path == ""
-
-
-def test_wurf_dependency_validate_config(test_directory):
-    """Simple test of the validate_config function."""
-
-    resolver = mock.Mock()
-    resolver.hash.return_value='h4sh'
-
-    d = WurfDependency('abc', resolver, recurse=True, optional=False)
-
-    config = {'name': 'abc', 'recurse': True, 'optional': False,
-              'resolver_hash': 'h4sh', 'path': test_directory.path()}
-
-    assert d._validate_config(config) == True
-
-    config = {'name': 'abc', 'recurse': True, 'optional': False,
-              'resolver_hash': 'h4sh', 'path': ""}
-
-    assert d._validate_config(config) == False
-
-    d = WurfDependency('abc', resolver, recurse=True, optional=True)
-
-    config = {'name': 'abc', 'recurse': True, 'optional': True,
-              'resolver_hash': 'h4sh', 'path': test_directory.path()}
-
-    assert d._validate_config(config) == True
-
-    config = {'name': 'abc', 'recurse': True, 'optional': True,
-              'resolver_hash': 'h4sh', 'path': ""}
-
-    assert d._validate_config(config) == True
-
-def test_wurf_dependency_equal():
-    """Simple test of the validate_config function."""
-
-    resolver = mock.Mock()
-    resolver.hash.return_value='h4sh'
-
-    d = WurfDependency('abc', resolver, recurse=True, optional=False)
-
-    assert d == d
-
-
+# @mock.patch.object(WurfDependency, '_active_resolve')
+# @mock.patch.object(WurfDependency, '_load')
+# @pytest.mark.parametrize("path", [None, "/okdoki"])
+# @pytest.mark.parametrize("optional", [True, False])
+# @pytest.mark.parametrize("active", [True, False])
+# def test_wurf_dependency_resolve(mock_load, mock_active_resolve, path,
+#                                  optional, active):
+#
+#     d = WurfDependency('abc', mock.Mock(), optional=optional)
+#     d._path = path
+#
+#     ctx = mock.Mock()
+#     ctx.cmd = 'resolve'
+#     ctx.is_active_resolve.return_value=active
+#
+#     if not path and not optional:
+#         with pytest.raises(Exception):
+#             d.resolve(ctx)
+#     else:
+#         d.resolve(ctx)
+#
+#     if active:
+#         assert mock_active_resolve.called
+#         assert not mock_load.called
+#     else:
+#         assert not mock_active_resolve.called
+#         assert mock_load.called
+#
+#
+# @mock.patch.object(WurfDependency, '_parse_user_defined_dependency_path')
+# @mock.patch.object(WurfDependency, '_optional_fetch')
+# @mock.patch.object(WurfDependency, '_store')
+# @pytest.mark.parametrize("is_user_defined", [True, False])
+# def test_wurf_dependency_active_resolve(mock_store,
+#                                         mock_optional_fetch,
+#                                         mock_parse_user,
+#                                         is_user_defined, test_directory):
+#
+#     # Setup
+#     if is_user_defined:
+#         mock_parse_user.return_value = test_directory.path()
+#     else:
+#         mock_parse_user.return_value = ""
+#
+#     d = WurfDependency('abc', mock.Mock())
+#
+#     ctx = mock.Mock()
+#
+#     # Invoke the _active_resolve function
+#     d._active_resolve(ctx)
+#
+#     # Check
+#     mock_parse_user.assert_called_once_with()
+#
+#     if is_user_defined:
+#         assert d._path == test_directory.path()
+#         assert not mock_optional_fetch.called
+#     else:
+#         assert d._path == ""
+#         mock_optional_fetch.assert_called_once_with(ctx)
+#
+#     mock_store.assert_called_once_with(ctx)
+#
+#
+# @mock.patch('wurf_dependency.sys')
+# @pytest.mark.parametrize("option,expected",[
+#     (['bla'], ''),
+#     (['bla','--abc-path=/tmp'], '/tmp'),
+#     (['bla','--abc-path', '/tmp'], '/tmp'),
+#     (['bla','--ab-path=/tmp'], ''),
+#     (['bla','--ab-path=/tmp','--abc-path', '/tmp'], '/tmp')])
+# def test_wurf_dependency_parse_user_defined_dependency_path(
+#         mock_sys, option, expected):
+#
+#     # Setup
+#     d = WurfDependency('abc', mock.Mock())
+#     mock_sys.argv = option
+#
+#     # Invoke
+#     path = d._parse_user_defined_dependency_path()
+#
+#     assert path == expected
+#
+#
+# @mock.patch.object(WurfDependency, '_fetch')
+# @pytest.mark.parametrize("optional", [True, False])
+# @pytest.mark.parametrize("fetch_exception", [True, False])
+# def test_wurf_dependency_optional_fetch(mock_fetch,
+#                                         optional, fetch_exception):
+#
+#     d = WurfDependency('abc', mock.Mock(), optional=optional)
+#
+#     if fetch_exception:
+#         mock_fetch.side_effect=Exception('booom')
+#
+#     ctx = mock.Mock()
+#
+#     try:
+#         d._optional_fetch(ctx)
+#     except:
+#
+#         assert fetch_exception
+#         assert not optional
+#
+#     else:
+#
+#         if fetch_exception:
+#             assert optional
+#
+#         assert ctx.start_msg.call_count == 1
+#         assert ctx.end_msg.call_count == 1
+#
+#     mock_fetch.assert_called_once_with(ctx)
+#
+#
+# @mock.patch.object(WurfDependency, '_resolver_path')
+# @mock.patch('wurf_dependency.os.path')
+# @mock.patch('wurf_dependency.os')
+# @pytest.mark.parametrize("path_exists", [True, False])
+# @pytest.mark.parametrize("resolver_path", ['/tmp', '/okdoki'])
+# def test_wurf_dependency_fetch(mock_os, mock_os_path, mock_resolver_path,
+#                                path_exists, resolver_path):
+#
+#     resolver = mock.Mock()
+#     resolver.resolve.return_value='/tmp5'
+#
+#     d = WurfDependency('abc', resolver)
+#
+#     mock_resolver_path.return_value=resolver_path
+#     mock_os_path.exists.return_value=path_exists
+#
+#     ctx = mock.Mock()
+#     d._fetch(ctx)
+#
+#     mock_os_path.exists.assert_called_once_with(resolver_path)
+#
+#     if not path_exists:
+#         mock_os.makedirs.assert_called_once_with(resolver_path)
+#     else:
+#         assert mock_os.makedirs.call_count == 0
+#
+#     resolver.resolve.assert_called_once_with(ctx, resolver_path)
+#     assert d._path == '/tmp5'
+#
+#
+# def test_wurf_dependency_resolver_path():
+#
+#     resolver = mock.Mock()
+#     resolver.hash.return_value='h4sh'
+#
+#     d = WurfDependency('abc', resolver)
+#
+#     ctx = mock.Mock()
+#     ctx.bundle_path.return_value='/tmp'
+#
+#     p = d._resolver_path(ctx)
+#
+#     assert p == '/tmp/abc-h4sh'
+#
+#     resolver = mock.Mock()
+#     resolver.hash.return_value='1234567890'
+#
+#     d = WurfDependency('abc', resolver)
+#
+#     ctx = mock.Mock()
+#     ctx.bundle_path.return_value='/tmp'
+#
+#     p = d._resolver_path(ctx)
+#
+#     assert p == '/tmp/abc-12345678'
+#
+#
+#
+# @pytest.mark.parametrize("optional,exists",[
+#     (True, False),(True, True),(False, True)])
+# def test_wurf_dependency_store_load(test_directory, optional, exists):
+#
+#     bundle_dir = test_directory.mkdir('bundle')
+#     dependency_dir = test_directory.mkdir('dependency')
+#
+#     resolver = mock.Mock()
+#     resolver.hash.return_value='h4sh'
+#
+#     ctx = mock.Mock()
+#     ctx.bundle_config_path.return_value=bundle_dir.path()
+#     ctx.fatal.side_effect=Exception('boom')
+#
+#     d_store = WurfDependency('abc', resolver, recurse=True, optional=optional)
+#
+#     if exists:
+#         d_store._path = dependency_dir.path()
+#
+#     d_store._store(ctx)
+#
+#     d_load = WurfDependency('abc', resolver, recurse=True, optional=optional)
+#     d_load._load(ctx)
+#
+#     if exists:
+#         assert d_load._path == dependency_dir.path()
+#     else:
+#         assert d_load._path == ""
+#
+#
+# def test_wurf_dependency_validate_config(test_directory):
+#     """Simple test of the validate_config function."""
+#
+#     resolver = mock.Mock()
+#     resolver.hash.return_value='h4sh'
+#
+#     d = WurfDependency('abc', resolver, recurse=True, optional=False)
+#
+#     config = {'name': 'abc', 'recurse': True, 'optional': False,
+#               'resolver_hash': 'h4sh', 'path': test_directory.path()}
+#
+#     assert d._validate_config(config) == True
+#
+#     config = {'name': 'abc', 'recurse': True, 'optional': False,
+#               'resolver_hash': 'h4sh', 'path': ""}
+#
+#     assert d._validate_config(config) == False
+#
+#     d = WurfDependency('abc', resolver, recurse=True, optional=True)
+#
+#     config = {'name': 'abc', 'recurse': True, 'optional': True,
+#               'resolver_hash': 'h4sh', 'path': test_directory.path()}
+#
+#     assert d._validate_config(config) == True
+#
+#     config = {'name': 'abc', 'recurse': True, 'optional': True,
+#               'resolver_hash': 'h4sh', 'path': ""}
+#
+#     assert d._validate_config(config) == True
+#
+# def test_wurf_dependency_equal():
+#     """Simple test of the validate_config function."""
+#
+#     resolver = mock.Mock()
+#     resolver.hash.return_value='h4sh'
+#
+#     d = WurfDependency('abc', resolver, recurse=True, optional=False)
+#
+#     assert d == d
+#
+#
 
 
 # @pytest.mark.parametrize("recurse", [True, False])

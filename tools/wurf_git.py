@@ -7,8 +7,10 @@ import re
 # from waflib.Configure import conf
 # from waflib import Utils
 # from waflib import Errors
+#
 
-class Git(object):
+
+class WurfGit(object):
 
     def __init__(self, git_binary, ctx):
         """

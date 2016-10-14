@@ -10,7 +10,7 @@ class WurfGitCheckoutResolver(object):
     Git Commit Resolver functionality. Checks out a specific commit.
     """
 
-    def __init__(self, name, checkout, git_resolver, log):
+    def __init__(self, name, cwd, git_resolver, log):
         """
         Creates a new resolver object
 
@@ -22,7 +22,7 @@ class WurfGitCheckoutResolver(object):
         self.git_resolver = git_resolver
         self.log = log
 
-    def resolve(self, ctx, cwd):
+    def resolve(self, url, checkout):
         """
         Fetches the dependency if necessary.
         :param ctx: A waf ConfigurationContext
@@ -54,8 +54,6 @@ class WurfGitCheckoutResolver(object):
         ctx.git_get_submodules(repository_dir=repo_path)
 
         return repo_path
-
-
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
