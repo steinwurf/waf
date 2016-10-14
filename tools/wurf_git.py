@@ -12,11 +12,11 @@ import re
 
 class WurfGit(object):
 
-    def __init__(self, git_binary, ctx):
+    def __init__(self, git_binary, context):
         """
         """
         self.git_binary = git_binary
-        self.ctx = ctx
+        self.ctx = context
 
     def cmd_and_log(self, *args, **kwargs):
         """

@@ -15,6 +15,9 @@ from waflib import Node
 from wurf_dependency import WurfDependency
 from wurf_git_semver_resolver import WurfSemverGitSResolver
 
+import wurf_registry
+import shutilwhich
+
 
 # To create the tree. https://gist.github.com/hrldcpr/2012250
 
@@ -66,6 +69,11 @@ class WurfResolveContext(Context.Context):
         self.logger = Logs.make_logger(path, 'cfg')
 
         self.logger.debug('Test')
+        
+        git_binary = shutilwhich.which('git')
+        
+        self.registry = wurf_registry.build_registry(
+            ctx=self, log=self.logger, git_binary=git_binary)
 
         # Directly call Context.execute() to avoid the side effects of
         # ConfigurationContext.execute()
@@ -136,6 +144,15 @@ class WurfResolveContext(Context.Context):
         """
 
         print("ADD dependency")
+        
+        name = kwargs['name']
+        cwd = self.bundle_path()
+        sources = kwargs['sources']
+        
+        source_resolver = self.registry.require('source_resolver')
+        
+        source_resolver.resolve(name=name, cwd=cwd, sources=sources)
+        
         print(kwargs)
         assert(0)
         return

@@ -26,7 +26,7 @@ class WurfGitUrlResolver(object):
     def __init__(self, preferred_scheme = 'https://'):
         self.preferred_scheme = preferred_scheme
 
-    def determine_url(url):
+    def determine_url(self, url):
 
         # The repo url cannot contain a protocol handler,
         # because that is added automatically to match the protocol
