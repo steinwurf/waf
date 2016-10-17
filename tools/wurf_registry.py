@@ -14,18 +14,13 @@ class Registry(object):
         self.registry = {}
 
     def provide(self, feature, provider, **kwargs):
+               
+        def call(): return provider(registry=self, **kwargs)
+        self.registry[feature] = call
         
-        if callable(provider):
-            
-            args = inspect.getargspec(provider).args
-            
-            if 'registry' in args:
-                def call(): return provider(registry=self, **kwargs)
-            else:
-                def call(): return provider(**kwargs)
-        else:
-            def call(): return provider
-
+    def provide_value(self, feature, value):
+        
+        def call(): return value
         self.registry[feature] = call
 
     def require(self, feature):
@@ -57,18 +52,19 @@ def build_git(registry):
     
     return wurf_git.WurfGit(git_binary=git_binary, context=context)
     
+def build_git_url_resolver(registry):
     
+    return wurf_git_url_resolver.WurfGitUrlResolver()
 
 def build_registry(ctx, log, git_binary):
     
     registry = Registry()
     
-    registry.provide('context', ctx)
-    registry.provide('git_binary', git_binary)
-    registry.provide('log', log)
+    registry.provide_value('context', ctx)
+    registry.provide_value('git_binary', git_binary)
+    registry.provide_value('log', log)
     registry.provide('git', build_git)
-    registry.provide('git_url_resolver',
-        wurf_git_url_resolver.WurfGitUrlResolver)
+    registry.provide('git_url_resolver', build_git_url_resolver)
     registry.provide('git_resolver', build_git_resolver)
     registry.provide('source_resolver', build_source_resolver)
     

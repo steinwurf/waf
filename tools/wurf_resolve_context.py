@@ -151,62 +151,23 @@ class WurfResolveContext(Context.Context):
         
         source_resolver = self.registry.require('source_resolver')
         
-        source_resolver.resolve(name=name, cwd=cwd, sources=sources)
+        #assert(0)
+        
+        try: 
+            path = source_resolver.resolve(name=name, cwd=cwd, sources=sources)
+        except:
+            
         
         print(kwargs)
         assert(0)
-        return
-
-        dependency = WurfDependency(name, resolver, recurse, optional)
-
-        if name in dependencies:
-            # The dependency already exists lets check that these are
-            # compatible. If they are we have nothing else to do since it
-            # should have been resolved.
-
-            if dependency != dependencies[name]:
-                ctx.fatal('Incompatible dependencies with same name %r <=> %r'
-                            % (dependency, dependencies[name]))
-            else:
-                return
-
-        # We have not already seen this dependency lets resolve
-        dependency.resolve(self)
-        dependencies[name] = dependency
-
-        if dependency.has_path() and dependency.requires_recurse():
-
-            self.to_log("Recurse for {}: cmd={}, path={}".format(
-                name, self.cmd, dependency.path()))
-
-            self.recurse(dependency.path())
-
-
-
-
-    def add_git_semver_dependency(self, name, git_repository, major, minor=None,
-                                  patch=None, recursive_resolve=True,
-                                  optional=False):
-        """
-        Adds ResolveVersion dependency (this function exists only such that
-        wscripts do not have to perform an import to access the ResolveVersion
-        class).
-
-        :param name: the name of this dependency resolver
-        :param git_repository: URL of the Git repository where the dependency
-                               can be found
-        :param major: The major version number to track (ensures binary
-                      compatibility), None for newest
-        :param minor: The minor version number to track, None for newest
-        :param patch: The patch version number to track, None for newest
-                      the dependency if necessary
-        :param recursive_resolve: specifies if it is allowed to recurse into the
-                                  dependency wscript after the dependency is
-                                  resolved
-        :param optional: specifies if this dependency is optional (an optional
-                         dependency might not be resolved if unavailable)
-        """
-
-        self.add_dependency(
-            WurfSemverGitSResolver(name, git_repository, major, minor, patch),
-            recursive_resolve, optional)
+        
+    def active_resolve(self, **kwargs):
+        pass
+        
+    def passive_resolve(self, **kwargs):
+        pass
+        
+    def hash_dependency(self, **kwargs):
+        s = json.dumps(kwargs, sort_keys=True)
+        return hashlib.sha1(s.encode('utf-8')).hexdigest()
+        

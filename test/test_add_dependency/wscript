@@ -35,7 +35,7 @@ def resolve(ctx):
         recurse=False,
         optional=False,
         sources=[{'resolver': 'git',
-                  'url': 'github.com/waf-project/waf'}])
+                  'url': 'github.com/waf-project/waf.git'}])
 
 
 def options(opt):

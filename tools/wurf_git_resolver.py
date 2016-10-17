@@ -38,6 +38,10 @@ class WurfGitResolver(object):
         # The folder for storing different versions of this repository
         repo_name = name + '-master-' + repo_hash
         repo_path = os.path.join(cwd, repo_name)
+        
+        self.log.info('Resolve repo_url {}'.format(repo_url))
+        self.log.info('Resolve repo_name {}'.format(repo_name))
+        self.log.info('Resolve repo_path {}'.format(repo_path))
 
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(repo_path):
