@@ -69,11 +69,14 @@ class WurfResolveContext(Context.Context):
         self.logger = Logs.make_logger(path, 'cfg')
 
         self.logger.debug('Test')
-        
+
         git_binary = shutilwhich.which('git')
-        
+
         self.registry = wurf_registry.build_registry(
-            ctx=self, log=self.logger, git_binary=git_binary)
+            ctx=self, git_binary=git_binary, bundle_path=self.bundle_path(),
+            bundle_config_path=self.bundle_config_path)
+
+        self.dependency_manager = self.registry.require('dependency_manager')
 
         # Directly call Context.execute() to avoid the side effects of
         # ConfigurationContext.execute()
@@ -144,30 +147,29 @@ class WurfResolveContext(Context.Context):
         """
 
         print("ADD dependency")
-        
+
         name = kwargs['name']
         cwd = self.bundle_path()
         sources = kwargs['sources']
-        
+
         source_resolver = self.registry.require('source_resolver')
-        
+
         #assert(0)
-        
-        try: 
-            path = source_resolver.resolve(name=name, cwd=cwd, sources=sources)
-        except:
-            
-        
+
+
+        path = source_resolver.resolve(name=name, cwd=cwd, sources=sources)
+
+
+
         print(kwargs)
-        assert(0)
-        
+        #assert(0)
+
     def active_resolve(self, **kwargs):
         pass
-        
+
     def passive_resolve(self, **kwargs):
         pass
-        
+
     def hash_dependency(self, **kwargs):
         s = json.dumps(kwargs, sort_keys=True)
         return hashlib.sha1(s.encode('utf-8')).hexdigest()
-        
