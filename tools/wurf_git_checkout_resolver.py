@@ -52,7 +52,9 @@ class WurfGitCheckoutResolver(object):
         else:
 
             if not self.git.is_detached_head(cwd=repo_path):
-                # If the checkout folder exists, we may need to update it
+                # If the checkout is a tag or commit (we will be in detached
+                # HEAD), then we cannot pull from it. On the other hand if it is
+                # a branch we can.
                 self.git.pull(cwd=repo_path)
 
         # If the project contains submodules we also get those
