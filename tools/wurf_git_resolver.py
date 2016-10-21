@@ -9,16 +9,17 @@ class WurfGitResolver(object):
     Base Git Resolver functionality. Clones/pulls a git repository.
     """
 
-    def __init__(self, git, url_resolver, log):
-        """
-        Creates a new resolver object
+    def __init__(self, git, url_resolver, ctx):
+        """ Construct a new WurfGitResolver instance.
 
-        :param url: URL of the Git repository where the dependency
-                    can be found
+        Args:
+            git: A WurfGit instance
+            url_resolver: A WurfGitUrlResolver instance.
+            ctx: A Waf Context instance.
         """
         self.git = git
         self.url_resolver = url_resolver
-        self.log = log
+        self.ctx = ctx
 
     def resolve(self, name, cwd, url):
         """
@@ -38,10 +39,10 @@ class WurfGitResolver(object):
         # The folder for storing different versions of this repository
         repo_name = name + '-master-' + repo_hash
         repo_path = os.path.join(cwd, repo_name)
-        
-        self.log.info('Resolve repo_url {}'.format(repo_url))
-        self.log.info('Resolve repo_name {}'.format(repo_name))
-        self.log.info('Resolve repo_path {}'.format(repo_path))
+
+        self.ctx.to_log('Resolve repo_url {}'.format(repo_url))
+        self.ctx.to_log('Resolve repo_name {}'.format(repo_name))
+        self.ctx.to_log('Resolve repo_path {}'.format(repo_path))
 
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(repo_path):
@@ -58,8 +59,8 @@ class WurfGitResolver(object):
                 # the required version for this dependency
                 self.git.pull(cwd=repo_path)
             except Exception as e:
-                self.log.info('Exception when executing git pull:')
-                self.log.info(e)
+                self.ctx.to_log('Exception when executing git pull:')
+                self.ctx.to_log(e)
 
         # If the project contains submodules we also get those
         self.git.pull_submodules(cwd=repo_path)

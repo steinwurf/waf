@@ -5,9 +5,21 @@ class WurfSourceResolver(object):
     """
     """
 
-    def __init__(self, source_resolvers, log):
+    def __init__(self, source_resolvers, ctx):
+        """ Construct a new WurfSourceResolver instance.
+
+        Args:
+            source_resolvers: A dict object mapping source types to resolvers
+            instances, providing the resolve(...) function.
+
+                Example:
+                    {'git': git_resolver_instance,
+                     'ftp': ftp_resolver_instance}
+
+            ctx: A Waf Context instance.
+        """
         self.source_resolvers = source_resolvers
-        self.log = log
+        self.ctx = ctx
 
     def resolve(self, name, cwd, sources):
 
@@ -15,7 +27,7 @@ class WurfSourceResolver(object):
             try:
                 path = self.__resolve(name, cwd, **source)
             except Exception as e:
-                self.log.info("Source {} resolve failed {}".format(source, e))
+                self.ctx.to_log("Source {} resolve failed {}".format(source, e))
             else:
                 return path
         else:

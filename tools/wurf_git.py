@@ -12,11 +12,15 @@ import re
 
 class WurfGit(object):
 
-    def __init__(self, git_binary, context):
-        """
+    def __init__(self, git_binary, ctx):
+        """ Construct a new WurfGit instance.
+
+        Args:
+            git_binary: A string containing the path to a git executable.
+            ctx: A Waf Context instance.
         """
         self.git_binary = git_binary
-        self.ctx = context
+        self.ctx = ctx
 
     def cmd_and_log(self, *args, **kwargs):
         """
@@ -173,7 +177,7 @@ class WurfGit(object):
 # def git_check_minimum_version(conf, minimum):
 #     """
 #     Checks the minimum version of git
-#     :param ctx: Waf context
+#     :param ctx: Waf c
 #     :param args: The required minimum version as a tuple
 #     """
 #     version = conf.git_version()

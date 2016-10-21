@@ -28,29 +28,33 @@ class Registry(object):
         return call()
 
 
-def build_git_resolver(registry):
+def build_wurf_git_resolver(registry):
+    """ Builds a WurfGitResolver instance."""
+
     git = registry.require('git')
     url_resolver = registry.require('git_url_resolver')
-    log = registry.require('log')
+    ctx = registry.require('ctx')
 
     return wurf_git_resolver.WurfGitResolver(
-        git=git, url_resolver=url_resolver, log=log)
+        git=git, url_resolver=url_resolver, ctx=ctx)
 
 def build_source_resolver(registry):
+    """ Builds a WurfSourceResolver instance."""
 
     source_resolvers = {'git': registry.require('git_resolver')}
 
-    log = registry.require('log')
+    ctx = registry.require('ctx')
 
     return wurf_source_resolver.WurfSourceResolver(
-        source_resolvers=source_resolvers, log=log)
+        source_resolvers=source_resolvers, ctx=ctx)
 
-def build_git(registry):
+def build_wurf_git(registry):
+    """ Builds a WurfGit instance."""
 
-    context = registry.require('context')
+    ctx = registry.require('ctx')
     git_binary = registry.require('git_binary')
 
-    return wurf_git.WurfGit(git_binary=git_binary, context=context)
+    return wurf_git.WurfGit(git_binary=git_binary, ctx=ctx)
 
 def build_git_url_resolver(registry):
 
@@ -94,9 +98,10 @@ def build_registry(ctx, git_binary, bundle_path, bundle_config_path,
     registry.provide_value('bundle_path', bundle_path)
     registry.provide_value('bundle_config_path', bundle_config_path)
     registry.provide_value('active_resolve', active_resolve)
-    registry.provide('git', build_git)
+
+    registry.provide('git', build_wurf_git)
     registry.provide('git_url_resolver', build_git_url_resolver)
-    registry.provide('git_resolver', build_git_resolver)
+    registry.provide('git_resolver', build_wurf_git_resolver)
     registry.provide('source_resolver', build_source_resolver)
     registry.provide('dependency_manager', build_dependency_manager)
 

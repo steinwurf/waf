@@ -35,7 +35,7 @@ def test_working_on_it(test_directory):
     log = mock.Mock()
     git_binary = '/bin/git'
 
-    registry = wurf_registry.build_registry(
-        ctx=ctx, log=log, git_binary=git_binary)
+    # registry = wurf_registry.build_registry(
+    #     ctx=ctx, log=log, git_binary=git_binary)
 
     #assert(f.color() == "red")

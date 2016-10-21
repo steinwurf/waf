@@ -74,7 +74,8 @@ class WurfResolveContext(Context.Context):
 
         self.registry = wurf_registry.build_registry(
             ctx=self, git_binary=git_binary, bundle_path=self.bundle_path(),
-            bundle_config_path=self.bundle_config_path)
+            bundle_config_path=self.bundle_config_path(),
+            active_resolve=self.is_active_resolve())
 
         self.dependency_manager = self.registry.require('dependency_manager')
 
@@ -148,20 +149,7 @@ class WurfResolveContext(Context.Context):
 
         print("ADD dependency")
 
-        name = kwargs['name']
-        cwd = self.bundle_path()
-        sources = kwargs['sources']
-
-        source_resolver = self.registry.require('source_resolver')
-
-        #assert(0)
-
-
-        path = source_resolver.resolve(name=name, cwd=cwd, sources=sources)
-
-
-
-        print(kwargs)
+        self.dependency_manager.add_dependency(**kwargs)
         #assert(0)
 
     def active_resolve(self, **kwargs):
