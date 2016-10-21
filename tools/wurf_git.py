@@ -62,6 +62,50 @@ class WurfGit(object):
         args = [self.git_binary, 'pull']
         self.ctx.cmd_and_log(args, cwd=cwd)
 
+    def branch(self, cwd):
+        """
+        Runs 'git branch' and returns the current branch and a list of
+        additional branches
+        """
+        args = [self.git_binary, 'branch']
+        o = self.ctx.cmd_and_log(args, cwd=cwd)
+
+        branch = o.split('\n')
+        branch = [b for b in branch if b != '']
+
+        current = ''
+        others = []
+
+        for b in branch:
+            if b.startswith('*'):
+                current = b[1:].strip()
+            else:
+                others.append(b)
+
+        if current == '':
+            self.ctx.fatal('Failed to locate current branch')
+
+        return current, others
+
+    def is_detached_head(self, cwd):
+        """
+        Checks if the repository is in detached HEAD state. See learn what this
+        means read here:
+
+            https://git-scm.com/docs/git-checkout
+
+            Search for: DETACHED HEAD
+        """
+        current, _ = self.branch(cwd=cwd)
+        return current.startswith('(HEAD detached at')
+
+    def checkout(self, branch, cwd):
+        """
+        Runs 'git checkout branch'
+        """
+        args = [self.git_binary, 'checkout', branch]
+        self.ctx.cmd_and_log(args, cwd=cwd)
+
     def has_submodules(ctx, cwd):
         """
         Returns true if the repository in directory cwd contains the .gitmodules

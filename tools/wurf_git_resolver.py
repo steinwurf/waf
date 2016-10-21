@@ -40,12 +40,13 @@ class WurfGitResolver(object):
         repo_name = name + '-master-' + repo_hash
         repo_path = os.path.join(cwd, repo_name)
 
-        self.ctx.to_log('Resolve repo_url {}'.format(repo_url))
-        self.ctx.to_log('Resolve repo_name {}'.format(repo_name))
-        self.ctx.to_log('Resolve repo_path {}'.format(repo_path))
+        self.ctx.to_log('WurfGitResolver repo_url {}'.format(repo_url))
+        self.ctx.to_log('WurfGitResolver repo_name {}'.format(repo_name))
+        self.ctx.to_log('WurfGitResolver repo_path {}'.format(repo_path))
 
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(repo_path):
+            self.ctx.to_log('WurfGitResolver repo_path {}'.format(repo_path))
             self.git.clone(repository=repo_url, directory=repo_name, cwd=cwd)
         else:
 

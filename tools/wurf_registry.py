@@ -6,6 +6,7 @@ import inspect
 import wurf_git
 import wurf_git_url_resolver
 import wurf_git_resolver
+import wurf_git_checkout_resolver
 import wurf_source_resolver
 
 class Registry(object):
@@ -38,10 +39,22 @@ def build_wurf_git_resolver(registry):
     return wurf_git_resolver.WurfGitResolver(
         git=git, url_resolver=url_resolver, ctx=ctx)
 
+def build_wurf_git_checkout_resolver(registry):
+    """ Builds a WurfGitResolver instance."""
+
+    git = registry.require('git')
+    git_resolver = registry.require('git_resolver')
+    ctx = registry.require('ctx')
+
+    return wurf_git_checkout_resolver.WurfGitCheckoutResolver(
+        git=git, git_resolver=git_resolver, ctx=ctx)
+
 def build_source_resolver(registry):
     """ Builds a WurfSourceResolver instance."""
 
-    source_resolvers = {'git': registry.require('git_resolver')}
+    source_resolvers = {
+        'git': registry.require('git_resolver'),
+        'git_checkout': registry.require('git_checkout_resolver')}
 
     ctx = registry.require('ctx')
 
@@ -102,6 +115,7 @@ def build_registry(ctx, git_binary, bundle_path, bundle_config_path,
     registry.provide('git', build_wurf_git)
     registry.provide('git_url_resolver', build_git_url_resolver)
     registry.provide('git_resolver', build_wurf_git_resolver)
+    registry.provide('git_checkout_resolver', build_wurf_git_checkout_resolver)
     registry.provide('source_resolver', build_source_resolver)
     registry.provide('dependency_manager', build_dependency_manager)
 

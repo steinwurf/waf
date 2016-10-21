@@ -10,16 +10,17 @@ class WurfGitCheckoutResolver(object):
     Git Commit Resolver functionality. Checks out a specific commit.
     """
 
-    def __init__(self, git, git_resolver, log):
-        """
-        Creates a new resolver object
+    def __init__(self, git, git_resolver, ctx):
+        """ Construct a new WurfGitCheckoutResolver instance.
 
-        :param url: URL of the Git repository where the dependency
-                    can be found
+        Args:
+            git: A WurfGit instance
+            url_resolver: A WurfGitResolver instance.
+            ctx: A Waf Context instance.
         """
         self.git = git
         self.git_resolver = git_resolver
-        self.log = log
+        self.ctx = ctx
 
     def resolve(self, name, cwd, url, checkout):
         """
@@ -32,13 +33,16 @@ class WurfGitCheckoutResolver(object):
 
         path = self.git_resolver.resolve(name=name, cwd=cwd, url=url)
 
-        # Use the first 6 characters of the SHA1 hash of the repository url
-        # to uniquely identify the repository
+        # Use the path retuned to create a unique location for this checkout
         repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
 
         # The folder for storing different versions of this repository
         repo_name = name + '-' + checkout + '-' + repo_hash
         repo_path = os.path.join(cwd, repo_name)
+
+        self.ctx.to_log('WurfGitCheckoutResolver repo_name {}'.format(repo_name))
+        self.ctx.to_log('WurfGitCheckoutResolver path {} -> repo_path {}'.format(
+            path, repo_path))
 
         # If the checkout folder does not exist,
         # then clone from the git repository
@@ -46,11 +50,14 @@ class WurfGitCheckoutResolver(object):
             shutil.copytree(src=path, dst=repo_path)
             self.git.checkout(branch=checkout, cwd=repo_path)
         else:
-            # If the checkout folder exists, we may need to update it
-            self.git.pull(cwd=repo_path)
+
+            if not self.git.is_detached_head(cwd=repo_path):
+                # If the checkout folder exists, we may need to update it
+                self.git.pull(cwd=repo_path)
 
         # If the project contains submodules we also get those
-        self.git.pull_submodules(repository_dir=repo_path)
+        #
+        self.git.pull_submodules(cwd=repo_path)
 
         return repo_path
 

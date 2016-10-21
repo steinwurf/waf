@@ -57,19 +57,52 @@ class WurfActiveDependencyManager(object):
         self.dependencies = {}
 
     def add_dependency(self, **kwargs):
+        sha1 = self.__hash_dependency(**kwargs)
+        self.__resolve_dependency(sha1=sha1, **kwargs)
 
-        sha1 = self.hash_dependency(**kwargs)
-        self.__add_dependency(sha1=sha1, **kwargs)
+    def __resolve_dependency(self, sha1, name, recurse, **kwargs):
 
-    def __add_dependency(self, sha1, name, optional, recurse, sources):
+        if self.__skip_dependency(name=name, sha1=sha1):
+            return
 
-        if name in self.dependencies:
+        path = self.__fetch_dependency(name=name, **kwargs)
 
-            if sha1 == self.dependencies[name]:
-                # We already have resolved this dependency
-                return
-            else:
-                self.ctx.fatal("Mismatch dependency")
+        # We store the information about the resolve state here.
+        # The reason we do it even though we might not have a path is that we
+        # want to avoid trying to resolve a dependency that is optional and
+        # failed leaving path==None again and again.
+        config = {'sha1': sha1, 'path':path}
+        self.dependencies[name] = config
+
+        if not path:
+            return
+
+        self.__store_dependency(name, config)
+
+        if recurse:
+            self.ctx.recurse(path)
+
+    def __store_dependency(self, name, config):
+
+        config_path = os.path.join(
+            self.bundle_config_path, name + '.resolve.json')
+
+        with open(config_path, 'w') as config_file:
+            json.dump(config, config_file)
+
+
+    def __skip_dependency(self, name, sha1):
+
+        if name not in self.dependencies:
+            return False
+
+        if sha1 == self.dependencies[name]['sha1']:
+            # We already have resolved this dependency
+            return True
+        else:
+            self.ctx.fatal("Mismatch dependency")
+
+    def __fetch_dependency(self, name, optional, sources):
 
         self.ctx.start_msg('Resolve dependency {}'.format(name))
 
@@ -85,24 +118,16 @@ class WurfActiveDependencyManager(object):
                 # does not have a license to access the repository, so we just
                 # print the status message and continue
                 self.ctx.end_msg('Unavailable', color='RED')
-                return
+                return None
             else:
                 raise
 
         self.ctx.end_msg(path)
 
-        config_path = os.path.join(
-            self.bundle_config_path, name + '.resolve.json')
-
-        config = {'sha1': sha1, 'path':path}
-
-        with open(config_path, 'w') as config_file:
-            json.dump(config, config_file)
-
-        self.dependencies[name] = sha1
+        return path
 
 
-    def hash_dependency(self, **kwargs):
+    def __hash_dependency(self, **kwargs):
         s = json.dumps(kwargs, sort_keys=True)
         return hashlib.sha1(s.encode('utf-8')).hexdigest()
 

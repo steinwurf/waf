@@ -142,4 +142,4 @@ def build(bld):
     #print(my_env)
     #print(bld.env)
     bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
-    bld(rule='tox', env=my_env, always=True)
+    bld(rule='tox -- -s', env=my_env, always=True)
