@@ -65,7 +65,13 @@ class WurfResolveContext(Context.Context):
         self.bldnode.mkdir()
 
         # Create a log file if this is an "active" resolve step
-        path = os.path.join(self.bldnode.abspath(), 'resolve.log')
+        
+        if self.is_active_resolve():
+            step = 'active'
+        else:
+            step = 'passive' 
+        
+        path = os.path.join(self.bldnode.abspath(), step+'.resolve.log')
         self.logger = Logs.make_logger(path, 'cfg')
 
         self.logger.debug('Test')
