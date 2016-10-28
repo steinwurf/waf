@@ -54,8 +54,14 @@ class WurfResolveContext(Context.Context):
     cmd = 'resolve'
     fun = 'resolve'
 
-    def __init__(self, **kw):
+    def __init__(self, opt, **kw):
+        """ Create a WurfResolveContext
+
+        :param opt: A Waf options context instance.
+        """
         super(WurfResolveContext, self).__init__(**kw)
+
+        self.opt = opt
 
     def execute(self):
 
@@ -65,12 +71,12 @@ class WurfResolveContext(Context.Context):
         self.bldnode.mkdir()
 
         # Create a log file if this is an "active" resolve step
-        
+
         if self.is_active_resolve():
             step = 'active'
         else:
-            step = 'passive' 
-        
+            step = 'passive'
+
         path = os.path.join(self.bldnode.abspath(), step+'.resolve.log')
         self.logger = Logs.make_logger(path, 'cfg')
 

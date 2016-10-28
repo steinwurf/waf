@@ -70,7 +70,7 @@ class WurfOptionsContext(Options.OptionsContext):
     def execute(self):
 
         # Create and execute the resolve context
-        ctx = Context.create_context('resolve')
+        ctx = Context.create_context('resolve', opt=self)
         ctx.cmd = 'resolve'
 
         try:

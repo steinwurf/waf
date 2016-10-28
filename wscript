@@ -109,6 +109,11 @@ def build(bld):
         target=bld.bldnode.make_node('waf'),
         is_copy=True)
 
+    # bld(features='subst',
+    #     source=bld.root.find_node(
+    #         os.path.join('/home/mvp/dev/steinwurf/waf/temp_clones/waf', 'waf')),
+    #     target=bld.bldnode.make_node('waf'),
+    #     is_copy=True)
 
 
     #bld(features='subst',
