@@ -1,31 +1,116 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+import argparse
+
+class WurfResolverOptions(object):
+    """
+    """
+
+    def __init__(self):
+
+        self.parser = argparse.ArgumentParser(description='Resolve Options')
+
+        # Collect the commands, environment variables and arguments that we do
+        # not yet understand.
+        self.parser.add_argument('args', nargs='*')
+
+
+        self.options = argparse.Namespace()
+
+    def add_argument(*args, **kwargs):
+        parser.add_argument(*args, **kwargs)
+
+    def parse_known_args(args = None):
+        self.options = parser.parse_known_args(args)
+
+
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+
+
+
+class WurfGitMethodResolver(object):
+    """
+    """
+
+    def __init__(self, user_methods, git_methods):
+        """ Construct a new WurfSourceResolver instance.
+
+        Args:
+            type_resolvers: A dict object mapping source types to resolvers
+            instances, providing the resolve(...) function.
+
+                Example:
+                    {'checkout': checkout_resolver_instance,
+                     'semver': semver_resolver_instance }
+
+            ctx: A Waf Context instance.
+        """
+        self.user_methods = user_methods
+        self.git_methods = git_methods
+
+    def resolve(self, name, cwd, source, method, **kwargs):
+        """ Resolve the git dependency.
+
+        - First see if the user has provided some options
+        - Then use the specified git method
+        """
+
+        # Try user method
+        for m in self.user_methods:
+            path = m.resolve(name=name, cwd=cwd, source=source, **kwargs)
+
+            if path:
+                return path
+
+        # Use git method
+        r = self.git_methods[method]
+        return r.resolve(name=name, cwd=cwd, source=source, **kwargs)
+
+
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+
 class WurfSourceResolver(object):
     """
     """
 
-    def __init__(self, source_resolvers, ctx):
-        """ Construct a new WurfSourceResolver instance.
+    def __init__(self, user_resolvers, type_resolvers, ctx):
+        """ Construct an instance.
 
-        Args:
-            source_resolvers: A dict object mapping source types to resolvers
+        :param user_resolvers: A list of resolvers allowing the user to provide
+            the path to a dependency in various ways.
+
+        :param type_resolvers: A dict object mapping source types to resolvers
             instances, providing the resolve(...) function.
 
                 Example:
                     {'git': git_resolver_instance,
                      'ftp': ftp_resolver_instance}
 
-            ctx: A Waf Context instance.
+        :param ctx: A Waf Context instance.
         """
-        self.source_resolvers = source_resolvers
+        self.user_resolvers = user_resolvers
+        self.type_resolvers = type_resolvers
         self.ctx = ctx
 
-    def resolve(self, name, cwd, sources):
+    def resolve(self, name, cwd, resolver, sources, **kwargs):
 
+        # Try user method
+        for r in self.user_resolvers:
+            path = r.resolve(name=name, cwd=cwd, resolver=resolver,
+                sources=sources, **kwargs)
+
+            if path:
+                return path
+
+        # Use resolver
         for source in sources:
             try:
-                path = self.__resolve(name, cwd, **source)
+                path = self.__resolve(name, cwd, resolver, source, **kwargs)
             except Exception as e:
                 self.ctx.to_log("Source {} resolve failed {}".format(source, e))
             else:
@@ -34,10 +119,10 @@ class WurfSourceResolver(object):
             raise RuntimeError("No sources resolved. {}".format(self))
 
 
-    def __resolve(self, name, cwd, resolver, **kwargs):
+    def __resolve(self, name, cwd, resolver, source, **kwargs):
 
-        r = self.source_resolvers[resolver]
-        return r.resolve(name=name, cwd=cwd, **kwargs)
+        r = self.type_resolvers[resolver]
+        return r.resolve(name=name, cwd=cwd, source=source, **kwargs)
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
@@ -102,13 +187,14 @@ class WurfActiveDependencyManager(object):
         else:
             self.ctx.fatal("Mismatch dependency")
 
-    def __fetch_dependency(self, name, optional, sources):
+    def __fetch_dependency(self, name, optional, **kwargs):
 
         self.ctx.start_msg('Resolve dependency {}'.format(name))
 
         try:
             path = self.source_resolver.resolve(
-                name=name, cwd=self.bundle_path, sources=sources)
+                name=name, cwd=self.bundle_path, **kwargs)
+
         except Exception as e:
 
             self.ctx.to_log('Exception while fetching dependency: {}'.format(e))

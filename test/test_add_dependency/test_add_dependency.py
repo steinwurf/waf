@@ -25,13 +25,22 @@ def test_add_dependency(test_directory):
     r = test_directory.run('python', 'waf', 'build', '-v')
 
     assert r.returncode == 0, str(r)
-    
-    r = test_directory.run('python', 'waf', 'configure', '-v', '--waf-use-checkout=waf-1.9.5')
+
+    r = test_directory.run('python', 'waf', 'configure', '-v', '--waf-use-checkout=waf-1.9.4')
 
     assert r.returncode == 0, str(r)
 
     r = test_directory.run('python', 'waf', 'build', '-v')
 
     assert r.returncode == 0, str(r)
+
+    r = test_directory.run('python', 'waf', 'configure', '-v', '--waf-path=/tmp')
+
+    assert r.returncode == 0, str(r)
+
+    r = test_directory.run('python', 'waf', 'build', '-v')
+
+    assert r.returncode == 0, str(r)
+
 
     print(str(r))

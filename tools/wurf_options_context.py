@@ -95,8 +95,19 @@ class WurfOptionsContext(Options.OptionsContext):
             help='The folder where the bundled dependencies are downloaded.'
                  '[default: %default]')
 
+        # Fetch the arguments not parsed in the resolve step
+        self.waf_options = ctx.waf_options
+        
         super(WurfOptionsContext, self).execute()
-        print("BLABAL 2")
+
+
+
+    def parse_args(self, _args=None):
+        """ Override the parse_args(..) from the OptionsContext.
+
+        Here we inject the arguments which were not consumed in the resolve step
+        """
+        super(WurfOptionsContext, self).parse_args(self.waf_options)
 
     def add_option(self, *k, **kw):
 

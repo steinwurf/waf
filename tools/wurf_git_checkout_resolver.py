@@ -22,7 +22,7 @@ class WurfGitCheckoutResolver(object):
         self.git_resolver = git_resolver
         self.ctx = ctx
 
-    def resolve(self, name, cwd, url, checkout):
+    def resolve(self, name, cwd, source, checkout):
         """
         Fetches the dependency if necessary.
         :param ctx: A waf ConfigurationContext
@@ -31,7 +31,7 @@ class WurfGitCheckoutResolver(object):
         """
         cwd = os.path.abspath(os.path.expanduser(cwd))
 
-        path = self.git_resolver.resolve(name=name, cwd=cwd, url=url)
+        path = self.git_resolver.resolve(name=name, cwd=cwd, source=source)
 
         # Use the path retuned to create a unique location for this checkout
         repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]

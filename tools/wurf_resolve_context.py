@@ -63,6 +63,10 @@ class WurfResolveContext(Context.Context):
 
         self.opt = opt
 
+        # Store the options that will be passed to Waf's options parser
+        self.waf_options = []
+
+
     def execute(self):
 
         # Create the nodes that will be used during the resolve step. The build
@@ -84,8 +88,11 @@ class WurfResolveContext(Context.Context):
 
         git_binary = shutilwhich.which('git')
 
+        self.parser = argparse.ArgumentParser(description='Resolve Options')
+
         self.registry = wurf_registry.build_registry(
-            ctx=self, git_binary=git_binary, bundle_path=self.bundle_path(),
+            ctx=self, opt=self.parser, git_binary=git_binary,
+            bundle_path=self.bundle_path(),
             bundle_config_path=self.bundle_config_path(),
             active_resolve=self.is_active_resolve())
 
@@ -99,6 +106,10 @@ class WurfResolveContext(Context.Context):
         # trigger loading the dependency.
 
         super(WurfResolveContext, self).execute()
+
+        # We are just interested in the left-over args, which is the second
+        # value retuned by parse_known_args(...)
+        _, self.waf_options = self.parser.parse_known_args()
 
     def create_resolvers():
         pass

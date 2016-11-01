@@ -21,7 +21,7 @@ class WurfGitResolver(object):
         self.url_resolver = url_resolver
         self.ctx = ctx
 
-    def resolve(self, name, cwd, url):
+    def resolve(self, name, cwd, source):
         """
         Fetches the dependency if necessary.
         :param ctx: A waf ConfigurationContext
@@ -30,7 +30,7 @@ class WurfGitResolver(object):
         """
         cwd = os.path.abspath(os.path.expanduser(cwd))
 
-        repo_url = self.url_resolver.determine_url(url=url)
+        repo_url = self.url_resolver.determine_url(url=source)
 
         # Use the first 6 characters of the SHA1 hash of the repository url
         # to uniquely identify the repository

@@ -4,6 +4,7 @@
 import hashlib
 import os
 import shutil
+import sys
 
 class WurfUserCheckoutResolver(object):
     """
@@ -17,50 +18,41 @@ class WurfUserCheckoutResolver(object):
             git_checkout_resolver: A WurfGitCheckoutResolver instance.
             opt: A Waf OptionsContext instance.
         """
-        self.git = git
-        self.git_resolver = git_resolver
+        self.git_checkout_resolver = git_checkout_resolver
         self.opt = opt
+        self.parsed_options = {}
 
-    def resolve(self, name, cwd, url, **kwargs):
+    def __parse_arguement(self, name):
+
+        option = '--%s-use-checkout' % name
+
+        if option in self.parsed_options:
+            return self.parsed_options[option]
+
+        self.opt.add_argument(option, default=None, dest=option)
+
+        known_args, unknown_args = self.opt.parse_known_args()
+
+        # Use vars(...) function to convert argparse.Namespace() to dict
+        self.parsed_options = vars(known_args)
+
+        return self.parsed_options[option]
+
+    def resolve(self, name, cwd, source, **kwargs):
         """
         Fetches the dependency if necessary.
         :param ctx: A waf ConfigurationContext
         :param path: The path where the dependency should be located
         :param use_checkout: If not None the given checkout will be used
         """
-        cwd = os.path.abspath(os.path.expanduser(cwd))
 
-        path = self.git_resolver.resolve(name=name, cwd=cwd, url=url)
+        use_checkout = self.__parse_arguement(name)
 
-        # Use the path retuned to create a unique location for this checkout
-        repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
+        if not use_checkout:
+            return
 
-        # The folder for storing different versions of this repository
-        repo_name = name + '-' + checkout + '-' + repo_hash
-        repo_path = os.path.join(cwd, repo_name)
-
-        self.ctx.to_log('WurfGitCheckoutResolver repo_name {}'.format(repo_name))
-        self.ctx.to_log('WurfGitCheckoutResolver path {} -> repo_path {}'.format(
-            path, repo_path))
-
-        # If the checkout folder does not exist,
-        # then clone from the git repository
-        if not os.path.isdir(repo_path):
-            shutil.copytree(src=path, dst=repo_path)
-            self.git.checkout(branch=checkout, cwd=repo_path)
-        else:
-
-            if not self.git.is_detached_head(cwd=repo_path):
-                # If the checkout is a tag or commit (we will be in detached
-                # HEAD), then we cannot pull from it. On the other hand if it is
-                # a branch we can.
-                self.git.pull(cwd=repo_path)
-
-        # If the project contains submodules we also get those
-        #
-        self.git.pull_submodules(cwd=repo_path)
-
-        return repo_path
+        return self.git_checkout_resolver.resolve(name=name, cwd=cwd,
+            source=source, checkout=use_checkout)
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)

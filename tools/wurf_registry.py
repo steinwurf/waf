@@ -8,6 +8,8 @@ import wurf_git_url_resolver
 import wurf_git_resolver
 import wurf_git_checkout_resolver
 import wurf_source_resolver
+import wurf_user_checkout_resolver
+import wurf_user_path_resolver
 
 class Registry(object):
 
@@ -49,17 +51,46 @@ def build_wurf_git_checkout_resolver(registry):
     return wurf_git_checkout_resolver.WurfGitCheckoutResolver(
         git=git, git_resolver=git_resolver, ctx=ctx)
 
+def build_wurf_git_method_resolver(registry):
+    """ Builds a WurfGitMethodResolver instance."""
+
+    user_methods = [registry.require('user_checkout_resolver')]
+
+    git_methods = {
+        'checkout': registry.require('git_checkout_resolver')}
+
+    return wurf_source_resolver.WurfGitMethodResolver(
+        user_methods=user_methods, git_methods=git_methods)
+
+def build_wurf_user_checkout_resolver(registry):
+    """ Builds a WurfUserCheckoutResolver instance."""
+
+    git_checkout_resolver = registry.require('git_checkout_resolver')
+    opt = registry.require('opt')
+
+    return wurf_user_checkout_resolver.WurfUserCheckoutResolver(
+        opt=opt, git_checkout_resolver=git_checkout_resolver)
+
+def build_wurf_user_path_resolver(registry):
+    """ Builds a WurfUserPathResolver instance."""
+
+    opt = registry.require('opt')
+
+    return wurf_user_path_resolver.WurfUserPathResolver(
+        options_parser=opt)
+
 def build_source_resolver(registry):
     """ Builds a WurfSourceResolver instance."""
 
-    source_resolvers = {
-        'git': registry.require('git_resolver'),
-        'git_checkout': registry.require('git_checkout_resolver')}
+    user_resolvers = [registry.require('user_path_resolver')]
+
+    type_resolvers = {
+        'git': registry.require('git_method_resolver')}
 
     ctx = registry.require('ctx')
 
     return wurf_source_resolver.WurfSourceResolver(
-        source_resolvers=source_resolvers, ctx=ctx)
+        user_resolvers=user_resolvers, type_resolvers=type_resolvers, ctx=ctx)
 
 def build_wurf_git(registry):
     """ Builds a WurfGit instance."""
@@ -86,27 +117,29 @@ def build_dependency_manager(registry):
         bundle_config_path=bundle_config_path,
         source_resolver=source_resolver)
 
-def build_registry(ctx, git_binary, bundle_path, bundle_config_path,
+def build_registry(ctx, opt, git_binary, bundle_path, bundle_config_path,
     active_resolve):
     """ Builds a registry.
 
-    Args:
-        ctx: A Waf Context instance.
-        git_binary: A string containing the path to a git executable.
-        bundle_path: A string containing the path where dependencies should be
-            downloaded.
-        bundle_config_path: A string containing the path to where the
-            dependencies config json files should be / is stored.
-        active_resolve: Boolean which is True if this is an active resolve
-            otherwise False.
 
-    Returns:
+    :param ctx: A Waf Context instance.
+    :param opt: An argparse.ArgumentParser instance.
+    :param git_binary: A string containing the path to a git executable.
+    :param bundle_path: A string containing the path where dependencies should be
+        downloaded.
+    :param bundle_config_path: A string containing the path to where the
+        dependencies config json files should be / is stored.
+    :param active_resolve: Boolean which is True if this is an active resolve
+        otherwise False.
+
+    :returns:
         A new Registery instance.
     """
 
     registry = Registry()
 
     registry.provide_value('ctx', ctx)
+    registry.provide_value('opt', opt)
     registry.provide_value('git_binary', git_binary)
     registry.provide_value('bundle_path', bundle_path)
     registry.provide_value('bundle_config_path', bundle_config_path)
@@ -116,6 +149,9 @@ def build_registry(ctx, git_binary, bundle_path, bundle_config_path,
     registry.provide('git_url_resolver', build_git_url_resolver)
     registry.provide('git_resolver', build_wurf_git_resolver)
     registry.provide('git_checkout_resolver', build_wurf_git_checkout_resolver)
+    registry.provide('user_checkout_resolver', build_wurf_user_checkout_resolver)
+    registry.provide('user_path_resolver', build_wurf_user_path_resolver)
+    registry.provide('git_method_resolver', build_wurf_git_method_resolver)
     registry.provide('source_resolver', build_source_resolver)
     registry.provide('dependency_manager', build_dependency_manager)
 

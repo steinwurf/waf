@@ -34,9 +34,10 @@ def resolve(ctx):
         name='waf',
         recurse=False,
         optional=False,
-        sources=[{'resolver': 'git_checkout',
-                  'checkout': 'waf-1.9.5',
-                  'url': 'github.com/waf-project/waf.git'}])
+        resolver='git',
+        method='checkout',
+        checkout='waf-1.9.5',
+        sources=['github.com/waf-project/waf.git'])
 
 
 def options(opt):
