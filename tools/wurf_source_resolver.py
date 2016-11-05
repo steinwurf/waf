@@ -127,23 +127,25 @@ class WurfFastResolveDependency(object):
         
     def add_dependency(self, name, sha1, **kwargs):
         
-        if fast_resolve:
-            path = self.__load_dependency(name=name, sha1=sha1)
+        if self.fast_resolve:
+            config = self.__load_dependency(name=name, sha1=sha1)
             
-        if not path:
-            path = self.dependency_manager.add_dependency(
+        if config and config['sha1'] == sha1:
+            return config['path']
+            
+        return self.dependency_manager.add_dependency(
                 name=name, sha1=sha1, **kwargs)
-        
-        return path
     
-    
-    def __load_dependency(self, name, sha1):    
-            config_path = os.path.join(
-                self.bundle_config_path, name + '.resolve.json')
-
-            with open(config_path, 'w') as config_file:
-                json.dump(config, config_file)
-        
+    def __load_dependency(self, name):    
+            
+        config_path = os.path.join(
+            self.bundle_config_path, name + '.resolve.json')
+            
+        if not os.path.isfile(config_path):
+            return None
+            
+        with open(config_path, 'r') as config_file:
+            return json.load(config_file)
         
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
