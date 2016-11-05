@@ -3,50 +3,21 @@
 
 import argparse
 
-class WurfResolverOptions(object):
-    """
-    """
-
-    def __init__(self):
-
-        self.parser = argparse.ArgumentParser(description='Resolve Options')
-
-        # Collect the commands, environment variables and arguments that we do
-        # not yet understand.
-        self.parser.add_argument('args', nargs='*')
-
-
-        self.options = argparse.Namespace()
-
-    def add_argument(*args, **kwargs):
-        parser.add_argument(*args, **kwargs)
-
-    def parse_known_args(args = None):
-        self.options = parser.parse_known_args(args)
-
-
-    def __repr__(self):
-        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
-
-
-
-
 class WurfGitMethodResolver(object):
     """
     """
 
     def __init__(self, user_methods, git_methods):
-        """ Construct a new WurfSourceResolver instance.
+        """ Construct an instance.
 
-        Args:
-            type_resolvers: A dict object mapping source types to resolvers
+        :param user_methods: A list of user specified git resolvers. These will
+            be tried before using the method.  
+        :param git_methods: A dict object mapping method types to resolvers
             instances, providing the resolve(...) function.
 
                 Example:
                     {'checkout': checkout_resolver_instance,
                      'semver': semver_resolver_instance }
-
-            ctx: A Waf Context instance.
         """
         self.user_methods = user_methods
         self.git_methods = git_methods
@@ -131,6 +102,53 @@ class WurfSourceResolver(object):
 import os
 import hashlib
 import json
+
+class WurfHashDependency(object):
+    def __init__(self, dependency_manager):
+        self.dependency_manager = dependency_manager
+        
+    def add_dependency(self, **kwargs):
+        sha1 = self.__hash_dependency(**kwargs)
+        self.dependency_manager.add_dependency(sha1=sha1, **kwargs)
+
+    def __hash_dependency(self, **kwargs):
+        s = json.dumps(kwargs, sort_keys=True)
+        return hashlib.sha1(s.encode('utf-8')).hexdigest()
+
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+class WurfFastResolveDependency(object):
+    def __init__(self, dependency_manager, bundle_config_path, fast_resolve):
+        self.dependency_manager = dependency_manager
+        self.bundle_config_path
+        self.fast_resolve = fast_resolve
+        
+        
+    def add_dependency(self, name, sha1, **kwargs):
+        
+        if fast_resolve:
+            path = self.__load_dependency(name=name, sha1=sha1)
+            
+        if not path:
+            path = self.dependency_manager.add_dependency(
+                name=name, sha1=sha1, **kwargs)
+        
+        return path
+    
+    
+    def __load_dependency(self, name, sha1):    
+            config_path = os.path.join(
+                self.bundle_config_path, name + '.resolve.json')
+
+            with open(config_path, 'w') as config_file:
+                json.dump(config, config_file)
+        
+        
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+
 
 class WurfActiveDependencyManager(object):
 
