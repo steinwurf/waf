@@ -3,6 +3,84 @@
 
 import argparse
 
+
+#            +--------------------------+
+#           |   WurfHashDependency     |
+#           |                          |
+#           |   - Hash the dependency  |
+#           |                          |
+#           +--------------------------+
+#  
+#               +                   ^
+#               |                   |
+#               |                   |
+#       add_dependency(...)        path
+#               |                   |
+#               |                   |
+#               v                   +
+#  
+#      +-----------------------------------+
+#      |   WurfDependencyCache             |
+#      |                                   |
+#      |   - Cache the path and sha1 for   |
+#      |     a resolved dependency.        |
+#      |   - Store the path and sha1 in a  |
+#      |     persistant file.              |
+#      |                                   |
+#      +-----------------------------------+
+#  
+#              +                   ^
+#              |                   |
+#              |                   |
+#      add_dependency(...)        path
+#              |                   |
+#              |                   |
+#              v                   +
+#
+#     +------------------------------------+
+#     |  WurfUserResolve                   |
+#     |                                    |
+#     |  - Check if user specified a path  |
+#     |    on the command-line.            |
+#     |                                    |
+#     +------------------------------------+
+#
+#              +                   ^
+#              |                   |
+#              |                   |
+#      add_dependency(...)        path
+#              |                   |
+#              |                   |
+#              v                   +
+#
+#    +----------------------------------------+
+#    |  WurfFastResolve                       |
+#    |                                        |
+#    |  - Active if the --fast-resolve option |
+#    |    is specified.                       |
+#    |  - If the cache file exists            |
+#    |    loads the path from there.          |
+#    |                                        |
+#    +----------------------------------------+
+#
+#               +                   ^
+#               |                   |
+#               |                   |
+#       add_dependency(...)        path
+#               |                   |
+#               |                   |
+#               v                   +
+#
+#       +---------------------------------+
+#       |  WurfResolve                    |
+#       |                                 |
+#       |  - Uses the specified resolver  |
+#       |    type to fetch the dependency |
+#       +---------------------------------+
+
+
+
+
 class WurfGitMethodResolver(object):
     """
     """
@@ -103,6 +181,58 @@ import os
 import hashlib
 import json
 
+class WurfDependencyUserPath(object):
+    """
+    User Path Resolver functionality. Allows the user to specify the path.
+    """
+
+    def __init__(self, options_parser, args):
+        """ Construct an instance.
+
+        :param option_parser: An argparse.ArgumentParser() instance.
+        :param args: A list containing the command-line arguments we want to 
+            parse.
+        """
+        self.options_parser = options_parser
+        self.args = args
+        self.parsed_options = {}
+
+    def __parse_arguement(self, name):
+        """ Parse the self.args and see if an --name-path option is present.
+        
+        If the option is found use that path.
+        
+        :param name: The name of the dependency we are looking for.
+        """
+
+        option = '--%s-path' % name
+
+        if option in self.parsed_options:
+            return self.parsed_options[option]
+
+        self.options_parser.add_argument(option, default=None, dest=option)
+
+        known_args, unknown_args = self.options_parser.parse_known_args()
+
+        # Use vars(...) function to convert argparse.Namespace() to dict
+        self.parsed_options = vars(known_args)
+
+        return self.parsed_options[option]
+
+    def add_dependency(self, name, **kwargs):
+        """
+        Fetches the dependency if necessary.
+        :param ctx: A waf ConfigurationContext
+        :param path: The path where the dependency should be located
+        :param use_checkout: If not None the given checkout will be used
+        """
+
+        return self.__parse_arguement(name)
+
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+
 class WurfHashDependency(object):
     def __init__(self, dependency_manager):
         self.dependency_manager = dependency_manager
@@ -117,6 +247,28 @@ class WurfHashDependency(object):
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+class WurfDependencyCache(object):
+    def __init__(self, cache, dependency_manager):
+        """ 
+            :param cache: Dict object where resolved dependencies will be stored.
+            :param dependency_manager: Dependency manager which will do the
+                resolve step on cache miss.
+        """
+        
+        self.dependency_manager = dependency_manager
+        
+    def add_dependency(self, **kwargs):
+        sha1 = self.__hash_dependency(**kwargs)
+        self.dependency_manager.add_dependency(sha1=sha1, **kwargs)
+
+    def __hash_dependency(self, **kwargs):
+        s = json.dumps(kwargs, sort_keys=True)
+        return hashlib.sha1(s.encode('utf-8')).hexdigest()
+
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
 
 class WurfFastResolveDependency(object):
     def __init__(self, dependency_manager, bundle_config_path, fast_resolve):
