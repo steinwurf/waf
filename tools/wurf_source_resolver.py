@@ -4,39 +4,34 @@
 import argparse
 
 
-#            +--------------------------+
+#           +--------------------------+
 #           |   WurfHashDependency     |
 #           |                          |
 #           |   - Hash the dependency  |
-#           |                          |
+#           |     using sha1.          |
 #           +--------------------------+
-#  
 #               +                   ^
-#               |                   |
 #               |                   |
 #       add_dependency(...)        path
 #               |                   |
-#               |                   |
 #               v                   +
-#  
 #      +-----------------------------------+
 #      |   WurfDependencyCache             |
 #      |                                   |
 #      |   - Cache the path and sha1 for   |
 #      |     a resolved dependency.        |
 #      |   - Store the path and sha1 in a  |
-#      |     persistant file.              |
+#      |     persistant cache file.        |
+#      |   - Checks that if a dependency   |
+#      |     is added twice their sha1     |
+#      |     must match.                   |
 #      |                                   |
 #      +-----------------------------------+
-#  
 #              +                   ^
-#              |                   |
 #              |                   |
 #      add_dependency(...)        path
 #              |                   |
-#              |                   |
 #              v                   +
-#
 #     +------------------------------------+
 #     |  WurfUserResolve                   |
 #     |                                    |
@@ -44,15 +39,11 @@ import argparse
 #     |    on the command-line.            |
 #     |                                    |
 #     +------------------------------------+
-#
 #              +                   ^
-#              |                   |
 #              |                   |
 #      add_dependency(...)        path
 #              |                   |
-#              |                   |
 #              v                   +
-#
 #    +----------------------------------------+
 #    |  WurfFastResolve                       |
 #    |                                        |
@@ -62,15 +53,11 @@ import argparse
 #    |    loads the path from there.          |
 #    |                                        |
 #    +----------------------------------------+
-#
 #               +                   ^
-#               |                   |
 #               |                   |
 #       add_dependency(...)        path
 #               |                   |
-#               |                   |
 #               v                   +
-#
 #       +---------------------------------+
 #       |  WurfResolve                    |
 #       |                                 |
@@ -181,20 +168,23 @@ import os
 import hashlib
 import json
 
-class WurfDependencyUserPath(object):
+class WurfUserResolve(object):
     """
     User Path Resolver functionality. Allows the user to specify the path.
     """
 
-    def __init__(self, options_parser, args):
+    def __init__(self, options_parser, args, resolver):
         """ Construct an instance.
 
         :param option_parser: An argparse.ArgumentParser() instance.
         :param args: A list containing the command-line arguments we want to 
             parse.
+        :param resolver: The resolver to use if a path option is not available
+            in the args list.
         """
         self.options_parser = options_parser
         self.args = args
+        self.resolver = resolver
         self.parsed_options = {}
 
     def __parse_arguement(self, name):
@@ -220,53 +210,139 @@ class WurfDependencyUserPath(object):
         return self.parsed_options[option]
 
     def add_dependency(self, name, **kwargs):
-        """
-        Fetches the dependency if necessary.
-        :param ctx: A waf ConfigurationContext
-        :param path: The path where the dependency should be located
-        :param use_checkout: If not None the given checkout will be used
+        """ Resolve the path to the dependency.
+         
+        :param name: The name of the dependency as a string
+        :param kwargs: Keyword arguments containing options for the dependency.
+        
+        :return: The path to the dependency as a string.
         """
 
-        return self.__parse_arguement(name)
+        path = self.__parse_arguement(name)
+        
+        if path:
+            return path
+        else:
+            return self.dependency_manager.add_dependency(
+                name=name, **kwargs)
 
     def __repr__(self):
+        """ 
+        :return: Representation of this object as a string
+        """
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 
 class WurfHashDependency(object):
-    def __init__(self, dependency_manager):
-        self.dependency_manager = dependency_manager
+    def __init__(self, resolver):
+        """ Construct an instance.
+
+        :param resolver: The resolver where the depenency options including the 
+            computed hash will be forwarded.
+        """
+
+        self.resolver = resolver
         
     def add_dependency(self, **kwargs):
+        """ Resolve the path to the dependency.
+         
+        :param kwargs: Keyword arguments containing options for the dependency.
+        
+        :return: The path to the dependency as a string.
+        """
+        
+        # Make sure the sha1 hash is not already included
+        assert('sha1' not in kwargs)
+
         sha1 = self.__hash_dependency(**kwargs)
-        self.dependency_manager.add_dependency(sha1=sha1, **kwargs)
+        
+        return self.resolver.add_dependency(sha1=sha1, **kwargs)
 
     def __hash_dependency(self, **kwargs):
+        """ Hash the keyword arguments representing the  to the dependency.
+         
+        :return: Hash of the dependency as a string.
+        """
+
         s = json.dumps(kwargs, sort_keys=True)
         return hashlib.sha1(s.encode('utf-8')).hexdigest()
 
     def __repr__(self):
+        """ 
+        :return: Representation of this object as a string
+        """
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 class WurfDependencyCache(object):
-    def __init__(self, cache, dependency_manager):
-        """ 
-            :param cache: Dict object where resolved dependencies will be stored.
-            :param dependency_manager: Dependency manager which will do the
-                resolve step on cache miss.
+    def __init__(self, cache, resolver):
+        """ Construct an instance.
+        
+        The dependency cache stores the hash and path of already resolved 
+        dependencies. If a dependency is resolved twice the path will be taken
+        from the cache.
+        
+        The cache will have the following "layout":
+        
+            cache = {'nameX': {'sha1': 'hashX', 'path': '/tmp'},
+                     'nameY': {'sha1': 'hashY', 'path': '/tmp'},
+                     'nameZ': {'sha1': 'hashZ', 'path': '/tmp'}}
+        
+        :param cache: Dict object where resolved dependencies will be stored.
+        :param resolver: Dependency manager which will do the
+            resolve step on cache miss.
         """
         
-        self.dependency_manager = dependency_manager
+        self.cache = cache
+        self.resolver = resolver
         
-    def add_dependency(self, **kwargs):
-        sha1 = self.__hash_dependency(**kwargs)
-        self.dependency_manager.add_dependency(sha1=sha1, **kwargs)
+    def add_dependency(self, name, sha1, **kwargs):
+        """ Resolve the path to the dependency.
+         
+        :param name: The name of the dependency as a string.
+        :param sha1: The hash of the dependency as a string.
+        :param kwargs: Keyword arguments containing options for the dependency.
+        
+        :return: The path to the dependency as a string.
+        """
+        
+        
 
-    def __hash_dependency(self, **kwargs):
-        s = json.dumps(kwargs, sort_keys=True)
-        return hashlib.sha1(s.encode('utf-8')).hexdigest()
+
+        sha1 = self.__hash_dependency(**kwargs)
+        self.resolver.add_dependency(sha1=sha1, **kwargs)
+
+    def __store_dependency(self, name, config):
+
+        config_path = os.path.join(
+            self.bundle_config_path, name + '.resolve.json')
+
+        with open(config_path, 'w') as config_file:
+            json.dump(config, config_file)
+
+
+    def __skip_dependency(self, name, sha1):
+        """ Checks if the depenency is already resolved.
+        
+        :param name: The name of the dependency as a string.
+        :param sha1: The hash of the dependency as a string.
+
+        :return: True if the dependency is already resolved, otherwise False.
+        """
+
+        if name not in self.cache:
+            return False
+
+        if sha1 == self.cache[name]['sha1']:
+            # We already have resolved this dependency
+            return True
+        else:
+            self.ctx.fatal("Mismatch dependency")
 
     def __repr__(self):
+        """ 
+        :return: Representation of this object as a string
+        """
+
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 
