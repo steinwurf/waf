@@ -173,18 +173,23 @@ class WurfUserResolve(object):
     User Path Resolver functionality. Allows the user to specify the path.
     """
 
-    def __init__(self, options_parser, args, resolver):
+    def __init__(self, options_parser, cache, args, resolver, ctx):
         """ Construct an instance.
 
         :param option_parser: An argparse.ArgumentParser() instance.
+        :param cache: Dict object where the resolved dependency meta data will
+            be stored.
         :param args: A list containing the command-line arguments we want to
             parse.
         :param resolver: The resolver to use if a path option is not available
             in the args list.
+        :param ctx: A Waf Context instance.
         """
         self.options_parser = options_parser
+        self.cache
         self.args = args
         self.resolver = resolver
+        self.ctx = ctx
         self.parsed_options = {}
 
     def __parse_arguement(self, name):
@@ -221,10 +226,14 @@ class WurfUserResolve(object):
         path = self.__parse_arguement(name)
 
         if path:
-            return path
-        else:
-            return self.dependency_manager.add_dependency(
-                name=name, **kwargs)
+            self.ctx.start_msg('User dependency {}'.format(name))
+            self.cache[name]['path'] = path
+            self.ctx.end_msg(path)
+            return
+        
+        self.resolver.add_dependency(name=name, **kwargs)
+
+        
 
     def __repr__(self):
         """

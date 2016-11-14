@@ -57,6 +57,17 @@ The basic
 Design
 ======
 
+Notes
+-----
+
+It does not make sense to store anything but the path and sha1 in the 
+persistant cache files. The reason is that with the sha1 we know that the
+options passed to add_dependency(...) is the same as during the active resolve.
+
+
+
+------
+
 The basic idea to extend waf with the capability of fetching/downloading
 dependencies of projects automatically.
 
