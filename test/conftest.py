@@ -1,9 +1,12 @@
 import sys
+import mock
 
 from fixtures.test_directory import test_directory
 
-sys.modules['waflib.extras.wurf'] = ""
-sys.modules['waflib.extras.wurf.wurf_registry'] = __import__('wurf_registry')
+import wurf
+
+sys.modules['waflib.extras.wurf'] = wurf
+
 
 #print(sys.modules)
 #exit(0)

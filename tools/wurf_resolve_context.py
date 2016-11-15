@@ -12,7 +12,7 @@ from waflib import Logs
 from waflib import ConfigSet
 from waflib import Node
 
-from waflib.extras.wurf import wurf_registry
+from waflib.extras.wurf import registry
 import shutilwhich
 
 
