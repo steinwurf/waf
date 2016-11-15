@@ -21,7 +21,7 @@ class WurfGitResolver(object):
         self.url_resolver = url_resolver
         self.ctx = ctx
 
-    def resolve(self, name, cwd, source):
+    def resolve(self, name, cwd, source, **kwargs):
         """
         Fetches the dependency if necessary.
         :param ctx: A waf ConfigurationContext

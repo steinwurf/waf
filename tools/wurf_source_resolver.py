@@ -92,6 +92,14 @@ class WurfGitMethodResolver(object):
 
         - First see if the user has provided some options
         - Then use the specified git method
+
+        :param name: Name of the dependency as a string
+        :param cwd: Current working directory as a string
+        :param source: URL of the git repository as a string
+        :param method: The git method to use.
+        :param kwargs: Keyword arguments containing options for the dependency
+
+        :return: Path to resolved dependency as a string
         """
 
         # Try user method
@@ -107,6 +115,9 @@ class WurfGitMethodResolver(object):
 
 
     def __repr__(self):
+        """
+        :return: Representation of this object as a string
+        """
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 
@@ -134,6 +145,19 @@ class WurfSourceResolver(object):
         self.ctx = ctx
 
     def resolve(self, name, cwd, resolver, sources, **kwargs):
+        """ Resolve the dependency.
+
+        - First see if the user has provided some options
+        - Then use the specified git method
+
+        :param name: Name of the dependency as a string
+        :param cwd: Current working directory as a string
+        :param resolver: The type of resolver to use.
+        :param sources: List of URLs which can be used for the dependency.
+        :param kwargs: Keyword arguments containing options for the dependency
+
+        :return: Path to resolved dependency as a string
+        """
 
         # Try user method
         for r in self.user_resolvers:
@@ -168,90 +192,17 @@ import os
 import hashlib
 import json
 
-class WurfUserResolve(object):
-    """
-    User Path Resolver functionality. Allows the user to specify the path.
-    """
-
-    def __init__(self, options_parser, cache, args, resolver, ctx):
-        """ Construct an instance.
-
-        :param option_parser: An argparse.ArgumentParser() instance.
-        :param cache: Dict object where the resolved dependency meta data will
-            be stored.
-        :param args: A list containing the command-line arguments we want to
-            parse.
-        :param resolver: The resolver to use if a path option is not available
-            in the args list.
-        :param ctx: A Waf Context instance.
-        """
-        self.options_parser = options_parser
-        self.cache
-        self.args = args
-        self.resolver = resolver
-        self.ctx = ctx
-        self.parsed_options = {}
-
-    def __parse_arguement(self, name):
-        """ Parse the self.args and see if an --name-path option is present.
-
-        If the option is found use that path.
-
-        :param name: The name of the dependency we are looking for.
-        """
-
-        option = '--%s-path' % name
-
-        if option in self.parsed_options:
-            return self.parsed_options[option]
-
-        self.options_parser.add_argument(option, default=None, dest=option)
-
-        known_args, unknown_args = self.options_parser.parse_known_args()
-
-        # Use vars(...) function to convert argparse.Namespace() to dict
-        self.parsed_options = vars(known_args)
-
-        return self.parsed_options[option]
-
-    def add_dependency(self, name, **kwargs):
-        """ Resolve the path to the dependency.
-
-        :param name: The name of the dependency as a string
-        :param kwargs: Keyword arguments containing options for the dependency.
-
-        :return: The path to the dependency as a string.
-        """
-
-        path = self.__parse_arguement(name)
-
-        if path:
-            self.ctx.start_msg('User dependency {}'.format(name))
-            self.cache[name]['path'] = path
-            self.ctx.end_msg(path)
-            return
-        
-        self.resolver.add_dependency(name=name, **kwargs)
-
-        
-
-    def __repr__(self):
-        """
-        :return: Representation of this object as a string
-        """
-        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
-
 
 
 
 class WurfHashDependency(object):
-    def __init__(self, resolver):
+    def __init__(self, next_resolver):
         """ Construct an instance.
 
-        :param resolver: The resolver where the depenency options including the
+        :param next_resolver: The resolver where the depenency options including the
             computed hash will be forwarded.
         """
-        self.resolver = resolver
+        self.next_resolver = next_resolver
 
     def add_dependency(self, **kwargs):
         """ Resolve the path to the dependency.
@@ -266,7 +217,7 @@ class WurfHashDependency(object):
 
         sha1 = self.__hash_dependency(**kwargs)
 
-        self.resolver.add_dependency(sha1=sha1, **kwargs)
+        self.next_resolver.add_dependency(sha1=sha1, **kwargs)
 
     def __hash_dependency(self, **kwargs):
         """ Hash the keyword arguments representing the  to the dependency.
@@ -284,38 +235,52 @@ class WurfHashDependency(object):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 
-class WurfSkipInCacheDependency(object):
-    def __init__(self, cache, resolver):
+class WurfSkipSeenDependency(object):
+    def __init__(self, next_resolver, ctx):
         """ Construct an instance.
 
-        :param cache: Dict object where the resolved dependency meta data will
-            be stored.
-        :param resolver: The resolver where the depenency options including the
-            computed hash will be forwarded.
+        :param next_resolver: The resolver where the depenency options including
+            the computed hash will be forwarded.
+        :param ctx: A Waf Context instance.
         """
+        self.next_resolver = next_resolver
 
-        self.cache = cache
-        self.resolver = resolver
+        # The seen_dependencies dict stores the hash and path of already
+        # resolved dependencies. If a dependency is resolved twice the path will
+        # be taken from the cache.
+        #
+        # The dict will have the following "layout":
+        #
+        #     {'nameX': {'sha1': 'hashX', 'options': {...}},
+        #      'nameY': {'sha1': 'hashY', 'options': {...}},
+        #      'nameZ': {'sha1': 'hashZ', 'options': {...}}
+        self.seen_dependencies = {}
 
     def add_dependency(self, name, sha1, **kwargs):
         """ Resolve the path to the dependency.
 
+        :param name: Name of the dependency as a string
+        :param sha1: Hash of the dependency options as a string
         :param kwargs: Keyword arguments containing options for the dependency.
-
-        :return: The path to the dependency as a string.
         """
 
-        if name in self.cache:
+        if name in self.seen_dependencies:
 
-            if self.cache[name]['sha1'] != sha1:
-                self.ctx.fatal("SHA1 mismatch adding dependency")
+            seen_sha1 = self.seen_dependencies[name]['sha1']
+
+            if seen_sha1 != sha1:
+                seen_options = self.seen_dependencies[name]['options']
+
+                self.ctx.fatal(
+                    "SHA1 mismatch adding dependency {} using {} was {}".format(
+                    name, kwargs, seen_options))
 
             # This dependency is already in the cache lets leave
             return
 
-        self.cache[name] = {'sha1': sha1}
+        self.seen_dependencies[name] = {'sha1': sha1, 'options': kwargs}
 
-        self.resolver.add_dependency(**kwargs)
+        self.next_resolver.add_dependency(name=name, sha1=sha1, **kwargs)
 
     def __repr__(self):
         """
@@ -323,35 +288,45 @@ class WurfSkipInCacheDependency(object):
         """
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
-class WurfStoreCachedDependency(object):
-    def __init__(self, cache, resolver, bundle_config_path):
+class WurfCacheDependency(object):
+    def __init__(self, next_resolver, cache):
         """ Construct an instance.
+
+        Caching the dependency, typically this is the final step in the
+        add_dependency(...) chain.
+
+        The dependency cache is used to run Waf commands in resolved
+        dependencies.
+
+        The cache will have the following "layout":
+
+            cache = {'nameX': {'recurse': True, 'path': '/tmpX'},
+                     'nameY': {'recurse': False, 'path': '/tmpY'},
+                     'nameZ': {'recruse': True, 'path': '/tmpZ'}}
 
         :param cache: Dict object where the resolved dependency meta data will
             be stored.
-        :param resolver: The resolver where the depenency options including the
-            computed hash will be forwarded.
         """
 
+        self.next_resolver = next_resolver
         self.cache = cache
-        self.resolver = resolver
-        self.bundle_config_path = bundle_config_path
 
-    def add_dependency(self, name, **kwargs):
+    def add_dependency(self, name, path, recurse, **kwargs):
         """ Resolve the path to the dependency.
 
+        :param name: Name of the dependency as a string
+        :param path: Path to the dependency as a string
+        :param recurse: Boolean showing whether the dependency should be
+            recursed
         :param kwargs: Keyword arguments containing options for the dependency.
-
-        :return: The path to the dependency as a string.
         """
-        self.resolver.add_dependency(**kwargs)
 
-        config_path = os.path.join(
-            self.bundle_config_path, name + '.resolve.json')
+        if path:
+            config = {'recurse': recurse, 'path': path,}
+            self.cache[name] = config
 
-        with open(config_path, 'w') as config_file:
-            json.dump(config, config_file)
-
+        self.next_resolver.add_dependency(name=name, path=path, recurse=recurse,
+            **kwargs)
 
     def __repr__(self):
         """
@@ -360,39 +335,87 @@ class WurfStoreCachedDependency(object):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 class WurfRecurseDependency(object):
-    def __init__(self, cache, resolver):
+    def __init__(self, next_resolver, ctx):
         """ Construct an instance.
 
-        :param cache: Dict object where the resolved dependency meta data will
-            be stored.
-        :param resolver: The resolver where the depenency options including the
+        :param next_resolver: The resolver where the depenency options including the
             computed hash will be forwarded.
+        :param ctx: A Waf Context instance.
         """
 
-        self.cache = cache
-        self.resolver = resolver
+        self.next_resolver = next_resolver
+        self.ctx = ctx
 
-    def add_dependency(self, name, recurse, **kwargs):
+    def add_dependency(self, path, recurse, **kwargs):
         """ Resolve the path to the dependency.
-
+        :param path: Path to the dependency as a string
+        :param recurse: Boolean showing whether the dependency should be
+            recursed
         :param kwargs: Keyword arguments containing options for the dependency.
-
-        :return: The path to the dependency as a string.
         """
-        self.cache[name]['recurse'] = recurse
-
-        self.resolver.add_dependency(name=name, **kwargs)
-
-        path = self.cache[name]['path']
 
         if recurse and path:
             self.ctx.recurse(path)
+
+        self.next_resolver.add_dependency(path=path, recurse=recurse, **kwargs)
 
     def __repr__(self):
         """
         :return: Representation of this object as a string
         """
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+class WurfStoreDependency(object):
+    def __init__(self, next_resolver, bundle_config_path):
+        """ Construct an instance.
+
+        :param resolver: The resolver where the depenency options including the
+            computed hash will be forwarded.
+        """
+
+        self.next_resolver = next_resolver
+        self.bundle_config_path = bundle_config_path
+
+    def add_dependency(self, sha1, name, path, **kwargs):
+        """ Resolve the path to the dependency.
+
+        :param kwargs: Keyword arguments containing options for the dependency.
+        """
+
+        config_path = os.path.join(
+            self.bundle_config_path, name + '.resolve.json')
+
+        config = {'sha1': sha1, 'path':path}
+
+        with open(config_path, 'w') as config_file:
+            json.dump(config, config_file)
+
+        self.next_resolver.add_dependency(path=path, name=name, sha1=sha1,
+            **kwargs)
+
+    def __repr__(self):
+        """
+        :return: Representation of this object as a string
+        """
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+
+class WurfNullResolver(object):
+
+    def add_dependency(self, **kwargs):
+        """ Resolve the path to the dependency.
+
+        :param kwargs: Keyword arguments containing options for the dependency.
+        """
+
+        pass
+
+    def __repr__(self):
+        """
+        :return: Representation of this object as a string
+        """
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
 
 class WurfFastResolveDependency(object):
     def __init__(self, cache, resolver, bundle_config_path, fast_resolve):
@@ -426,158 +449,17 @@ class WurfFastResolveDependency(object):
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
-class WurfDependencyCache(object):
-    def __init__(self, cache, resolver):
-        """ Construct an instance.
-
-        The dependency cache stores the hash and path of already resolved
-        dependencies. If a dependency is resolved twice the path will be taken
-        from the cache.
-
-        The cache will have the following "layout":
-
-            cache = {'nameX': {'sha1': 'hashX', 'path': '/tmpX'},
-                     'nameY': {'sha1': 'hashY', 'path': '/tmpY'},
-                     'nameZ': {'sha1': 'hashZ', 'path': '/tmpZ'}}
-
-        :param cache: Dict object where resolved dependencies will be stored.
-        :param resolver: Dependency resolver which will do the
-            resolve step on cache miss.
-        """
-
-        self.cache = cache
-        self.resolver = resolver
-
-    def add_dependency(self, name, sha1, **kwargs):
-        """ Resolve the path to the dependency.
-
-        :param name: The name of the dependency as a string.
-        :param sha1: The hash of the dependency as a string.
-        :param kwargs: Keyword arguments containing options for the dependency.
-
-        :return: The path to the dependency as a string.
-        """
-
-        if self.__cache_hit(name, sha1):
-
-            cache_sha1 = self.cache[name]['sha1']
-
-            if cache_sha1 != sha1:
-                self.ctx.fatal("SHA1 mismatch adding dependency")
-
-            return self.cache[name]['path']
-
-        path = self.resolver.add_dependency(name=name, sha1=sha1, **kwargs)
-
-        # We store the information about the resolve state here.
-        # The reason we do it even though we might not have a path is that we
-        # want to avoid trying to resolve a dependency that is optional and
-        # failed leaving path==None again and again.
-        config = {'sha1': sha1, 'path':path}
-        self.cache[name] = config
 
 
+class WurfActiveDependencyResolver(object):
 
-        sha1 = self.__hash_dependency(**kwargs)
-        self.resolver.add_dependency(sha1=sha1, **kwargs)
-
-
-
-    def __store_dependency(self, name, config):
-
-        config_path = os.path.join(
-            self.bundle_config_path, name + '.resolve.json')
-
-        with open(config_path, 'w') as config_file:
-            json.dump(config, config_file)
-
-
-    def __skip_dependency(self, name, sha1):
-        """ Checks if the depenency is already resolved.
-
-        :param name: The name of the dependency as a string.
-        :param sha1: The hash of the dependency as a string.
-
-        :return: True if the dependency is already resolved, otherwise False.
-        """
-
-        if name not in self.cache:
-            return False
-
-        if sha1 == self.cache[name]['sha1']:
-            # We already have resolved this dependency
-            return True
-        else:
-            self.ctx.fatal("Mismatch dependency")
-
-    def __repr__(self):
-        """
-        :return: Representation of this object as a string
-        """
-
-        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
-
-
-
-
-
-
-class WurfActiveDependencyManager(object):
-
-    def __init__(self, ctx, bundle_path, bundle_config_path, source_resolver):
+    def __init__(self, ctx, bundle_path, next_resolver, source_resolver):
         self.ctx = ctx
         self.bundle_path = bundle_path
-        self.bundle_config_path = bundle_config_path
+        self.next_resolver = next_resolver
         self.source_resolver = source_resolver
-        self.dependencies = {}
 
-    def add_dependency(self, **kwargs):
-        sha1 = self.__hash_dependency(**kwargs)
-        self.__resolve_dependency(sha1=sha1, **kwargs)
-
-    def __resolve_dependency(self, sha1, name, recurse, **kwargs):
-
-        if self.__skip_dependency(name=name, sha1=sha1):
-            return
-
-        path = self.__fetch_dependency(name=name, **kwargs)
-
-        # We store the information about the resolve state here.
-        # The reason we do it even though we might not have a path is that we
-        # want to avoid trying to resolve a dependency that is optional and
-        # failed leaving path==None again and again.
-        config = {'sha1': sha1, 'path':path}
-        self.dependencies[name] = config
-
-        if not path:
-            return
-
-        self.__store_dependency(name, config)
-
-        if recurse:
-            self.ctx.recurse(path)
-
-    def __store_dependency(self, name, config):
-
-        config_path = os.path.join(
-            self.bundle_config_path, name + '.resolve.json')
-
-        with open(config_path, 'w') as config_file:
-            json.dump(config, config_file)
-
-
-    def __skip_dependency(self, name, sha1):
-
-        if name not in self.dependencies:
-            return False
-
-        if sha1 == self.dependencies[name]['sha1']:
-            # We already have resolved this dependency
-            return True
-        else:
-            self.ctx.fatal("Mismatch dependency")
-
-    def __fetch_dependency(self, name, optional, **kwargs):
+    def add_dependency(self, name, optional, **kwargs):
 
         self.ctx.start_msg('Resolve dependency {}'.format(name))
 
@@ -594,18 +476,53 @@ class WurfActiveDependencyManager(object):
                 # does not have a license to access the repository, so we just
                 # print the status message and continue
                 self.ctx.end_msg('Unavailable', color='RED')
-                return None
             else:
                 raise
 
         self.ctx.end_msg(path)
 
-        return path
+        self.next_resolver.add_dependency(name=name, optional=optional,
+            path=path, **kwargs)
 
 
-    def __hash_dependency(self, **kwargs):
-        s = json.dumps(kwargs, sort_keys=True)
-        return hashlib.sha1(s.encode('utf-8')).hexdigest()
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+
+class WurfPassiveDependencyResolver(object):
+
+    def __init__(self, ctx, next_resolver, bundle_config_path):
+        self.ctx = ctx
+        self.next_resolver = next_resolver
+        self.bundle_config_path = bundle_config_path
+
+    def __read_config(self, name):
+        """ Hash the keyword arguments representing the  to the dependency.
+
+        :return: Hash of the dependency as a string.
+        """
+
+        config_path = os.path.join(
+            self.bundle_config_path, name + '.resolve.json')
+
+        if not os.path.isfile(config_path):
+            ctx.fatal('No config - re-run configure')
+
+        with open(config_path, 'r') as config_file:
+            return json.load(config_file)
+
+    def add_dependency(self, sha1, name, **kwargs):
+
+        config = self.__read_config(name)
+
+        if sha1 != config['sha1']:
+            ctx.fatal('Failed sha1 check')
+
+        path = config['path']
+
+        self.next_resolver.add_dependency(sha1=sha1, name=name, path=path,
+            **kwargs)
+
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)

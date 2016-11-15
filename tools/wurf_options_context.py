@@ -81,35 +81,18 @@ class WurfOptionsContext(Options.OptionsContext):
         # Call options in all dependencies
         wurf_resolve_context.recurse_dependencies(self)
 
-        # Now invoke execute to recurse in to the option(...) function of
-        # the wscript (if it is defined)
-        #
-        # This will also call parse_args(...) so we need to have recursed
-        # the dependencies options(...) functions first.
-        print("BLABAL 1")
-
-        # Using the %default placeholder:
-        #    http://stackoverflow.com/a/1254491/1717320
-        self.add_option('--bundle-path', default='bundle_dependencies',
-            dest='bundle_path',
-            help='The folder where the bundled dependencies are downloaded.'
-                 '[default: %default]')
-
         # Fetch the arguments not parsed in the resolve step
         self.waf_options = ctx.waf_options
-        
-        super(WurfOptionsContext, self).execute()
 
+        print(sys.modules)
+
+        super(WurfOptionsContext, self).execute()
 
 
     def parse_args(self, _args=None):
         """ Override the parse_args(..) from the OptionsContext.
 
-        Here we inject the arguments which were not consumed in the resolve step
+        Here we inject the arguments which were not consumed in the resolve
+        step.
         """
         super(WurfOptionsContext, self).parse_args(self.waf_options)
-
-    def add_option(self, *k, **kw):
-
-        print(k)
-        super(WurfOptionsContext, self).add_option(*k, **kw)

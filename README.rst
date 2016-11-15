@@ -60,7 +60,7 @@ Design
 Notes
 -----
 
-It does not make sense to store anything but the path and sha1 in the 
+It does not make sense to store anything but the path and sha1 in the
 persistant cache files. The reason is that with the sha1 we know that the
 options passed to add_dependency(...) is the same as during the active resolve.
 
@@ -143,3 +143,13 @@ directory where the tests failed and play around. Once you are done exit
 the virtualenv by running::
 
   $ deactivate
+
+Note, the above does not work anymore since we now invoke Tox from within waf
+and pass needed paths to it.
+
+Finding the log output etc.
+---------------------------
+
+We use pytest to run the waf commands (integration tests). pytest will create
+temporary folders etc. when running the tests. These are created on the fly and
+numbered.

@@ -90,7 +90,15 @@ def build(bld):
 
     tools = ['tools/wurf_entry_point.py',
              'tools/wurf_options_context.py',
-             'tools/wurf_resolve_context.py']
+             'tools/wurf_resolve_context.py',
+             #'tools/wurf_registry.py',
+             'tools/wurf_git.py',
+             'tools/wurf_git_url_resolver.py',
+             'tools/wurf_git_resolver.py',
+             'tools/wurf_git_checkout_resolver.py',
+             'tools/wurf_source_resolver.py',
+             'tools/wurf_user_checkout_resolver.py',
+             'tools/wurf_user_path_resolver.py']
 
     tools_dir = ['temp_clones/shutilwhich/shutilwhich']
 

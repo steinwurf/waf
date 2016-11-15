@@ -12,10 +12,7 @@ from waflib import Logs
 from waflib import ConfigSet
 from waflib import Node
 
-from wurf_dependency import WurfDependency
-from wurf_git_semver_resolver import WurfSemverGitSResolver
-
-import wurf_registry
+from waflib.extras.wurf import wurf_registry
 import shutilwhich
 
 
@@ -74,7 +71,8 @@ class WurfResolveContext(Context.Context):
         self.bldnode = self.path.make_node('build')
         self.bldnode.mkdir()
 
-        # Create a log file if this is an "active" resolve step
+        # Create different log files depending on whether this is an "active"
+        # resolve step
 
         if self.is_active_resolve():
             step = 'active'
@@ -88,13 +86,25 @@ class WurfResolveContext(Context.Context):
 
         git_binary = shutilwhich.which('git')
 
+        # The resolve options
         self.parser = argparse.ArgumentParser(description='Resolve Options')
+
+        bundle_path = os.path.join(self.path.abspath(), 'bundle_dependencies')
+
+        # Using the %default placeholder:
+        #    http://stackoverflow.com/a/1254491/1717320
+        self.parser.add_argument('--bundle-path', default=bundle_path,
+            dest='bundle_path',
+            help='The folder where the bundled dependencies are downloaded.'
+                 '[default: %default]')
+
+        cache = {}
 
         self.registry = wurf_registry.build_registry(
             ctx=self, opt=self.parser, git_binary=git_binary,
             bundle_path=self.bundle_path(),
             bundle_config_path=self.bundle_config_path(),
-            active_resolve=self.is_active_resolve())
+            active_resolve=self.is_active_resolve(), cache=cache)
 
         self.dependency_manager = self.registry.require('dependency_manager')
 
@@ -111,8 +121,7 @@ class WurfResolveContext(Context.Context):
         # value retuned by parse_known_args(...)
         _, self.waf_options = self.parser.parse_known_args()
 
-    def create_resolvers():
-        pass
+        self.logger.debug('cache: {}'.format(cache))
 
 
     def bundle_config_path(self):
@@ -143,44 +152,9 @@ class WurfResolveContext(Context.Context):
         # dependencies to fetch the options from these.
         return 'configure' in sys.argv and not show_help
 
-    def user_defined_dependency_path(self, name):
-
-        p = argparse.ArgumentParser()
-        p.add_argument('--%s-path' % name, dest='dependency_path',
-                       default="", type=str)
-        args, unknown = p.parse_known_args(args=sys.argv[1:])
-
-        return args.dependency_path
-
-    def has_user_defined_dependency_path(self, name):
-
-        return self.user_defined_dependency_path(name)
-
 
     def add_dependency(self, **kwargs):
         """Adds a dependency.
-
-        :param name: The name of the dependency. Must be unique.
-
-        :param resolver: a resolver object which is responsible for downloading
-                     the dependency if necessary
-        :param recursive_resolve: specifies if it is allowed to recurse into the
-        dependency wscript after the dependency is resolved
-        :param optional: specifies if this dependency is optional (an optional
-                     dependency might not be resolved if unavailable)
         """
 
-        print("ADD dependency")
-
         self.dependency_manager.add_dependency(**kwargs)
-        #assert(0)
-
-    def active_resolve(self, **kwargs):
-        pass
-
-    def passive_resolve(self, **kwargs):
-        pass
-
-    def hash_dependency(self, **kwargs):
-        s = json.dumps(kwargs, sort_keys=True)
-        return hashlib.sha1(s.encode('utf-8')).hexdigest()

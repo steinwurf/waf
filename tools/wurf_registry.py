@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import inspect
-
 import wurf_git
 import wurf_git_url_resolver
 import wurf_git_resolver
@@ -104,21 +102,69 @@ def build_git_url_resolver(registry):
 
     return wurf_git_url_resolver.WurfGitUrlResolver()
 
+
+
 def build_dependency_manager(registry):
 
     ctx = registry.require('ctx')
     bundle_path = registry.require('bundle_path')
     bundle_config_path = registry.require('bundle_config_path')
     source_resolver = registry.require('source_resolver')
+    cache = registry.require('cache')
 
-    return wurf_source_resolver.WurfActiveDependencyManager(
+    resolver = wurf_source_resolver.WurfNullResolver()
+
+    resolver = wurf_source_resolver.WurfCacheDependency(
+        next_resolver=resolver, cache=cache)
+
+    resolver = wurf_source_resolver.WurfRecurseDependency(
+            next_resolver=resolver, ctx=ctx)
+
+    resolver = wurf_source_resolver.WurfStoreDependency(
+            next_resolver=resolver, bundle_config_path=bundle_config_path)
+
+    resolver = wurf_source_resolver.WurfActiveDependencyResolver(
         ctx=ctx,
         bundle_path=bundle_path,
-        bundle_config_path=bundle_config_path,
+        next_resolver=resolver,
         source_resolver=source_resolver)
 
+    resolver = wurf_source_resolver.WurfSkipSeenDependency(
+        ctx=ctx, next_resolver=resolver)
+
+    resolver = wurf_source_resolver.WurfHashDependency(next_resolver=resolver)
+
+    return resolver
+
+def build_passive_dependency_manager(registry):
+
+    ctx = registry.require('ctx')
+    bundle_config_path = registry.require('bundle_config_path')
+    source_resolver = registry.require('source_resolver')
+    cache = registry.require('cache')
+
+    resolver = wurf_source_resolver.WurfNullResolver()
+
+    resolver = wurf_source_resolver.WurfCacheDependency(
+        next_resolver=resolver, cache=cache)
+
+    resolver = wurf_source_resolver.WurfRecurseDependency(
+            next_resolver=resolver, ctx=ctx)
+
+    resolver = wurf_source_resolver.WurfPassiveDependencyResolver(
+        ctx=ctx,
+        bundle_config_path=bundle_config_path,
+        next_resolver=resolver)
+
+    resolver = wurf_source_resolver.WurfSkipSeenDependency(
+        ctx=ctx, next_resolver=resolver)
+
+    resolver = wurf_source_resolver.WurfHashDependency(next_resolver=resolver)
+
+    return resolver
+
 def build_registry(ctx, opt, git_binary, bundle_path, bundle_config_path,
-    active_resolve):
+    active_resolve, cache):
     """ Builds a registry.
 
 
@@ -131,7 +177,8 @@ def build_registry(ctx, opt, git_binary, bundle_path, bundle_config_path,
         dependencies config json files should be / is stored.
     :param active_resolve: Boolean which is True if this is an active resolve
         otherwise False.
-
+    :param cache: Dict object which will contain the path to the resolved
+        dependencies.
     :returns:
         A new Registery instance.
     """
@@ -144,6 +191,7 @@ def build_registry(ctx, opt, git_binary, bundle_path, bundle_config_path,
     registry.provide_value('bundle_path', bundle_path)
     registry.provide_value('bundle_config_path', bundle_config_path)
     registry.provide_value('active_resolve', active_resolve)
+    registry.provide_value('cache', cache)
 
     registry.provide('git', build_wurf_git)
     registry.provide('git_url_resolver', build_git_url_resolver)
@@ -153,6 +201,11 @@ def build_registry(ctx, opt, git_binary, bundle_path, bundle_config_path,
     registry.provide('user_path_resolver', build_wurf_user_path_resolver)
     registry.provide('git_method_resolver', build_wurf_git_method_resolver)
     registry.provide('source_resolver', build_source_resolver)
-    registry.provide('dependency_manager', build_dependency_manager)
+
+    if active_resolve:
+        registry.provide('dependency_manager', build_dependency_manager)
+    else:
+        registry.provide('dependency_manager', build_passive_dependency_manager)
+
 
     return registry
