@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import wurf_git
-import wurf_git_url_resolver
-import wurf_git_resolver
-import wurf_git_checkout_resolver
-import wurf_source_resolver
-import wurf_user_checkout_resolver
-import wurf_user_path_resolver
+from . import wurf_git
+from . import wurf_git_url_resolver
+from . import wurf_git_resolver
+from . import wurf_git_checkout_resolver
+from . import wurf_source_resolver
+from . import wurf_user_checkout_resolver
+from . import wurf_user_path_resolver
 
 class Registry(object):
 
