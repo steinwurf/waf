@@ -63,7 +63,7 @@ import copy
 from waflib import Context
 from waflib import Options
 
-import wurf_resolve_context
+from . import wurf_resolve_context
 
 class WurfOptionsContext(Options.OptionsContext):
 
