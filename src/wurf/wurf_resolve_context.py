@@ -19,7 +19,7 @@ import shutilwhich
 
 # To create the tree. https://gist.github.com/hrldcpr/2012250
 
-dependencies = dict()
+dependency_cache = dict()
 """Dictionary that stores the dependencies resolved.
 
 The dictionary will be initialized by the WurfResolveContext and can be
@@ -29,20 +29,20 @@ figure out which dependencies exist.
 """
 
 def recurse_dependencies(ctx):
-
-    for name, dependency in dependencies.items():
-
-        ctx.to_log("Recurse dependency {}".format(name))
-
-        if dependency.has_path() and dependency.requires_recurse():
-
-            ctx.to_log("Recurse for {}: cmd={}, path={}".format(
-                name, ctx.cmd, dependency.path()))
-
-            ctx.recurse(dependency.path())
-
-        if ctx.cmd == 'options':
-            dependency.add_options(ctx)
+    pass
+    # for name, dependency in dependency_cache.items():
+    # 
+    #     ctx.to_log("Recurse dependency {}".format(name))
+    # 
+    #     if dependency.has_path() and dependency.requires_recurse():
+    # 
+    #         ctx.to_log("Recurse for {}: cmd={}, path={}".format(
+    #             name, ctx.cmd, dependency.path()))
+    # 
+    #         ctx.recurse(dependency.path())
+    # 
+    #     if ctx.cmd == 'options':
+    #         dependency.add_options(ctx)
 
 
 class WurfResolveContext(Context.Context):
@@ -99,13 +99,11 @@ class WurfResolveContext(Context.Context):
             help='The folder where the bundled dependencies are downloaded.'
                  '[default: %default]')
 
-        cache = {}
-
         self.registry = wurf_registry.build_registry(
             ctx=self, opt=self.parser, git_binary=git_binary,
             bundle_path=self.bundle_path(),
             bundle_config_path=self.bundle_config_path(),
-            active_resolve=self.is_active_resolve(), cache=cache)
+            active_resolve=self.is_active_resolve(), cache=dependency_cache)
 
         self.dependency_manager = self.registry.require('dependency_manager')
 
@@ -122,7 +120,7 @@ class WurfResolveContext(Context.Context):
         # value retuned by parse_known_args(...)
         _, self.waf_options = self.parser.parse_known_args()
 
-        self.logger.debug('cache: {}'.format(cache))
+        self.logger.debug('wurf: dependency_cache {}'.format(dependency_cache))
 
 
     def bundle_config_path(self):

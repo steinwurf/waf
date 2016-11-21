@@ -1,13 +1,14 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import wurf_git
-import wurf_git_url_resolver
-import wurf_git_resolver
-import wurf_git_checkout_resolver
-import wurf_source_resolver
-import wurf_user_checkout_resolver
-import wurf_user_path_resolver
+from . import wurf_git
+from . import wurf_git_url_resolver
+from . import wurf_git_resolver
+from . import wurf_git_checkout_resolver
+from . import wurf_git_semver_resolver
+from . import wurf_source_resolver
+from . import wurf_user_checkout_resolver
+from . import wurf_user_path_resolver
 
 class Registry(object):
 
@@ -49,13 +50,24 @@ def build_wurf_git_checkout_resolver(registry):
     return wurf_git_checkout_resolver.WurfGitCheckoutResolver(
         git=git, git_resolver=git_resolver, ctx=ctx)
 
+def build_wurf_git_semver_resolver(registry):
+    """ Builds a WurfGitSemverResolver instance."""
+
+    git = registry.require('git')
+    git_resolver = registry.require('git_resolver')
+    ctx = registry.require('ctx')
+
+    return wurf_git_semver_resolver.WurfGitSemverResolver(
+        git=git, git_resolver=git_resolver, ctx=ctx)
+
 def build_wurf_git_method_resolver(registry):
     """ Builds a WurfGitMethodResolver instance."""
 
     user_methods = [registry.require('user_checkout_resolver')]
 
     git_methods = {
-        'checkout': registry.require('git_checkout_resolver')}
+        'checkout': registry.require('git_checkout_resolver'),
+        'semver': registry.require('git_semver_resolver')}
 
     return wurf_source_resolver.WurfGitMethodResolver(
         user_methods=user_methods, git_methods=git_methods)
@@ -197,6 +209,7 @@ def build_registry(ctx, opt, git_binary, bundle_path, bundle_config_path,
     registry.provide('git_url_resolver', build_git_url_resolver)
     registry.provide('git_resolver', build_wurf_git_resolver)
     registry.provide('git_checkout_resolver', build_wurf_git_checkout_resolver)
+    registry.provide('git_semver_resolver', build_wurf_git_semver_resolver)
     registry.provide('user_checkout_resolver', build_wurf_user_checkout_resolver)
     registry.provide('user_path_resolver', build_wurf_user_path_resolver)
     registry.provide('git_method_resolver', build_wurf_git_method_resolver)

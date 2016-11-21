@@ -38,6 +38,15 @@ def resolve(ctx):
         method='checkout',
         checkout='waf-1.9.5',
         sources=['github.com/waf-project/waf.git'])
+        
+    ctx.add_dependency(
+        name='meta',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='semver',
+        major=1,
+        sources=['github.com/steinwurf/meta.git'])
 
 
 def options(opt):
@@ -49,4 +58,5 @@ def configure(conf):
 
 
 def build(bld):
-    pass
+    print("PATH ", bld.dependency_path('waf'))
+    print("PATH ", bld.dependency_path('meta'))

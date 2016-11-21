@@ -11,23 +11,25 @@ class WurfGitCheckoutResolver(object):
     """
 
     def __init__(self, git, git_resolver, ctx):
-        """ Construct a new WurfGitCheckoutResolver instance.
+        """ Construct an instance.
 
-        Args:
-            git: A WurfGit instance
-            url_resolver: A WurfGitResolver instance.
-            ctx: A Waf Context instance.
+        :param git: A WurfGit instance
+        :param url_resolver: A WurfGitResolver instance.
+        :param ctx: A Waf Context instance.
         """
         self.git = git
         self.git_resolver = git_resolver
         self.ctx = ctx
 
     def resolve(self, name, cwd, source, checkout, **kwargs):
-        """
-        Fetches the dependency if necessary.
-        :param ctx: A waf ConfigurationContext
-        :param path: The path where the dependency should be located
-        :param use_checkout: If not None the given checkout will be used
+        """ Fetches the dependency if necessary.
+        
+        :param name: Name of the dependency as a string
+        :param cwd: Current working directory as a string. This is the place 
+                    where we should create new folders etc.
+        :param source: URL of the repository as a string.
+        :param checkout: The branch, tag, or sha1 as a string.
+        :param kwargs: Remaining keyword arguments.
         """
         cwd = os.path.abspath(os.path.expanduser(cwd))
 

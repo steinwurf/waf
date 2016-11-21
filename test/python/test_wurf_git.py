@@ -1,7 +1,7 @@
 import pytest
 import mock
 
-from wurf import git as wurf_git
+from wurf import wurf_git
 
 def test_wurf_git_version():
 

@@ -144,6 +144,19 @@ class WurfGit(object):
             self.init_submodules(cwd=cwd)
             self.update_submodules(cwd=cwd)
 
+    def tags(self, cwd):
+        """
+        Runs 'git tag -l' in the directory cwd and returns the tags
+        
+        :param cwd: The current working directory as a string
+        """
+        args = [self.git_binary, 'tag', '-l']
+        output = self.ctx.cmd_and_log(args, cwd=cwd)
+        
+        tags = output.split('\n')
+        return [t for t in tags if t != '']
+
+
 # try:
 #     import _winreg
 # except:

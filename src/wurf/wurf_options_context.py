@@ -84,8 +84,6 @@ class WurfOptionsContext(Options.OptionsContext):
         # Fetch the arguments not parsed in the resolve step
         self.waf_options = ctx.waf_options
 
-        print(sys.modules)
-
         super(WurfOptionsContext, self).execute()
 
 

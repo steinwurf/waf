@@ -8,18 +8,21 @@ from waflib import Build
 top = '.'
 
 def resolve(ctx):
-    pass
+    
 
     # ctx.add_git_semver_dependency(
         # name='waf-tools',
         # git_repository='github.com/steinwurf/waf-tools.git',
         # major=3)
-
-    #ctx.add_git_commit_dependency(
-    #    name='waf',
-    #    git_repository='github.com/waf-project/waf.git',
-    #    commit='waf-1.8.14',
-    #    recursive_resolve=False)
+    return
+    ctx.add_dependency(
+        name='waf',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='waf-1.9.5',
+        sources=['github.com/waf-project/waf.git'])
 
     # ctx.add_git_commit_dependency(
         # name='python-semver',
@@ -58,7 +61,7 @@ def build_waf_binary(tsk):
     tool_paths = ','.join(tool_paths)
 
     # The prelude option
-    prelude = '\timport waflib.extras.wurf_entry_point'
+    prelude = '\timport waflib.extras.wurf.wurf_entry_point'
 
     # Build the command to execute
     command = "python waf-light configure build --make-waf --prelude='{}' --tools={}".format(
@@ -88,22 +91,24 @@ def build(bld):
     #    cwd=bld.dependency_path('waf'),
     #    always=True)
 
-    tools = ['tools/wurf_entry_point.py',
-             'tools/wurf_options_context.py',
-             'tools/wurf_resolve_context.py',
-             'tools/wurf_registry.py',
-             'tools/wurf_git.py',
-             'tools/wurf_git_url_resolver.py',
-             'tools/wurf_git_resolver.py',
-             'tools/wurf_git_checkout_resolver.py',
-             'tools/wurf_source_resolver.py',
-             'tools/wurf_user_checkout_resolver.py',
-             'tools/wurf_user_path_resolver.py']
+    # tools = ['tools/wurf_entry_point.py',
+    #          'tools/wurf_options_context.py',
+    #          'tools/wurf_resolve_context.py',
+    #          'tools/wurf_registry.py',
+    #          'tools/wurf_git.py',
+    #          'tools/wurf_git_url_resolver.py',
+    #          'tools/wurf_git_resolver.py',
+    #          'tools/wurf_git_checkout_resolver.py',
+    #          'tools/wurf_source_resolver.py',
+    #          'tools/wurf_user_checkout_resolver.py',
+    #          'tools/wurf_user_path_resolver.py']
 
-    tools_dir = ['temp_clones/shutilwhich/shutilwhich']
+    tools_dir = ['temp_clones/shutilwhich/shutilwhich',
+                 'temp_clones/python-semver/semver.py',
+                 'src/wurf']
 
     bld(rule=build_waf_binary,
-        source=tools,
+        #source=tools,
         cwd='/home/mvp/dev/steinwurf/waf/temp_clones/waf',
         tools_dir=tools_dir,
         always=True)
@@ -146,14 +151,15 @@ def build(bld):
     my_env = bld.env.derive()
     my_env.env = os.environ
 
-    tools_path = os.path.join(os.getcwd(), 'tools')
+    #tools_path = os.path.join(os.getcwd(), 'tools')
     semver_path = os.path.join(os.getcwd(), 'third_party', 'python-semver')
     shutil_path = os.path.join(os.getcwd(), 'temp_clones', 'shutilwhich')
     wurf_path = os.path.join(os.getcwd(), 'src')
 
-    my_env.env.update({'PYTHONPATH': ':'.join([wurf_path, tools_path, semver_path, shutil_path])})
+    my_env.env.update({'PYTHONPATH': ':'.join([wurf_path, semver_path, shutil_path])})
 
     #print(my_env)
     #print(bld.env)
     bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
-    bld(rule='tox -- -s', env=my_env, always=True)
+    bld(rule='tox', env=my_env, always=True)
+    #bld(rule='tox -- -s', env=my_env, always=True)

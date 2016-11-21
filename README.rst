@@ -5,7 +5,7 @@ We use Waf as our build tool. However, before adding the Waf
 file to the individual projects we first add some additional
 tools to Waf.
 
-These help us to handle library dependencies and toolchains.
+These help us to handle library dependencies and tool-chains.
 
 Installation
 =============
@@ -32,6 +32,12 @@ Build waf and include our custom tools::
 This will produce a waf binary which we may copy into our projects.
 Note that the path to the tools must be absolute.
 
+Source code
+===========
+
+The modifications and additions to Waf are in the `src/wurf` folder. The 
+main files included by Waf is the `src/wurf/wurf_entry_point.py`.
+
 Tools
 =====
 
@@ -47,6 +53,7 @@ tests. To run the tests invoke::
       tox
 
 See tox documentation here: https://tox.readthedocs.org/en/latest/
+
 
 
 Bundle dependencies

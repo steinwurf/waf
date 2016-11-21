@@ -2,7 +2,7 @@ import pytest
 import mock
 import os
 
-from wurf_git_checkout_resolver import WurfGitCheckoutResolver
+from wurf.wurf_git_checkout_resolver import WurfGitCheckoutResolver
 
 def test_wurf_git_checkout_resolver(test_directory):
 
