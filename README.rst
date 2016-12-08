@@ -71,6 +71,21 @@ It does not make sense to store anything but the path and sha1 in the
 persistant cache files. The reason is that with the sha1 we know that the
 options passed to add_dependency(...) is the same as during the active resolve.
 
+Location of the source files is a bit tricky. The reason being that Waf will
+move these files to waflib.extras, this is actually a good thing because if we
+explicitly import from either waflib.extras or use a relative include such as
+from . import. Then we avoid conflicts with system installed packages with the
+same name.
+
+Now when running unit tests our source files will be under:
+
+- src/wurf/wurf_xyz.py
+
+Third party dependencies will be under:
+
+- /home/mvp/bundle_dependencies/some_name
+
+So 
 
 
 ------

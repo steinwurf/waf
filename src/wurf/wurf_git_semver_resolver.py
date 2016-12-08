@@ -4,7 +4,7 @@
 import hashlib
 import os
 import shutil
-import semver
+from waflib.extras import semver
 
 class WurfGitSemverResolver(object):
     """
