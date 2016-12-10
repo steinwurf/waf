@@ -6,6 +6,7 @@ import time
 import mock
 import functools
 import shutilwhich
+import semver
 
 from wurf import wurf_registry
 

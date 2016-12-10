@@ -13,8 +13,9 @@ from waflib import ConfigSet
 from waflib import Node
 
 from . import wurf_registry
-#from waflib.extras.wurf import registry
-import shutilwhich
+
+from waflib.extras import shutilwhich
+from waflib.extras import semver
 
 
 # To create the tree. https://gist.github.com/hrldcpr/2012250
@@ -31,16 +32,16 @@ figure out which dependencies exist.
 def recurse_dependencies(ctx):
     pass
     # for name, dependency in dependency_cache.items():
-    # 
+    #
     #     ctx.to_log("Recurse dependency {}".format(name))
-    # 
+    #
     #     if dependency.has_path() and dependency.requires_recurse():
-    # 
+    #
     #         ctx.to_log("Recurse for {}: cmd={}, path={}".format(
     #             name, ctx.cmd, dependency.path()))
-    # 
+    #
     #         ctx.recurse(dependency.path())
-    # 
+    #
     #     if ctx.cmd == 'options':
     #         dependency.add_options(ctx)
 
@@ -101,7 +102,7 @@ class WurfResolveContext(Context.Context):
 
         self.registry = wurf_registry.build_registry(
             ctx=self, opt=self.parser, git_binary=git_binary,
-            bundle_path=self.bundle_path(),
+            semver=semver, bundle_path=self.bundle_path(),
             bundle_config_path=self.bundle_config_path(),
             active_resolve=self.is_active_resolve(), cache=dependency_cache)
 

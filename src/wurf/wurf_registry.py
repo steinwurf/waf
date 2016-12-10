@@ -56,9 +56,10 @@ def build_wurf_git_semver_resolver(registry):
     git = registry.require('git')
     git_resolver = registry.require('git_resolver')
     ctx = registry.require('ctx')
+    semver = registry.require('semver')
 
     return wurf_git_semver_resolver.WurfGitSemverResolver(
-        git=git, git_resolver=git_resolver, ctx=ctx)
+        git=git, git_resolver=git_resolver, ctx=ctx, semver=semver)
 
 def build_wurf_git_method_resolver(registry):
     """ Builds a WurfGitMethodResolver instance."""
@@ -176,7 +177,7 @@ def build_passive_dependency_manager(registry):
     return resolver
 
 def build_registry(ctx, opt, git_binary, bundle_path, bundle_config_path,
-    active_resolve, cache):
+    active_resolve, cache, semver):
     """ Builds a registry.
 
 
@@ -191,6 +192,7 @@ def build_registry(ctx, opt, git_binary, bundle_path, bundle_config_path,
         otherwise False.
     :param cache: Dict object which will contain the path to the resolved
         dependencies.
+    :param semver: The semver module
     :returns:
         A new Registery instance.
     """
@@ -204,6 +206,7 @@ def build_registry(ctx, opt, git_binary, bundle_path, bundle_config_path,
     registry.provide_value('bundle_config_path', bundle_config_path)
     registry.provide_value('active_resolve', active_resolve)
     registry.provide_value('cache', cache)
+    registry.provide_value('semver', semver)
 
     registry.provide('git', build_wurf_git)
     registry.provide('git_url_resolver', build_git_url_resolver)
