@@ -84,7 +84,7 @@ class WurfResolveContext(Context.Context):
         path = os.path.join(self.bldnode.abspath(), step+'.resolve.log')
         self.logger = Logs.make_logger(path, 'cfg')
 
-        self.logger.debug('Test')
+        self.logger.debug('wurf: Resolve execute')
 
         git_binary = shutilwhich.which('git')
 
@@ -140,7 +140,14 @@ class WurfResolveContext(Context.Context):
         the dependencies i.e. it represents the path in the file system
         where all bundled dependencies are stored.
         """
-        return os.path.join(self.path.abspath(), 'bundle_dependencies')
+        known_args, _ = self.parser.parse_known_args()
+
+        bundle_path = os.path.abspath(os.path.expanduser(
+            known_args.bundle_path))
+
+        Utils.check_dir(bundle_path)
+
+        return bundle_path
 
     def is_active_resolve(self):
 

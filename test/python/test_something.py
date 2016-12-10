@@ -5,6 +5,7 @@ import glob
 import time
 import mock
 import functools
+
 import shutilwhich
 import semver
 
@@ -13,6 +14,8 @@ from wurf import wurf_registry
 def test_copy_file(test_directory):
     test_directory.copy_files('test/prog1/*')
     test_directory.copy_file('build/*/waf')
+
+    print(test_directory.path())
 
     r = test_directory.run('python','waf','configure')
 

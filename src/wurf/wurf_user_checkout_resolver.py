@@ -20,6 +20,9 @@ class WurfUserCheckoutResolver(object):
         """
         self.git_checkout_resolver = git_checkout_resolver
         self.opt = opt
+
+        # dict object serving as a cache, this ensures that for each dependency
+        # we only parse the command-line arguments once.
         self.parsed_options = {}
 
     def __parse_arguement(self, name):

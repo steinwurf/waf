@@ -8,7 +8,7 @@ from waflib import Build
 top = '.'
 
 def resolve(ctx):
-    
+
 
     # ctx.add_git_semver_dependency(
         # name='waf-tools',

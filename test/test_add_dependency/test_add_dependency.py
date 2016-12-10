@@ -13,7 +13,7 @@ def test_add_dependency(test_directory):
     bundle_directory = test_directory.mkdir('bundle_dependencies')
 
 
-    bundle_directory.copy_dir('test/test_add_dependency/libfoo')
+    #bundle_directory.copy_dir('test/test_add_dependency/libfoo')
 
     ##libfoo_directory = bundle_directory.mkdir('libbar-h4sh')
     #libfoo_directory.copy_dir('test/test_add_dependency/libbar')
