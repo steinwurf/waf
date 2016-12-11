@@ -83,7 +83,7 @@ Now when running unit tests our source files will be under:
 
 Third party dependencies will be under:
 
-- /home/mvp/bundle_dependencies/some_name
+- /home/mvp/bundle_dependencies/some_name/thing.py
 
 So 
 

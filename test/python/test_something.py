@@ -13,7 +13,7 @@ from wurf import wurf_registry
 
 def test_copy_file(test_directory):
     test_directory.copy_files('test/prog1/*')
-    test_directory.copy_file('build/*/waf')
+    test_directory.copy_file('build/waf')
 
     print(test_directory.path())
 

@@ -4,7 +4,7 @@
 def test_add_dependency(test_directory):
     """ Integration testing of adding a dependency."""
 
-    test_directory.copy_file('build/*/waf')
+    test_directory.copy_file('build/waf')
     test_directory.copy_file('test/test_add_dependency/wscript')
 
     # The bundle_dependencies directory is the default, so when we do
