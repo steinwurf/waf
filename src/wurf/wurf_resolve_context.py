@@ -91,20 +91,15 @@ class WurfResolveContext(Context.Context):
         # The resolve options
         self.parser = argparse.ArgumentParser(description='Resolve Options')
 
-        bundle_path = os.path.join(self.path.abspath(), 'bundle_dependencies')
-
-        # Using the %default placeholder:
-        #    http://stackoverflow.com/a/1254491/1717320
-        self.parser.add_argument('--bundle-path', default=bundle_path,
-            dest='bundle_path',
-            help='The folder where the bundled dependencies are downloaded.'
-                 '[default: %default]')
+        default_bundle_path = os.path.join(
+            self.path.abspath(), 'bundle_dependencies')
 
         self.registry = wurf_registry.build_registry(
-            ctx=self, opt=self.parser, git_binary=git_binary,
-            semver=semver, bundle_path=self.bundle_path(),
+            ctx=self, parser=self.parser, git_binary=git_binary,
+            semver=semver, default_bundle_path=default_bundle_path,
             bundle_config_path=self.bundle_config_path(),
-            active_resolve=self.is_active_resolve(), cache=dependency_cache)
+            active_resolve=self.is_active_resolve(), cache=dependency_cache,
+            utils=Utils, args=sys.argv[1:])
 
         self.dependency_manager = self.registry.require('dependency_manager')
 

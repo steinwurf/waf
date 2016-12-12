@@ -196,13 +196,11 @@ import json
 
 
 class WurfHashDependency(object):
-    def __init__(self, next_resolver):
-        """ Construct an instance.
+    def __init__(self):
+        """ Construct an instance."""
+        # The next resolver to handle the dependency
+        self.next_resolver = None
 
-        :param next_resolver: The resolver where the depenency options including the
-            computed hash will be forwarded.
-        """
-        self.next_resolver = next_resolver
 
     def add_dependency(self, **kwargs):
         """ Resolve the path to the dependency.
@@ -235,15 +233,65 @@ class WurfHashDependency(object):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 
-class WurfSkipSeenDependency(object):
-    def __init__(self, next_resolver, ctx):
+class WurfBundlePath(object):
+    """
+    Adds and parses the bundle path option.
+    """
+
+    def __init__(self, utils, parser, default_bundle_path, args):
         """ Construct an instance.
 
-        :param next_resolver: The resolver where the depenency options including
-            the computed hash will be forwarded.
+        :param utils: The waflib.Utils module
+        :param parser: An argparse.ArgumentParser instance.
+        :param default_bundle_path: The default bundle path as a string
+        :param args: Argument strings as a list, typically this will come
+            from sys.argv
+        """
+
+        # The next resolver to handle the dependency
+        self.next_resolver = None
+
+        # Using the %default placeholder:
+        #    http://stackoverflow.com/a/1254491/1717320
+        parser.add_argument('--bundle-path',
+            default=default_bundle_path,
+            dest='bundle_path',
+            help='The folder where the bundled dependencies are downloaded.'
+                 '[default: %default]')
+
+        known_args, unknown_args = parser.parse_known_args(args=args)
+
+        self.bundle_path = known_args.bundle_path
+
+        # The waflib.Utils.check_dir function will ensure that the directory
+        # exists
+        utils.check_dir(path=self.bundle_path)
+
+    def add_dependency(self, **kwargs):
+        """ Resolve the path to the dependency.
+
+        :param kwargs: Keyword arguments containing options for the dependency.
+        """
+        self.next_resolver.add_dependency(bundle_path=self.bundle_path,
+            **kwargs)
+
+
+    def __repr__(self):
+        """
+        :return: Representation of this object as a string
+        """
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+
+class WurfSkipSeenDependency(object):
+    def __init__(self, ctx):
+        """ Construct an instance.
+
         :param ctx: A Waf Context instance.
         """
-        self.next_resolver = next_resolver
+
+        # The next resolver to handle the dependency
+        self.next_resolver = None
 
         # The seen_dependencies dict stores the hash and path of already
         # resolved dependencies. If a dependency is resolved twice the path will
@@ -453,19 +501,18 @@ class WurfFastResolveDependency(object):
 
 class WurfActiveDependencyResolver(object):
 
-    def __init__(self, ctx, bundle_path, next_resolver, source_resolver):
+    def __init__(self, ctx, next_resolver, source_resolver):
         self.ctx = ctx
-        self.bundle_path = bundle_path
         self.next_resolver = next_resolver
         self.source_resolver = source_resolver
 
-    def add_dependency(self, name, optional, **kwargs):
+    def add_dependency(self, name, optional, bundle_path, **kwargs):
 
         self.ctx.start_msg('Resolve dependency {}'.format(name))
 
         try:
             path = self.source_resolver.resolve(
-                name=name, cwd=self.bundle_path, **kwargs)
+                name=name, cwd=bundle_path, **kwargs)
 
         except Exception as e:
 

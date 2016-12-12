@@ -11,15 +11,14 @@ class WurfUserCheckoutResolver(object):
     User Commit Resolver functionality. Checks out a specific commit.
     """
 
-    def __init__(self, git_checkout_resolver, opt):
-        """ Construct a new WurfGitCheckoutResolver instance.
+    def __init__(self, git_checkout_resolver, parser):
+        """ Construct an instance.
 
-        Args:
-            git_checkout_resolver: A WurfGitCheckoutResolver instance.
-            opt: A Waf OptionsContext instance.
+        :param git_checkout_resolver: A WurfGitCheckoutResolver instance.
+        :param parser: An argparse.ArgumentParser instance.
         """
         self.git_checkout_resolver = git_checkout_resolver
-        self.opt = opt
+        self.parser = parser
 
         # dict object serving as a cache, this ensures that for each dependency
         # we only parse the command-line arguments once.
@@ -32,9 +31,9 @@ class WurfUserCheckoutResolver(object):
         if option in self.parsed_options:
             return self.parsed_options[option]
 
-        self.opt.add_argument(option, default=None, dest=option)
+        self.parser.add_argument(option, default=None, dest=option)
 
-        known_args, unknown_args = self.opt.parse_known_args()
+        known_args, unknown_args = self.parser.parse_known_args()
 
         # Use vars(...) function to convert argparse.Namespace() to dict
         self.parsed_options = vars(known_args)
@@ -58,4 +57,7 @@ class WurfUserCheckoutResolver(object):
             source=source, checkout=use_checkout)
 
     def __repr__(self):
+        """
+        :return: Representation of this object as a string
+        """
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
