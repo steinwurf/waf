@@ -337,7 +337,7 @@ class WurfSkipSeenDependency(object):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 class WurfCacheDependency(object):
-    def __init__(self, next_resolver, cache):
+    def __init__(self, cache):
         """ Construct an instance.
 
         Caching the dependency, typically this is the final step in the
@@ -356,7 +356,8 @@ class WurfCacheDependency(object):
             be stored.
         """
 
-        self.next_resolver = next_resolver
+        # The next resolver to handle the dependency
+        self.next_resolver = None
         self.cache = cache
 
     def add_dependency(self, name, path, recurse, **kwargs):
@@ -383,15 +384,14 @@ class WurfCacheDependency(object):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 class WurfRecurseDependency(object):
-    def __init__(self, next_resolver, ctx):
+    def __init__(self, ctx):
         """ Construct an instance.
 
-        :param next_resolver: The resolver where the depenency options including the
-            computed hash will be forwarded.
         :param ctx: A Waf Context instance.
         """
 
-        self.next_resolver = next_resolver
+        # The next resolver to handle the dependency
+        self.next_resolver = None
         self.ctx = ctx
 
     def add_dependency(self, path, recurse, **kwargs):
@@ -414,14 +414,15 @@ class WurfRecurseDependency(object):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 class WurfStoreDependency(object):
-    def __init__(self, next_resolver, bundle_config_path):
+    def __init__(self, bundle_config_path):
         """ Construct an instance.
 
         :param resolver: The resolver where the depenency options including the
             computed hash will be forwarded.
         """
 
-        self.next_resolver = next_resolver
+        # The next resolver to handle the dependency
+        self.next_resolver = None
         self.bundle_config_path = bundle_config_path
 
     def add_dependency(self, sha1, name, path, **kwargs):
@@ -501,9 +502,10 @@ class WurfFastResolveDependency(object):
 
 class WurfActiveDependencyResolver(object):
 
-    def __init__(self, ctx, next_resolver, source_resolver):
+    def __init__(self, ctx, source_resolver):
         self.ctx = ctx
-        self.next_resolver = next_resolver
+        # The next resolver to handle the dependency
+        self.next_resolver = None
         self.source_resolver = source_resolver
 
     def add_dependency(self, name, optional, bundle_path, **kwargs):
@@ -538,9 +540,10 @@ class WurfActiveDependencyResolver(object):
 
 class WurfPassiveDependencyResolver(object):
 
-    def __init__(self, ctx, next_resolver, bundle_config_path):
+    def __init__(self, ctx, bundle_config_path):
         self.ctx = ctx
-        self.next_resolver = next_resolver
+        # The next resolver to handle the dependency
+        self.next_resolver = None
         self.bundle_config_path = bundle_config_path
 
     def __read_config(self, name):
