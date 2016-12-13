@@ -128,21 +128,6 @@ class WurfResolveContext(Context.Context):
 
         return self.bldnode.abspath()
 
-    def bundle_path(self):
-        """Returns the bundle path.
-
-        The bundle path is used by the different resolvers to download
-        the dependencies i.e. it represents the path in the file system
-        where all bundled dependencies are stored.
-        """
-        known_args, _ = self.parser.parse_known_args()
-
-        bundle_path = os.path.abspath(os.path.expanduser(
-            known_args.bundle_path))
-
-        Utils.check_dir(bundle_path)
-
-        return bundle_path
 
     def is_active_resolve(self):
 
