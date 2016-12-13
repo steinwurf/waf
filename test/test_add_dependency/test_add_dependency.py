@@ -10,7 +10,7 @@ def test_add_dependency(test_directory):
     # The bundle_dependencies directory is the default, so when we do
     # configure without any arguments dependencies are expected to be
     # placed there.
-    bundle_directory = test_directory.mkdir('bundle_dependencies')
+    #bundle_directory = test_directory.mkdir('bundle_dependencies')
 
 
     #bundle_directory.copy_dir('test/test_add_dependency/libfoo')
@@ -35,6 +35,14 @@ def test_add_dependency(test_directory):
     assert r.returncode == 0, str(r)
 
     r = test_directory.run('python', 'waf', 'configure', '-v', '--waf-path=/tmp')
+
+    assert r.returncode == 0, str(r)
+
+    r = test_directory.run('python', 'waf', 'build', '-v')
+
+    assert r.returncode == 0, str(r)
+
+    r = test_directory.run('python', 'waf', 'configure', '-v', '--bundle-path=okidoki')
 
     assert r.returncode == 0, str(r)
 
