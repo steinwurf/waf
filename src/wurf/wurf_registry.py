@@ -192,12 +192,14 @@ def build_passive_dependency_manager(registry):
     skip_resolver = registry.require('skip_seen_dependency_resolver')
     passive_resolver = registry.require('passive_dependency_resolver')
     recurse_resolver = registry.require('recurse_dependency_resolver')
+    cache_resolver = registry.require('cache_dependency_resolver')
     null_resolver = registry.require('null_dependency_resolver')
 
     hash_resolver.next_resolver = skip_resolver
     skip_resolver.next_resolver = passive_resolver
     passive_resolver.next_resolver = recurse_resolver
-    recurse_resolver.next_resolver = null_resolver
+    recurse_resolver.next_resolver = cache_resolver
+    cache_resolver.next_resolver = null_resolver
 
     return hash_resolver
 
