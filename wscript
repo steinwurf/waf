@@ -3,7 +3,7 @@
 
 import os
 
-from waflib import Build
+import waflib
 
 top = '.'
 
@@ -26,7 +26,7 @@ def resolve(ctx):
         method='checkout',
         checkout='2.4.1',
         sources=['github.com/k-bx/python-semver.git'])
-        
+
     ctx.add_dependency(
         name='shutilwhich',
         recurse=False,
@@ -54,13 +54,15 @@ def build_waf_binary(tsk):
     # Get the working directory
     # Waf checks whether a path is a waflib.Node or string by checking
     # isinstance(str) but in python3 most string are unicode, which makes the
-    # test fail. 
+    # test fail.
     wd = str(getattr(tsk, 'cwd', None))
 
     # Tools dir
     tools_dir = getattr(tsk.generator, 'tools_dir', None)
     tools_dir = [os.path.abspath(os.path.expanduser(d)) for d in tools_dir]
-    print("tools_dir {}".format(tools_dir))
+
+    # Run with ./waf --zones wurf to see the print
+    waflib.Logs.debug("wurf: tools_dir={}".format(tools_dir))
 
     # Get the absolute path to all the tools (passed as input to the task)
     tool_paths = [t.abspath() for t in tsk.inputs] + tools_dir
@@ -73,7 +75,15 @@ def build_waf_binary(tsk):
     command = "python waf-light configure build --make-waf --prelude='{}' --tools={}".format(
         prelude, tool_paths)
 
-    return tsk.exec_command(command, cwd=wd)
+    # Get the waf BuildContext
+    bld = tsk.generator.bld
+    bld.cmd_and_log(command, cwd=wd, quiet=waflib.Context.BOTH)
+
+    # Copy the waf binary to the build folder
+    waf_src = bld.root.find_resource(os.path.join(wd, 'waf'))
+    waf_dest = bld.bldnode.make_node('waf')
+    waf_dest.write(waf_src.read('rb'), 'wb')
+
 
 def build(bld):
 
@@ -81,7 +91,7 @@ def build(bld):
     # different tasks. We can ask waf to lazily do this because the waf
     # binary is not created until after we run the waf-light build
     # step. This is manipulated using the post_mode.
-    bld.post_mode = Build.POST_LAZY
+    bld.post_mode = waflib.Build.POST_LAZY
 
     # We need to invoke the waf-light from within the third_party/waf
     # folder as waf-light will look for wscript in the folder where the
@@ -101,12 +111,15 @@ def build(bld):
 
     bld.add_group()
 
+
+
+
     # Copy the waf binary to build directory
-    bld(features='subst',
-        source=#bld.root.find_node(
-            str(os.path.join(bld.dependency_path('waf'), 'waf')),
-        target=bld.bldnode.make_node('waf'),
-        is_copy=True)
+    #bld(features='subst',
+    #    source=#bld.root.find_node(
+    #        str(os.path.join(bld.dependency_path('waf'), 'waf')),
+    #    target='waf',
+    #    is_copy=True)
 
     # Make a build group will ensure that
     #bld.add_group()
@@ -119,13 +132,13 @@ def build(bld):
     # We run tox at the end since we will use the freshly built waf binary
     # in some of the tests.
 
-    #my_env = bld.env.derive()
-    #my_env.env = os.environ
+    my_env = bld.env.derive()
+    my_env.env = os.environ
 
 
-    #semver_path = bld.dependency_path('python-semver')
-    #shutil_path = bld.dependency_path('shutilwhich')
-    #wurf_path = os.path.join(os.getcwd(), 'src')
+    semver_path = bld.dependency_path('python-semver')
+    shutil_path = bld.dependency_path('shutilwhich')
+    wurf_path = os.path.join(os.getcwd(), 'src')
 
     #my_env.env.update({'PYTHONPATH': ':'.join([wurf_path, semver_path, shutil_path])})
 
