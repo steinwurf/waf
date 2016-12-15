@@ -10,10 +10,7 @@ import shutil
 
 def resolve(ctx):
 
-    # Replace git clone
-    #ctx.git_clone = mock.Mock()
-    #ctx.
-    #return
+
 
     def fake_git_clone(ctx, source, destination, cwd):
         """ Mocking the resolve function which is the one called when

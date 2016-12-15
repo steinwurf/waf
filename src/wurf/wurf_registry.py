@@ -86,9 +86,10 @@ def build_wurf_user_path_resolver(registry):
     """ Builds a WurfUserPathResolver instance."""
 
     parser = registry.require('parser')
+    args = registry.require('args')
 
     return wurf_user_path_resolver.WurfUserPathResolver(
-        parser=parser)
+        parser=parser, args=args)
 
 def build_source_resolver(registry):
     """ Builds a WurfSourceResolver instance."""

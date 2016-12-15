@@ -11,12 +11,13 @@ class WurfUserPathResolver(object):
     User Path Resolver functionality. Allows the user to specify the path.
     """
 
-    def __init__(self, parser):
+    def __init__(self, parser, args):
         """ Construct an instance.
 
         :param parser: An argpase.ArgumentParser() instance
         """
         self.parser = parser
+        self.args = args
         self.parsed_options = {}
 
     def __parse_arguement(self, name):
@@ -28,7 +29,7 @@ class WurfUserPathResolver(object):
 
         self.parser.add_argument(option, default=None, dest=option)
 
-        known_args, unknown_args = self.parser.parse_known_args()
+        known_args, unknown_args = self.parser.parse_known_args(args=self.args)
 
         # Use vars(...) function to convert argparse.Namespace() to dict
         self.parsed_options = vars(known_args)

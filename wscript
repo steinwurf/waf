@@ -140,8 +140,9 @@ def build(bld):
     shutil_path = bld.dependency_path('shutilwhich')
     wurf_path = os.path.join(os.getcwd(), 'src')
 
-    #my_env.env.update({'PYTHONPATH': ':'.join([wurf_path, semver_path, shutil_path])})
+    my_env.env.update({'PYTHONPATH': ':'.join(
+        [wurf_path, semver_path, shutil_path])})
 
     #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
-    #bld(rule='tox', env=my_env, always=True)
+    bld(rule='tox', env=my_env, always=True)
     #bld(rule='tox -- -s', env=my_env, always=True)
