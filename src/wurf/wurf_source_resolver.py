@@ -556,7 +556,7 @@ class WurfPassiveDependencyResolver(object):
             self.bundle_config_path, name + '.resolve.json')
 
         if not os.path.isfile(config_path):
-            ctx.fatal('No config - re-run configure')
+            self.ctx.fatal('No config - re-run configure')
 
         with open(config_path, 'r') as config_file:
             return json.load(config_file)
@@ -566,7 +566,7 @@ class WurfPassiveDependencyResolver(object):
         config = self.__read_config(name)
 
         if sha1 != config['sha1']:
-            ctx.fatal('Failed sha1 check')
+            self.ctx.fatal('Failed sha1 check')
 
         path = config['path']
 
