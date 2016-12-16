@@ -84,7 +84,6 @@ def build_waf_binary(tsk):
     waf_dest = bld.bldnode.make_node('waf')
     waf_dest.write(waf_src.read('rb'), 'wb')
 
-
 def build(bld):
 
     # Waf checks that source files are available when we create the

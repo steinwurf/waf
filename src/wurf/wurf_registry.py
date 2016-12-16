@@ -9,6 +9,7 @@ from . import wurf_git_semver_resolver
 from . import wurf_source_resolver
 from . import wurf_user_checkout_resolver
 from . import wurf_user_path_resolver
+from . import wurf_hash_manager
 
 class Registry(object):
 
@@ -116,8 +117,8 @@ def build_git_url_resolver(registry):
 
     return wurf_git_url_resolver.WurfGitUrlResolver()
 
-def build_hash_dependency_resolver(registry):
-    return wurf_source_resolver.WurfHashDependency()
+def build_hash_manager(registry):
+    return wurf_hash_manager.WurfHashManager()
 
 def build_skip_seen_dependency_resolver(registry):
     ctx = registry.require('ctx')
@@ -168,7 +169,7 @@ def build_null_dependency_resolver(registry):
 
 def build_dependency_manager(registry):
 
-    hash_resolver = registry.require('hash_dependency_resolver')
+    hash_manager = registry.require('hash_manager')
     skip_resolver = registry.require('skip_seen_dependency_resolver')
     bundle_path_resolver = registry.require('bundle_path_resolver')
     active_resolver = registry.require('active_dependency_resolver')
@@ -177,7 +178,7 @@ def build_dependency_manager(registry):
     cache_resolver = registry.require('cache_dependency_resolver')
     null_resolver = registry.require('null_dependency_resolver')
 
-    hash_resolver.next_resolver = skip_resolver
+    hash_manager.next_resolver = skip_resolver
     skip_resolver.next_resolver = bundle_path_resolver
     bundle_path_resolver.next_resolver = active_resolver
     active_resolver.next_resolver = store_resolver
@@ -185,24 +186,24 @@ def build_dependency_manager(registry):
     recurse_resolver.next_resolver = cache_resolver
     cache_resolver.next_resolver = null_resolver
 
-    return hash_resolver
+    return hash_manager
 
 def build_passive_dependency_manager(registry):
 
-    hash_resolver = registry.require('hash_dependency_resolver')
+    hash_manager = registry.require('hash_manager')
     skip_resolver = registry.require('skip_seen_dependency_resolver')
     passive_resolver = registry.require('passive_dependency_resolver')
     recurse_resolver = registry.require('recurse_dependency_resolver')
     cache_resolver = registry.require('cache_dependency_resolver')
     null_resolver = registry.require('null_dependency_resolver')
 
-    hash_resolver.next_resolver = skip_resolver
+    hash_manager.next_resolver = skip_resolver
     skip_resolver.next_resolver = passive_resolver
     passive_resolver.next_resolver = recurse_resolver
     recurse_resolver.next_resolver = cache_resolver
     cache_resolver.next_resolver = null_resolver
 
-    return hash_resolver
+    return hash_manager
 
 def build_registry(ctx, parser, git_binary, default_bundle_path, bundle_config_path,
     active_resolve, cache, semver, utils, args):
@@ -251,7 +252,7 @@ def build_registry(ctx, parser, git_binary, default_bundle_path, bundle_config_p
     registry.provide('user_path_resolver', build_wurf_user_path_resolver)
     registry.provide('git_method_resolver', build_wurf_git_method_resolver)
     registry.provide('source_resolver', build_source_resolver)
-    registry.provide('hash_dependency_resolver', build_hash_dependency_resolver)
+    registry.provide('hash_manager', build_hash_manager)
     registry.provide('skip_seen_dependency_resolver',
         build_skip_seen_dependency_resolver)
     registry.provide('bundle_path_resolver', build_bundle_path_resolver)
