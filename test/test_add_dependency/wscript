@@ -8,11 +8,31 @@ import mock
 import os
 import shutil
 
+import waflib
+from waflib.extras.wurf.wurf_git import WurfGit
+
 def resolve(ctx):
 
+    class FakeGitClone(WurfGit):
+        
+        def __init__(self, git_binary, ctx):
+            super(FakeGitClone, self).__init__(
+                git_binary=git_binary, ctx=ctx)
+                
+        def clone(self, repository, directory, cwd):
+            
+            super(FakeGitClone, self).clone(repository=repository,
+                directory=directory, cwd=cwd)
 
-
-    def fake_git_clone(ctx, source, destination, cwd):
+    def build_fake_git(registry):
+        git_binary = registry.require('git_binary')
+        ctx = registry.require('ctx')
+        
+        return FakeGitClone(git_binary=git_binary, ctx=ctx)
+        
+    
+        
+    def okd():
         """ Mocking the resolve function which is the one called when
         fetching a dependency"""
 
@@ -24,8 +44,12 @@ def resolve(ctx):
 
         return p
 
-
-
+    # Get the registry and replace the git builder
+    registry = ctx.registry
+    registry.provide('git', build_fake_git)
+    
+    # Rebuild the dependency manager
+    ctx.dependency_manager = registry.require('dependency_manager')
 
     ctx.add_dependency(
         name='waf',
@@ -55,5 +79,6 @@ def configure(conf):
 
 
 def build(bld):
+    print(waflib.extras.wurf.wurf_resolve_context.dependency_cache)
     print("PATH ", bld.dependency_path('waf'))
     print("PATH ", bld.dependency_path('meta'))

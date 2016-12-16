@@ -89,16 +89,16 @@ class WurfResolveContext(Context.Context):
         git_binary = shutilwhich.which('git')
 
         # The resolve options
-        self.parser = argparse.ArgumentParser(description='Resolve Options')
+        #self.parser = argparse.ArgumentParser(description='Resolve Options')
 
         default_bundle_path = os.path.join(
             self.path.abspath(), 'bundle_dependencies')
 
         self.registry = wurf_registry.build_registry(
-            ctx=self, parser=self.parser, git_binary=git_binary,
+            ctx=self, git_binary=git_binary,
             semver=semver, default_bundle_path=default_bundle_path,
             bundle_config_path=self.bundle_config_path(),
-            active_resolve=self.is_active_resolve(), cache=dependency_cache,
+            active_resolve=self.is_active_resolve(),
             utils=Utils, args=sys.argv[1:])
 
         self.dependency_manager = self.registry.require('dependency_manager')
@@ -112,9 +112,14 @@ class WurfResolveContext(Context.Context):
 
         super(WurfResolveContext, self).execute()
 
+        # Get the cache with the resolved dependencies
+        global dependency_cache
+        dependency_cache = self.registry.require('cache')
+
         # We are just interested in the left-over args, which is the second
         # value retuned by parse_known_args(...)
-        _, self.waf_options = self.parser.parse_known_args()
+        parser = self.registry.require('parser')
+        _, self.waf_options = parser.parse_known_args()
 
         self.logger.debug('wurf: dependency_cache {}'.format(dependency_cache))
 

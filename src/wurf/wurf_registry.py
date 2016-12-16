@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+import argparse
+
 from . import wurf_git
 from . import wurf_git_url_resolver
 from . import wurf_git_resolver
@@ -168,7 +170,26 @@ def build_null_dependency_resolver(registry):
     return wurf_source_resolver.WurfNullResolver()
 
 def build_dependency_manager(registry):
+    
+    # The dependency manager instance modifies state of the following
+    # objects these therefore should be unique for each manager built
+    #
+    registry.provide_value('parser', 
+        argparse.ArgumentParser(description='Resolve Options'))
 
+    # Dict object which will contain the path to the resolved
+    # dependencies.
+    registry.provide_value('cache', {})
+    
+    active_resolve = registry.require('active_resolve')
+    
+    if active_resolve:
+        return build_active_dependency_manager(registry)
+    else:
+        return build_passive_dependency_manager(registry)
+                    
+def build_active_dependency_manager(registry):
+    
     hash_manager = registry.require('hash_manager')
     skip_resolver = registry.require('skip_seen_dependency_resolver')
     bundle_path_resolver = registry.require('bundle_path_resolver')
@@ -205,13 +226,12 @@ def build_passive_dependency_manager(registry):
 
     return hash_manager
 
-def build_registry(ctx, parser, git_binary, default_bundle_path, bundle_config_path,
-    active_resolve, cache, semver, utils, args):
+def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
+    active_resolve, semver, utils, args):
     """ Builds a registry.
 
 
     :param ctx: A Waf Context instance.
-    :param parser: An argparse.ArgumentParser instance.
     :param git_binary: A string containing the path to a git executable.
     :param default_bundle_path: A string containing the path where dependencies
         as default should be downloaded (unless the user overrides).
@@ -219,8 +239,6 @@ def build_registry(ctx, parser, git_binary, default_bundle_path, bundle_config_p
         dependencies config json files should be / is stored.
     :param active_resolve: Boolean which is True if this is an active resolve
         otherwise False.
-    :param cache: Dict object which will contain the path to the resolved
-        dependencies.
     :param semver: The semver module
     :param utils: The waflib.Utils module
     :param args: Argument strings as a list, typically this will come
@@ -233,12 +251,13 @@ def build_registry(ctx, parser, git_binary, default_bundle_path, bundle_config_p
     registry = Registry()
 
     registry.provide_value('ctx', ctx)
-    registry.provide_value('parser', parser)
+    registry.provide_value('parser', 
+        argparse.ArgumentParser(description='Resolve Options'))
     registry.provide_value('git_binary', git_binary)
     registry.provide_value('default_bundle_path', default_bundle_path)
     registry.provide_value('bundle_config_path', bundle_config_path)
     registry.provide_value('active_resolve', active_resolve)
-    registry.provide_value('cache', cache)
+    registry.provide_value('active_resolve', active_resolve)
     registry.provide_value('semver', semver)
     registry.provide_value('utils', utils)
     registry.provide_value('args', args)
@@ -263,12 +282,7 @@ def build_registry(ctx, parser, git_binary, default_bundle_path, bundle_config_p
     registry.provide('cache_dependency_resolver', build_cache_dependency_resolver)
     registry.provide('null_dependency_resolver', build_null_dependency_resolver)
     registry.provide('passive_dependency_resolver', build_passive_dependency_resolver)
-
-
-    if active_resolve:
-        registry.provide('dependency_manager', build_dependency_manager)
-    else:
-        registry.provide('dependency_manager', build_passive_dependency_manager)
+    registry.provide('dependency_manager', build_dependency_manager)
 
 
     return registry
