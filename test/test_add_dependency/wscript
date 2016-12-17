@@ -51,23 +51,23 @@ def resolve(ctx):
     # Rebuild the dependency manager
     ctx.dependency_manager = registry.require('dependency_manager')
 
-    ctx.add_dependency(
-        name='waf',
-        recurse=False,
-        optional=False,
-        resolver='git',
-        method='checkout',
-        checkout='waf-1.9.5',
-        sources=['github.com/waf-project/waf.git'])
-        
-    ctx.add_dependency(
-        name='meta',
-        recurse=False,
-        optional=False,
-        resolver='git',
-        method='semver',
-        major=1,
-        sources=['github.com/steinwurf/meta.git'])
+    # ctx.add_dependency(
+    #     name='waf',
+    #     recurse=False,
+    #     optional=False,
+    #     resolver='git',
+    #     method='checkout',
+    #     checkout='waf-1.9.5',
+    #     sources=['github.com/waf-project/waf.git'])
+    #     
+    # ctx.add_dependency(
+    #     name='meta',
+    #     recurse=False,
+    #     optional=False,
+    #     resolver='git',
+    #     method='semver',
+    #     major=1,
+    #     sources=['github.com/steinwurf/meta.git'])
 
 
 def options(opt):
@@ -80,5 +80,5 @@ def configure(conf):
 
 def build(bld):
     print(waflib.extras.wurf.wurf_resolve_context.dependency_cache)
-    print("PATH ", bld.dependency_path('waf'))
-    print("PATH ", bld.dependency_path('meta'))
+    #print("PATH ", bld.dependency_path('waf'))
+    #print("PATH ", bld.dependency_path('meta'))
