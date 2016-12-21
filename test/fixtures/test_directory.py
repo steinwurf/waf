@@ -30,6 +30,7 @@ def test_fixture(test_directory):
     assert os.path.isfile(ok_path)
 
     sub2 = test_directory.mkdir('sub2')
-    sub2.copy_dir(sub1.path())
+    sub1_copy = sub2.copy_dir(sub1.path())
 
     assert os.path.exists(os.path.join(sub2.path(), 'sub1'))
+    assert os.path.exists(sub1_copy.path())

@@ -40,10 +40,12 @@ class TestDirectory:
     def __init__(self, tmpdir):
         self.tmpdir = tmpdir
 
-    def mkdir(self, name):
+    def mkdir(self, directory):
         """Create a sub-directory in the temporary / test dir.
+
+        :param directory: The
         """
-        return TestDirectory(self.tmpdir.mkdir(name))
+        return TestDirectory(self.tmpdir.mkdir(directory))
 
     def path(self):
         """ :return: The path to the temporary directory as a string"""
@@ -74,7 +76,23 @@ class TestDirectory:
             self.copy_file(f)
 
     def copy_dir(self, directory):
-        """Copy a directory into the test directory."""
+        """Copy a directory into the test directory.
+
+        Example (using the test fixture test_directory):
+
+            def test_something(test_directory):
+
+                # Prints /tmp/pytest-9/some_test
+                print(test_directory.path())
+
+                app_dir = test_directory.copy_dir('/home/ok/app')
+
+                # Prints /tmp/pytest-9/some_test/app
+                print(app_dir.path())
+
+        :param directory: Path to the directory as a string
+        :return: TestDirectory object representing the copied directory
+        """
 
         # From: http://stackoverflow.com/a/3925147
         name = os.path.basename(os.path.normpath(directory))
@@ -86,6 +104,8 @@ class TestDirectory:
         source_dir.copy(target_dir)
 
         print("Copy Dir: {} -> {}".format(source_dir, target_dir))
+
+        return TestDirectory(target_dir)
 
 
     def write_file(self, filename, content):
