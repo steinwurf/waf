@@ -31,12 +31,16 @@ def resolve(ctx):
         def clone(self, repository, directory, cwd):
             print("repository={}".format(repository))
             print("directory={}".format(directory))
+            print("cwd={}".format(cwd))
 
             print(self.libraries)
+            
+            dst_directory = os.path.join(cwd, directory)
+            print("dst_directory={}".format(dst_directory))
 
             for lib_repository, lib_directory in self.libraries:
                 if repository.endswidth(lib_directory):
-                    shutil.copytree(src=lib_directory, dst=directory)
+                    shutil.copytree(src=lib_directory, dst=dst_directory)
                     return
 
             else:

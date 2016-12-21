@@ -174,4 +174,11 @@ Finding the log output etc.
 
 We use pytest to run the waf commands (integration tests). pytest will create
 temporary folders etc. when running the tests. These are created on the fly and
-numbered.
+numbered. 
+
+One great feature of pytest is that is will maintain a symbolic link to the most
+current test invocation. On Linux this is found under::
+
+    /tmp/pytest-of-user/pytest-current/
+
+Where the `user` will be replace with the your user's name.

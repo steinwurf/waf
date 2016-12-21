@@ -6,6 +6,7 @@ import time
 import os
 
 from . import runresult
+from . import runresulterror
 
 class TestDirectory:
     """Testing code by invoking executable which potentially creates and deletes
@@ -116,7 +117,6 @@ class TestDirectory:
         f = self.tmpdir.join(filename)
         f.write(content)
 
-
     def run(self, *args, **kwargs):
         """Runs the command in the test directory.
 
@@ -155,6 +155,11 @@ class TestDirectory:
         stdout, stderr = popen.communicate()
 
         end_time = time.time()
-
-        return runresult.RunResult(' '.join(args), self.path(),
+        
+        result = runresult.RunResult(' '.join(args), self.path(),
             stdout, stderr, popen.returncode, end_time - start_time)
+
+        if popen.returncode != 0:
+            raise runresulterror.RunResultError(result)
+
+        return result

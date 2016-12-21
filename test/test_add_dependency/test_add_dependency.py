@@ -20,6 +20,8 @@ def test_add_dependency(test_directory):
 
     foo_dir = git_dir.copy_dir(directory='test/test_add_dependency/libfoo')
     foo_dir.run('git', 'init')
+    foo_dir.run('git', 'add', '.')
+    foo_dir.run('git', 'commit', '-m', 'oki')
     foo_dir.run('git', 'tag', '1.3.3.7')
 
     # The bundle_dependencies directory is the default, so when we do
