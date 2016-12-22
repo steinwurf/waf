@@ -135,8 +135,6 @@ class TestDirectory:
         else:
             env = os.environ.copy()
 
-        print(env)
-
         start_time = time.time()
 
         popen = subprocess.Popen(args,

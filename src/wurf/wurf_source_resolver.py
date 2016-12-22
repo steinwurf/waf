@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import argparse
+import sys
 
 
 #           +--------------------------+
@@ -195,7 +196,16 @@ class WurfSourceResolver(object):
                 path = self.__resolve(name, cwd, resolver, source, **kwargs)
             except Exception as e:
                 errors.append(e)
-                self.ctx.to_log("Source {} resolve failed {}".format(source, e))
+                
+                # Using exc_info will attache the current exception information
+                # to the log message (including traceback to where the 
+                # exception was thrown).
+                # Waf is using the standard Python Logger so you can check the
+                # docs here (read about the exc_info kwargs): 
+                # https://docs.python.org/2/library/logging.html
+                # 
+                self.ctx.logger.debug("Source {} resolve failed".format(
+                    source), exc_info=True)
             else:
                 return path
         else:
