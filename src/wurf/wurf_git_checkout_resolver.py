@@ -23,18 +23,21 @@ class WurfGitCheckoutResolver(object):
 
     def resolve(self, name, cwd, source, checkout, **kwargs):
         """ Fetches the dependency if necessary.
-        
+
         :param name: Name of the dependency as a string
-        :param cwd: Current working directory as a string. This is the place 
+        :param cwd: Current working directory as a string. This is the place
                     where we should create new folders etc.
         :param source: URL of the repository as a string.
         :param checkout: The branch, tag, or sha1 as a string.
         :param kwargs: Remaining keyword arguments.
         """
+        self.ctx.to_log('WurfGitCheckoutResolver resolve')
         cwd = os.path.abspath(os.path.expanduser(cwd))
 
         path = self.git_resolver.resolve(name=name, cwd=cwd, source=source,
             **kwargs)
+
+        self.ctx.to_log('WurfGitCheckoutResolver path={}'.format(path))
 
         # Use the path retuned to create a unique location for this checkout
         repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]

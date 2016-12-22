@@ -21,7 +21,12 @@ def test_add_dependency(test_directory):
     foo_dir = git_dir.copy_dir(directory='test/test_add_dependency/libfoo')
     foo_dir.run('git', 'init')
     foo_dir.run('git', 'add', '.')
-    foo_dir.run('git', 'commit', '-m', 'oki')
+
+    # We cannot commit without setting a user + email, but that is not always
+    # available. So we can set it just for the one commit command using this
+    # approach: http://stackoverflow.com/a/22058263/1717320
+    #
+    foo_dir.run('git', '-c', 'user.name=John', '-c', 'user.email=doe@email.org', 'commit', '-m', 'oki')
     foo_dir.run('git', 'tag', '1.3.3.7')
 
     # The bundle_dependencies directory is the default, so when we do
@@ -40,13 +45,9 @@ def test_add_dependency(test_directory):
     ##libfoo_directory = bundle_directory.mkdir('libbar-h4sh')
     #libfoo_directory.copy_dir('test/test_add_dependency/libbar')
 
-    r = app_dir.run('python', 'waf', 'configure', '-v')
+    app_dir.run('python', 'waf', 'configure', '-v')
+    app_dir.run('python', 'waf', 'build', '-v')
 
-    assert r.returncode == 0, str(r)
-
-    r = app_dir.run('python', 'waf', 'build', '-v')
-
-    assert r.returncode == 0, str(r)
 
     # r = test_directory.run('python', 'waf', 'configure', '-v', '--waf-use-checkout=waf-1.9.4')
     #

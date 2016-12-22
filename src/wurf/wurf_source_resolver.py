@@ -120,6 +120,26 @@ class WurfGitMethodResolver(object):
         """
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
+class WurfError(Exception):
+    """Basic exception for errors raised by wurf tools"""
+    pass
+
+class WurfSourceError(WurfError):
+    """Generic exception for wurf"""
+    def __init__(self, name, cwd, resolver, sources, errors, **kwargs):
+
+        msg = "Error resolving sources for {}:\n".format(name)
+        msg += "\tcwd={}\n".format(cwd)
+        msg += "\tresolver={}\n".format(resolver)
+        msg += "\tkwargs={}\n".format(kwargs)
+        msg += "\tNumber of sources for this dependency: {}\n".format(len(sources))
+
+        for s, e in zip(sources, errors):
+            msg += "\t{} => {}\n".format(s, e)
+
+        super(WurfSourceError, self).__init__(msg)
+
+
 
 class WurfSourceResolver(object):
     """
@@ -167,16 +187,20 @@ class WurfSourceResolver(object):
             if path:
                 return path
 
+        # Record errors
+        errors = []
         # Use resolver
         for source in sources:
             try:
                 path = self.__resolve(name, cwd, resolver, source, **kwargs)
             except Exception as e:
+                errors.append(e)
                 self.ctx.to_log("Source {} resolve failed {}".format(source, e))
             else:
                 return path
         else:
-            raise RuntimeError("No sources resolved. {}".format(self))
+            raise WurfSourceError(name=name, cwd=cwd, resolver=resolver,
+                sources=sources, errors=errors, **kwargs)
 
 
     def __resolve(self, name, cwd, resolver, source, **kwargs):

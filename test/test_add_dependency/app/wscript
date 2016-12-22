@@ -10,6 +10,12 @@ import shutil
 import waflib
 from waflib.extras.wurf.wurf_git import WurfGit
 
+class CloneError(Exception):
+    """Basic """
+    def __init__(self, msg):
+        super(CloneError, self).__init__(msg)
+
+
 def resolve(ctx):
 
     # Setup path to libraries for the fake git clone
@@ -34,17 +40,19 @@ def resolve(ctx):
             print("cwd={}".format(cwd))
 
             print(self.libraries)
-            
+
             dst_directory = os.path.join(cwd, directory)
             print("dst_directory={}".format(dst_directory))
 
             for lib_repository, lib_directory in self.libraries:
-                if repository.endswidth(lib_directory):
+                if repository.endswidth(lib_repository):
                     shutil.copytree(src=lib_directory, dst=dst_directory)
+
+                    assert os.path.isdir(dst_directory), "We should have a valid path here!"
                     return
 
             else:
-                assert(0)
+                raise CloneError("No mapping for the repository found!")
 
     def build_fake_git(registry):
         git_binary = registry.require('git_binary')

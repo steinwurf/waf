@@ -46,7 +46,6 @@ class WurfGitResolver(object):
 
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(repo_path):
-            self.ctx.to_log('WurfGitResolver repo_path {}'.format(repo_path))
             self.git.clone(repository=repo_url, directory=repo_name, cwd=cwd)
         else:
 
@@ -62,6 +61,8 @@ class WurfGitResolver(object):
             except Exception as e:
                 self.ctx.to_log('Exception when executing git pull:')
                 self.ctx.to_log(e)
+
+        assert os.path.isdir(repo_path), "We should have a valid path here!"
 
         # If the project contains submodules we also get those
         self.git.pull_submodules(cwd=repo_path)

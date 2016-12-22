@@ -170,26 +170,26 @@ def build_null_dependency_resolver(registry):
     return wurf_source_resolver.WurfNullResolver()
 
 def build_dependency_manager(registry):
-    
+
     # The dependency manager instance modifies state of the following
     # objects these therefore should be unique for each manager built
     #
-    registry.provide_value('parser', 
+    registry.provide_value('parser',
         argparse.ArgumentParser(description='Resolve Options'))
 
     # Dict object which will contain the path to the resolved
     # dependencies.
     registry.provide_value('cache', {})
-    
+
     active_resolve = registry.require('active_resolve')
-    
+
     if active_resolve:
         return build_active_dependency_manager(registry)
     else:
         return build_passive_dependency_manager(registry)
-                    
+
 def build_active_dependency_manager(registry):
-    
+
     hash_manager = registry.require('hash_manager')
     skip_resolver = registry.require('skip_seen_dependency_resolver')
     bundle_path_resolver = registry.require('bundle_path_resolver')
@@ -251,7 +251,7 @@ def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
     registry = Registry()
 
     registry.provide_value('ctx', ctx)
-    registry.provide_value('parser', 
+    registry.provide_value('parser',
         argparse.ArgumentParser(description='Resolve Options'))
     registry.provide_value('git_binary', git_binary)
     registry.provide_value('default_bundle_path', default_bundle_path)
