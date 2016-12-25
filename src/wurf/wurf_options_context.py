@@ -78,13 +78,13 @@ class WurfOptionsContext(Options.OptionsContext):
         finally:
             ctx.finalize()
 
-        # Call options in all dependencies
-        wurf_resolve_context.recurse_dependencies(self)
-
         # Fetch the arguments not parsed in the resolve step
         self.waf_options = ctx.waf_options
 
         super(WurfOptionsContext, self).execute()
+
+        # Call options in all dependencies
+        wurf_resolve_context.recurse_dependencies(self)
 
 
     def parse_args(self, _args=None):

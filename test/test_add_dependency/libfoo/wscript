@@ -15,5 +15,6 @@ def configure(conf):
 
 def build(bld):
     bld.shlib(features='cxx',
+              target='foo',
               source='src/foo/foo.cpp',
               export_includes='src')

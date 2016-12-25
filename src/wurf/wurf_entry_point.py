@@ -41,6 +41,9 @@ _check_minimum_python_version(2, 7)
 # first recurses the resolve(...) functions to fetch any defined
 # dependencies.
 from . import wurf_options_context
+from . import wurf_configuration_context
+from . import wurf_build_context
+
 #import waflib.extras.wurf_resolve_context
 
 
