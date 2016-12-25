@@ -35,17 +35,17 @@ def resolve(ctx):
             self.libraries = libraries
 
         def clone(self, repository, directory, cwd):
-            print("repository={}".format(repository))
-            print("directory={}".format(directory))
-            print("cwd={}".format(cwd))
+            ctx.logger.debug("repository={}".format(repository))
+            ctx.logger.debug("directory={}".format(directory))
+            ctx.logger.debug("cwd={}".format(cwd))
 
-            print(self.libraries)
+            ctx.logger.debug(self.libraries)
 
             dst_directory = os.path.join(cwd, directory)
-            print("dst_directory={}".format(dst_directory))
+            ctx.logger.debug("dst_directory={}".format(dst_directory))
 
-            for lib_repository, lib_directory in self.libraries:
-                if repository.endswidth(lib_repository):
+            for lib_repository, lib_directory in self.libraries.items():
+                if repository.endswith(lib_repository):
                     shutil.copytree(src=lib_directory, dst=dst_directory)
 
                     assert os.path.isdir(dst_directory), "We should have a valid path here!"
@@ -70,7 +70,7 @@ def resolve(ctx):
 
     ctx.add_dependency(
         name='foo',
-        recurse=False,
+        recurse=True,
         optional=False,
         resolver='git',
         method='checkout',

@@ -127,18 +127,15 @@ class WurfError(Exception):
 
 class WurfSourceError(WurfError):
     """Generic exception for wurf"""
-    def __init__(self, name, cwd, resolver, sources, errors, **kwargs):
+    def __init__(self, name, cwd, resolver, sources, **kwargs):
 
-        msg = "Error resolving sources for {}:\n".format(name)
-        msg += "\tcwd={}\n".format(cwd)
-        msg += "\tresolver={}\n".format(resolver)
-        msg += "\tkwargs={}\n".format(kwargs)
-        msg += "\tNumber of sources for this dependency: {}\n".format(len(sources))
-
-        for s, e in zip(sources, errors):
-            msg += "\t{} => {}\n".format(s, e)
-
-        super(WurfSourceError, self).__init__(msg)
+        self.name = name
+        self.cwd = cwd
+        self.resolver = resolver
+        self.sources = sources
+        self.kwargs = kwargs
+    
+        super(WurfSourceError, self).__init__("Error resolving sources for {}".format(name))
 
 
 
@@ -188,14 +185,11 @@ class WurfSourceResolver(object):
             if path:
                 return path
 
-        # Record errors
-        errors = []
         # Use resolver
         for source in sources:
             try:
                 path = self.__resolve(name, cwd, resolver, source, **kwargs)
             except Exception as e:
-                errors.append(e)
                 
                 # Using exc_info will attache the current exception information
                 # to the log message (including traceback to where the 
@@ -204,13 +198,22 @@ class WurfSourceResolver(object):
                 # docs here (read about the exc_info kwargs): 
                 # https://docs.python.org/2/library/logging.html
                 # 
-                self.ctx.logger.debug("Source {} resolve failed".format(
+                self.ctx.logger.debug("Source {} resolve failed:".format(
                     source), exc_info=True)
             else:
                 return path
         else:
+            
+            msg = "Error resolving sources for {}:\n".format(name)
+            msg += "\tcwd={}\n".format(cwd)
+            msg += "\tresolver={}\n".format(resolver)
+            msg += "\tkwargs={}\n".format(kwargs)
+            msg += "\tsources: {}\n".format(sources)
+
+            self.ctx.logger.debug(msg)
+            
             raise WurfSourceError(name=name, cwd=cwd, resolver=resolver,
-                sources=sources, errors=errors, **kwargs)
+                sources=sources, **kwargs)
 
 
     def __resolve(self, name, cwd, resolver, source, **kwargs):
@@ -370,7 +373,7 @@ class WurfCacheDependency(object):
         """
 
         if path:
-            config = {'recurse': recurse, 'path': path,}
+            config = {'recurse': recurse, 'path': path}
             self.cache[name] = config
 
         self.next_resolver.add_dependency(name=name, path=path, recurse=recurse,

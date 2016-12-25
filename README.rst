@@ -54,6 +54,39 @@ tests. To run the tests invoke::
 
 See tox documentation here: https://tox.readthedocs.org/en/latest/
 
+Specifying a dependency
+========================
+
+In the following we will provide an overview of the options (and sub-options)
+available when specifying a dependency::
+
+    def resolve(ctx):
+        ctx.add_dependency(name='foo',
+                           ...)
+                           
+recurse (boolean)
+-------
+This option specifies whether waf should recurse into the dependency folder. 
+
+This is useful if the dependency is itself a waf probject. When recursing into
+a folder waf will look for a wscript in the folder and execute its commands. 
+
+Currently we will automatically (if recurse is True), recurse into and execute 
+following waf commands: (resolve, options, configure, build)
+
+If you have a wscript where you would like to recurse dependencies for a custom
+waf commands, say upload. This can be done by using the adding the following
+to your wscript's upload function::
+
+    def upload(ctx):
+        ... your code
+        # Now lets recurse and execute the upload functions in dependencies 
+        # wscripts. 
+        
+        import waflib.extras.wurf.wurf_resolve_context
+        
+        # Call upload in all dependencies
+        wurf_resolve_context.recurse_dependencies(self)
 
 
 Bundle dependencies

@@ -30,21 +30,25 @@ figure out which dependencies exist.
 """
 
 def recurse_dependencies(ctx):
-    pass
-    # for name, dependency in dependency_cache.items():
-    #
-    #     ctx.to_log("Recurse dependency {}".format(name))
-    #
-    #     if dependency.has_path() and dependency.requires_recurse():
-    #
-    #         ctx.to_log("Recurse for {}: cmd={}, path={}".format(
-    #             name, ctx.cmd, dependency.path()))
-    #
-    #         ctx.recurse(dependency.path())
-    #
-    #     if ctx.cmd == 'options':
-    #         dependency.add_options(ctx)
+    """ Recurse the dependencies which have the resolve property set to True.
 
+    :param ctx: A Waf Context instance.
+    """
+
+    for name, dependency in dependency_cache.items():
+
+        if not dependency['recurse']:
+            
+            ctx.to_log('Recurse for name={} cmd={} skipped.'.format(
+                name, ctx.cmd))
+        
+            continue
+    
+        ctx.to_log("Recurse for {}: cmd={}, path={}".format(
+            name, ctx.cmd, dependency['path']))
+    
+        ctx.recurse(dependency['path'])
+    
 
 class WurfResolveContext(Context.Context):
 
