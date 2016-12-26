@@ -39,7 +39,7 @@ def recurse_dependencies(ctx):
 
         if not dependency['recurse']:
             
-            ctx.to_log('Recurse for name={} cmd={} skipped.'.format(
+            ctx.to_log('Skipped recurse for name={} cmd={}'.format(
                 name, ctx.cmd))
         
             continue
@@ -47,7 +47,7 @@ def recurse_dependencies(ctx):
         ctx.to_log("Recurse for {}: cmd={}, path={}".format(
             name, ctx.cmd, dependency['path']))
     
-        ctx.recurse(dependency['path'])
+        #ctx.recurse(dependency['path'])
     
 
 class WurfResolveContext(Context.Context):

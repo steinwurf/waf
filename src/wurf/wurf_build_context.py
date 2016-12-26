@@ -30,6 +30,9 @@ class WurfBuildContext(BuildContext):
     #wurf_resolve_context.recurse_dependencies(self)
     
     def pre_build(self):
-        #wurf_resolve_context.recurse_dependencies(self)
-            
+        #
+        #
+        print("HIHIHIHIHIHIH")
+        print("wurf resolve deps: {}".format(wurf_resolve_context.dependency_cache))
+        wurf_resolve_context.recurse_dependencies(self)
         super(WurfBuildContext, self).pre_build()
