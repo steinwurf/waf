@@ -373,7 +373,7 @@ class WurfCacheDependency(object):
         """
 
         if path:
-            config = {'recurse': recurse, 'path': path}
+            config = {'recurse': recurse, 'path': str(path)}
             self.cache[name] = config
 
         self.next_resolver.add_dependency(name=name, path=path, recurse=recurse,

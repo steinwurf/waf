@@ -101,6 +101,8 @@ def build(bld):
                 source='main.cpp',
                 target='app',
                 use='foo')
+                
+    print("in build")
 
     print(waflib.extras.wurf.wurf_resolve_context.dependency_cache)
     #print("PATH ", bld.dependency_path('waf'))
