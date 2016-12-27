@@ -405,7 +405,15 @@ class WurfRecurseDependency(object):
         """
 
         if recurse and path:
-            self.ctx.recurse(path)
+            
+            try:
+                self.ctx.recurse(path)
+            except:
+                self.ctx.logger.debug(
+                    "Recurse failed path={} recurse={} kwargs={}".format(
+                    path, recurse, kwargs), exc_info=True)
+                
+                raise
 
         self.next_resolver.add_dependency(path=path, recurse=recurse, **kwargs)
 
@@ -570,7 +578,11 @@ class WurfPassiveDependencyResolver(object):
         if sha1 != config['sha1']:
             self.ctx.fatal('Failed sha1 check')
 
-        path = config['path']
+        path = str(config['path'])
+        
+        # @todo remove
+        print("WurfPassiveDependencyResolver path type = {}".format(type(path)))
+        print("WurfPassiveDependencyResolver path = {}".format(path))
 
         self.next_resolver.add_dependency(sha1=sha1, name=name, path=path,
             **kwargs)

@@ -44,15 +44,8 @@ from . import wurf_options_context
 from . import wurf_configuration_context
 from . import wurf_build_context
 
-#import waflib.extras.wurf_resolve_context
-
-
 # We add a number of methods to the ConfigurationContext and BuildContext
 # objects used in Waf's configure(...) and build(...) functions (found in 
 # most wscripts). To register these functions we just need to import the module
 # where they are defined: 
 from . import wurf_conf
-
-# Ensure that WurfConfigurationContext is used instead of the standard Waf
-# ConfigurationContext
-#import waflib.extras.wurf_configuration_context

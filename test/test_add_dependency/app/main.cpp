@@ -10,5 +10,6 @@
 int main()
 {
     std::cout << "app" << std::endl;
+    std::cout << "foo::whoooth" << foo::whoooth() << std::endl;
     return 0;
 }

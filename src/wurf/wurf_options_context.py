@@ -67,8 +67,16 @@ from . import wurf_resolve_context
 
 class WurfOptionsContext(Options.OptionsContext):
 
-    def execute(self):
+    def __init__(self, **kw):
+        super(WurfOptionsContext, self).__init__(**kw)
+        
+        self.waf_options = None
 
+    def execute(self):
+        
+        # @todo remove
+        print("WurfOptionsContext in execute")
+        
         # Create and execute the resolve context
         ctx = Context.create_context('resolve', opt=self)
         ctx.cmd = 'resolve'
@@ -80,8 +88,13 @@ class WurfOptionsContext(Options.OptionsContext):
 
         # Fetch the arguments not parsed in the resolve step
         self.waf_options = ctx.waf_options
+        
+        print("WurfOptionsContext after resolve context")
 
         super(WurfOptionsContext, self).execute()
+        
+        # @todo remove
+        print("WurfOptionsContext after super execute")
 
         # Call options in all dependencies
         wurf_resolve_context.recurse_dependencies(self)
@@ -93,4 +106,13 @@ class WurfOptionsContext(Options.OptionsContext):
         Here we inject the arguments which were not consumed in the resolve
         step.
         """
-        super(WurfOptionsContext, self).parse_args(self.waf_options)
+        
+        # @todo remove
+        print("WurfOptionsContext in parse_args")
+        
+        # We expect _args to be None here, if it isn't we should probably 
+        # figure out why and see if we should combine it with the 
+        # self.waf_options list
+        assert(_args is None)
+        
+        super(WurfOptionsContext, self).parse_args(_args=self.waf_options)

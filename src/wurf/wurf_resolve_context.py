@@ -39,15 +39,18 @@ def recurse_dependencies(ctx):
 
         if not dependency['recurse']:
             
-            ctx.to_log('Skipped recurse for name={} cmd={}'.format(
+            ctx.to_log('Skipped recurse for name={} cmd={}\n'.format(
                 name, ctx.cmd))
         
             continue
     
-        ctx.to_log("Recurse for {}: cmd={}, path={}".format(
+        ctx.to_log("Recurse for {}: cmd={}, path={}\n".format(
             name, ctx.cmd, dependency['path']))
     
-        #ctx.recurse(dependency['path'])
+        path = dependency['path']
+    
+        ctx.to_log("Path {} Type {}\n".format(path, type(path)))
+        ctx.recurse([path])
     
 
 class WurfResolveContext(Context.Context):
@@ -71,6 +74,9 @@ class WurfResolveContext(Context.Context):
 
 
     def execute(self):
+
+        # @todo remove
+        print("WurfResolveContext in execute")
 
         # Create the nodes that will be used during the resolve step. The build
         # directory is also used by the waf BuildContext

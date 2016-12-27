@@ -13,7 +13,6 @@ def configure(conf):
     conf.load('compiler_cxx')
 
 def build(bld):
-    print("IN FOOOO")
     bld.shlib(features='cxx',
               target='foo',
               source='src/foo/foo.cpp',

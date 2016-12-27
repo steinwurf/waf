@@ -194,8 +194,12 @@ project root folder, to activate it we run::
 
 You should now use the right version of the Python interpreter and have
 access to all the test dependencies (if any). So you can navigate to the
-directory where the tests failed and play around. Once you are done exit
-the virtualenv by running::
+directory where the tests failed and play around. Typically you can use the
+pytest symlink::
+
+    /tmp/pytest-of-user/pytest-current/some_folder_containing_failed_test
+
+Once you are done exit the virtualenv by running::
 
   $ deactivate
 
