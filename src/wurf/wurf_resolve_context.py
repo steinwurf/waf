@@ -60,14 +60,10 @@ class WurfResolveContext(Context.Context):
     cmd = 'resolve'
     fun = 'resolve'
 
-    def __init__(self, opt, **kw):
+    def __init__(self, **kw):
         """ Create a WurfResolveContext
-
-        :param opt: A Waf options context instance.
         """
         super(WurfResolveContext, self).__init__(**kw)
-
-        self.opt = opt
 
         # Store the options that will be passed to Waf's options parser
         self.waf_options = []
@@ -133,7 +129,7 @@ class WurfResolveContext(Context.Context):
 
         self.logger.debug('wurf: dependency_cache {}'.format(dependency_cache))
 
-
+    
     def bundle_config_path(self):
         """Returns the bundle config path.
 

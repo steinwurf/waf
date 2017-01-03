@@ -66,6 +66,18 @@ from waflib import Options
 from . import wurf_resolve_context
 
 class WurfOptionsContext(Options.OptionsContext):
+    """ Custom options context which will initiate the dependency resolve step.
+    
+    Default waf will instantiate and use this context in two different ways:
+    
+    1. If waf is executed in a folder without a wscript, waf will simply create 
+       the context and then directly call parse_args(...) without running 
+       execute(...). This can be seen in:
+       https://github.com/waf-project/waf/blob/master/waflib/Scripting.py#L130-L139
+       
+    2. Standard, where the options context is instantiated and executed:
+       https://github.com/waf-project/waf/blob/master/waflib/Scripting.py#L262
+    """
 
     def __init__(self, **kw):
         super(WurfOptionsContext, self).__init__(**kw)
@@ -78,8 +90,7 @@ class WurfOptionsContext(Options.OptionsContext):
         print("WurfOptionsContext in execute")
         
         # Create and execute the resolve context
-        ctx = Context.create_context('resolve', opt=self)
-        ctx.cmd = 'resolve'
+        ctx = Context.create_context('resolve')
 
         try:
             ctx.execute()

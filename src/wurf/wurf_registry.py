@@ -174,8 +174,10 @@ def build_dependency_manager(registry):
     # The dependency manager instance modifies state of the following
     # objects these therefore should be unique for each manager built
     #
+    # add_help=False will remove the default handling of --help and -h
+    # https://docs.python.org/3/library/argparse.html#add-help
     registry.provide_value('parser',
-        argparse.ArgumentParser(description='Resolve Options'))
+        argparse.ArgumentParser(description='Resolve Options', add_help=False))
 
     # Dict object which will contain the path to the resolved
     # dependencies.
