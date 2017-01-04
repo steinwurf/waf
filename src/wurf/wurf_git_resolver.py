@@ -12,10 +12,9 @@ class WurfGitResolver(object):
     def __init__(self, git, url_resolver, ctx):
         """ Construct a new WurfGitResolver instance.
 
-        Args:
-            git: A WurfGit instance
-            url_resolver: A WurfGitUrlResolver instance.
-            ctx: A Waf Context instance.
+        :param git: A WurfGit instance
+        :param url_resolver: A WurfGitUrlResolver instance.
+        :param ctx: A Waf Context instance.
         """
         self.git = git
         self.url_resolver = url_resolver

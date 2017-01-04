@@ -173,17 +173,32 @@ def build_dependency_manager(registry):
 
     # The dependency manager instance modifies state of the following
     # objects these therefore should be unique for each manager built
-    #
-    # add_help=False will remove the default handling of --help and -h
-    # https://docs.python.org/3/library/argparse.html#add-help
+
+    active_resolve = registry.require('active_resolve')
+
+    if active_resolve:
+        step = 'active'
+    else:
+        step = 'passive'
+
     registry.provide_value('parser',
-        argparse.ArgumentParser(description='Resolve Options', add_help=False))
+        argparse.ArgumentParser(description='Resolve Options ({})'.format(step),
+        # add_help=False will remove the default handling of --help and -h
+        # https://docs.python.org/3/library/argparse.html#add-help
+        #
+        # This will be handled by waf's default options context.
+        add_help=False,
+        # Remove printing usage help, like:
+        #    usage: waf [--bundle-path]
+        # When printing help, this seems to be an undocumented feature of
+        # argparse: http://stackoverflow.com/a/14591302/1717320
+        usage=argparse.SUPPRESS))
 
     # Dict object which will contain the path to the resolved
     # dependencies.
     registry.provide_value('cache', {})
 
-    active_resolve = registry.require('active_resolve')
+
 
     if active_resolve:
         return build_active_dependency_manager(registry)
@@ -253,8 +268,6 @@ def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
     registry = Registry()
 
     registry.provide_value('ctx', ctx)
-    registry.provide_value('parser',
-        argparse.ArgumentParser(description='Resolve Options'))
     registry.provide_value('git_binary', git_binary)
     registry.provide_value('default_bundle_path', default_bundle_path)
     registry.provide_value('bundle_config_path', bundle_config_path)

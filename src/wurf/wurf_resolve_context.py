@@ -38,20 +38,20 @@ def recurse_dependencies(ctx):
     for name, dependency in dependency_cache.items():
 
         if not dependency['recurse']:
-            
+
             ctx.to_log('Skipped recurse for name={} cmd={}\n'.format(
                 name, ctx.cmd))
-        
+
             continue
-    
+
         ctx.to_log("Recurse for {}: cmd={}, path={}\n".format(
             name, ctx.cmd, dependency['path']))
-    
+
         path = dependency['path']
-    
+
         ctx.to_log("Path {} Type {}\n".format(path, type(path)))
         ctx.recurse([path])
-    
+
 
 class WurfResolveContext(Context.Context):
 
@@ -94,9 +94,6 @@ class WurfResolveContext(Context.Context):
 
         git_binary = shutilwhich.which('git')
 
-        # The resolve options
-        #self.parser = argparse.ArgumentParser(description='Resolve Options')
-
         default_bundle_path = os.path.join(
             self.path.abspath(), 'bundle_dependencies')
 
@@ -109,9 +106,6 @@ class WurfResolveContext(Context.Context):
 
         self.dependency_manager = self.registry.require('dependency_manager')
 
-        # Directly call Context.execute() to avoid the side effects of
-        # ConfigurationContext.execute()
-        #
         # Calling the context execute will call the resolve(...) functions in
         # the wscripts. These will in turn call add_dependency(...) which will
         # trigger loading the dependency.
@@ -127,9 +121,14 @@ class WurfResolveContext(Context.Context):
         parser = self.registry.require('parser')
         _, self.waf_options = parser.parse_known_args()
 
+        # We
+        self.resolve_help = 'Here you go...'
+        print("{}".format(parser.format_help()))
+        #parser.print_help()
+
         self.logger.debug('wurf: dependency_cache {}'.format(dependency_cache))
 
-    
+
     def bundle_config_path(self):
         """Returns the bundle config path.
 

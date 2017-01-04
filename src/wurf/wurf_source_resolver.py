@@ -134,7 +134,7 @@ class WurfSourceError(WurfError):
         self.resolver = resolver
         self.sources = sources
         self.kwargs = kwargs
-    
+
         super(WurfSourceError, self).__init__("Error resolving sources for {}".format(name))
 
 
@@ -190,20 +190,20 @@ class WurfSourceResolver(object):
             try:
                 path = self.__resolve(name, cwd, resolver, source, **kwargs)
             except Exception as e:
-                
+
                 # Using exc_info will attache the current exception information
-                # to the log message (including traceback to where the 
+                # to the log message (including traceback to where the
                 # exception was thrown).
                 # Waf is using the standard Python Logger so you can check the
-                # docs here (read about the exc_info kwargs): 
+                # docs here (read about the exc_info kwargs):
                 # https://docs.python.org/2/library/logging.html
-                # 
+                #
                 self.ctx.logger.debug("Source {} resolve failed:".format(
                     source), exc_info=True)
             else:
                 return path
         else:
-            
+
             msg = "Error resolving sources for {}:\n".format(name)
             msg += "\tcwd={}\n".format(cwd)
             msg += "\tresolver={}\n".format(resolver)
@@ -211,7 +211,7 @@ class WurfSourceResolver(object):
             msg += "\tsources: {}\n".format(sources)
 
             self.ctx.logger.debug(msg)
-            
+
             raise WurfSourceError(name=name, cwd=cwd, resolver=resolver,
                 sources=sources, **kwargs)
 
@@ -259,7 +259,7 @@ class WurfBundlePath(object):
             default=default_bundle_path,
             dest='bundle_path',
             help='The folder where the bundled dependencies are downloaded.'
-                 '[default: %default]')
+                 '(default: %(default)s)')
 
         known_args, unknown_args = parser.parse_known_args(args=args)
 
@@ -405,14 +405,14 @@ class WurfRecurseDependency(object):
         """
 
         if recurse and path:
-            
+
             try:
                 self.ctx.recurse(path)
             except:
                 self.ctx.logger.debug(
                     "Recurse failed path={} recurse={} kwargs={}".format(
                     path, recurse, kwargs), exc_info=True)
-                
+
                 raise
 
         self.next_resolver.add_dependency(path=path, recurse=recurse, **kwargs)
@@ -579,7 +579,7 @@ class WurfPassiveDependencyResolver(object):
             self.ctx.fatal('Failed sha1 check')
 
         path = str(config['path'])
-        
+
         # @todo remove
         print("WurfPassiveDependencyResolver path type = {}".format(type(path)))
         print("WurfPassiveDependencyResolver path = {}".format(path))
