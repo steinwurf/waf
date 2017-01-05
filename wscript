@@ -143,5 +143,5 @@ def build(bld):
         [wurf_path, semver_path, shutil_path])})
 
     #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
-    bld(rule='tox', env=my_env, always=True)
-    #bld(rule='tox -- -s', env=my_env, always=True)
+    #bld(rule='tox', env=my_env, always=True)
+    bld(rule='tox -- -s', env=my_env, always=True)

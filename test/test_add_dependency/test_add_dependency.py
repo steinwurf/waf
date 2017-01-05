@@ -45,7 +45,9 @@ def test_add_dependency(test_directory):
     ##libfoo_directory = bundle_directory.mkdir('libbar-h4sh')
     #libfoo_directory.copy_dir('test/test_add_dependency/libbar')
 
-    app_dir.run('python', 'waf', 'configure', '-v')
+    # @todo remove print of r
+    r = app_dir.run('python', 'waf', 'configure', '-v')
+    print(r)
     app_dir.run('python', 'waf', 'build', '-v')
 
 

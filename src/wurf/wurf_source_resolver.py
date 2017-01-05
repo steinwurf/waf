@@ -225,6 +225,71 @@ class WurfSourceResolver(object):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 
+class WurfSourceResolver2(object):
+    """
+    """
+
+    def __init__(self, name, user_resolvers, type_resolvers, ctx):
+        """ Construct an instance.
+
+        :param user_resolvers: A list of resolvers allowing the user to provide
+            the path to a dependency in various ways.
+
+        :param type_resolvers: A list of type resolvers object for the available
+           sources
+
+        :param ctx: A Waf Context instance.
+        """
+        self.name = name
+        self.user_resolvers = user_resolvers
+        self.type_resolvers = type_resolvers
+        self.ctx = ctx
+
+    def resolve(self):
+        """ Resolve the dependency.
+
+        :param kwargs: Keyword arguments containing options for the dependency
+        :return: Path to resolved dependency as a string
+        """
+
+        # Try user methods
+        for r in self.user_resolvers:
+            path = r.resolve()
+
+            if path:
+                return path
+
+        # Use type resolver
+        for t in self.type_resolvers:
+            try:
+                path = t.resolve()
+            except Exception as e:
+
+                # Using exc_info will attache the current exception information
+                # to the log message (including traceback to where the
+                # exception was thrown).
+                # Waf is using the standard Python Logger so you can check the
+                # docs here (read about the exc_info kwargs):
+                # https://docs.python.org/2/library/logging.html
+                #
+                self.ctx.logger.debug("Source {} resolve failed:".format(
+                    t), exc_info=True)
+            else:
+                return path
+        else:
+
+            msg = "FAILED RESOLVE SOURCE {}".format(name)
+            self.ctx.logger.debug(msg)
+
+            raise RuntimeError(msg)
+
+    def __repr__(self):
+        """
+        :return: Representation of this object as a string
+        """
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+
 import os
 import hashlib
 import json

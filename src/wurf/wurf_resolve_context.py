@@ -65,10 +65,6 @@ class WurfResolveContext(Context.Context):
         """
         super(WurfResolveContext, self).__init__(**kw)
 
-        # Store the options that will be passed to Waf's options parser
-        self.waf_options = []
-
-
     def execute(self):
 
         # @todo remove
@@ -115,16 +111,6 @@ class WurfResolveContext(Context.Context):
         # Get the cache with the resolved dependencies
         global dependency_cache
         dependency_cache = self.registry.require('cache')
-
-        # We are just interested in the left-over args, which is the second
-        # value retuned by parse_known_args(...)
-        parser = self.registry.require('parser')
-        _, self.waf_options = parser.parse_known_args()
-
-        # We
-        self.resolve_help = 'Here you go...'
-        print("{}".format(parser.format_help()))
-        #parser.print_help()
 
         self.logger.debug('wurf: dependency_cache {}'.format(dependency_cache))
 

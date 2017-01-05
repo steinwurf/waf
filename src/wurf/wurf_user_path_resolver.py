@@ -46,6 +46,8 @@ class WurfUserPathResolver(object):
 
         return self.__parse_arguement(name)
 
-
     def __repr__(self):
+        """
+        :return: Representation of this object as a string
+        """
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)

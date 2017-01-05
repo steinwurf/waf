@@ -67,28 +67,31 @@ from . import wurf_resolve_context
 
 class WurfOptionsContext(Options.OptionsContext):
     """ Custom options context which will initiate the dependency resolve step.
-    
+
     Default waf will instantiate and use this context in two different ways:
-    
-    1. If waf is executed in a folder without a wscript, waf will simply create 
-       the context and then directly call parse_args(...) without running 
+
+    1. If waf is executed in a folder without a wscript, waf will simply create
+       the context and then directly call parse_args(...) without running
        execute(...). This can be seen in:
        https://github.com/waf-project/waf/blob/master/waflib/Scripting.py#L130-L139
-       
+
     2. Standard, where the options context is instantiated and executed:
        https://github.com/waf-project/waf/blob/master/waflib/Scripting.py#L262
     """
 
     def __init__(self, **kw):
         super(WurfOptionsContext, self).__init__(**kw)
-        
+
+        # List containing the command-line arguments not parsed
+        # by the resolve context options parser. These are the
+        # arguments that waf's defalt options parser
         self.waf_options = None
 
+        # Options parser used in the resolve step.
+        self.wurf_parser = None
+
     def execute(self):
-        
-        # @todo remove
-        print("WurfOptionsContext in execute")
-        
+
         # Create and execute the resolve context
         ctx = Context.create_context('resolve')
 
@@ -97,15 +100,16 @@ class WurfOptionsContext(Options.OptionsContext):
         finally:
             ctx.finalize()
 
+        # Fetch the resolve options parser such that we can
+        # print help if needed:
+        self.wurf_parser = ctx.registry.require('parser')
+
         # Fetch the arguments not parsed in the resolve step
-        self.waf_options = ctx.waf_options
-        
-        print("WurfOptionsContext after resolve context")
+        # We are just interested in the left-over args, which is the
+        # second value retuned by parse_known_args(...)
+        _, self.waf_options = self.wurf_parser.parse_known_args()
 
         super(WurfOptionsContext, self).execute()
-        
-        # @todo remove
-        print("WurfOptionsContext after super execute")
 
         # Call options in all dependencies
         wurf_resolve_context.recurse_dependencies(self)
@@ -117,13 +121,28 @@ class WurfOptionsContext(Options.OptionsContext):
         Here we inject the arguments which were not consumed in the resolve
         step.
         """
-        
-        # @todo remove
-        print("WurfOptionsContext in parse_args")
-        
-        # We expect _args to be None here, if it isn't we should probably 
-        # figure out why and see if we should combine it with the 
+
+        # We expect _args to be None here, if it isn't we should probably
+        # figure out why and see if we should combine it with the
         # self.waf_options list
         assert(_args is None)
-        
-        super(WurfOptionsContext, self).parse_args(_args=self.waf_options)
+
+        try:
+            super(WurfOptionsContext, self).parse_args(_args=self.waf_options)
+
+        except SystemExit:
+
+            # If optparse (which is the options parser use by waf) sees
+            # -h or --help it will call sys.exit(0) to stop the program and
+            # print the help message for the user.
+            #
+            # sys.exit() will raise the SytemExit exception so an easy way for
+            # us to add our help message here is to catch that and print our
+            # help and then re-raise.
+
+            if self.wurf_parser:
+                # We may not have a wurf_parser if running in a folder
+                # without a wscript (see class documentation)
+                self.wurf_parser.print_help()
+
+            raise
