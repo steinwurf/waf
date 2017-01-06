@@ -81,28 +81,31 @@ class WurfGitResolver2(object):
     Base Git Resolver functionality. Clones/pulls a git repository.
     """
 
-    def __init__(self, git, url_resolver, ctx, name, cwd, source):
+    def __init__(self, git, url_resolver, ctx, name, bundle_path, source):
         """ Construct a new WurfGitResolver instance.
 
         :param git: A WurfGit instance
         :param url_resolver: A WurfGitUrlResolver instance.
         :param ctx: A Waf Context instance.
         :param name: The name of the dependency as a string
-        :param cwd: The current working directory as a string
+        :param bundle_path: Current working directory as a string. This is the place
+            where we should create new folders etc.
         :param source: THe URL of the dependency as a string
         """
         self.git = git
         self.url_resolver = url_resolver
         self.ctx = ctx
         self.name = name
-        self.cwd = cwd
+        self.bundle_path = bundle_path
         self.source = source
 
-        assert os.path.isabs(self.cwd)
+        assert os.path.isabs(self.bundle_path)
 
     def resolve(self):
         """
         Fetches the dependency if necessary.
+
+        :return: The path to the resolved dependency as a string.
         """
         repo_url = self.url_resolver.determine_url(url=self.source)
 
@@ -112,15 +115,15 @@ class WurfGitResolver2(object):
 
         # The folder for storing different versions of this repository
         repo_name = self.name + '-master-' + repo_hash
-        repo_path = os.path.join(self.cwd, repo_name)
+        repo_path = os.path.join(self.bundle_path, repo_name)
 
         self.ctx.to_log('wurf: GitResolver name {} -> {}'.format(
-            self.name, self.repo_path))
+            self.name, repo_path))
 
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(repo_path):
             self.git.clone(repository=repo_url, directory=repo_name,
-                cwd=self.cwd)
+                cwd=self.bundle_path)
         else:
 
             # We only want to pull if we haven't just cloned. This avoids

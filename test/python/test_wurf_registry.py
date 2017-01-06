@@ -9,8 +9,6 @@ class Point(object):
         self.x = x
         self.y = y
 
-
-
 def test_wurf_registry():
 
     registry = wurf_registry.Registry()
@@ -59,9 +57,11 @@ def test_parse_user_path():
     registry = wurf_registry.Registry()
     registry.provide_value('parser', parser)
     registry.provide_value('args', args)
-    registry.provide('user_path', wurf_registry.parse_user_path)
 
-    path = registry.require('user_path', name='foo')
+    dependency = mock.Mock()
+    dependency.name = 'foo'
+
+    path = registry.require('user_path', dependency=dependency)
     assert path == None
 
     # Path specified
@@ -71,9 +71,8 @@ def test_parse_user_path():
     registry = wurf_registry.Registry()
     registry.provide_value('parser', parser)
     registry.provide_value('args', args)
-    registry.provide('user_path', wurf_registry.parse_user_path)
 
-    path = registry.require('user_path', name='foo')
+    path = registry.require('user_path', dependency=dependency)
     assert path == '/home/stw/code'
 
     print(registry.registry)

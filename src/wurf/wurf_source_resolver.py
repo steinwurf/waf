@@ -121,11 +121,9 @@ class WurfGitMethodResolver(object):
         """
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
-class WurfError(Exception):
-    """Basic exception for errors raised by wurf tools"""
-    pass
+from . import wurf_error
 
-class WurfSourceError(WurfError):
+class WurfSourceError(wurf_error.WurfError):
     """Generic exception for wurf"""
     def __init__(self, name, cwd, resolver, sources, **kwargs):
 
@@ -229,7 +227,7 @@ class WurfSourceResolver2(object):
     """
     """
 
-    def __init__(self, name, user_resolvers, type_resolvers, ctx):
+    def __init__(self, name, resolvers, ctx):
         """ Construct an instance.
 
         :param user_resolvers: A list of resolvers allowing the user to provide
@@ -241,28 +239,18 @@ class WurfSourceResolver2(object):
         :param ctx: A Waf Context instance.
         """
         self.name = name
-        self.user_resolvers = user_resolvers
-        self.type_resolvers = type_resolvers
+        self.resolvers = resolvers
         self.ctx = ctx
 
     def resolve(self):
         """ Resolve the dependency.
 
-        :param kwargs: Keyword arguments containing options for the dependency
         :return: Path to resolved dependency as a string
         """
 
-        # Try user methods
-        for r in self.user_resolvers:
-            path = r.resolve()
-
-            if path:
-                return path
-
-        # Use type resolver
-        for t in self.type_resolvers:
+        for resolver in self.resolvers:
             try:
-                path = t.resolve()
+                path = resolver.resolve()
             except Exception as e:
 
                 # Using exc_info will attache the current exception information
@@ -273,12 +261,13 @@ class WurfSourceResolver2(object):
                 # https://docs.python.org/2/library/logging.html
                 #
                 self.ctx.logger.debug("Source {} resolve failed:".format(
-                    t), exc_info=True)
+                    resolver), exc_info=True)
             else:
+                assert os.path.isdir(path)
                 return path
         else:
 
-            msg = "FAILED RESOLVE SOURCE {}".format(name)
+            msg = "FAILED RESOLVE SOURCE {} check log for detailed information".format(self.name)
             self.ctx.logger.debug(msg)
 
             raise RuntimeError(msg)
@@ -574,22 +563,25 @@ class WurfFastResolveDependency(object):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 
+from . import wurf_dependency
 
 class WurfActiveDependencyResolver(object):
 
-    def __init__(self, ctx, source_resolver):
+    def __init__(self, ctx, registry):
         self.ctx = ctx
         # The next resolver to handle the dependency
         self.next_resolver = None
-        self.source_resolver = source_resolver
+        self.registry = registry
 
-    def add_dependency(self, name, optional, bundle_path, **kwargs):
+    def add_dependency(self, name, optional, **kwargs):
 
         self.ctx.start_msg('Resolve dependency {}'.format(name))
 
+        dependency = wurf_dependency.WurfDependency(name=name, optional=optional, **kwargs)
+        resolver = self.registry.require('dependency_resolver2', dependency=dependency)
+
         try:
-            path = self.source_resolver.resolve(
-                name=name, cwd=bundle_path, **kwargs)
+            path = resolver.resolve()
 
         except Exception as e:
 
@@ -655,3 +647,83 @@ class WurfPassiveDependencyResolver(object):
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+class WurfPassivePathResolverError(wurf_error.WurfError):
+    """Generic exception for wurf"""
+    def __init__(self):
+        super(WurfPassivePathResolverError, self).__init__(
+            "No resolving passive paths when using configure")
+
+class WurfPassivePathResolver(object):
+
+    def __init__(self, ctx, name, sha1, active_resolve, bundle_config_path):
+        """ Construct an instance.
+
+        :param ctx: A Waf Context instance.
+        :param name: Name of the dependency as a string
+        :param sha1: Hash of the depenency information as a string
+        :param active_resolve: True if we are in an active resolve step
+        :param bundle_config_path: A string containing the path to where the
+            dependencies config json files should be / is stored.
+        """
+        self.ctx = ctx
+        self.name = name
+        self.sha1 = sha1
+        self.active_resolve = active_resolve
+        self.bundle_config_path = bundle_config_path
+
+    def __read_config(self):
+        """ Read the dependency config from file
+        """
+
+        config_path = os.path.join(
+            self.bundle_config_path, name + '.resolve.json')
+
+        if not os.path.isfile(config_path):
+            self.ctx.fatal('No config - re-run configure')
+
+        with open(config_path, 'r') as config_file:
+            return json.load(config_file)
+
+    def resolve(self):
+
+        if self.active_resolve:
+            raise WurfPassivePathResolverError()
+
+        config = self.__read_config(self.name)
+
+        if self.sha1 != config['sha1']:
+            self.ctx.fatal('Failed sha1 check')
+
+        path = str(config['path'])
+
+        if not os.path.is_dir(path):
+            self.ctx.fatal('Not valid path {}'.format(path))
+
+        return path
+
+
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+
+class WurfDependencyManager(object):
+
+    def __init__(self, steps):
+        """ Construct an instance.
+
+        :param steps: List of steps to carry out when adding a dependency.
+        """
+
+        self.steps = steps
+
+    def add_dependency(self, **kwargs):
+
+        dependency = wurf_dependency.WurfDependency(**kwargs)
+
+        for step in self.steps:
+
+            keep_going = step.process(dependency)
+
+            if not keep_going:
+                return
