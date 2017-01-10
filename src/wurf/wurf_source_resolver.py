@@ -278,6 +278,61 @@ class WurfSourceResolver2(object):
         """
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
+class WurfSourceResolver2(object):
+    """
+    """
+
+    def __init__(self, name, resolvers, ctx):
+        """ Construct an instance.
+
+        :param user_resolvers: A list of resolvers allowing the user to provide
+            the path to a dependency in various ways.
+
+        :param type_resolvers: A list of type resolvers object for the available
+           sources
+
+        :param ctx: A Waf Context instance.
+        """
+        self.name = name
+        self.resolvers = resolvers
+        self.ctx = ctx
+
+    def resolve(self):
+        """ Resolve the dependency.
+
+        :return: Path to resolved dependency as a string
+        """
+
+        for resolver in self.resolvers:
+            try:
+                path = resolver.resolve()
+            except Exception as e:
+
+                # Using exc_info will attache the current exception information
+                # to the log message (including traceback to where the
+                # exception was thrown).
+                # Waf is using the standard Python Logger so you can check the
+                # docs here (read about the exc_info kwargs):
+                # https://docs.python.org/2/library/logging.html
+                #
+                self.ctx.logger.debug("Source {} resolve failed:".format(
+                    resolver), exc_info=True)
+            else:
+                assert os.path.isdir(path)
+                return path
+        else:
+
+            msg = "FAILED RESOLVE SOURCE {} check log for detailed information".format(self.name)
+            self.ctx.logger.debug(msg)
+
+            raise RuntimeError(msg)
+
+    def __repr__(self):
+        """
+        :return: Representation of this object as a string
+        """
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
 
 import os
 import hashlib
@@ -577,6 +632,8 @@ class WurfActiveDependencyResolver(object):
 
         self.ctx.start_msg('Resolve dependency {}'.format(name))
 
+        del kwargs['sha1']
+
         dependency = wurf_dependency.WurfDependency(name=name, optional=optional, **kwargs)
         resolver = self.registry.require('dependency_resolver2', dependency=dependency)
 
@@ -598,7 +655,7 @@ class WurfActiveDependencyResolver(object):
         self.ctx.end_msg(path)
 
         self.next_resolver.add_dependency(name=name, optional=optional,
-            path=path, **kwargs)
+            path=path, sha1=dependency.sha1, **kwargs)
 
 
     def __repr__(self):
@@ -707,23 +764,127 @@ class WurfPassivePathResolver(object):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 
+class WurfOnActiveStorePathResolver(object):
+
+    def __init__(self, resolver, name, sha1, active_resolve, bundle_config_path):
+        """ Construct an instance.
+
+        :param resolver: A resolver which will do the actual job
+        :param name: Name of the dependency as a string
+        :param sha1: Hash of the depenency information as a string
+        :param active_resolve: True if we are in an active resolve step
+        :param bundle_config_path: A string containing the path to where the
+            dependencies config json files should be / is stored.
+        """
+        self.resolver = resolver
+        self.name = name
+        self.sha1 = sha1
+        self.active_resolve = active_resolve
+        self.bundle_config_path = bundle_config_path
+
+    def __write_config(self, path):
+        """ Write the dependency config from file
+        """
+
+        config_path = os.path.join(
+            self.bundle_config_path, self.name + '.resolve.json')
+
+        config = {'sha1': self.sha1, 'path':path}
+
+        with open(config_path, 'w') as config_file:
+            json.dump(config, config_file)
+
+
+    def resolve(self):
+
+        path = self.resolver.resolve()
+
+        if self.active_resolve:
+            self.__write_config(path=path)
+
+        return path
+
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+
+
+class WurfSkipDependencyError(wurf_error.WurfError):
+    """Exception raised when a dependency should be skipped."""
+    def __init__(self):
+        super(WurfPassivePathResolverError, self).__init__(
+            "No resolving passive paths when using configure")
+
 class WurfDependencyManager(object):
 
-    def __init__(self, steps):
+    def __init__(self, resolver, cache, ctx):
         """ Construct an instance.
 
         :param steps: List of steps to carry out when adding a dependency.
         """
 
-        self.steps = steps
+        self.resolver = resolver
+        self.cache = cache
+        self.ctx = ctx
+
+        self.seen_dependencies = {}
 
     def add_dependency(self, **kwargs):
 
         dependency = wurf_dependency.WurfDependency(**kwargs)
 
-        for step in self.steps:
+        if self.__skip_dependency(dependency):
+            return
 
-            keep_going = step.process(dependency)
+        path = self.__resolve_dependency(dependency)
 
-            if not keep_going:
-                return
+        if not path:
+            return
+
+        self.cache[dependency.name] = {'path': path, 'recurse': dependency.recurse}
+
+        if dependency.recurse:
+            self.ctx.recurse(path)
+
+    def __skip_dependency(self, dependency):
+
+        if dependency.name in self.seen_dependencies:
+
+            seen_dependency = self.seen_dependencies[dependency.name]
+
+            if seen_dependency.sha1 != dependency.sha1:
+
+                self.ctx.fatal(
+                    "SHA1 mismatch adding dependency {} was {}".format(
+                    dependency, seen_dependency))
+
+            # This dependency is already in the cache lets leave
+            return True
+
+        self.seen_dependencies[name] = dependency
+
+        return False
+
+    def __resolve_dependency(dependency):
+
+        self.ctx.start_msg('Resolve dependency {}'.format(dependency.name))
+
+        try:
+
+            path = self.resolver.resolve()
+
+        except Exception as e:
+
+            self.ctx.to_log('Exception while fetching dependency: {}'.format(e))
+
+            if not dependency.optional:
+                raise
+
+            # An optional dependency might be unavailable if the user
+            # does not have a license to access the repository, so we just
+            # print the status message and continue
+            self.ctx.end_msg('Unavailable', color='RED')
+
+        else:
+            self.ctx.end_msg(path)
+
+        return path

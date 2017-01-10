@@ -12,7 +12,7 @@ def test_wurf_dependency():
            "method": "checkout",
            "sources":["gitrepo1.git", "gitrepo2.git"]}
 
-    w = wurf_dependency.WurfDependency(dep)
+    w = wurf_dependency.WurfDependency(**dep)
 
     assert w.name == "waf"
     assert w.optional == True
@@ -21,6 +21,6 @@ def test_wurf_dependency():
     assert w.method == "checkout"
     assert w.sources == ["gitrepo1.git", "gitrepo2.git"]
 
-    w["sha1"] = "sd324dsf"
-
-    assert w.sha1 == "sd324dsf"
+    # Check there is a sha1 key
+    assert "sha1" in w
+    assert len(w.sha1) > 0

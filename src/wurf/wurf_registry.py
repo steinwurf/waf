@@ -472,6 +472,9 @@ def build_wurf_git_semver_resolver2(registry, dependency):
 def dependency_resolver2(registry, dependency):
     """ Builds a WurfSourceResolver instance."""
 
+    active_resolve = registry.require('active_resolve')
+    bundle_config_path = registry.require('bundle_config_path')
+
     user_resolvers = [
         registry.require('user_path_resolver2', dependency=dependency),
         registry.require('passive_path_resolver', dependency=dependency)]
@@ -484,8 +487,14 @@ def dependency_resolver2(registry, dependency):
 
     resolvers = user_resolvers + source_resolvers
 
-    return wurf_source_resolver.WurfSourceResolver2(
+    source_resolver = wurf_source_resolver.WurfSourceResolver2(
         name=dependency.name, resolvers=resolvers, ctx=ctx)
+
+    return wurf_source_resolver.WurfOnActiveStorePathResolver(
+        resolver=source_resolver, name=dependency.name,
+        sha1=dependency.sha1, active_resolve=active_resolve,
+        bundle_config_path=bundle_config_path)
+
 
 
 def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
