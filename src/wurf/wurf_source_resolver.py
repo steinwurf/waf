@@ -88,97 +88,13 @@ class WurfSourceError(wurf_error.WurfError):
 
 
 
+
+
 class WurfSourceResolver(object):
     """
     """
 
-    def __init__(self, user_resolvers, type_resolvers, ctx):
-        """ Construct an instance.
-
-        :param user_resolvers: A list of resolvers allowing the user to provide
-            the path to a dependency in various ways.
-
-        :param type_resolvers: A dict object mapping source types to resolvers
-            instances, providing the resolve(...) function.
-
-                Example:
-                    {'git': git_resolver_instance,
-                     'ftp': ftp_resolver_instance}
-
-        :param ctx: A Waf Context instance.
-        """
-        self.user_resolvers = user_resolvers
-        self.type_resolvers = type_resolvers
-        self.ctx = ctx
-
-    def resolve(self, name, cwd, resolver, sources, **kwargs):
-        """ Resolve the dependency.
-
-        - First see if the user has provided some options
-        - Then use the specified git method
-
-        :param name: Name of the dependency as a string
-        :param cwd: Current working directory as a string
-        :param resolver: The type of resolver to use.
-        :param sources: List of URLs which can be used for the dependency.
-        :param kwargs: Keyword arguments containing options for the dependency
-
-        :return: Path to resolved dependency as a string
-        """
-
-        # Try user method
-        for r in self.user_resolvers:
-            path = r.resolve(name=name, cwd=cwd, resolver=resolver,
-                sources=sources, **kwargs)
-
-            if path:
-                return path
-
-        # Use resolver
-        for source in sources:
-            try:
-                path = self.__resolve(name, cwd, resolver, source, **kwargs)
-            except Exception as e:
-
-                # Using exc_info will attache the current exception information
-                # to the log message (including traceback to where the
-                # exception was thrown).
-                # Waf is using the standard Python Logger so you can check the
-                # docs here (read about the exc_info kwargs):
-                # https://docs.python.org/2/library/logging.html
-                #
-                self.ctx.logger.debug("Source {} resolve failed:".format(
-                    source), exc_info=True)
-            else:
-                return path
-        else:
-
-            msg = "Error resolving sources for {}:\n".format(name)
-            msg += "\tcwd={}\n".format(cwd)
-            msg += "\tresolver={}\n".format(resolver)
-            msg += "\tkwargs={}\n".format(kwargs)
-            msg += "\tsources: {}\n".format(sources)
-
-            self.ctx.logger.debug(msg)
-
-            raise WurfSourceError(name=name, cwd=cwd, resolver=resolver,
-                sources=sources, **kwargs)
-
-
-    def __resolve(self, name, cwd, resolver, source, **kwargs):
-
-        r = self.type_resolvers[resolver]
-        return r.resolve(name=name, cwd=cwd, source=source, **kwargs)
-
-    def __repr__(self):
-        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
-
-
-class WurfSourceResolver2(object):
-    """
-    """
-
-    def __init__(self, name, resolvers, ctx):
+    def __init__(self, dependency, resolvers, ctx):
         """ Construct an instance.
 
         :param user_resolvers: A list of resolvers allowing the user to provide
@@ -189,7 +105,7 @@ class WurfSourceResolver2(object):
 
         :param ctx: A Waf Context instance.
         """
-        self.name = name
+        self.dependency = dependency
         self.resolvers = resolvers
         self.ctx = ctx
 
@@ -218,62 +134,7 @@ class WurfSourceResolver2(object):
                 return path
         else:
 
-            msg = "FAILED RESOLVE SOURCE {} check log for detailed information".format(self.name)
-            self.ctx.logger.debug(msg)
-
-            raise RuntimeError(msg)
-
-    def __repr__(self):
-        """
-        :return: Representation of this object as a string
-        """
-        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
-
-class WurfSourceResolver2(object):
-    """
-    """
-
-    def __init__(self, name, resolvers, ctx):
-        """ Construct an instance.
-
-        :param user_resolvers: A list of resolvers allowing the user to provide
-            the path to a dependency in various ways.
-
-        :param type_resolvers: A list of type resolvers object for the available
-           sources
-
-        :param ctx: A Waf Context instance.
-        """
-        self.name = name
-        self.resolvers = resolvers
-        self.ctx = ctx
-
-    def resolve(self):
-        """ Resolve the dependency.
-
-        :return: Path to resolved dependency as a string
-        """
-
-        for resolver in self.resolvers:
-            try:
-                path = resolver.resolve()
-            except Exception as e:
-
-                # Using exc_info will attache the current exception information
-                # to the log message (including traceback to where the
-                # exception was thrown).
-                # Waf is using the standard Python Logger so you can check the
-                # docs here (read about the exc_info kwargs):
-                # https://docs.python.org/2/library/logging.html
-                #
-                self.ctx.logger.debug("Source {} resolve failed:".format(
-                    resolver), exc_info=True)
-            else:
-                assert os.path.isdir(path)
-                return path
-        else:
-
-            msg = "FAILED RESOLVE SOURCE {} check log for detailed information".format(self.name)
+            msg = "FAILED RESOLVE SOURCE {} check log for detailed information".format(self.dependency)
             self.ctx.logger.debug(msg)
 
             raise RuntimeError(msg)

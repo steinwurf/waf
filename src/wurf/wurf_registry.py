@@ -268,8 +268,8 @@ def dependency_resolver(registry, dependency):
 
     resolvers = user_resolvers + source_resolvers
 
-    source_resolver = wurf_source_resolver.WurfSourceResolver2(
-        name=dependency.name, resolvers=resolvers, ctx=ctx)
+    source_resolver = wurf_source_resolver.WurfSourceResolver(
+        dependency=dependency, resolvers=resolvers, ctx=ctx)
 
     return OnActiveStorePathResolver(
         resolver=source_resolver, name=dependency.name,
