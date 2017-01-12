@@ -6,15 +6,17 @@ import argparse
 from . import wurf_git
 from . import wurf_git_url_resolver
 from . import wurf_git_resolver
-from . import wurf_git_checkout_resolver
+
 from . import wurf_git_semver_resolver
-from . import wurf_source_resolver
+
 from . import wurf_user_checkout_resolver
 from . import wurf_user_path_resolver
-from . import wurf_hash_manager
 from .dependency_manager import DependencyManager
 from .on_active_store_path_resolver import OnActiveStorePathResolver
 from .on_passive_load_path_resolver import OnPassiveLoadPathResolver
+from .try_resolver import TryResolver
+from .git_checkout_resolver import GitCheckoutResolver
+
 
 from . import wurf_error
 
@@ -210,9 +212,8 @@ def git_checkout_resolvers(registry, dependency):
     checkout = dependency.checkout
 
     def new_resolver(git_resolver):
-        return wurf_git_checkout_resolver.WurfGitCheckoutResolver2(
-            git=git, git_resolver=git_resolver, ctx=ctx, name=name,
-            bundle_path=bundle_path, checkout=checkout)
+        return GitCheckoutResolver(git=git, git_resolver=git_resolver, ctx=ctx, 
+            name=name, bundle_path=bundle_path, checkout=checkout)
 
     resolvers = [new_resolver(git_resolver) for git_resolver in git_resolvers]
     return resolvers
@@ -268,11 +269,10 @@ def dependency_resolver(registry, dependency):
 
     resolvers = user_resolvers + source_resolvers
 
-    source_resolver = wurf_source_resolver.WurfSourceResolver(
-        dependency=dependency, resolvers=resolvers, ctx=ctx)
+    try_resolver = TryResolver(resolvers=resolvers, ctx=ctx)
 
     return OnActiveStorePathResolver(
-        resolver=source_resolver, name=dependency.name,
+        resolver=try_resolver, name=dependency.name,
         sha1=dependency.sha1, active_resolve=active_resolve,
         bundle_config_path=bundle_config_path)
 

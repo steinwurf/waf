@@ -74,38 +74,23 @@ import os
 
 from . import wurf_error
 
-class WurfSourceError(wurf_error.WurfError):
+class NoPathResolvedError(wurf_error.WurfError):
     """Generic exception for wurf"""
-    def __init__(self, name, cwd, resolver, sources, **kwargs):
-
-        self.name = name
-        self.cwd = cwd
-        self.resolver = resolver
-        self.sources = sources
-        self.kwargs = kwargs
-
-        super(WurfSourceError, self).__init__("Error resolving sources for {}".format(name))
+    def __init__(self):
+        super(NoPathResolvedError, self).__init__(
+            "Could not resolve dependency path.")
 
 
+class TryResolver(object):
+    """ Iterates through a list of resolvers until a path is resolved."""
 
-
-
-class WurfSourceResolver(object):
-    """
-    """
-
-    def __init__(self, dependency, resolvers, ctx):
+    def __init__(self, resolvers, ctx):
         """ Construct an instance.
 
-        :param user_resolvers: A list of resolvers allowing the user to provide
-            the path to a dependency in various ways.
-
-        :param type_resolvers: A list of type resolvers object for the available
+        :param resolvers: A list of resolvers object for the available
            sources
-
         :param ctx: A Waf Context instance.
         """
-        self.dependency = dependency
         self.resolvers = resolvers
         self.ctx = ctx
 
@@ -113,6 +98,7 @@ class WurfSourceResolver(object):
         """ Resolve the dependency.
 
         :return: Path to resolved dependency as a string
+        :raises NoPathResolved: if no resolver produced a valid path. 
         """
 
         for resolver in self.resolvers:
@@ -130,17 +116,8 @@ class WurfSourceResolver(object):
                 self.ctx.logger.debug("Source {} resolve failed:".format(
                     resolver), exc_info=True)
             else:
+                
                 assert os.path.isdir(path)
                 return path
         else:
-
-            msg = "FAILED RESOLVE SOURCE {} check log for detailed information".format(self.dependency)
-            self.ctx.logger.debug(msg)
-
-            raise RuntimeError(msg)
-
-    def __repr__(self):
-        """
-        :return: Representation of this object as a string
-        """
-        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
+            raise NoPathResolvedError()
