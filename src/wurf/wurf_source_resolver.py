@@ -70,57 +70,7 @@ import os
 
 
 
-class WurfGitMethodResolver(object):
-    """
-    """
 
-    def __init__(self, user_methods, git_methods):
-        """ Construct an instance.
-
-        :param user_methods: A list of user specified git resolvers. These will
-            be tried before using the method.
-        :param git_methods: A dict object mapping method types to resolvers
-            instances, providing the resolve(...) function.
-
-                Example:
-                    {'checkout': checkout_resolver_instance,
-                     'semver': semver_resolver_instance }
-        """
-        self.user_methods = user_methods
-        self.git_methods = git_methods
-
-    def resolve(self, name, cwd, source, method, **kwargs):
-        """ Resolve the git dependency.
-
-        - First see if the user has provided some options
-        - Then use the specified git method
-
-        :param name: Name of the dependency as a string
-        :param cwd: Current working directory as a string
-        :param source: URL of the git repository as a string
-        :param method: The git method to use.
-        :param kwargs: Keyword arguments containing options for the dependency
-
-        :return: Path to resolved dependency as a string
-        """
-
-        # Try user method
-        for m in self.user_methods:
-            path = m.resolve(name=name, cwd=cwd, source=source, **kwargs)
-
-            if path:
-                return path
-
-        # Use git method
-        r = self.git_methods[method]
-        return r.resolve(name=name, cwd=cwd, source=source, **kwargs)
-
-
-    def __repr__(self):
-        """
-        :return: Representation of this object as a string
-        """
-        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
 from . import wurf_error
 
