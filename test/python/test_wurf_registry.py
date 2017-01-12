@@ -24,28 +24,17 @@ def test_wurf_registry():
     assert p.x == 0
     assert p.y == 0
 
-    # Bind an arguement in the provide function
-    registry.provide('point', build_point, x=1)
-
-    p = registry.require('point')
-
-    assert p.x == 1
-    assert p.y == 0
+    # Check that we cannot add the same provider twice
+    with pytest.raises(Exception):
+        registry.provide('point', build_point)
 
     # Bind an argument in the require
-    registry.provide('point', build_point)
+    registry.provide('point', build_point, override=True)
 
     p = registry.require('point', x=1)
 
     assert p.x == 1
     assert p.y == 0
-
-    # Bind the same arguement in both provide and require
-    # should rasie an exception
-    registry.provide('point', build_point, x=1)
-
-    with pytest.raises(Exception):
-        p = registry.require('point', x=1)
 
 
 def test_parse_user_path():

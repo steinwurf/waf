@@ -12,6 +12,9 @@ from . import wurf_source_resolver
 from . import wurf_user_checkout_resolver
 from . import wurf_user_path_resolver
 from . import wurf_hash_manager
+from .dependency_manager import DependencyManager
+from .on_active_store_path_resolver import OnActiveStorePathResolver
+from .on_passive_load_path_resolver import OnPassiveLoadPathResolver
 
 from . import wurf_error
 
@@ -43,18 +46,19 @@ class Registry(object):
         for k,v in Registry.providers.items():
             self.provide(k,v)
 
-    def provide(self, feature, provider, **kwargs):
+    def provide(self, feature, provider, override=False):
+        """
+        :param feature: The name of the feature as a string
+        :param provider: Function to call while will provide the "feature"
+        :param override: Determines whether the provider should override an
+            existing providers. True of we will override an existing provider for
+            the same feature.
+        """
 
-        def call(**_kwargs):
+        if not override and feature in self.registry:
+            raise WurfProvideRegistryError(feature)
 
-            # Python 2.x does not allow two keyword dicts, so we merge
-            # them manually:
-            # http://stackoverflow.com/a/33350709/1717320
-            for k, v in _kwargs.items():
-                if k in kwargs:
-                    raise RuntimeError('No duplicates')
-                kwargs[k] = v
-
+        def call(**kwargs):
             return provider(registry=self, **kwargs)
 
         self.registry[feature] = call
@@ -78,213 +82,12 @@ def provide(func):
     Registry.providers[func.__name__] = func
 
 
-def build_wurf_git_resolver(registry):
-    """ Builds a WurfGitResolver instance."""
 
-    git = registry.require('git')
-    url_resolver = registry.require('git_url_resolver')
-    ctx = registry.require('ctx')
-
-    return wurf_git_resolver.WurfGitResolver(
-        git=git, url_resolver=url_resolver, ctx=ctx)
-
-def build_wurf_git_checkout_resolver(registry):
-    """ Builds a WurfGitResolver instance."""
-
-    git = registry.require('git')
-    git_resolver = registry.require('git_resolver')
-    ctx = registry.require('ctx')
-
-    return wurf_git_checkout_resolver.WurfGitCheckoutResolver(
-        git=git, git_resolver=git_resolver, ctx=ctx)
-
-def build_wurf_git_semver_resolver(registry):
-    """ Builds a WurfGitSemverResolver instance."""
-
-    git = registry.require('git')
-    git_resolver = registry.require('git_resolver')
-    ctx = registry.require('ctx')
-    semver = registry.require('semver')
-
-    return wurf_git_semver_resolver.WurfGitSemverResolver(
-        git=git, git_resolver=git_resolver, ctx=ctx, semver=semver)
-
-def build_wurf_git_method_resolver(registry):
-    """ Builds a WurfGitMethodResolver instance."""
-
-    user_methods = [registry.require('user_checkout_resolver')]
-
-    git_methods = {
-        'checkout': registry.require('git_checkout_resolver'),
-        'semver': registry.require('git_semver_resolver')}
-
-    return wurf_source_resolver.WurfGitMethodResolver(
-        user_methods=user_methods, git_methods=git_methods)
-
-def build_wurf_user_checkout_resolver(registry):
-    """ Builds a WurfUserCheckoutResolver instance."""
-
-    git_checkout_resolver = registry.require('git_checkout_resolver')
-    parser = registry.require('parser')
-
-    return wurf_user_checkout_resolver.WurfUserCheckoutResolver(
-        parser=parser, git_checkout_resolver=git_checkout_resolver)
-
-def build_wurf_user_path_resolver(registry):
-    """ Builds a WurfUserPathResolver instance."""
-
-    parser = registry.require('parser')
-    args = registry.require('args')
-
-    return wurf_user_path_resolver.WurfUserPathResolver(
-        parser=parser, args=args)
-
-def build_source_resolver(registry):
-    """ Builds a WurfSourceResolver instance."""
-
-    user_resolvers = [registry.require('user_path_resolver')]
-
-    type_resolvers = {
-        'git': registry.require('git_method_resolver')}
-
-    ctx = registry.require('ctx')
-
-    return wurf_source_resolver.WurfSourceResolver(
-        user_resolvers=user_resolvers, type_resolvers=type_resolvers, ctx=ctx)
-
-def build_wurf_git(registry):
-    """ Builds a WurfGit instance."""
-
-    ctx = registry.require('ctx')
-    git_binary = registry.require('git_binary')
-
-    return wurf_git.WurfGit(git_binary=git_binary, ctx=ctx)
-
-def build_git_url_resolver(registry):
-
+@provide
+def git_url_resolver(registry):
     return wurf_git_url_resolver.WurfGitUrlResolver()
 
-def build_hash_manager(registry):
-    return wurf_hash_manager.WurfHashManager()
 
-def build_skip_seen_dependency_resolver(registry):
-    ctx = registry.require('ctx')
-    return wurf_source_resolver.WurfSkipSeenDependency(ctx=ctx)
-
-def build_bundle_path_resolver(registry):
-    utils = registry.require('utils')
-    parser = registry.require('parser')
-    default_bundle_path = registry.require('default_bundle_path')
-    args = registry.require('args')
-
-    return wurf_source_resolver.WurfBundlePath(utils=utils,
-        parser=parser, default_bundle_path=default_bundle_path, args=args)
-
-def build_active_dependency_resolver(registry):
-    ctx = registry.require('ctx')
-
-    return wurf_source_resolver.WurfActiveDependencyResolver(ctx=ctx,
-        registry=registry)
-
-def build_passive_dependency_resolver(registry):
-    ctx = registry.require('ctx')
-    bundle_config_path = registry.require('bundle_config_path')
-
-    return wurf_source_resolver.WurfPassiveDependencyResolver(
-        ctx=ctx, bundle_config_path=bundle_config_path)
-
-def build_store_dependency_resolver(registry):
-    bundle_config_path = registry.require('bundle_config_path')
-
-    return wurf_source_resolver.WurfStoreDependency(
-        bundle_config_path=bundle_config_path)
-
-def build_recurse_dependency_resolver(registry):
-    ctx = registry.require('ctx')
-
-    return wurf_source_resolver.WurfRecurseDependency(ctx=ctx)
-
-def build_cache_dependency_resolver(registry):
-    cache = registry.require('cache')
-
-    return wurf_source_resolver.WurfCacheDependency(cache=cache)
-
-def build_null_dependency_resolver(registry):
-
-    return wurf_source_resolver.WurfNullResolver()
-
-def build_dependency_manager(registry):
-
-    # The dependency manager instance modifies state of the following
-    # objects these therefore should be unique for each manager built
-
-    active_resolve = registry.require('active_resolve')
-
-    registry.provide_value('parser',
-        argparse.ArgumentParser(description='Resolve Options',
-        # add_help=False will remove the default handling of --help and -h
-        # https://docs.python.org/3/library/argparse.html#add-help
-        #
-        # This will be handled by waf's default options context.
-        add_help=False,
-        # Remove printing usage help, like:
-        #    usage: waf [--bundle-path]
-        # When printing help, this seems to be an undocumented feature of
-        # argparse: http://stackoverflow.com/a/14591302/1717320
-        usage=argparse.SUPPRESS))
-
-    # Dict object which will contain the path to the resolved
-    # dependencies.
-    registry.provide_value('cache', {})
-
-    if active_resolve:
-        return build_active_dependency_manager(registry)
-    else:
-        return build_passive_dependency_manager(registry)
-
-def build_active_dependency_manager(registry):
-
-    hash_manager = registry.require('hash_manager')
-    skip_resolver = registry.require('skip_seen_dependency_resolver')
-    active_resolver = registry.require('active_dependency_resolver')
-    store_resolver = registry.require('store_dependency_resolver')
-    recurse_resolver = registry.require('recurse_dependency_resolver')
-    cache_resolver = registry.require('cache_dependency_resolver')
-    null_resolver = registry.require('null_dependency_resolver')
-
-    hash_manager.next_resolver = skip_resolver
-    skip_resolver.next_resolver = active_resolver
-    #bundle_path_resolver.next_resolver = active_resolver
-    active_resolver.next_resolver = store_resolver
-    store_resolver.next_resolver = recurse_resolver
-    recurse_resolver.next_resolver = cache_resolver
-    cache_resolver.next_resolver = null_resolver
-
-    return hash_manager
-
-def build_passive_dependency_manager(registry):
-
-    hash_manager = registry.require('hash_manager')
-    skip_resolver = registry.require('skip_seen_dependency_resolver')
-    active_resolver = registry.require('active_dependency_resolver')
-    recurse_resolver = registry.require('recurse_dependency_resolver')
-    cache_resolver = registry.require('cache_dependency_resolver')
-    null_resolver = registry.require('null_dependency_resolver')
-
-    hash_manager.next_resolver = skip_resolver
-    skip_resolver.next_resolver = active_resolver
-    active_resolver.next_resolver = recurse_resolver
-    recurse_resolver.next_resolver = cache_resolver
-    cache_resolver.next_resolver = null_resolver
-
-    return hash_manager
-
-
-
-############################################################
-############################################################
-############################################################
-############################################################
 
 @provide
 def bundle_path(registry):
@@ -322,19 +125,6 @@ def bundle_path(registry):
 
     return known_args.bundle_path
 
-@provide
-def git_method_source_resolvers(registry, dependency):
-    """ Builds a WurfGitMethodResolver instance.
-
-    :param registry: A Registry instance
-    :param dependency: A WurfDependency instance.
-    """
-
-    method = dependency.method
-    method_key = "git_{}_source_resolvers".format(method)
-
-    return registry.require(method_key, dependency=dependency)
-
 
 @provide
 def user_path(registry, dependency):
@@ -371,14 +161,14 @@ def user_path(registry, dependency):
     return arguments[option]
 
 @provide
-def user_path_resolver2(registry, dependency):
+def user_path_resolver(registry, dependency):
 
     path = registry.require('user_path', dependency=dependency)
 
     return wurf_user_path_resolver.WurfUserPathResolver2(path=path)
 
 @provide
-def git_source_resolvers(registry, dependency):
+def git_resolvers(registry, dependency):
     """ Builds a WurfGitResolver instance.
 
     :param registry: A Registry instance.
@@ -394,33 +184,16 @@ def git_source_resolvers(registry, dependency):
     sources = dependency.sources
 
     def new_resolver(source):
-        return wurf_git_resolver.WurfGitResolver2(
+        return wurf_git_resolver.GitResolver(
             git=git, url_resolver=url_resolver, ctx=ctx, name=name,
             bundle_path=bundle_path, source=source)
 
     resolvers = [new_resolver(source) for source in sources]
     return resolvers
 
-@provide
-def passive_path_resolver(registry, dependency):
-    """ Builds a WurfPassivePathResolver instance.
-
-    :param registry: A Registry instance.
-    :param dependency: A WurfDependency instance.
-    """
-
-    ctx = registry.require('ctx')
-    bundle_config_path = registry.require('bundle_config_path')
-    active_resolve = registry.require('active_resolve')
-
-    name = dependency.name
-    sha1 = dependency.sha1
-
-    return wurf_source_resolver.WurfPassivePathResolver(ctx=ctx, name=name,
-        sha1=sha1, active_resolve=active_resolve, bundle_config_path=bundle_config_path)
 
 @provide
-def git_checkout_source_resolvers(registry, dependency):
+def git_checkout_resolvers(registry, dependency):
     """ Builds a WurfGitCheckoutResolver instance.
 
     :param registry: A Registry instance.
@@ -429,7 +202,7 @@ def git_checkout_source_resolvers(registry, dependency):
 
     git = registry.require('git')
     ctx = registry.require('ctx')
-    git_resolvers = registry.require('git_method_source_resolvers',
+    git_resolvers = registry.require('git_resolvers',
         dependency=dependency)
     bundle_path = registry.require('bundle_path')
 
@@ -444,39 +217,47 @@ def git_checkout_source_resolvers(registry, dependency):
     resolvers = [new_resolver(git_resolver) for git_resolver in git_resolvers]
     return resolvers
 
-def build_wurf_git_semver_resolver2(registry, dependency):
-    """ Builds a WurfGitCheckoutResolver instance.
+
+@provide
+def git_source_resolvers(registry, dependency):
+    """ Builds git resolvers
 
     :param registry: A Registry instance.
     :param dependency: A WurfDependency instance.
     """
 
-    git = registry.require('git')
-    ctx = registry.require('ctx')
-    semver = registry.require('semver')
-    git_resolvers = registry.require('git_resolver', dependency=dependency)
-    bundle_path = registry.require('bundle_path')
+    method = dependency.method
+    method_key = "git_{}_resolvers".format(method)
 
-    name = dependency.name
-    major = dependency.major
-
-    def new_resolver(git_resolver):
-        return wurf_git_checkout_resolver.WurfGitSemverResolver2(
-            git=git, git_resolver=git_resolver, ctx=ctx, semver=semver,
-            name=name, bundle_path=bundle_path, major=major)
-
-    resolvers = [new_resolver(git_resolver) for git_resolver in git_resolvers]
-    return resolvers
+    return registry.require(method_key, dependency=dependency)
 
 @provide
-def dependency_resolver2(registry, dependency):
+def passive_path_resolver(registry, dependency):
+    """ Builds a WurfPassivePathResolver instance.
+
+    :param registry: A Registry instance.
+    """
+
+    ctx = registry.require('ctx')
+    bundle_config_path = registry.require('bundle_config_path')
+    active_resolve = registry.require('active_resolve')
+
+    name = dependency.name
+    sha1 = dependency.sha1
+
+    return OnPassiveLoadPathResolver(ctx=ctx, name=name, sha1=sha1,
+        active_resolve=active_resolve, bundle_config_path=bundle_config_path)
+
+
+@provide
+def dependency_resolver(registry, dependency):
     """ Builds a WurfSourceResolver instance."""
 
     active_resolve = registry.require('active_resolve')
     bundle_config_path = registry.require('bundle_config_path')
 
     user_resolvers = [
-        registry.require('user_path_resolver2', dependency=dependency),
+        registry.require('user_path_resolver', dependency=dependency),
         registry.require('passive_path_resolver', dependency=dependency)]
 
     resolver_key = "{}_source_resolvers".format(dependency.resolver)
@@ -490,12 +271,37 @@ def dependency_resolver2(registry, dependency):
     source_resolver = wurf_source_resolver.WurfSourceResolver2(
         name=dependency.name, resolvers=resolvers, ctx=ctx)
 
-    return wurf_source_resolver.WurfOnActiveStorePathResolver(
+    return OnActiveStorePathResolver(
         resolver=source_resolver, name=dependency.name,
         sha1=dependency.sha1, active_resolve=active_resolve,
         bundle_config_path=bundle_config_path)
 
 
+@provide
+def dependency_manager(registry):
+
+    ctx = registry.require('ctx')
+
+    registry.provide_value('parser',
+        argparse.ArgumentParser(description='Resolve Options',
+        # add_help=False will remove the default handling of --help and -h
+        # https://docs.python.org/3/library/argparse.html#add-help
+        #
+        # This will be handled by waf's default options context.
+        add_help=False,
+        # Remove printing usage help, like:
+        #    usage: waf [--bundle-path]
+        # When printing help, this seems to be an undocumented feature of
+        # argparse: http://stackoverflow.com/a/14591302/1717320
+        usage=argparse.SUPPRESS))
+
+    # Dict object which will contain the path to the resolved
+    # dependencies.
+    cache = dict()
+    registry.provide_value('cache', cache)
+
+    return DependencyManager(registry=registry,
+        cache=cache, ctx=ctx)
 
 def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
     active_resolve, semver, utils, args):
@@ -529,27 +335,5 @@ def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
     registry.provide_value('semver', semver)
     registry.provide_value('utils', utils)
     registry.provide_value('args', args)
-
-    registry.provide('git', build_wurf_git)
-    registry.provide('git_url_resolver', build_git_url_resolver)
-    registry.provide('git_resolver', build_wurf_git_resolver)
-    registry.provide('git_checkout_resolver', build_wurf_git_checkout_resolver)
-    registry.provide('git_semver_resolver', build_wurf_git_semver_resolver)
-    registry.provide('user_checkout_resolver', build_wurf_user_checkout_resolver)
-    registry.provide('user_path_resolver', build_wurf_user_path_resolver)
-    registry.provide('git_method_resolver', build_wurf_git_method_resolver)
-    registry.provide('source_resolver', build_source_resolver)
-    registry.provide('hash_manager', build_hash_manager)
-    registry.provide('skip_seen_dependency_resolver',
-        build_skip_seen_dependency_resolver)
-    registry.provide('bundle_path_resolver', build_bundle_path_resolver)
-    registry.provide('active_dependency_resolver',
-        build_active_dependency_resolver)
-    registry.provide('store_dependency_resolver', build_store_dependency_resolver)
-    registry.provide('recurse_dependency_resolver', build_recurse_dependency_resolver)
-    registry.provide('cache_dependency_resolver', build_cache_dependency_resolver)
-    registry.provide('null_dependency_resolver', build_null_dependency_resolver)
-    registry.provide('passive_dependency_resolver', build_passive_dependency_resolver)
-    registry.provide('dependency_manager', build_dependency_manager)
 
     return registry

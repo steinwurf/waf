@@ -63,7 +63,7 @@ def resolve(ctx):
 
     # Get the registry and replace the git builder
     registry = ctx.registry
-    registry.provide('git', build_fake_git)
+    registry.provide('git', build_fake_git, override=True)
 
     # Rebuild the dependency manager
     ctx.dependency_manager = registry.require('dependency_manager')
@@ -101,7 +101,7 @@ def build(bld):
                 source='main.cpp',
                 target='app',
                 use='foo')
-                
+
     print("in build")
 
     print(waflib.extras.wurf.wurf_resolve_context.dependency_cache)
