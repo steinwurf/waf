@@ -21,12 +21,12 @@ git_schemes = ['https://', 'git@', 'git://']
 #    url = urlsplit(url, scheme=preferred_scheme)
 #    return url.geturl()
 
-class WurfGitUrlResolver(object):
+class GitUrl(object):
 
     def __init__(self, preferred_scheme = 'https://'):
         self.preferred_scheme = preferred_scheme
 
-    def determine_url(self, url):
+    def add_scheme(self, url):
 
         # The repo url cannot contain a protocol handler,
         # because that is added automatically to match the protocol
@@ -47,31 +47,3 @@ class WurfGitUrlResolver(object):
             url = url.replace('/', ':', 1)
 
         return self.preferred_scheme + url
-
-
-
-
-def wurf_determine_git_url(url, preferred_scheme):
-
-    if not preferred_scheme:
-        preferred_scheme = 'https://'
-
-    # The repo url cannot contain a protocol handler,
-    # because that is added automatically to match the protocol
-    # that was used for checking out the parent project
-    if url.count('://') > 0 or url.count('@') > 0:
-        raise RuntimeError('Repository URL contains the following '
-                           'git protocol handler: {}'.format(url))
-
-    if preferred_scheme not in git_schemes:
-        raise RuntimeError('Unknown git protocol specified: "{}", supported '
-                           'protocols are {}'.format(preferred_scheme,
-                                                     git_schemes))
-
-    if preferred_scheme == 'git@':
-        # Replace the first / with : in the url to support git over SSH
-        # For example, 'github.com/steinwurf/boost.git' becomes
-        # 'github.com:steinwurf/boost.git'
-        url = url.replace('/', ':', 1)
-
-    return preferred_scheme + url

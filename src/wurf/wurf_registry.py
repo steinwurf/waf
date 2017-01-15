@@ -5,7 +5,6 @@ import argparse
 
 from . import wurf_git
 from . import wurf_git_url_resolver
-from . import wurf_git_resolver
 
 from . import wurf_git_semver_resolver
 
@@ -16,6 +15,7 @@ from .on_active_store_path_resolver import OnActiveStorePathResolver
 from .on_passive_load_path_resolver import OnPassiveLoadPathResolver
 from .try_resolver import TryResolver
 from .git_checkout_resolver import GitCheckoutResolver
+from .git_url_resolver import GitUrl
 
 
 from . import wurf_error
