@@ -4,9 +4,9 @@
 import argparse
 
 from . import wurf_git
-from . import wurf_git_url_resolver
 
 from . import wurf_git_semver_resolver
+from . import wurf_git_resolver
 
 from . import wurf_user_checkout_resolver
 from . import wurf_user_path_resolver
@@ -15,7 +15,7 @@ from .on_active_store_path_resolver import OnActiveStorePathResolver
 from .on_passive_load_path_resolver import OnPassiveLoadPathResolver
 from .try_resolver import TryResolver
 from .git_checkout_resolver import GitCheckoutResolver
-from .git_url_resolver import GitUrl
+from .git_url import GitUrl
 
 
 from . import wurf_error
@@ -87,7 +87,7 @@ def provide(func):
 
 @provide
 def git_url_resolver(registry):
-    return wurf_git_url_resolver.WurfGitUrlResolver()
+    return GitUrl()
 
 
 
@@ -212,7 +212,7 @@ def git_checkout_resolvers(registry, dependency):
     checkout = dependency.checkout
 
     def new_resolver(git_resolver):
-        return GitCheckoutResolver(git=git, git_resolver=git_resolver, ctx=ctx, 
+        return GitCheckoutResolver(git=git, git_resolver=git_resolver, ctx=ctx,
             name=name, bundle_path=bundle_path, checkout=checkout)
 
     resolvers = [new_resolver(git_resolver) for git_resolver in git_resolvers]
