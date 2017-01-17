@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import argparse
+import os
 
 from . import wurf_git
 
@@ -15,8 +16,10 @@ from .on_active_store_path_resolver import OnActiveStorePathResolver
 from .on_passive_load_path_resolver import OnPassiveLoadPathResolver
 from .try_resolver import TryResolver
 from .git_checkout_resolver import GitCheckoutResolver
-from .git_url import GitUrl
+from .git_url_parser import GitUrlParser
+from .git_url_rewriter import GitUrlRewriter
 
+from . import git_url_rewriter
 
 from . import wurf_error
 
@@ -84,10 +87,123 @@ def provide(func):
     Registry.providers[func.__name__] = func
 
 
+@provide
+def git_url_parser(registry):
+
+    # We cache the GitUrlParser() object since then we can reuse the regexp
+    # used for parsing
+    cached = 'cached_git_url_parser'
+
+    if not cached in registry:
+        registry.provide_value(cached, GitUrlParser())
+
+    return registry.require(cached)
 
 @provide
 def git_url_resolver(registry):
-    return GitUrl()
+    parser = registry.require('git_url_parser')
+
+    git_protocol = registry.require('git_protocol')
+
+    return GitUrlRewriter(parser=parser)
+
+@provide
+def git_url_rewriter(registry):
+    parser = registry.require('git_url_parser')
+
+    git_protocol = registry.require('git_protocol')
+
+    return GitUrlRewriter(parser=parser, )
+
+@provide
+def user_git_protocol(registry):
+
+    # Cache the result for later lookup
+    cached = 'cached_user_git_protocol'
+
+    if cached in registry:
+        return registry.require(cached)
+
+    # We support the protocols we know how to rewrite
+    supported_protocols = git_url_rewriter.git_protocols.keys()
+
+    # Check if the user specified a git protocol to use:
+    parser = registry.require('parser')
+    args = registry.require('args')
+    ctx = registry.require('ctx')
+
+    parser.add_argument('--git-protocol',
+        help='Use a specific git protocol to download dependencies.'
+             'Supported protocols {}'.format(supported_protocols))
+
+    known_args, unknown_args = parser.parse_known_args(args=args)
+
+    protocol = known_args.git_protocol
+
+    if protocol and protocol not in supported:
+        ctx.fatal('Unknown git protocol specified: "{}", supported '
+                  'protocols are {}'.format(protocol, supported_protocols))
+
+    registry.provide_value(cached, protocol)
+    return protocol
+
+@provide
+def project_git_protocol(registry):
+
+    # Cache the result for later lookup
+    cached = 'cached_project_git_protocol'
+
+    if cached in registry:
+        return registry.require(cached)
+
+    # We support the protocols we know how to rewrite
+    supported_protocols = git_url_rewriter.git_protocols.keys()
+
+    # Try to use the same protocol as the parent project
+    git = registry.require('git')
+    ctx = registry.require('ctx')
+    parser = registry.require('git_url_parser')
+
+    try:
+        parent_url = git.remote_origin_url(cwd=os.getcwd())
+
+    except Exception as e:
+
+        ctx.to_log('Exception when executing git.remote_origin_url {}'.format(e))
+        registry.provide_value(cached, None)
+        return None
+
+    else:
+
+        url = parser.parse(parent_url)
+        registry.provide_value(cached, url.protocol)
+        return url.protocol
+
+
+@provide
+def git_protocol(registry):
+
+    # Cache the result for later lookup
+    cached = 'cached_git_protocol'
+
+    if cached in registry:
+        return registry.require(cached)
+
+    # We support the protocols we know how to rewrite
+    supported = git_url_rewriter.git_protocols.keys()
+
+    # Check if the user specified a git protocol to use:
+    protocol = registry.require('user_git_protocol')
+
+    if not protocol:
+        protocol = registry.require('project_git_protocol')
+
+    if not protocol:
+        protocol = 'https://'
+
+    # Finally just use https
+    registry.provide_value(cached, 'https://')
+    return 'https://'
 
 
 
@@ -99,7 +215,7 @@ def bundle_path(registry):
     :param name: The name of a dependency as a string
     """
 
-    key = 'parsed_bundle_path'
+    key = 'cached_bundle_path'
 
     if key in registry:
         return registry.require(key)
@@ -136,7 +252,7 @@ def user_path(registry, dependency):
     :param dependency: A WurfDependency instance.
     """
 
-    key = 'parsed_{}_user_path'.format(dependency.name)
+    key = 'cached_{}_user_path'.format(dependency.name)
 
     if key in registry:
         return registry.require(key)
@@ -168,6 +284,16 @@ def user_path_resolver(registry, dependency):
     path = registry.require('user_path', dependency=dependency)
 
     return wurf_user_path_resolver.WurfUserPathResolver2(path=path)
+
+@provide
+def git_sources(registry, dependency):
+    """ Takes the dependency sources and re-writes the with the desired protocol
+
+    :param registry: A Registry instance.
+    :param dependency: A WurfDependency instance.
+    """
+    url_resolver = registry.require('git_url_rewriter')
+
 
 @provide
 def git_resolvers(registry, dependency):

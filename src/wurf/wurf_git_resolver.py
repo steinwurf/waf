@@ -35,7 +35,7 @@ class GitResolver(object):
 
         :return: The path to the resolved dependency as a string.
         """
-        repo_url = self.url_resolver.determine_url(url=self.source)
+        repo_url = self.url_resolver.rewrite_url(url=self.source)
 
         # Use the first 6 characters of the SHA1 hash of the repository url
         # to uniquely identify the repository

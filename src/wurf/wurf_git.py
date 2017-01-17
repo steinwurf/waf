@@ -147,12 +147,25 @@ class WurfGit(object):
     def tags(self, cwd):
         """
         Runs 'git tag -l' in the directory cwd and returns the tags
-        
+
         :param cwd: The current working directory as a string
         """
         args = [self.git_binary, 'tag', '-l']
         output = self.ctx.cmd_and_log(args, cwd=cwd)
-        
+
+        tags = output.split('\n')
+        return [t for t in tags if t != '']
+
+    def remote_origin_url(self, cwd):
+        """
+        Runs 'git config --get remote.origin.url' in the directory cwd and
+        returns the value
+
+        :param cwd: The current working directory as a string
+        """
+        args = [self.git_binary, 'config', '--get', 'remote.origin.url']
+        output = self.ctx.cmd_and_log(args, cwd=cwd)
+
         tags = output.split('\n')
         return [t for t in tags if t != '']
 
