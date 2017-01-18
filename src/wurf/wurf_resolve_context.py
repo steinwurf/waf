@@ -12,7 +12,7 @@ from waflib import Logs
 from waflib import ConfigSet
 from waflib import Node
 
-from . import wurf_registry
+from . import registry
 
 from waflib.extras import shutilwhich
 from waflib.extras import semver
@@ -67,9 +67,6 @@ class WurfResolveContext(Context.Context):
 
     def execute(self):
 
-        # @todo remove
-        print("WurfResolveContext in execute")
-
         # Create the nodes that will be used during the resolve step. The build
         # directory is also used by the waf BuildContext
         self.bldnode = self.path.make_node('build')
@@ -93,7 +90,7 @@ class WurfResolveContext(Context.Context):
         default_bundle_path = os.path.join(
             self.path.abspath(), 'bundle_dependencies')
 
-        self.registry = wurf_registry.build_registry(
+        self.registry = registry.build_registry(
             ctx=self, git_binary=git_binary,
             semver=semver, default_bundle_path=default_bundle_path,
             bundle_config_path=self.bundle_config_path(),

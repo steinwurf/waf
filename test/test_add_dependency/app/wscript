@@ -8,7 +8,7 @@ import os
 import shutil
 
 import waflib
-from waflib.extras.wurf.wurf_git import WurfGit
+from waflib.extras.wurf.git import Git
 
 class CloneError(Exception):
     """Basic """
@@ -26,7 +26,7 @@ def resolve(ctx):
 
     libraries = {'github.com/acme-corp/foo.git': foo_dir.abspath()}
 
-    class FakeGitClone(WurfGit):
+    class FakeGitClone(Git):
 
         def __init__(self, git_binary, ctx, libraries):
             super(FakeGitClone, self).__init__(
@@ -35,14 +35,8 @@ def resolve(ctx):
             self.libraries = libraries
 
         def clone(self, repository, directory, cwd):
-            ctx.logger.debug("repository={}".format(repository))
-            ctx.logger.debug("directory={}".format(directory))
-            ctx.logger.debug("cwd={}".format(cwd))
-
-            ctx.logger.debug(self.libraries)
 
             dst_directory = os.path.join(cwd, directory)
-            ctx.logger.debug("dst_directory={}".format(dst_directory))
 
             for lib_repository, lib_directory in self.libraries.items():
                 if repository.endswith(lib_repository):

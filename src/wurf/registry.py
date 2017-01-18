@@ -4,8 +4,6 @@
 import argparse
 import os
 
-from . import wurf_git
-
 from . import wurf_git_semver_resolver
 from . import wurf_git_resolver
 
@@ -18,8 +16,8 @@ from .try_resolver import TryResolver
 from .git_checkout_resolver import GitCheckoutResolver
 from .git_url_parser import GitUrlParser
 from .git_url_rewriter import GitUrlRewriter
+from .git import Git
 
-from . import git_url_rewriter
 
 from . import wurf_error
 
@@ -38,18 +36,38 @@ class Registry(object):
     # using the @provide decorator
     providers = {}
 
-    def __init__(self, use_providers=True):
+    # Set which will track which provider functions that produce values
+    # that should be cached. This is done using @cache decorator.
+    cache_providers = set()
+
+    def __init__(self, use_providers=True, use_cache_providers=True):
         """
         :param use_providers: True if the class providers should be added. False
             will create a new Registry instance without any added providers.
         """
+
+        # Dictionary which will contain the feature as a key and a
+        # provider function as value
         self.registry = {}
 
-        if not use_providers:
-            return
+        # Dictionary which contains cached values produced for the different
+        # features
+        self.cache = {}
 
-        for k,v in Registry.providers.items():
-            self.provide(k,v)
+        # Set which contains the name of features that should be cached
+        self.should_cache = set()
+
+        if use_should_cache:
+            for s in Registry.cache_providers:
+                self.cache_provider(s)
+
+        if use_providers:
+            for k,v in Registry.providers.items():
+                self.provide(k,v)
+
+    def cache_provider(self, feature):
+        """ Makes the Registry cache values produced for the specific feature."""
+        self.should_cache.add(feature)
 
     def provide(self, feature, provider, override=False):
         """
@@ -63,6 +81,9 @@ class Registry(object):
         if not override and feature in self.registry:
             raise WurfProvideRegistryError(feature)
 
+        if feature in self.cache:
+            del self.cache[feature]
+
         def call(**kwargs):
             return provider(registry=self, **kwargs)
 
@@ -74,8 +95,17 @@ class Registry(object):
         self.registry[feature] = call
 
     def require(self, feature, **kwargs):
+
+        if feature in self.cache:
+            return self.cache[feature]
+
         call = self.registry[feature]
-        return call(**kwargs)
+        result = call(**kwargs)
+
+        if feature in self.should_cache:
+            self.cache[feature] = result
+
+        return result
 
     def __contains__(self, key):
         return key in self.registry
@@ -86,51 +116,46 @@ def provide(func):
         raise WurfProvideRegistryError(func.__name__)
     Registry.providers[func.__name__] = func
 
+    return func
 
+def cache(func):
+    Registry.cache_providers.add(func.__name__)
+
+    return func
+
+@cache
 @provide
 def git_url_parser(registry):
+    """ Parser for Git URLs. """
 
-    # We cache the GitUrlParser() object since then we can reuse the regexp
-    # used for parsing
-    cached = 'cached_git_url_parser'
+    return GitUrlParser()
 
-    if not cached in registry:
-        registry.provide_value(cached, GitUrlParser())
-
-    return registry.require(cached)
-
-@provide
-def git_url_resolver(registry):
-    parser = registry.require('git_url_parser')
-
-    git_protocol = registry.require('git_protocol')
-
-    return GitUrlRewriter(parser=parser)
-
+@cache
 @provide
 def git_url_rewriter(registry):
-    parser = registry.require('git_url_parser')
+    """ Rewriter for Git URLs.
 
+    Supports various transformations such as changing/adding the git
+    protocol.
+    """
+    parser = registry.require('git_url_parser')
     git_protocol = registry.require('git_protocol')
 
-    return GitUrlRewriter(parser=parser, )
+    return GitUrlRewriter(parser=parser, rewrite_protocol=git_protocol)
 
+@cache
 @provide
 def user_git_protocol(registry):
+    """ Return the user specified Git protcol.
 
-    # Cache the result for later lookup
-    cached = 'cached_user_git_protocol'
-
-    if cached in registry:
-        return registry.require(cached)
-
-    # We support the protocols we know how to rewrite
-    supported_protocols = git_url_rewriter.git_protocols.keys()
-
-    # Check if the user specified a git protocol to use:
+    If no protocol is specified return None.
+    """
     parser = registry.require('parser')
     args = registry.require('args')
     ctx = registry.require('ctx')
+
+    # We support the protocols we know how to rewrite
+    supported_protocols = GitUrlRewriter.git_protocols.keys()
 
     parser.add_argument('--git-protocol',
         help='Use a specific git protocol to download dependencies.'
@@ -144,22 +169,15 @@ def user_git_protocol(registry):
         ctx.fatal('Unknown git protocol specified: "{}", supported '
                   'protocols are {}'.format(protocol, supported_protocols))
 
-    registry.provide_value(cached, protocol)
     return protocol
 
+@cache
 @provide
 def project_git_protocol(registry):
+    """ Return the Git protocol used by the parent project.
 
-    # Cache the result for later lookup
-    cached = 'cached_project_git_protocol'
-
-    if cached in registry:
-        return registry.require(cached)
-
-    # We support the protocols we know how to rewrite
-    supported_protocols = git_url_rewriter.git_protocols.keys()
-
-    # Try to use the same protocol as the parent project
+    If parent project not under git version control return None.
+    """
     git = registry.require('git')
     ctx = registry.require('ctx')
     parser = registry.require('git_url_parser')
@@ -170,56 +188,51 @@ def project_git_protocol(registry):
     except Exception as e:
 
         ctx.to_log('Exception when executing git.remote_origin_url {}'.format(e))
-        registry.provide_value(cached, None)
         return None
 
     else:
 
         url = parser.parse(parent_url)
-        registry.provide_value(cached, url.protocol)
         return url.protocol
 
+@cache
+@provide
+def git(registry):
+    """ The Git object, which is used to run git commands.
 
+    :param registry: A Registry instance.
+    """
+    git_binary = registry.require('git_binary')
+    ctx = registry.require('ctx')
+
+    return Git(git_binary=git_binary, ctx=ctx)
+
+@cache
 @provide
 def git_protocol(registry):
-
-    # Cache the result for later lookup
-    cached = 'cached_git_protocol'
-
-    if cached in registry:
-        return registry.require(cached)
-
-    # We support the protocols we know how to rewrite
-    supported = git_url_rewriter.git_protocols.keys()
+    """ Return the Git protocol to use. """
 
     # Check if the user specified a git protocol to use:
     protocol = registry.require('user_git_protocol')
 
+    # Check what the parent project uses
     if not protocol:
         protocol = registry.require('project_git_protocol')
 
+    # Finally just use https
     if not protocol:
         protocol = 'https://'
 
-    # Finally just use https
-    registry.provide_value(cached, 'https://')
-    return 'https://'
+    return protocol
 
 
-
+@cache
 @provide
 def bundle_path(registry):
-    """ Provides the user path to a specific dependency.
+    """ Provides the path where dependencies should be stored.
 
     :param registry: A Registry instance
-    :param name: The name of a dependency as a string
     """
-
-    key = 'cached_bundle_path'
-
-    if key in registry:
-        return registry.require(key)
-
     parser = registry.require('parser')
     args = registry.require('args')
     default_bundle_path = registry.require('default_bundle_path')
@@ -238,8 +251,6 @@ def bundle_path(registry):
     # The waflib.Utils.check_dir function will ensure that the directory
     # exists
     utils.check_dir(path=known_args.bundle_path)
-
-    registry.provide_value(key, known_args.bundle_path)
 
     return known_args.bundle_path
 
@@ -285,36 +296,44 @@ def user_path_resolver(registry, dependency):
 
     return wurf_user_path_resolver.WurfUserPathResolver2(path=path)
 
+
+
 @provide
 def git_sources(registry, dependency):
-    """ Takes the dependency sources and re-writes the with the desired protocol
+    """ Takes the dependency sources and re-writes the with the desired
+    git protocol.
+
+    If needed this is also the place where "addition" sources could be added.
+    E.g. one could add additional mirrors or alternative protocols to try.
 
     :param registry: A Registry instance.
     :param dependency: A WurfDependency instance.
     """
-    url_resolver = registry.require('git_url_rewriter')
+    rewriter = registry.require('git_url_rewriter')
+
+    sources = [rewriter.rewrite_url(s) for s in dependency.sources]
+
+    return sources
 
 
 @provide
 def git_resolvers(registry, dependency):
-    """ Builds a WurfGitResolver instance.
+    """ Builds a list of WurfGitResolver instances, one for each source.
 
     :param registry: A Registry instance.
     :param dependency: A WurfDependency instance.
     """
 
     git = registry.require('git')
-    url_resolver = registry.require('git_url_resolver')
     ctx = registry.require('ctx')
     bundle_path = registry.require('bundle_path')
 
     name = dependency.name
-    sources = dependency.sources
+    sources = registry.require('git_sources', dependency=dependency)
 
     def new_resolver(source):
         return wurf_git_resolver.GitResolver(
-            git=git, url_resolver=url_resolver, ctx=ctx, name=name,
-            bundle_path=bundle_path, source=source)
+            git=git, ctx=ctx, name=name, bundle_path=bundle_path, source=source)
 
     resolvers = [new_resolver(source) for source in sources]
     return resolvers
@@ -357,6 +376,7 @@ def git_source_resolvers(registry, dependency):
     method_key = "git_{}_resolvers".format(method)
 
     return registry.require(method_key, dependency=dependency)
+
 
 @provide
 def passive_path_resolver(registry, dependency):
@@ -428,6 +448,7 @@ def dependency_manager(registry):
 
     return DependencyManager(registry=registry,
         cache=cache, ctx=ctx)
+
 
 def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
     active_resolve, semver, utils, args):

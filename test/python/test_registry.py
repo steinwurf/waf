@@ -2,7 +2,7 @@ import pytest
 import mock
 import argparse
 
-from wurf import wurf_registry
+from wurf.registry import Registry
 
 class Point(object):
     def __init__(self, x, y):
@@ -11,7 +11,7 @@ class Point(object):
 
 def test_wurf_registry():
 
-    registry = wurf_registry.Registry()
+    registry = Registry()
 
     def build_point(registry, x=0):
         return Point(x,0)
@@ -36,6 +36,11 @@ def test_wurf_registry():
     assert p.x == 1
     assert p.y == 0
 
+    # Cache the feature
+    registry.cache_provider('point')
+    
+
+
 
 def test_parse_user_path():
 
@@ -43,7 +48,7 @@ def test_parse_user_path():
     parser = argparse.ArgumentParser()
     args = ['--foo', '--bundle-path', '-b']
 
-    registry = wurf_registry.Registry()
+    registry = Registry()
     registry.provide_value('parser', parser)
     registry.provide_value('args', args)
 
@@ -57,7 +62,7 @@ def test_parse_user_path():
     parser = argparse.ArgumentParser()
     args = ['--foo', '--bundle-path', '--foo-path', '/home/stw/code', '-b']
 
-    registry = wurf_registry.Registry()
+    registry = Registry()
     registry.provide_value('parser', parser)
     registry.provide_value('args', args)
 

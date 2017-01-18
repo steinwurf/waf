@@ -4,20 +4,13 @@
 import os
 import re
 
-# from waflib.Configure import conf
-# from waflib import Utils
-# from waflib import Errors
-#
-
-
-class WurfGit(object):
+class Git(object):
 
     def __init__(self, git_binary, ctx):
         """ Construct a new WurfGit instance.
 
-        Args:
-            git_binary: A string containing the path to a git executable.
-            ctx: A Waf Context instance.
+        :param git_binary: A string containing the path to a git executable.
+        :param ctx: A Waf Context instance.
         """
         self.git_binary = git_binary
         self.ctx = ctx

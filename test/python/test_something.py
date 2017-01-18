@@ -9,7 +9,6 @@ import functools
 import shutilwhich
 import semver
 
-from wurf import wurf_registry
 
 def test_copy_file(test_directory):
     test_directory.copy_files('test/prog1/*')

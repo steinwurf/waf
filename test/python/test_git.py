@@ -1,14 +1,15 @@
 import pytest
 import mock
 
-from wurf import wurf_git
+from wurf.git import Git
+
 
 def test_wurf_git_version():
 
     ctx = mock.Mock()
     ctx.cmd_and_log.return_value = 'git version 1.8.1.msysgit.1'
 
-    git = wurf_git.WurfGit('/bin/git_binary', ctx)
+    git = Git('/bin/git_binary', ctx)
 
     assert(git.version() == (1,8,1,1))
     ctx.cmd_and_log.assert_called_once_with(['/bin/git_binary', 'version'])
@@ -20,7 +21,7 @@ def test_wurf_git_version():
 def test_wurf_git_clone():
 
     ctx = mock.Mock()
-    git = wurf_git.WurfGit('/bin/git_binary', ctx)
+    git = Git('/bin/git_binary', ctx)
 
     git.clone(repository='https://github.com/repo.git',
               directory='/tmp/repo2',
@@ -33,7 +34,7 @@ def test_wurf_git_clone():
 def test_wurf_git_pull():
 
     ctx = mock.Mock()
-    git = wurf_git.WurfGit('/bin/git_binary', ctx)
+    git = Git('/bin/git_binary', ctx)
 
     git.pull(cwd='/tmp')
 
@@ -43,7 +44,7 @@ def test_wurf_git_pull():
 def test_wurf_git_has_submodules(test_directory):
 
     ctx = mock.Mock()
-    git = wurf_git.WurfGit('/bin/git_binary', ctx)
+    git = Git('/bin/git_binary', ctx)
 
     cwd = test_directory.path()
 
@@ -56,7 +57,7 @@ def test_wurf_git_has_submodules(test_directory):
 def test_wurf_git_sync_submodules():
 
     ctx = mock.Mock()
-    git = wurf_git.WurfGit('/bin/git_binary', ctx)
+    git = Git('/bin/git_binary', ctx)
 
     git.sync_submodules(cwd='/tmp')
 
@@ -66,7 +67,7 @@ def test_wurf_git_sync_submodules():
 def test_wurf_git_init_submodules():
 
     ctx = mock.Mock()
-    git = wurf_git.WurfGit('/bin/git_binary', ctx)
+    git = Git('/bin/git_binary', ctx)
 
     git.init_submodules(cwd='/tmp')
 
@@ -76,7 +77,7 @@ def test_wurf_git_init_submodules():
 def test_wurf_git_update_submodules():
 
     ctx = mock.Mock()
-    git = wurf_git.WurfGit('/bin/git_binary', ctx)
+    git = Git('/bin/git_binary', ctx)
 
     git.update_submodules(cwd='/tmp')
 
@@ -86,7 +87,7 @@ def test_wurf_git_update_submodules():
 def test_wurf_git_pull_submodules(test_directory):
 
     ctx = mock.Mock()
-    git = wurf_git.WurfGit('/bin/git_binary', ctx)
+    git = Git('/bin/git_binary', ctx)
 
     cwd = test_directory.path()
 

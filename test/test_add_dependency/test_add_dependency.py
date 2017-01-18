@@ -4,9 +4,12 @@
 import shutilwhich
 
 def test_add_dependency(test_directory):
-    """ Integration testing of adding a dependency."""
+    """ Integration testing of adding a dependency.
 
-    #app_dir = test_directory.mkdir('app')
+    This test is a bit involved so lets try to explain what it does:
+
+
+    """
 
     app_dir = test_directory.copy_dir(directory='test/test_add_dependency/app')
     app_dir.copy_file('build/waf')
@@ -46,8 +49,7 @@ def test_add_dependency(test_directory):
     #libfoo_directory.copy_dir('test/test_add_dependency/libbar')
 
     # @todo remove print of r
-    r = app_dir.run('python', 'waf', 'configure', '-v')
-    print(r)
+    app_dir.run('python', 'waf', 'configure', '-v')
     app_dir.run('python', 'waf', 'build', '-v')
 
 
