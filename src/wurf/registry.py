@@ -57,7 +57,7 @@ class Registry(object):
         # Set which contains the name of features that should be cached
         self.should_cache = set()
 
-        if use_should_cache:
+        if use_cache_providers:
             for s in Registry.cache_providers:
                 self.cache_provider(s)
 
@@ -110,6 +110,16 @@ class Registry(object):
     def __contains__(self, key):
         return key in self.registry
 
+    @staticmethod
+    def __check_provider_is_cachable(provider):
+        """ Checks that the provider is cachable.
+
+        We do this by checking that the provider function only takes,
+        one argument - which is the registry. This avoids some of the
+        pitfalls possible when
+        """
+        pass
+
 def provide(func):
 
     if func.__name__ in Registry.providers:
@@ -129,6 +139,7 @@ def git_url_parser(registry):
     """ Parser for Git URLs. """
 
     return GitUrlParser()
+
 
 @cache
 @provide
@@ -255,6 +266,13 @@ def bundle_path(registry):
     return known_args.bundle_path
 
 
+def test(dependency):
+    hash(frozenset(dependency.items()))
+
+
+
+
+
 @provide
 def user_path(registry, dependency):
     """ Provides the user path to a specific dependency.
@@ -262,6 +280,9 @@ def user_path(registry, dependency):
     :param registry: A Registry instance
     :param dependency: A WurfDependency instance.
     """
+
+    # @todo remove
+    test(dependency)
 
     key = 'cached_{}_user_path'.format(dependency.name)
 

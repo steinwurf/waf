@@ -38,7 +38,20 @@ def test_wurf_registry():
 
     # Cache the feature
     registry.cache_provider('point')
-    
+
+    p = registry.require('point', x=1)
+
+    assert p.x == 1
+    assert p.y == 0
+
+    # Change the value
+    p.y = 1
+
+    p = registry.require('point', x=1)
+
+    assert p.x == 1
+    assert p.y == 1
+
 
 
 
