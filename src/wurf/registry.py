@@ -51,43 +51,52 @@ class Registry(object):
         self.registry = {}
 
         # Dictionary which contains cached values produced for the different
-        # features
+        # providers. The layout of the dictionary will be:
+        # { 'provider1': { argument_hash1: value1 
+        #                  arguemnt_hash2, value2},
+        #   'provider2': { argument_hash1: value1 },
+        #   ....
+        # }  
+        # 
+        # Where the provider name is the key to a dictionary where cached values
+        # are stored. The nested dict uses a hash of the arguments passed to
+        # require(...) to find the right cached response.
         self.cache = {}
 
         # Set which contains the name of features that should be cached
-        self.should_cache = set()
-
-        if use_cache_providers:
-            for s in Registry.cache_providers:
-                self.cache_provider(s)
+        self.should_cache = copy(Registry.cache_providers)
 
         if use_providers:
             for k,v in Registry.providers.items():
                 self.provide(k,v)
 
-    def cache_provider(self, feature):
+    def cache_provider(self, provider):
         """ Makes the Registry cache values produced for the specific feature."""
-        self.should_cache.add(feature)
+        if provider in self.cache:
+            raise RuntimeError("Hey you!?")
+        
+        self.should_cache.add(provider)
 
-    def provide(self, feature, provider, override=False):
+    def provide(self, name, callable, override=False):
         """
-        :param feature: The name of the feature as a string
-        :param provider: Function to call while will provide the "feature"
-        :param override: Determines whether the provider should override an
-            existing providers. True of we will override an existing provider for
-            the same feature.
+        :param name: The name of the provider as a string
+        :param callable: Function to call which will provide the value
+        :param override: Determines whether the provider should override/replace 
+            an existing provider. If True we will override an existing provider 
+            with the same name.
         """
 
-        if not override and feature in self.registry:
-            raise WurfProvideRegistryError(feature)
+        if not override and name in self.registry:
+            raise WurfProvideRegistryError(name)
 
-        if feature in self.cache:
-            del self.cache[feature]
+        if name in self.should_cache:
+            # If this provider is "caching" we make sure it has a fresh cache
+            self.cache[name] = {}
 
         def call(**kwargs):
             return provider(registry=self, **kwargs)
 
-        self.registry[feature] = call
+        self.registry[] = call
 
     def provide_value(self, feature, value):
 
@@ -267,7 +276,7 @@ def bundle_path(registry):
 
 
 def test(dependency):
-    hash(frozenset(dependency.items()))
+    hash(dependency)
 
 
 
