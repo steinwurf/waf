@@ -6,7 +6,7 @@ import os
 import shutil
 import sys
 
-class WurfUserCheckoutResolver(object):
+class GitUserCheckoutResolver(object):
     """
     User Commit Resolver functionality. Checks out a specific commit.
     """
@@ -18,11 +18,6 @@ class WurfUserCheckoutResolver(object):
         :param parser: An argparse.ArgumentParser instance.
         """
         self.git_checkout_resolver = git_checkout_resolver
-        self.parser = parser
-
-        # dict object serving as a cache, this ensures that for each dependency
-        # we only parse the command-line arguments once.
-        self.parsed_options = {}
 
     def __parse_arguement(self, name):
 

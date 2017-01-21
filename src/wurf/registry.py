@@ -4,16 +4,17 @@
 import argparse
 import os
 
-from . import wurf_git_semver_resolver
+
 from . import wurf_git_resolver
 
 from . import wurf_user_checkout_resolver
-from . import wurf_user_path_resolver
+from .user_path_resolver import UserPathResolver
 from .dependency_manager import DependencyManager
 from .on_active_store_path_resolver import OnActiveStorePathResolver
 from .on_passive_load_path_resolver import OnPassiveLoadPathResolver
 from .try_resolver import TryResolver
 from .git_checkout_resolver import GitCheckoutResolver
+from .git_semver_resolver import GitSemverResolver
 from .git_url_parser import GitUrlParser
 from .git_url_rewriter import GitUrlRewriter
 from .git import Git
@@ -62,72 +63,79 @@ class Registry(object):
         # are stored. The nested dict uses a hash of the arguments passed to
         # require(...) to find the right cached response.
         self.cache = {}
-
+        
         # Set which contains the name of features that should be cached
-        self.should_cache = copy(Registry.cache_providers)
+        if use_cache_providers:
+            for s in Registry.cache_providers:
+                self.cache_provider(s)    
 
         if use_providers:
             for k,v in Registry.providers.items():
                 self.provide(k,v)
 
-    def cache_provider(self, provider):
-        """ Makes the Registry cache values produced for the specific feature."""
-        if provider in self.cache:
-            raise RuntimeError("Hey you!?")
-        
-        self.should_cache.add(provider)
+    def cache_provider(self, provider_name):
+        assert provider_name not in self.cache
+        self.cache[provider_name] = {}
 
-    def provide(self, name, callable, override=False):
+
+    def provide(self, provider_name, provider_function, override=False):
         """
-        :param name: The name of the provider as a string
-        :param callable: Function to call which will provide the value
+        :param provider_name: The name of the provider as a string
+        :param provider_function: Function to call which will provide the value
+        :param cache: Determines whether calls to the provider should be cached.
+            If arguments are passed to the provider in the require(...) 
+            function, they must be hashable. 
         :param override: Determines whether the provider should override/replace 
             an existing provider. If True we will override an existing provider 
             with the same name.
         """
 
-        if not override and name in self.registry:
-            raise WurfProvideRegistryError(name)
-
-        if name in self.should_cache:
-            # If this provider is "caching" we make sure it has a fresh cache
-            self.cache[name] = {}
+        if not override and provider_name in self.registry:
+            raise WurfProvideRegistryError(provider_name)
 
         def call(**kwargs):
-            return provider(registry=self, **kwargs)
+            return provider_function(registry=self, **kwargs)
 
-        self.registry[] = call
+        self.registry[provider_name] = call
 
-    def provide_value(self, feature, value):
+    def provide_value(self, provider_name, value):
+        """
+        :param provider_name: The name of the provider as a string
+        :param value: The value with should be returned on require(...)
+        """
 
         def call(): return value
-        self.registry[feature] = call
+        self.registry[provider_name] = call
 
-    def require(self, feature, **kwargs):
+    def require(self, provider_name, **kwargs):
+        """
+        :param provider_name: The name of the provider as a string
+        :param kwargs: Keyword arguments that should be passed to the provider 
+            function.
+        """
+        if provider_name in self.cache:
+            # Did we already cache?
+            key = frozenset(kwargs.items()) 
+            try:
+                return self.cache[provider_name][key]
+            except KeyError:
+                call = self.registry[provider_name]
+                result = call(**kwargs)
+                self.cache[provider_name][key] = result
+                return result  
+        else:
+            call = self.registry[provider_name]
+            result = call(**kwargs)
+            return result
+        
 
-        if feature in self.cache:
-            return self.cache[feature]
-
-        call = self.registry[feature]
-        result = call(**kwargs)
-
-        if feature in self.should_cache:
-            self.cache[feature] = result
-
-        return result
-
-    def __contains__(self, key):
+    def __contains__(self, provider_name):
+        """
+        :param provider_name: The name of the provider as a string
+        :return: True if the provider is in the registry
+        """
         return key in self.registry
 
-    @staticmethod
-    def __check_provider_is_cachable(provider):
-        """ Checks that the provider is cachable.
-
-        We do this by checking that the provider function only takes,
-        one argument - which is the registry. This avoids some of the
-        pitfalls possible when
-        """
-        pass
 
 def provide(func):
 
@@ -275,13 +283,7 @@ def bundle_path(registry):
     return known_args.bundle_path
 
 
-def test(dependency):
-    hash(dependency)
-
-
-
-
-
+@cache
 @provide
 def user_path(registry, dependency):
     """ Provides the user path to a specific dependency.
@@ -289,15 +291,6 @@ def user_path(registry, dependency):
     :param registry: A Registry instance
     :param dependency: A WurfDependency instance.
     """
-
-    # @todo remove
-    test(dependency)
-
-    key = 'cached_{}_user_path'.format(dependency.name)
-
-    if key in registry:
-        return registry.require(key)
-
     parser = registry.require('parser')
     args = registry.require('args')
 
@@ -315,7 +308,7 @@ def user_path(registry, dependency):
     arguments = vars(known_args)
 
     # Cache the value in the registry
-    registry.provide_value(key, arguments[option])
+    #registry.provide_value(key, arguments[option])
 
     return arguments[option]
 
@@ -324,10 +317,13 @@ def user_path_resolver(registry, dependency):
 
     path = registry.require('user_path', dependency=dependency)
 
-    return wurf_user_path_resolver.WurfUserPathResolver2(path=path)
+    if path:
+        UserPathResolver(path=path)
+    else:
+        return None
 
 
-
+@cache
 @provide
 def git_sources(registry, dependency):
     """ Takes the dependency sources and re-writes the with the desired
@@ -379,8 +375,7 @@ def git_checkout_resolvers(registry, dependency):
 
     git = registry.require('git')
     ctx = registry.require('ctx')
-    git_resolvers = registry.require('git_resolvers',
-        dependency=dependency)
+    git_resolvers = registry.require('git_resolvers', dependency=dependency)
     bundle_path = registry.require('bundle_path')
 
     name = dependency.name
@@ -392,6 +387,82 @@ def git_checkout_resolvers(registry, dependency):
 
     resolvers = [new_resolver(git_resolver) for git_resolver in git_resolvers]
     return resolvers
+
+@provide
+def git_semver_resolvers(registry, dependency):
+    """ Builds a GitSemverResolver instance.
+
+    :param registry: A Registry instance.
+    :param dependency: A WurfDependency instance.
+    """
+
+    git = registry.require('git')
+    semver = registry.require('semver')
+    ctx = registry.require('ctx')
+    git_resolvers = registry.require('git_resolvers', dependency=dependency)
+    bundle_path = registry.require('bundle_path')
+
+    name = dependency.name
+    major = dependency.major
+
+    def new_resolver(git_resolver):
+        return GitSemverResolver(git=git, git_resolver=git_resolver, ctx=ctx,
+            semver=semver, name=name, bundle_path=bundle_path, major=major)
+
+    resolvers = [new_resolver(git_resolver) for git_resolver in git_resolvers]
+    return resolvers
+
+
+@cache
+@provide
+def git_user_checkout(registry, dependency):
+    """ Provides the user chosen git checkout.
+
+    :param registry: A Registry instance
+    :param dependency: A Dependency instance.
+    """
+    parser = registry.require('parser')
+    args = registry.require('args')
+
+    option = '--%s-use-checkout' % dependency.name
+
+    parser.add_argument(option,
+        nargs='?',
+        dest=option,
+        help='Manually specify Git checkout for {}.'.format(dependency.name))
+
+    known_args, unknown_args = parser.parse_known_args(args=args)
+
+    # Access the attribute as a dict:
+    # https://docs.python.org/3/library/argparse.html#the-namespace-object
+    arguments = vars(known_args)
+
+    # Cache the value in the registry
+    #registry.provide_value(key, arguments[option])
+
+    return arguments[option]
+
+
+@cache
+@provide
+def git_user_checkout_resolver(registry, dependency):
+    """ Builds a WurfGitCheckoutResolver instance.
+
+    :param registry: A Registry instance.
+    :param dependency: A WurfDependency instance.
+    """
+
+    git = registry.require('git')
+    ctx = registry.require('ctx')
+    git_resolvers = registry.require('git_resolvers', dependency=dependency)
+    bundle_path = registry.require('bundle_path')
+    checkout = registry.require('git_user_checkout', dependency=dependency)
+        
+    if checkout:
+        return GitCheckoutResolver(git=git, git_resolver=git_resolver, ctx=ctx,
+            name=name, bundle_path=bundle_path, checkout=checkout)
+    else: 
+        return None
 
 
 @provide
@@ -405,8 +476,13 @@ def git_source_resolvers(registry, dependency):
     method = dependency.method
     method_key = "git_{}_resolvers".format(method)
 
-    return registry.require(method_key, dependency=dependency)
+    user_resolvers = [
+        registry.require('git_user_checkout_resolver', dependency=dependency)]
+    source_resolvers = registry.require(method_key, dependency=dependency)
 
+    resolvers = user_resolvers + source_resolvers
+    
+    return resolvers
 
 @provide
 def passive_path_resolver(registry, dependency):
@@ -419,11 +495,14 @@ def passive_path_resolver(registry, dependency):
     bundle_config_path = registry.require('bundle_config_path')
     active_resolve = registry.require('active_resolve')
 
+    if active_resolve:
+        return None
+
     name = dependency.name
     sha1 = dependency.sha1
 
     return OnPassiveLoadPathResolver(ctx=ctx, name=name, sha1=sha1,
-        active_resolve=active_resolve, bundle_config_path=bundle_config_path)
+        bundle_config_path=bundle_config_path)
 
 
 @provide
@@ -444,6 +523,9 @@ def dependency_resolver(registry, dependency):
     ctx = registry.require('ctx')
 
     resolvers = user_resolvers + source_resolvers
+    
+    # Filter out missing resolvers
+    resolvers = [r for r in resolvers if r is not None]
 
     try_resolver = TryResolver(resolvers=resolvers, ctx=ctx)
 

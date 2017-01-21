@@ -12,8 +12,9 @@ from waflib.extras.wurf.git import Git
 
 class CloneError(Exception):
     """Basic """
-    def __init__(self, msg):
-        super(CloneError, self).__init__(msg)
+    def __init__(self, repository):
+        super(CloneError, self).__init__(
+            "No mapping for repository {} found!".format(repository))
 
 
 def resolve(ctx):
@@ -23,8 +24,12 @@ def resolve(ctx):
 
     git_dir = ctx.path.parent.find_node('git_dir')
     foo_dir = git_dir.find_node('libfoo')
+    bar_dir = git_dir.find_node('libbar')
+    baz_dir = git_dir.find_node('libbaz')
 
-    libraries = {'github.com/acme-corp/foo.git': foo_dir.abspath()}
+    libraries = {'github.com/acme-corp/foo.git': foo_dir.abspath(),
+                 'gitlab.com/acme-corp/bar.git': bar_dir.abspath(),
+                 'gitlab.com/acme/baz.git': baz_dir.abspath() }
 
     class FakeGitClone(Git):
 
@@ -46,7 +51,7 @@ def resolve(ctx):
                     return
 
             else:
-                raise CloneError("No mapping for the repository found!")
+                raise CloneError(repository=repository)
 
     def build_fake_git(registry):
         git_binary = registry.require('git_binary')
@@ -70,16 +75,15 @@ def resolve(ctx):
         method='checkout',
         checkout='1.3.3.7',
         sources=['github.com/acme-corp/foo.git'])
-
-    # ctx.add_dependency(
-    #     name='meta',
-    #     recurse=False,
-    #     optional=False,
-    #     resolver='git',
-    #     method='semver',
-    #     major=1,
-    #     sources=['github.com/steinwurf/meta.git'])
-
+        
+    ctx.add_dependency(
+        name='baz',
+        recurse=True,
+        optional=False,
+        resolver='git',
+        method='semver',
+        major=3,
+        sources=['gitlab.com/acme/baz.git'])
 
 def options(opt):
 
@@ -94,7 +98,7 @@ def build(bld):
     bld.program(features='cxx',
                 source='main.cpp',
                 target='app',
-                use='foo')
+                use=['foo', 'baz'])
 
     print("in build")
 

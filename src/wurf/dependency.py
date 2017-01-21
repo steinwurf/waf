@@ -4,8 +4,7 @@
 import hashlib
 import json
 
-
-class WurfDependency(object):
+class Dependency(object):
 
     def __init__(self, **kwargs):
         """ Construct an instance.
@@ -100,6 +99,9 @@ class WurfDependency(object):
         :return: True if the option is available otherwise False
         """
         return option in self.info
+
+    def __str__(self):
+        return str(self.info)
 
     def __hash__(self):
         """ :return: Integer hash value for the dependency. """

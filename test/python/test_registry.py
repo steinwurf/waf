@@ -51,7 +51,12 @@ def test_wurf_registry():
 
     assert p.x == 1
     assert p.y == 1
-
+    
+    # Ask for a point with a different value, this will bypass the cache
+    p = registry.require('point', x=4)
+    
+    assert p.x == 4
+    assert p.y == 0
 
 
 

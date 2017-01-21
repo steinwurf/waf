@@ -8,6 +8,30 @@ def test_add_dependency(test_directory):
 
     This test is a bit involved so lets try to explain what it does:
 
+    We are setting up the following dependency graph:
+    
+               +--------------+
+               |     app      |
+               +---+------+---+
+                   |      |
+                   |      |
+          +--------+      +-------+
+          |                       |
+          v                       v
+    +-----+------+          +-----+-----+
+    |  libfoo    |          |  libbaz   |
+    +-----+------+          +-----+-----+
+          |                       ^
+          v                       |
+    +-----+------+                |
+    |  libbar    |----------------+
+    +------------+
+
+    The arrows indicate dependencies, so:
+    
+    - 'app' depends on 'libfoo' and 'libbaz'
+    - 'libfoo' depends on 'libbar'
+    - 'libbar' depends on 'libbaz'
 
     """
 
@@ -21,6 +45,7 @@ def test_add_dependency(test_directory):
     # libraries there and then fake the git clone step.
     git_dir = test_directory.mkdir(directory='git_dir')
 
+    # Add foo dir
     foo_dir = git_dir.copy_dir(directory='test/test_add_dependency/libfoo')
     foo_dir.run('git', 'init')
     foo_dir.run('git', 'add', '.')
@@ -31,6 +56,20 @@ def test_add_dependency(test_directory):
     #
     foo_dir.run('git', '-c', 'user.name=John', '-c', 'user.email=doe@email.org', 'commit', '-m', 'oki')
     foo_dir.run('git', 'tag', '1.3.3.7')
+
+    # Add bar dir
+    bar_dir = git_dir.copy_dir(directory='test/test_add_dependency/libbar')
+    bar_dir.run('git', 'init')
+    bar_dir.run('git', 'add', '.')
+    bar_dir.run('git', '-c', 'user.name=John', '-c', 'user.email=doe@email.org', 'commit', '-m', 'oki')
+    bar_dir.run('git', 'tag', 'someh4sh')
+    
+    # Add baz dir
+    baz_dir = git_dir.copy_dir(directory='test/test_add_dependency/libbaz')
+    baz_dir.run('git', 'init')
+    baz_dir.run('git', 'add', '.')
+    baz_dir.run('git', '-c', 'user.name=John', '-c', 'user.email=doe@email.org', 'commit', '-m', 'oki')
+    baz_dir.run('git', 'tag', '3.1.2')
 
     # The bundle_dependencies directory is the default, so when we do
     # configure without any arguments dependencies are expected to be

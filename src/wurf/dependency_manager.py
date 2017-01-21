@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-from . import wurf_dependency
+from .dependency import Dependency 
 
 class DependencyManager(object):
 
@@ -44,12 +44,16 @@ class DependencyManager(object):
         :param kwargs: Keyword arguments containing options for the dependency.
         """
 
-        dependency = wurf_dependency.WurfDependency(**kwargs)
+        dependency = Dependency(**kwargs)
 
         if self.__skip_dependency(dependency):
             return
 
-        path = self.__resolve_dependency(dependency)
+        try:
+            path = self.__resolve_dependency(dependency)
+        except Exception as e:
+            self.ctx.fatal("Failed resolving {} error: {}. Check logs for "
+                           "more information.".format(dependency, e))
 
         if not path:
             return

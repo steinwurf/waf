@@ -6,10 +6,12 @@
 #include <iostream>
 
 #include <foo/foo.h>
+#include <baz/baz.h>
 
 int main()
 {
     std::cout << "app" << std::endl;
     std::cout << "foo::whoooth" << foo::whoooth() << std::endl;
+    std::cout << "baz::whoooth" << baz::whoooth() << std::endl;
     return 0;
 }

@@ -1,7 +1,7 @@
 #include "bar.h"
-#include <foo/bar.h>
+#include <baz/baz.h>
 
 std::string bar::whoooth()
 {
-    return foo::whoooth() + "baaaar";
+    return baz::whoooth() + "bar";
 }
