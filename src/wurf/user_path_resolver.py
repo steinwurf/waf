@@ -26,16 +26,13 @@ class UserPathResolver(object):
         :param path: Path to the dependency as a string or None of not
             user path has been specified.
         """
+        assert os.path.isdir(path)
         self.path = path
 
     def resolve(self):
         """
         :return: The user specified path.
         """
-
-        if not self.path:
-            raise UserPathResolverError()
-
         return self.path
 
     def __repr__(self):

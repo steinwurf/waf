@@ -87,4 +87,16 @@ def test_parse_user_path():
     path = registry.require('user_path', dependency=dependency)
     assert path == '/home/stw/code'
 
-    print(registry.registry)
+    # Path specified
+    parser = argparse.ArgumentParser()
+    args = ['--foo', '--bundle-path', '--foo-path=/home/stw/code1', '-b']
+
+    registry = Registry()
+    registry.provide_value('parser', parser)
+    registry.provide_value('args', args)
+
+    path = registry.require('user_path', dependency=dependency)
+    assert path == '/home/stw/code1'
+
+
+    print(registry.cache)

@@ -3,50 +3,46 @@
 
 import shutilwhich
 
-def test_add_dependency(test_directory):
-    """ Integration testing of adding a dependency.
+""" Integration testing of adding a dependency.
 
-    This test is a bit involved so lets try to explain what it does:
+This test is a bit involved so lets try to explain what it does:
 
-    We are setting up the following dependency graph:
-    
-               +--------------+
-               |     app      |
-               +---+------+---+
-                   |      |
-                   |      |
-          +--------+      +-------+
-          |                       |
-          v                       v
-    +-----+------+          +-----+-----+
-    |  libfoo    |          |  libbaz   |
-    +-----+------+          +-----+-----+
-          |                       ^
-          v                       |
-    +-----+------+                |
-    |  libbar    |----------------+
-    +------------+
+We are setting up the following dependency graph:
 
-    The arrows indicate dependencies, so:
-    
-    - 'app' depends on 'libfoo' and 'libbaz'
-    - 'libfoo' depends on 'libbar'
-    - 'libbar' depends on 'libbaz'
+           +--------------+
+           |     app      |
+           +---+------+---+
+               |      |
+               |      |
+      +--------+      +-------+
+      |                       |
+      v                       v
++-----+------+          +-----+-----+
+|  libfoo    |          |  libbaz   |
++-----+------+          +-----+-----+
+      |                       ^
+      v                       |
++-----+------+                |
+|  libbar    |----------------+
++------------+
 
-    """
+The arrows indicate dependencies, so:
 
-    app_dir = test_directory.copy_dir(directory='test/test_add_dependency/app')
+- 'app' depends on 'libfoo' and 'libbaz'
+- 'libfoo' depends on 'libbar'
+- 'libbar' depends on 'libbaz'
+
+"""
+
+def mkdir_app(directory):
+    app_dir = directory.copy_dir(directory='test/test_add_dependency/app')
     app_dir.copy_file('build/waf')
-
-    # Make a directory where we place the libraries that we would have cloned
-    # if we had use the full waf resolve functionality.
-    #
-    # To avoid relying on network connectivity we simply place the
-    # libraries there and then fake the git clone step.
-    git_dir = test_directory.mkdir(directory='git_dir')
-
+    return app_dir
+    
+def mkdir_libfoo(directory):
+    
     # Add foo dir
-    foo_dir = git_dir.copy_dir(directory='test/test_add_dependency/libfoo')
+    foo_dir = directory.copy_dir(directory='test/test_add_dependency/libfoo')
     foo_dir.run('git', 'init')
     foo_dir.run('git', 'add', '.')
 
@@ -56,65 +52,66 @@ def test_add_dependency(test_directory):
     #
     foo_dir.run('git', '-c', 'user.name=John', '-c', 'user.email=doe@email.org', 'commit', '-m', 'oki')
     foo_dir.run('git', 'tag', '1.3.3.7')
-
+    return foo_dir
+    
+def mkdir_libbar(directory):
+    
     # Add bar dir
-    bar_dir = git_dir.copy_dir(directory='test/test_add_dependency/libbar')
+    bar_dir = directory.copy_dir(directory='test/test_add_dependency/libbar')
     bar_dir.run('git', 'init')
     bar_dir.run('git', 'add', '.')
     bar_dir.run('git', '-c', 'user.name=John', '-c', 'user.email=doe@email.org', 'commit', '-m', 'oki')
     bar_dir.run('git', 'tag', 'someh4sh')
+    return bar_dir
+    
+def mkdir_libbaz(directory):
     
     # Add baz dir
-    baz_dir = git_dir.copy_dir(directory='test/test_add_dependency/libbaz')
+    baz_dir = directory.copy_dir(directory='test/test_add_dependency/libbaz')
     baz_dir.run('git', 'init')
     baz_dir.run('git', 'add', '.')
     baz_dir.run('git', '-c', 'user.name=John', '-c', 'user.email=doe@email.org', 'commit', '-m', 'oki')
     baz_dir.run('git', 'tag', '3.1.2')
+    
+    return baz_dir
+    
+    
+def test_add_dependency(test_directory):
 
-    # The bundle_dependencies directory is the default, so when we do
-    # configure without any arguments dependencies are expected to be
-    # placed there.
+    app_dir = mkdir_app(directory=test_directory)
 
-    #git_binary = shutilwhich.which('git')
+    # Make a directory where we place the libraries that we would have cloned
+    # if we had use the full waf resolve functionality.
+    #
+    # To avoid relying on network connectivity we simply place the
+    # libraries there and then fake the git clone step.
+    git_dir = test_directory.mkdir(directory='git_dir')
 
-    #libfoo_repo = test
+    foo_dir = mkdir_libfoo(directory=git_dir)
+    bar_dir = mkdir_libbar(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir)
 
-    #bundle_directory = test_directory.mkdir('bundle_dependencies')
-
-
-    #bundle_directory.copy_dir('test/test_add_dependency/libfoo')
-
-    ##libfoo_directory = bundle_directory.mkdir('libbar-h4sh')
-    #libfoo_directory.copy_dir('test/test_add_dependency/libbar')
-
-    # @todo remove print of r
+    # All setup - lets run some tests
+    app_dir.run('python', 'waf', '--help')
     app_dir.run('python', 'waf', 'configure', '-v')
     app_dir.run('python', 'waf', 'build', '-v')
 
-
-    # r = test_directory.run('python', 'waf', 'configure', '-v', '--waf-use-checkout=waf-1.9.4')
-    #
-    # assert r.returncode == 0, str(r)
-    #
-    # r = test_directory.run('python', 'waf', 'build', '-v')
-    #
-    # assert r.returncode == 0, str(r)
-    #
-    # r = test_directory.run('python', 'waf', 'configure', '-v', '--waf-path=/tmp')
-    #
-    # assert r.returncode == 0, str(r)
-    #
-    # r = test_directory.run('python', 'waf', 'build', '-v')
-    #
-    # assert r.returncode == 0, str(r)
-    #
-    # r = test_directory.run('python', 'waf', 'configure', '-v', '--bundle-path=okidoki')
-    #
-    # assert r.returncode == 0, str(r)
-    #
-    # r = test_directory.run('python', 'waf', 'build', '-v')
-    #
-    # assert r.returncode == 0, str(r)
-    #
-
-    #print(str(r))
+def test_add_dependency_path(test_directory):
+    
+    app_dir = mkdir_app(directory=test_directory)
+    
+    git_dir = test_directory.mkdir(directory='git_dir')
+    
+    foo_dir = mkdir_libfoo(directory=git_dir)
+    bar_dir = mkdir_libbar(directory=git_dir)
+    
+    # Test --baz-path option, by not putting this in the git_dir we make
+    # sure that our fake git clone step in the wscript cannot find it. 
+    # Therefore the test will fail if for some reason try to clone it..
+    path_test = test_directory.mkdir(directory='path_test')
+    baz_dir = mkdir_libbaz(directory=path_test)
+    
+    app_dir.run('python', 'waf', 'configure', '--baz-path={}'.format(
+        baz_dir.path()))
+    app_dir.run('python', 'waf', 'build', '-v')
+    

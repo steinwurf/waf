@@ -289,7 +289,7 @@ def user_path(registry, dependency):
     """ Provides the user path to a specific dependency.
 
     :param registry: A Registry instance
-    :param dependency: A WurfDependency instance.
+    :param dependency: A Dependency instance.
     """
     parser = registry.require('parser')
     args = registry.require('args')
@@ -312,6 +312,8 @@ def user_path(registry, dependency):
 
     return arguments[option]
 
+
+@cache
 @provide
 def user_path_resolver(registry, dependency):
 
