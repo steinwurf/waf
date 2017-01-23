@@ -53,21 +53,21 @@ class Registry(object):
 
         # Dictionary which contains cached values produced for the different
         # providers. The layout of the dictionary will be:
-        # { 'provider1': { argument_hash1: value1 
+        # { 'provider1': { argument_hash1: value1
         #                  arguemnt_hash2, value2},
         #   'provider2': { argument_hash1: value1 },
         #   ....
-        # }  
-        # 
+        # }
+        #
         # Where the provider name is the key to a dictionary where cached values
         # are stored. The nested dict uses a hash of the arguments passed to
         # require(...) to find the right cached response.
         self.cache = {}
-        
+
         # Set which contains the name of features that should be cached
         if use_cache_providers:
             for s in Registry.cache_providers:
-                self.cache_provider(s)    
+                self.cache_provider(s)
 
         if use_providers:
             for k,v in Registry.providers.items():
@@ -83,10 +83,10 @@ class Registry(object):
         :param provider_name: The name of the provider as a string
         :param provider_function: Function to call which will provide the value
         :param cache: Determines whether calls to the provider should be cached.
-            If arguments are passed to the provider in the require(...) 
-            function, they must be hashable. 
-        :param override: Determines whether the provider should override/replace 
-            an existing provider. If True we will override an existing provider 
+            If arguments are passed to the provider in the require(...)
+            function, they must be hashable.
+        :param override: Determines whether the provider should override/replace
+            an existing provider. If True we will override an existing provider
             with the same name.
         """
 
@@ -110,24 +110,24 @@ class Registry(object):
     def require(self, provider_name, **kwargs):
         """
         :param provider_name: The name of the provider as a string
-        :param kwargs: Keyword arguments that should be passed to the provider 
+        :param kwargs: Keyword arguments that should be passed to the provider
             function.
         """
         if provider_name in self.cache:
             # Did we already cache?
-            key = frozenset(kwargs.items()) 
+            key = frozenset(kwargs.items())
             try:
                 return self.cache[provider_name][key]
             except KeyError:
                 call = self.registry[provider_name]
                 result = call(**kwargs)
                 self.cache[provider_name][key] = result
-                return result  
+                return result
         else:
             call = self.registry[provider_name]
             result = call(**kwargs)
             return result
-        
+
 
     def __contains__(self, provider_name):
         """
@@ -309,18 +309,22 @@ def user_path(registry, dependency):
 
     # Cache the value in the registry
     #registry.provide_value(key, arguments[option])
-
+    # @todo remove
+    print(arguments)
     return arguments[option]
 
 
-@cache
+
 @provide
 def user_path_resolver(registry, dependency):
 
     path = registry.require('user_path', dependency=dependency)
 
+    # @todo remove
+    print("PATH {} {}".format(path, dependency))
+
     if path:
-        UserPathResolver(path=path)
+        return UserPathResolver(path=path)
     else:
         return None
 
@@ -459,11 +463,11 @@ def git_user_checkout_resolver(registry, dependency):
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
     bundle_path = registry.require('bundle_path')
     checkout = registry.require('git_user_checkout', dependency=dependency)
-        
+
     if checkout:
         return GitCheckoutResolver(git=git, git_resolver=git_resolver, ctx=ctx,
             name=name, bundle_path=bundle_path, checkout=checkout)
-    else: 
+    else:
         return None
 
 
@@ -483,7 +487,7 @@ def git_source_resolvers(registry, dependency):
     source_resolvers = registry.require(method_key, dependency=dependency)
 
     resolvers = user_resolvers + source_resolvers
-    
+
     return resolvers
 
 @provide
@@ -525,7 +529,10 @@ def dependency_resolver(registry, dependency):
     ctx = registry.require('ctx')
 
     resolvers = user_resolvers + source_resolvers
-    
+
+    print(registry.require('user_path_resolver', dependency=dependency))
+    print("wurf: resolvers {}".format(resolvers))
+
     # Filter out missing resolvers
     resolvers = [r for r in resolvers if r is not None]
 

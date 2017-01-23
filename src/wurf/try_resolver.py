@@ -5,73 +5,6 @@ import argparse
 import sys
 import os
 
-
-#           +--------------------------+
-#           |   WurfHashDependency     |
-#           |                          |
-#           |   - Hash the dependency  |
-#           |     using sha1.          |
-#           +--------------------------+
-#               +                   ^
-#               |                   |
-#       add_dependency(...)        path
-#               |                   |
-#               v                   +
-#      +-----------------------------------+
-#      |   WurfDependencyCache             |
-#      |                                   |
-#      |   - Cache the path and sha1 for   |
-#      |     a resolved dependency.        |
-#      |   - Store the path and sha1 in a  |
-#      |     persistant cache file.        |
-#      |   - Checks that if a dependency   |
-#      |     is added twice their sha1     |
-#      |     must match.                   |
-#      |                                   |
-#      +-----------------------------------+
-#              +                   ^
-#              |                   |
-#      add_dependency(...)        path
-#              |                   |
-#              v                   +
-#     +------------------------------------+
-#     |  WurfUserResolve                   |
-#     |                                    |
-#     |  - Check if user specified a path  |
-#     |    on the command-line.            |
-#     |                                    |
-#     +------------------------------------+
-#              +                   ^
-#              |                   |
-#      add_dependency(...)        path
-#              |                   |
-#              v                   +
-#    +----------------------------------------+
-#    |  WurfFastResolve                       |
-#    |                                        |
-#    |  - Active if the --fast-resolve option |
-#    |    is specified.                       |
-#    |  - If the cache file exists            |
-#    |    loads the path from there.          |
-#    |                                        |
-#    +----------------------------------------+
-#               +                   ^
-#               |                   |
-#       add_dependency(...)        path
-#               |                   |
-#               v                   +
-#       +---------------------------------+
-#       |  WurfResolve                    |
-#       |                                 |
-#       |  - Uses the specified resolver  |
-#       |    type to fetch the dependency |
-#       +---------------------------------+
-
-
-
-
-
-
 from . import wurf_error
 
 class NoPathResolvedError(wurf_error.WurfError):
@@ -98,7 +31,7 @@ class TryResolver(object):
         """ Resolve the dependency.
 
         :return: Path to resolved dependency as a string
-        :raises NoPathResolved: if no resolver produced a valid path. 
+        :raises NoPathResolved: if no resolver produced a valid path.
         """
 
         for resolver in self.resolvers:
@@ -116,7 +49,7 @@ class TryResolver(object):
                 self.ctx.logger.debug("Source {} resolve failed:".format(
                     resolver), exc_info=True)
             else:
-                
+
                 assert os.path.isdir(path)
                 return path
         else:

@@ -30,7 +30,7 @@ class OnPassiveLoadPathResolver(object):
         :return: The path as a string.
         """
 
-        config = self.__read_config(self.name)
+        config = self.__read_config()
 
         if self.sha1 != config['sha1']:
             self.ctx.fatal('Failed sha1 check')
