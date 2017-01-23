@@ -320,9 +320,6 @@ def user_path_resolver(registry, dependency):
 
     path = registry.require('user_path', dependency=dependency)
 
-    # @todo remove
-    print("PATH {} {}".format(path, dependency))
-
     if path:
         return UserPathResolver(path=path)
     else:
@@ -484,6 +481,7 @@ def git_source_resolvers(registry, dependency):
 
     user_resolvers = [
         registry.require('git_user_checkout_resolver', dependency=dependency)]
+
     source_resolvers = registry.require(method_key, dependency=dependency)
 
     resolvers = user_resolvers + source_resolvers
