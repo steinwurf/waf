@@ -72,8 +72,8 @@ def build_waf_binary(tsk):
     prelude = '\timport waflib.extras.wurf.wurf_entry_point'
 
     # Build the command to execute
-    command = 'python waf-light --make-waf --prelude="{}" --tools={}'.format(
-        prelude, tool_paths)
+    command = 'python waf-light configure build --make-waf --prelude="{}" ' \
+              '--tools={}'.format(prelude, tool_paths)
 
     # Get the waf BuildContext
     bld = tsk.generator.bld
