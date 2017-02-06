@@ -40,11 +40,11 @@ def configure(conf):
 
     # Ensure that the waf-light program is available in the in the
     # waf folder. This is used to build the waf binary.
-    conf.find_program('waf-light',
+    conf.find_program('waf-light', exts='',
         path_list=[conf.dependency_path('waf')])
 
     # Make sure we tox used for running unit tests
-    conf.find_program('tox')
+    #conf.find_program('tox')
 
 def build_waf_binary(tsk):
     """
@@ -72,7 +72,7 @@ def build_waf_binary(tsk):
     prelude = '\timport waflib.extras.wurf.wurf_entry_point'
 
     # Build the command to execute
-    command = "python waf-light configure build --make-waf --prelude='{}' --tools={}".format(
+    command = 'python waf-light --make-waf --prelude="{}" --tools={}'.format(
         prelude, tool_paths)
 
     # Get the waf BuildContext
@@ -131,17 +131,17 @@ def build(bld):
     # We run tox at the end since we will use the freshly built waf binary
     # in some of the tests.
 
-    my_env = bld.env.derive()
-    my_env.env = os.environ
+    #my_env = bld.env.derive()
+    #my_env.env = os.environ
 
 
-    semver_path = bld.dependency_path('python-semver')
-    shutil_path = bld.dependency_path('shutilwhich')
-    wurf_path = os.path.join(os.getcwd(), 'src')
+    #semver_path = bld.dependency_path('python-semver')
+    #shutil_path = bld.dependency_path('shutilwhich')
+    #wurf_path = os.path.join(os.getcwd(), 'src')
 
-    my_env.env.update({'PYTHONPATH': ':'.join(
-        [wurf_path, semver_path, shutil_path])})
+    #my_env.env.update({'PYTHONPATH': ':'.join(
+    #    [wurf_path, semver_path, shutil_path])})
 
     #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
-    bld(rule='tox', env=my_env, always=True)
+    #bld(rule='tox', env=my_env, always=True)
     #bld(rule='tox -- -s', env=my_env, always=True)

@@ -1,7 +1,10 @@
 [submodule "waf"]
-	path = third_party/waf
+    path = third_party/waf
     url = https://github.com/waf-project/waf.git
     ignore = dirty
 [submodule "python-semver"]
-	path = third_party/python-semver
+    path = third_party/python-semver
     url = https://github.com/k-bx/python-semver.git
+[submodule "shutilwhich"]
+    path = third_party/shutilwhich
+    url = https://github.com/mbr/shutilwhich.git
