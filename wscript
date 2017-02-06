@@ -110,9 +110,6 @@ def build(bld):
 
     bld.add_group()
 
-
-
-
     # Copy the waf binary to build directory
     #bld(features='subst',
     #    source=#bld.root.find_node(
@@ -121,7 +118,7 @@ def build(bld):
     #    is_copy=True)
 
     # Make a build group will ensure that
-    #bld.add_group()
+    bld.add_group()
 
     # Invoke tox to run all the pure Python unit tests. Tox creates
     # virtualenvs for different setups and runs unit tests in them. See the
@@ -145,3 +142,22 @@ def build(bld):
     #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
     #bld(rule='tox', env=my_env, always=True)
     #bld(rule='tox -- -s', env=my_env, always=True)
+
+    #python = bld.env['PYTHON'][0]
+    env = dict(os.environ)
+
+    cwd = os.getcwd()
+    print('cwd: %s' % cwd)
+
+    third_party = os.path.join(cwd, 'third_party')
+
+    # Add the absolute paths to all the necessary tools
+    tools = [os.path.join(third_party, 'shutilwhich'),
+             os.path.join(third_party, 'python-semver'),
+             os.path.join(cwd, 'src')]
+
+    env['PYTHONPATH'] = ';'.join(tools)
+
+    # Run the unit tests
+    if os.path.exists('test'):
+        bld.cmd_and_log('pytest\n', cwd=cwd, env=env)
