@@ -3,7 +3,7 @@
 
 import argparse
 import os
-
+from collections import defaultdict
 
 from . import wurf_git_resolver
 
@@ -41,6 +41,14 @@ class Registry(object):
     # that should be cached. This is done using @cache decorator.
     cache_providers = set()
 
+    # Dictionary with functions that should be invoked before a specific
+    # provider
+    before_provider = defaultdict(set)
+
+    # Dictionary with functions that should be invoked before a specific
+    # provider
+    after_provider = defaultdict(set)
+
     def __init__(self, use_providers=True, use_cache_providers=True):
         """
         :param use_providers: True if the class providers should be added. False
@@ -63,6 +71,14 @@ class Registry(object):
         # are stored. The nested dict uses a hash of the arguments passed to
         # require(...) to find the right cached response.
         self.cache = {}
+
+        # Dictionary with functions that should be invoked before a specific
+        # provider
+        self.before_provider = defaultdict(set)
+
+        # Dictionary with functions that should be invoked before a specific
+        # provider
+        self.after_provider = defaultdict(set)
 
         # Set which contains the name of features that should be cached
         if use_cache_providers:
@@ -94,9 +110,29 @@ class Registry(object):
             raise WurfProvideRegistryError(provider_name)
 
         def call(**kwargs):
-            return provider_function(registry=self, **kwargs)
+
+            for before in self.before_provider[provider_name]:
+                assert before in self.cache
+
+
+
+            result = provider_function(registry=self, **kwargs)
+
+            for after in self.after_provider[provider_name]:
+                assert after in self.cache
+                after(registry=self, **kwargs)
+
+            return result
 
         self.registry[provider_name] = call
+
+    def invoke_before(self, provider_name, function):
+        assert function not in self.before_provider[provider_name]
+        self.before_provider[provider_name].add(function)
+
+    def invoke_after(self, provider_name, function):
+        assert function not in self.after_provider[provider_name]
+        self.after_provider[provider_name].add(function)
 
     def provide_value(self, provider_name, value):
         """
@@ -113,9 +149,13 @@ class Registry(object):
         :param kwargs: Keyword arguments that should be passed to the provider
             function.
         """
+        for before in self.before_provider[provider_name]:
+            self.require(before, **kwargs)
+
         if provider_name in self.cache:
             # Did we already cache?
             key = frozenset(kwargs.items())
+
             try:
                 return self.cache[provider_name][key]
             except KeyError:
@@ -127,6 +167,27 @@ class Registry(object):
             call = self.registry[provider_name]
             result = call(**kwargs)
             return result
+
+    def __compute_cache(provider_name, **kwargs):
+        assert provider_name in self.cache:
+
+        key = frozenset(kwargs.items())
+
+        # Did we already cache?
+        if key in self.cache[provider_name][key]:
+            return
+
+        # Add key to cache - to prevent cyclic reqursion
+        self.cache[provider_name][key] = None
+
+        for before in self.before_provider[provider_name]:
+            self.__compute_cache(before, **kwargs)
+
+        call = self.registry[provider_name]
+        self.cache[provider_name][key] = call(**kwargs)
+
+        for after in self.after_provider[provider_name]:
+            self.__compute_cache(after, **kwargs)
 
 
     def __contains__(self, provider_name):
@@ -145,10 +206,25 @@ def provide(func):
 
     return func
 
+def invoke_before(func, provider_name):
+
+    assert func not in Registry.before_provider[provider_name]
+    Registry.before_provider[provider_name].add(func)
+
+    return func
+
+def invoke_after(func, provider_name):
+
+    assert func not in Registry.after_provider[provider_name]
+    Registry.after_provider[provider_name].add(func)
+
+    return func
+
 def cache(func):
     Registry.cache_providers.add(func.__name__)
 
     return func
+
 
 @cache
 @provide
@@ -314,7 +390,6 @@ def user_path(registry, dependency):
     return arguments[option]
 
 
-
 @provide
 def user_path_resolver(registry, dependency):
 
@@ -440,9 +515,6 @@ def git_user_checkout(registry, dependency):
     # https://docs.python.org/3/library/argparse.html#the-namespace-object
     arguments = vars(known_args)
 
-    # Cache the value in the registry
-    #registry.provide_value(key, arguments[option])
-
     return arguments[option]
 
 
@@ -509,9 +581,14 @@ def passive_path_resolver(registry, dependency):
         bundle_config_path=bundle_config_path)
 
 
+
+
 @provide
 def dependency_resolver(registry, dependency):
     """ Builds a WurfSourceResolver instance."""
+
+    # Collect general options
+
 
     active_resolve = registry.require('active_resolve')
     bundle_config_path = registry.require('bundle_config_path')
@@ -572,7 +649,6 @@ def dependency_manager(registry):
 def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
     active_resolve, semver, utils, args):
     """ Builds a registry.
-
 
     :param ctx: A Waf Context instance.
     :param git_binary: A string containing the path to a git executable.
