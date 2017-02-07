@@ -7,6 +7,11 @@ tools to Waf.
 
 These help us to handle library dependencies and tool-chains.
 
+License
+=======
+This project is under the same BSD license as the Waf project. The license text
+can be found here: https://github.com/waf-project/waf/blob/master/waf-light#L6-L30
+
 Installation
 =============
 
