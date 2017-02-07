@@ -72,17 +72,6 @@ def test_wurf_registry():
     assert p.x == 0
     assert p.y == 0
 
-    before = mock.Mock()
-    registry.invoke_before(provider_name='point', function=before)
-
-    p = registry.require('point', x=4)
-
-    before.assert_called_once_with(registry=registry, x=4)
-
-    assert p.x == 4
-    assert p.y == 0
-
-
 
 def test_parse_user_path():
 

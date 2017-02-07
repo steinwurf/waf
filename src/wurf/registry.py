@@ -112,14 +112,11 @@ class Registry(object):
         def call(**kwargs):
 
             for before in self.before_provider[provider_name]:
-                assert before in self.cache
-
-
+                before(registry=self, **kwargs)
 
             result = provider_function(registry=self, **kwargs)
 
             for after in self.after_provider[provider_name]:
-                assert after in self.cache
                 after(registry=self, **kwargs)
 
             return result
@@ -140,6 +137,8 @@ class Registry(object):
         :param value: The value with should be returned on require(...)
         """
 
+        # @todo add override parameter / check
+
         def call(): return value
         self.registry[provider_name] = call
 
@@ -149,8 +148,6 @@ class Registry(object):
         :param kwargs: Keyword arguments that should be passed to the provider
             function.
         """
-        for before in self.before_provider[provider_name]:
-            self.require(before, **kwargs)
 
         if provider_name in self.cache:
             # Did we already cache?
@@ -168,34 +165,12 @@ class Registry(object):
             result = call(**kwargs)
             return result
 
-    def __compute_cache(provider_name, **kwargs):
-        assert provider_name in self.cache:
-
-        key = frozenset(kwargs.items())
-
-        # Did we already cache?
-        if key in self.cache[provider_name][key]:
-            return
-
-        # Add key to cache - to prevent cyclic reqursion
-        self.cache[provider_name][key] = None
-
-        for before in self.before_provider[provider_name]:
-            self.__compute_cache(before, **kwargs)
-
-        call = self.registry[provider_name]
-        self.cache[provider_name][key] = call(**kwargs)
-
-        for after in self.after_provider[provider_name]:
-            self.__compute_cache(after, **kwargs)
-
-
     def __contains__(self, provider_name):
         """
         :param provider_name: The name of the provider as a string
         :return: True if the provider is in the registry
         """
-        return key in self.registry
+        return provider_name in self.registry
 
 
 def provide(func):
@@ -232,7 +207,6 @@ def git_url_parser(registry):
     """ Parser for Git URLs. """
 
     return GitUrlParser()
-
 
 @cache
 @provide
@@ -299,6 +273,7 @@ def project_git_protocol(registry):
         url = parser.parse(parent_url)
         return url.protocol
 
+
 @cache
 @provide
 def git(registry):
@@ -310,6 +285,7 @@ def git(registry):
     ctx = registry.require('ctx')
 
     return Git(git_binary=git_binary, ctx=ctx)
+
 
 @cache
 @provide
