@@ -21,10 +21,10 @@ def resolve(ctx):
 
 
     # This mapping is use when performing a "fake" git clone.
-    # 
+    #
     # In the tests we will make "fake" git repositories available
-    # under the 'git_dir' folder using the following mapping. 
-    # For the a given git URL the value in the dict below gives 
+    # under the 'git_dir' folder using the following mapping.
+    # For the a given git URL the value in the dict below gives
     # the directory name in the 'git_dir'.
     libraries = {'github.com/acme-corp/foo.git': 'libfoo',
                  'gitlab.com/acme-corp/bar.git': 'libbar',
@@ -36,10 +36,10 @@ def resolve(ctx):
             super(FakeGitClone, self).__init__(
                 git_binary=git_binary, ctx=ctx)
 
-            # This is the directory on the file system which contains the 
+            # This is the directory on the file system which contains the
             # test libraries. We use the url in the clone(...) function
             # to find the library needed
-            
+
             self.git_dir = ctx.path.parent.find_node('git_dir')
             self.libraries = libraries
 
@@ -49,9 +49,14 @@ def resolve(ctx):
 
             for lib_repository, lib_name in self.libraries.items():
                 if repository.endswith(lib_repository):
-                    
+
+                    lib_node = self.git_dir.find_node(lib_name)
+
+                    if not lib_node:
+                        raise CloneError(repository=repository)
+
                     lib_directory = self.git_dir.find_node(lib_name).abspath()
-                    
+
                     shutil.copytree(src=lib_directory, dst=dst_directory)
 
                     assert os.path.isdir(dst_directory), "We should have a valid path here!"
@@ -82,7 +87,7 @@ def resolve(ctx):
         method='checkout',
         checkout='1.3.3.7',
         sources=['github.com/acme-corp/foo.git'])
-        
+
     ctx.add_dependency(
         name='baz',
         recurse=True,

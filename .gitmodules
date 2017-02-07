@@ -5,6 +5,20 @@
 [submodule "python-semver"]
     path = third_party/python-semver
     url = https://github.com/k-bx/python-semver.git
+    ignore = dirty
 [submodule "shutilwhich"]
     path = third_party/shutilwhich
     url = https://github.com/mbr/shutilwhich.git
+    ignore = dirty
+[submodule "pytest"]
+    path = third_party/pytest
+    url = https://github.com/pytest-dev/pytest.git
+    ignore = dirty
+[submodule "mock"]
+    path = third_party/mock
+    url = https://github.com/testing-cabal/mock.git
+    ignore = dirty
+[submodule "py"]
+    path = third_party/py
+    url = https://github.com/pytest-dev/py.git
+    ignore = dirty

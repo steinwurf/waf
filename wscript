@@ -2,6 +2,8 @@
 # encoding: utf-8
 
 import os
+import sys
+import shutil
 
 import waflib
 
@@ -108,17 +110,8 @@ def build(bld):
         tools_dir=tools_dir,
         always=True)
 
-    bld.add_group()
-
-    # Copy the waf binary to build directory
-    #bld(features='subst',
-    #    source=#bld.root.find_node(
-    #        str(os.path.join(bld.dependency_path('waf'), 'waf')),
-    #    target='waf',
-    #    is_copy=True)
-
     # Make a build group will ensure that
-    bld.add_group()
+    #bld.add_group()
 
     # Invoke tox to run all the pure Python unit tests. Tox creates
     # virtualenvs for different setups and runs unit tests in them. See the
@@ -143,7 +136,7 @@ def build(bld):
     #bld(rule='tox', env=my_env, always=True)
     #bld(rule='tox -- -s', env=my_env, always=True)
 
-    #python = bld.env['PYTHON'][0]
+def test(bld):
     env = dict(os.environ)
 
     cwd = os.getcwd()
@@ -152,12 +145,31 @@ def build(bld):
     third_party = os.path.join(cwd, 'third_party')
 
     # Add the absolute paths to all the necessary tools
-    tools = [os.path.join(third_party, 'shutilwhich'),
+    tools = [os.path.join(third_party, 'pytest'),
+             os.path.join(third_party, 'py'),
+             os.path.join(third_party, 'mock', 'mock'),
+             os.path.join(third_party, 'shutilwhich'),
              os.path.join(third_party, 'python-semver'),
              os.path.join(cwd, 'src')]
 
-    env['PYTHONPATH'] = ';'.join(tools)
+    separator = ';' if sys.platform == 'win32' else ':'
+    env['PYTHONPATH'] = separator.join(tools)
 
-    # Run the unit tests
+    # Remove the previously created temp folder
+    if os.path.exists('temp'):
+
+        def onerror(func, path, exc_info):
+            import stat
+            if not os.access(path, os.W_OK):
+                # Is the error an access error ?
+                os.chmod(path, stat.S_IWUSR)
+                func(path)
+            else:
+                raise
+
+        shutil.rmtree('temp', onerror=onerror)
+
+    # Run the unit tests with pytest
     if os.path.exists('test'):
-        bld.cmd_and_log('pytest\n', cwd=cwd, env=env)
+        bld.cmd_and_log('python -m pytest -x --basetemp=temp test\n',
+                        cwd=cwd, env=env)

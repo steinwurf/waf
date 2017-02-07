@@ -37,7 +37,7 @@ class OnPassiveLoadPathResolver(object):
 
         path = str(config['path'])
 
-        if not os.path.is_dir(path):
+        if not os.path.isdir(path):
             self.ctx.fatal('Not valid path {}'.format(path))
 
         return path

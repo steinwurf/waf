@@ -4,7 +4,7 @@
 VERSION = '1.0.0'
 
 def resolve(ctx):
-    
+
     ctx.add_dependency(
         name='bar',
         recurse=True,
@@ -22,7 +22,7 @@ def configure(conf):
     conf.load('compiler_cxx')
 
 def build(bld):
-    bld.shlib(features='cxx',
+    bld.stlib(features='cxx',
               target='foo',
               source='src/foo/foo.cpp',
               use=['bar'],
