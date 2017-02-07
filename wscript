@@ -147,7 +147,9 @@ def test(bld):
     # Add the absolute paths to all the necessary tools
     tools = [os.path.join(third_party, 'pytest'),
              os.path.join(third_party, 'py'),
-             os.path.join(third_party, 'mock', 'mock'),
+             os.path.join(third_party, 'mock'),
+             #os.path.join(third_party, 'pbr', 'pbr'),
+             #os.path.join(third_party, 'six'),
              os.path.join(third_party, 'shutilwhich'),
              os.path.join(third_party, 'python-semver'),
              os.path.join(cwd, 'src')]
