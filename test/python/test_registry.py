@@ -51,13 +51,26 @@ def test_wurf_registry():
 
     assert p.x == 1
     assert p.y == 1
-    
+
     # Ask for a point with a different value, this will bypass the cache
     p = registry.require('point', x=4)
-    
+
     assert p.x == 4
     assert p.y == 0
 
+    # Create a new registry
+    registry = Registry()
+
+    def build_point(registry, x=0):
+        return Point(x,0)
+
+    registry.provide('point', build_point)
+
+    # Use the default build
+    p = registry.require('point')
+
+    assert p.x == 0
+    assert p.y == 0
 
 
 def test_parse_user_path():
