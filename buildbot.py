@@ -34,15 +34,16 @@ def configure(properties):
     if properties.get('build_distclean'):
         command += ['distclean']
 
-    command += ['configure', '--git-protocol=git@']
+    #command += ['configure', '--git-protocol=git@']
+    command += ['configure']
 
-    if 'waf_bundle_path' in properties:
-        command += ['--bundle-path=' + properties['waf_bundle_path']]
+#    if 'waf_bundle_path' in properties:
+#        command += ['--bundle-path=' + properties['waf_bundle_path']]
 
-    if 'dependency_project' in properties:
-        command += ['--{0}-use-checkout={1}'.format(
-            properties['dependency_project'],
-            properties['dependency_checkout'])]
+#    if 'dependency_project' in properties:
+#        command += ['--{0}-use-checkout={1}'.format(
+#            properties['dependency_project'],
+#            properties['dependency_checkout'])]
 
     #command += ["--cxx_mkspec={}".format(properties['cxx_mkspec'])]
     #command += get_tool_options(properties)
