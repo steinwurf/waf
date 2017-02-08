@@ -173,6 +173,86 @@ class Registry(object):
         return provider_name in self.registry
 
 
+
+@option
+def add_user_path(parser, dependency):
+    pass
+
+class Option(object):
+    def __init__(command, *args):
+        pass
+        
+class DependencyOption(object):
+    
+    def __init__(self, options, **kwargs):
+        self.options = options
+        
+        self.options.parser.add_
+    
+    def get(self, options, dependency):
+        pass
+        
+@option
+def bundle_path():
+    pass
+    
+
+
+class Options(object):
+    
+    def __init__(self, args, parser, default_bundle_path):
+        
+        # Using the %default placeholder:
+        #    http://stackoverflow.com/a/1254491/1717320
+        parser.add_argument('--bundle-path',
+            default=default_bundle_path,
+            dest='--bundle-path',
+            help='The folder where the bundled dependencies are downloaded.'
+                 '(default: %(default)s)')
+        
+        parser.add_argument('--git-protocol',
+            dest='--git-protocol',
+            help='Use a specific git protocol to download dependencies.'
+                 'Supported protocols {}'.format(supported_protocols))
+        
+    def bundle_path(self):
+        return self.options['--bundle-path'] 
+        
+    def git_protocol(self):
+        return self.options['--git-protocol']    
+        
+    def user_path(self, dependency):
+        return self.options['--%s-path' % dependency.name]    
+
+    def use_checkout(self, dependency):
+        return self.options['--%s-path' % dependency.name] 
+        
+    def __add_user_path(self, dependency):
+        
+        option = '--%s-path' % dependency.name
+        
+        self.parser.add_argument(option,
+        nargs='?',
+        dest=option,
+        help='Manually specify path for {}.'.format(
+        dependency.name))
+        
+        
+    def add_dependency(self, dependency):
+        
+        
+        if dependency.resolver == 'git':
+            
+            option = '--%s-use-checkout' % dependency.name
+
+            parser.add_argument(option,
+                nargs='?',
+                dest=option,
+                help='Manually specify Git checkout for {}.'.format(
+                    dependency.name))
+
+
+
 def provide(func):
 
     if func.__name__ in Registry.providers:
