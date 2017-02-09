@@ -11,7 +11,9 @@ def test_dependency_manager():
     registry = mock.Mock()
     cache = {}
     ctx = mock.Mock()
+    options = mock.Mock()
 
-    d = DependencyManager(registry=registry, cache=cache, ctx=ctx)
+    d = DependencyManager(registry=registry, cache=cache, ctx=ctx,
+        options=options)
 
     # @todo add tests

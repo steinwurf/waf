@@ -74,7 +74,7 @@ def resolve(ctx):
 
     # Get the registry and replace the git builder
     registry = ctx.registry
-    registry.provide('git', build_fake_git, override=True)
+    registry.provide_function('git', build_fake_git, override=True)
 
     # Rebuild the dependency manager
     ctx.dependency_manager = registry.require('dependency_manager')
