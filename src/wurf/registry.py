@@ -34,20 +34,12 @@ class WurfProvideRegistryError(wurf_error.WurfError):
 class Registry(object):
 
     # Dictionary containing the provider functions registered
-    # using the @provide decorator
+    # using the @Registry.provide decorator
     providers = {}
 
     # Set which will track which provider functions that produce values
-    # that should be cached. This is done using @cache decorator.
+    # that should be cached. This is done using @Registry.cache decorator.
     cache_providers = set()
-
-    # Dictionary with functions that should be invoked before a specific
-    # provider
-    before_provider = defaultdict(set)
-
-    # Dictionary with functions that should be invoked before a specific
-    # provider
-    after_provider = defaultdict(set)
 
     def __init__(self, use_providers=True, use_cache_providers=True):
         """
@@ -72,14 +64,6 @@ class Registry(object):
         # require(...) to find the right cached response.
         self.cache = {}
 
-        # Dictionary with functions that should be invoked before a specific
-        # provider
-        self.before_provider = defaultdict(set)
-
-        # Dictionary with functions that should be invoked before a specific
-        # provider
-        self.after_provider = defaultdict(set)
-
         # Set which contains the name of features that should be cached
         if use_cache_providers:
             for s in Registry.cache_providers:
@@ -87,14 +71,17 @@ class Registry(object):
 
         if use_providers:
             for k,v in Registry.providers.items():
-                self.provide(k,v)
+                self.provide_function(k,v)
 
     def cache_provider(self, provider_name):
         assert provider_name not in self.cache
         self.cache[provider_name] = {}
 
+    def purge_cache(self):
+        for provider_name in self.cache:
+            self.cache[provider_name] = {}
 
-    def provide(self, provider_name, provider_function, override=False):
+    def provide_function(self, provider_name, provider_function, override=False):
         """
         :param provider_name: The name of the provider as a string
         :param provider_function: Function to call which will provide the value
@@ -110,26 +97,14 @@ class Registry(object):
             raise WurfProvideRegistryError(provider_name)
 
         def call(**kwargs):
-
-            for before in self.before_provider[provider_name]:
-                before(registry=self, **kwargs)
-
-            result = provider_function(registry=self, **kwargs)
-
-            for after in self.after_provider[provider_name]:
-                after(registry=self, **kwargs)
-
-            return result
+            return provider_function(registry=self, **kwargs)
 
         self.registry[provider_name] = call
+        
+        if provider_name in self.cache:
+            # Clean the cache
+            self.cache[provider_name] = {}
 
-    def invoke_before(self, provider_name, function):
-        assert function not in self.before_provider[provider_name]
-        self.before_provider[provider_name].add(function)
-
-    def invoke_after(self, provider_name, function):
-        assert function not in self.after_provider[provider_name]
-        self.after_provider[provider_name].add(function)
 
     def provide_value(self, provider_name, value):
         """
@@ -141,6 +116,7 @@ class Registry(object):
 
         def call(): return value
         self.registry[provider_name] = call
+
 
     def require(self, provider_name, **kwargs):
         """
@@ -172,124 +148,112 @@ class Registry(object):
         """
         return provider_name in self.registry
 
+    @staticmethod
+    def cache(func):
+        Registry.cache_providers.add(func.__name__)
 
+        return func
+        
+    @staticmethod
+    def provide(func):
 
-@option
-def add_user_path(parser, dependency):
-    pass
+        if func.__name__ in Registry.providers:
+            raise WurfProvideRegistryError(func.__name__)
+        Registry.providers[func.__name__] = func
 
-class Option(object):
-    def __init__(command, *args):
-        pass
-        
-class DependencyOption(object):
-    
-    def __init__(self, options, **kwargs):
-        self.options = options
-        
-        self.options.parser.add_
-    
-    def get(self, options, dependency):
-        pass
-        
-@option
-def bundle_path():
-    pass
-    
+        return func
+
 
 
 class Options(object):
     
-    def __init__(self, args, parser, default_bundle_path):
+    def __init__(self, args, parser, default_bundle_path, 
+        supported_git_protocols):
+        
+        self.args = args
+        self.parser = parser
+        
+        self.known_args = {}
+        self.unknown_args = []
         
         # Using the %default placeholder:
         #    http://stackoverflow.com/a/1254491/1717320
-        parser.add_argument('--bundle-path',
+        self.parser.add_argument('--bundle-path',
             default=default_bundle_path,
             dest='--bundle-path',
             help='The folder where the bundled dependencies are downloaded.'
                  '(default: %(default)s)')
         
-        parser.add_argument('--git-protocol',
+        self.parser.add_argument('--git-protocol',
             dest='--git-protocol',
             help='Use a specific git protocol to download dependencies.'
-                 'Supported protocols {}'.format(supported_protocols))
+                 'Supported protocols {}'.format(supported_git_protocols))
+        
+        self.__parse()
         
     def bundle_path(self):
-        return self.options['--bundle-path'] 
+        return self.known_args['--bundle-path'] 
         
     def git_protocol(self):
-        return self.options['--git-protocol']    
+        return self.known_args['--git-protocol']    
         
-    def user_path(self, dependency):
-        return self.options['--%s-path' % dependency.name]    
+    def path(self, dependency):
+        return self.known_args['--%s-path' % dependency.name]    
 
     def use_checkout(self, dependency):
-        return self.options['--%s-path' % dependency.name] 
+        return self.known_args['--%s-use-checkout' % dependency.name] 
         
-    def __add_user_path(self, dependency):
+    def __parse(self):
+        
+        known, unknown = self.parser.parse_known_args(args=self.args)
+        
+        self.known_args = vars(known)
+        self.unknown_args = unknown    
+    
+    def __add_path(self, dependency):
         
         option = '--%s-path' % dependency.name
         
         self.parser.add_argument(option,
-        nargs='?',
-        dest=option,
-        help='Manually specify path for {}.'.format(
-        dependency.name))
+            nargs='?',
+            dest=option,
+            help='Manually specify path for {}.'.format(
+                dependency.name))
         
+    def __add_use_checkout(self, dependency):
         
+        option = '--%s-use-checkout' % dependency.name
+
+        self.parser.add_argument(option,
+            nargs='?',
+            dest=option,
+            help='Manually specify Git checkout for {}.'.format(
+                dependency.name))
+
     def add_dependency(self, dependency):
         
+        self.__add_path(dependency)
         
         if dependency.resolver == 'git':
             
-            option = '--%s-use-checkout' % dependency.name
+            self.__add_use_checkout(dependency)
 
-            parser.add_argument(option,
-                nargs='?',
-                dest=option,
-                help='Manually specify Git checkout for {}.'.format(
-                    dependency.name))
+        self.__parse()
 
 
 
-def provide(func):
-
-    if func.__name__ in Registry.providers:
-        raise WurfProvideRegistryError(func.__name__)
-    Registry.providers[func.__name__] = func
-
-    return func
-
-def invoke_before(func, provider_name):
-
-    assert func not in Registry.before_provider[provider_name]
-    Registry.before_provider[provider_name].add(func)
-
-    return func
-
-def invoke_after(func, provider_name):
-
-    assert func not in Registry.after_provider[provider_name]
-    Registry.after_provider[provider_name].add(func)
-
-    return func
-
-def cache(func):
-    Registry.cache_providers.add(func.__name__)
-
-    return func
 
 
-@cache
-@provide
+
+@Registry.cache
+@Registry.provide
 def git_url_parser(registry):
     """ Parser for Git URLs. """
 
     return GitUrlParser()
 
-@cache
-@provide
+@Registry.cache
+@Registry.provide
 def git_url_rewriter(registry):
     """ Rewriter for Git URLs.
 
@@ -301,36 +265,47 @@ def git_url_rewriter(registry):
 
     return GitUrlRewriter(parser=parser, rewrite_protocol=git_protocol)
 
-@cache
-@provide
-def user_git_protocol(registry):
-    """ Return the user specified Git protcol.
+@Registry.cache
+@Registry.provide
+def parser(registry):
+    return argparse.ArgumentParser(description='Resolve Options',
+        # add_help=False will remove the default handling of --help and -h
+        # https://docs.python.org/3/library/argparse.html#add-help
+        #
+        # This will be handled by waf's default options context.
+        add_help=False,
+        # Remove printing usage help, like:
+        #    usage: waf [--bundle-path]
+        # When printing help, this seems to be an undocumented feature of
+        # argparse: http://stackoverflow.com/a/14591302/1717320
+        usage=argparse.SUPPRESS)
 
-    If no protocol is specified return None.
+@Registry.cache
+@Registry.provide
+def cache(registry):
+    return dict()
+
+@Registry.cache
+@Registry.provide
+def options(registry):
+    """ Return the Options provider.
+
     """
     parser = registry.require('parser')
     args = registry.require('args')
-    ctx = registry.require('ctx')
-
+    default_bundle_path = registry.require('default_bundle_path')
+    
     # We support the protocols we know how to rewrite
-    supported_protocols = GitUrlRewriter.git_protocols.keys()
+    supported_git_protocols = GitUrlRewriter.git_protocols.keys()
 
-    parser.add_argument('--git-protocol',
-        help='Use a specific git protocol to download dependencies.'
-             'Supported protocols {}'.format(supported_protocols))
+    return Options(args=args, parser=parser, 
+        default_bundle_path=default_bundle_path, 
+        supported_git_protocols=supported_git_protocols)
+    
+    
 
-    known_args, unknown_args = parser.parse_known_args(args=args)
-
-    protocol = known_args.git_protocol
-
-    if protocol and protocol not in supported:
-        ctx.fatal('Unknown git protocol specified: "{}", supported '
-                  'protocols are {}'.format(protocol, supported_protocols))
-
-    return protocol
-
-@cache
-@provide
+@Registry.cache
+@Registry.provide
 def project_git_protocol(registry):
     """ Return the Git protocol used by the parent project.
 
@@ -354,8 +329,8 @@ def project_git_protocol(registry):
         return url.protocol
 
 
-@cache
-@provide
+@Registry.cache
+@Registry.provide
 def git(registry):
     """ The Git object, which is used to run git commands.
 
@@ -367,13 +342,15 @@ def git(registry):
     return Git(git_binary=git_binary, ctx=ctx)
 
 
-@cache
-@provide
+@Registry.cache
+@Registry.provide
 def git_protocol(registry):
     """ Return the Git protocol to use. """
 
+    options = registry.require('options')
+
     # Check if the user specified a git protocol to use:
-    protocol = registry.require('user_git_protocol')
+    protocol = options.git_protocol()
 
     # Check what the parent project uses
     if not protocol:
@@ -386,70 +363,13 @@ def git_protocol(registry):
     return protocol
 
 
-@cache
-@provide
-def bundle_path(registry):
-    """ Provides the path where dependencies should be stored.
 
-    :param registry: A Registry instance
-    """
-    parser = registry.require('parser')
-    args = registry.require('args')
-    default_bundle_path = registry.require('default_bundle_path')
-    utils = registry.require('utils')
-
-    # Using the %default placeholder:
-    #    http://stackoverflow.com/a/1254491/1717320
-    parser.add_argument('--bundle-path',
-        default=default_bundle_path,
-        dest='bundle_path',
-        help='The folder where the bundled dependencies are downloaded.'
-             '(default: %(default)s)')
-
-    known_args, unknown_args = parser.parse_known_args(args=args)
-
-    # The waflib.Utils.check_dir function will ensure that the directory
-    # exists
-    utils.check_dir(path=known_args.bundle_path)
-
-    return known_args.bundle_path
-
-
-@cache
-@provide
-def user_path(registry, dependency):
-    """ Provides the user path to a specific dependency.
-
-    :param registry: A Registry instance
-    :param dependency: A Dependency instance.
-    """
-    parser = registry.require('parser')
-    args = registry.require('args')
-
-    option = '--%s-path' % dependency.name
-
-    parser.add_argument(option,
-        nargs='?',
-        dest=option,
-        help='Manually specify path for {}.'.format(dependency.name))
-
-    known_args, unknown_args = parser.parse_known_args(args=args)
-
-    # Access the attribute as a dict:
-    # https://docs.python.org/3/library/argparse.html#the-namespace-object
-    arguments = vars(known_args)
-
-    # Cache the value in the registry
-    #registry.provide_value(key, arguments[option])
-    # @todo remove
-    print(arguments)
-    return arguments[option]
-
-
-@provide
+@Registry.provide
 def user_path_resolver(registry, dependency):
 
-    path = registry.require('user_path', dependency=dependency)
+    options = registry.require('options')
+
+    path = options.path(dependency=dependency)
 
     if path:
         return UserPathResolver(path=path)
@@ -457,8 +377,8 @@ def user_path_resolver(registry, dependency):
         return None
 
 
-@cache
-@provide
+@Registry.cache
+@Registry.provide
 def git_sources(registry, dependency):
     """ Takes the dependency sources and re-writes the with the desired
     git protocol.
@@ -476,7 +396,7 @@ def git_sources(registry, dependency):
     return sources
 
 
-@provide
+@Registry.provide
 def git_resolvers(registry, dependency):
     """ Builds a list of WurfGitResolver instances, one for each source.
 
@@ -486,8 +406,9 @@ def git_resolvers(registry, dependency):
 
     git = registry.require('git')
     ctx = registry.require('ctx')
-    bundle_path = registry.require('bundle_path')
-
+    options = registry.require('options')
+    
+    bundle_path = options.bundle_path()
     name = dependency.name
     sources = registry.require('git_sources', dependency=dependency)
 
@@ -499,7 +420,7 @@ def git_resolvers(registry, dependency):
     return resolvers
 
 
-@provide
+@Registry.provide
 def git_checkout_resolvers(registry, dependency):
     """ Builds a WurfGitCheckoutResolver instance.
 
@@ -508,10 +429,12 @@ def git_checkout_resolvers(registry, dependency):
     """
 
     git = registry.require('git')
-    ctx = registry.require('ctx')
-    git_resolvers = registry.require('git_resolvers', dependency=dependency)
-    bundle_path = registry.require('bundle_path')
+    ctx = registry.require('ctx')    
+    options = registry.require('options')
 
+    git_resolvers = registry.require('git_resolvers', dependency=dependency)
+    
+    bundle_path = options.bundle_path()
     name = dependency.name
     checkout = dependency.checkout
 
@@ -522,7 +445,7 @@ def git_checkout_resolvers(registry, dependency):
     resolvers = [new_resolver(git_resolver) for git_resolver in git_resolvers]
     return resolvers
 
-@provide
+@Registry.provide
 def git_semver_resolvers(registry, dependency):
     """ Builds a GitSemverResolver instance.
 
@@ -534,8 +457,9 @@ def git_semver_resolvers(registry, dependency):
     semver = registry.require('semver')
     ctx = registry.require('ctx')
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
-    bundle_path = registry.require('bundle_path')
-
+    options = registry.require('options')
+    
+    bundle_path = options.bundle_path()
     name = dependency.name
     major = dependency.major
 
@@ -547,35 +471,9 @@ def git_semver_resolvers(registry, dependency):
     return resolvers
 
 
-@cache
-@provide
-def git_user_checkout(registry, dependency):
-    """ Provides the user chosen git checkout.
 
-    :param registry: A Registry instance
-    :param dependency: A Dependency instance.
-    """
-    parser = registry.require('parser')
-    args = registry.require('args')
-
-    option = '--%s-use-checkout' % dependency.name
-
-    parser.add_argument(option,
-        nargs='?',
-        dest=option,
-        help='Manually specify Git checkout for {}.'.format(dependency.name))
-
-    known_args, unknown_args = parser.parse_known_args(args=args)
-
-    # Access the attribute as a dict:
-    # https://docs.python.org/3/library/argparse.html#the-namespace-object
-    arguments = vars(known_args)
-
-    return arguments[option]
-
-
-@cache
-@provide
+@Registry.cache
+@Registry.provide
 def git_user_checkout_resolver(registry, dependency):
     """ Builds a WurfGitCheckoutResolver instance.
 
@@ -586,8 +484,10 @@ def git_user_checkout_resolver(registry, dependency):
     git = registry.require('git')
     ctx = registry.require('ctx')
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
-    bundle_path = registry.require('bundle_path')
-    checkout = registry.require('git_user_checkout', dependency=dependency)
+    options = registry.require('options')
+    
+    bundle_path = options.bundle_path()
+    checkout = options.use_checkout(dependency=dependency)
 
     if checkout:
         return GitCheckoutResolver(git=git, git_resolver=git_resolver, ctx=ctx,
@@ -596,7 +496,7 @@ def git_user_checkout_resolver(registry, dependency):
         return None
 
 
-@provide
+@Registry.provide
 def git_source_resolvers(registry, dependency):
     """ Builds git resolvers
 
@@ -616,7 +516,7 @@ def git_source_resolvers(registry, dependency):
 
     return resolvers
 
-@provide
+@Registry.provide
 def passive_path_resolver(registry, dependency):
     """ Builds a WurfPassivePathResolver instance.
 
@@ -639,7 +539,7 @@ def passive_path_resolver(registry, dependency):
 
 
 
-@provide
+@Registry.provide
 def dependency_resolver(registry, dependency):
     """ Builds a WurfSourceResolver instance."""
 
@@ -675,31 +575,18 @@ def dependency_resolver(registry, dependency):
         bundle_config_path=bundle_config_path)
 
 
-@provide
+@Registry.provide
 def dependency_manager(registry):
+    
+    # Clean the cache such that we get "fresh" objects
+    registry.purge_cache()
 
     ctx = registry.require('ctx')
-
-    registry.provide_value('parser',
-        argparse.ArgumentParser(description='Resolve Options',
-        # add_help=False will remove the default handling of --help and -h
-        # https://docs.python.org/3/library/argparse.html#add-help
-        #
-        # This will be handled by waf's default options context.
-        add_help=False,
-        # Remove printing usage help, like:
-        #    usage: waf [--bundle-path]
-        # When printing help, this seems to be an undocumented feature of
-        # argparse: http://stackoverflow.com/a/14591302/1717320
-        usage=argparse.SUPPRESS))
-
-    # Dict object which will contain the path to the resolved
-    # dependencies.
-    cache = dict()
-    registry.provide_value('cache', cache)
+    cache = registry.require('cache')
+    options = registry.require('options')
 
     return DependencyManager(registry=registry,
-        cache=cache, ctx=ctx)
+        cache=cache, ctx=ctx, options=options)
 
 
 def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
@@ -722,7 +609,6 @@ def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
     :returns:
         A new Registery instance.
     """
-
     registry = Registry()
 
     registry.provide_value('ctx', ctx)

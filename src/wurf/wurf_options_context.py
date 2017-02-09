@@ -88,7 +88,7 @@ class WurfOptionsContext(Options.OptionsContext):
         self.waf_options = None
 
         # Options parser used in the resolve step.
-        self.wurf_parser = None
+        self.wurf_options = None
 
     def execute(self):
 
@@ -102,12 +102,12 @@ class WurfOptionsContext(Options.OptionsContext):
 
         # Fetch the resolve options parser such that we can
         # print help if needed:
-        self.wurf_parser = ctx.registry.require('parser')
+        self.wurf_options = ctx.registry.require('options')
 
         # Fetch the arguments not parsed in the resolve step
         # We are just interested in the left-over args, which is the
         # second value retuned by parse_known_args(...)
-        _, self.waf_options = self.wurf_parser.parse_known_args()
+        self.waf_options = self.wurf_options.unknown_args
 
         super(WurfOptionsContext, self).execute()
 
@@ -140,9 +140,9 @@ class WurfOptionsContext(Options.OptionsContext):
             # us to add our help message here is to catch that and print our
             # help and then re-raise.
 
-            if self.wurf_parser:
+            if self.wurf_options:
                 # We may not have a wurf_parser if running in a folder
                 # without a wscript (see class documentation)
-                self.wurf_parser.print_help()
+                self.wurf_options.parser.print_help()
 
             raise

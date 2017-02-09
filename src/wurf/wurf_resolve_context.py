@@ -97,6 +97,7 @@ class WurfResolveContext(Context.Context):
             active_resolve=self.is_active_resolve(),
             utils=Utils, args=sys.argv[1:])
 
+        print("RESOLVE CONTEXT")
         self.dependency_manager = self.registry.require('dependency_manager')
 
         # Calling the context execute will call the resolve(...) functions in

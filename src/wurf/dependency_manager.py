@@ -5,7 +5,7 @@ from .dependency import Dependency
 
 class DependencyManager(object):
 
-    def __init__(self, registry, cache, ctx):
+    def __init__(self, registry, cache, ctx, options):
         """ Construct an instance.
 
         As the manager resolves dependencies it will store the results
@@ -23,11 +23,13 @@ class DependencyManager(object):
         :param registry: A Registry instance.
         :param cache: Dict where paths to dependencies should be stored.
         :param ctx: A Waf Context instance.
+        :param options: Options instance for collecing / parsing options
         """
 
         self.registry = registry
         self.cache = cache
         self.ctx = ctx
+        self.options = options
 
         # Dict where we will store the dependencies already added. For
         # example two libraries may have an overlap in their
@@ -48,6 +50,8 @@ class DependencyManager(object):
 
         if self.__skip_dependency(dependency):
             return
+
+        self.options.add_dependency(dependency)
 
         try:
             path = self.__resolve_dependency(dependency)

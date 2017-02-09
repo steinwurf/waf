@@ -16,7 +16,7 @@ def test_wurf_registry():
     def build_point(registry, x=0):
         return Point(x,0)
 
-    registry.provide('point', build_point)
+    registry.provide_function('point', build_point)
 
     # Use the default build
     p = registry.require('point')
@@ -26,10 +26,10 @@ def test_wurf_registry():
 
     # Check that we cannot add the same provider twice
     with pytest.raises(Exception):
-        registry.provide('point', build_point)
+        registry.provide_function('point', build_point)
 
     # Bind an argument in the require
-    registry.provide('point', build_point, override=True)
+    registry.provide_function('point', build_point, override=True)
 
     p = registry.require('point', x=1)
 
@@ -64,7 +64,7 @@ def test_wurf_registry():
     def build_point(registry, x=0):
         return Point(x,0)
 
-    registry.provide('point', build_point)
+    registry.provide_function('point', build_point)
 
     # Use the default build
     p = registry.require('point')
@@ -72,44 +72,47 @@ def test_wurf_registry():
     assert p.x == 0
     assert p.y == 0
 
+# @todo move to own test file
+from wurf.registry import Options
 
 def test_parse_user_path():
 
     # No path specified
     parser = argparse.ArgumentParser()
-    args = ['--foo', '--bundle-path', '-b']
+    args = ['--foo', '--bundle-path', '/tmp/bundlehere', '-b']
 
-    registry = Registry()
-    registry.provide_value('parser', parser)
-    registry.provide_value('args', args)
-
+    options = Options(args=args, parser=parser, default_bundle_path="",
+        supported_git_protocols="")
+        
+    assert options.bundle_path() == '/tmp/bundlehere'
+        
     dependency = mock.Mock()
     dependency.name = 'foo'
+    
+    options.add_dependency(dependency)
 
-    path = registry.require('user_path', dependency=dependency)
-    assert path == None
-
-    # Path specified
-    parser = argparse.ArgumentParser()
-    args = ['--foo', '--bundle-path', '--foo-path', '/home/stw/code', '-b']
-
-    registry = Registry()
-    registry.provide_value('parser', parser)
-    registry.provide_value('args', args)
-
-    path = registry.require('user_path', dependency=dependency)
-    assert path == '/home/stw/code'
+    assert options.path(dependency=dependency) == None
 
     # Path specified
     parser = argparse.ArgumentParser()
-    args = ['--foo', '--bundle-path', '--foo-path=/home/stw/code1', '-b']
+    args = ['--foo', '--bundle-path', '/tmp/bundlehere', 
+            '--foo-path', '/home/stw/code', '-b']
 
-    registry = Registry()
-    registry.provide_value('parser', parser)
-    registry.provide_value('args', args)
+    options = Options(args=args, parser=parser, default_bundle_path="",
+        supported_git_protocols="")
 
-    path = registry.require('user_path', dependency=dependency)
-    assert path == '/home/stw/code1'
+    options.add_dependency(dependency)
 
+    assert options.path(dependency=dependency) == '/home/stw/code'
 
-    print(registry.cache)
+    # Path specified
+    parser = argparse.ArgumentParser()
+    args = ['--foo', '--bundle-path', '/tmp/bundlehere', 
+            '--foo-path', '/home/stw/code1', '-b']
+            
+    options = Options(args=args, parser=parser, default_bundle_path="",
+        supported_git_protocols="")
+
+    options.add_dependency(dependency)
+
+    assert options.path(dependency=dependency) == '/home/stw/code1'
