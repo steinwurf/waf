@@ -38,6 +38,7 @@ def resolve(ctx):
         checkout='1.1.0',
         sources=['github.com/mbr/shutilwhich.git'])
 
+
 def configure(conf):
 
     # Ensure that the waf-light program is available in the in the
@@ -48,7 +49,8 @@ def configure(conf):
     # Make sure we tox used for running unit tests
     #conf.find_program('tox')
 
-def build_waf_binary(tsk):
+
+def _build_waf_binary(tsk):
     """
     Task for building the waf binary.
     """
@@ -86,6 +88,7 @@ def build_waf_binary(tsk):
     waf_dest = bld.bldnode.make_node('waf')
     waf_dest.write(waf_src.read('rb'), 'wb')
 
+
 def build(bld):
 
     # Waf checks that source files are available when we create the
@@ -99,19 +102,20 @@ def build(bld):
     # executable was started - so we need to start it from the right
     # folder. Using cwd we can make sure the python process is lauched in
     # the right directory.
+    tools_dir = \
+    [
+        os.path.join(bld.dependency_path('shutilwhich'), 'shutilwhich'),
+        os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
+        'src/wurf'
+    ]
 
-
-    tools_dir = [os.path.join(bld.dependency_path('shutilwhich'), 'shutilwhich'),
-                 os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
-                 'src/wurf']
-
-    bld(rule=build_waf_binary,
+    bld(rule=_build_waf_binary,
         cwd=bld.dependency_path('waf'),
         tools_dir=tools_dir,
         always=True)
 
-    # Make a build group will ensure that
-    #bld.add_group()
+
+def tox_test(bld):
 
     # Invoke tox to run all the pure Python unit tests. Tox creates
     # virtualenvs for different setups and runs unit tests in them. See the
@@ -124,7 +128,6 @@ def build(bld):
     #my_env = bld.env.derive()
     #my_env.env = os.environ
 
-
     #semver_path = bld.dependency_path('python-semver')
     #shutil_path = bld.dependency_path('shutilwhich')
     #wurf_path = os.path.join(os.getcwd(), 'src')
@@ -135,6 +138,8 @@ def build(bld):
     #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
     #bld(rule='tox', env=my_env, always=True)
     #bld(rule='tox -- -s', env=my_env, always=True)
+    pass
+
 
 def test(bld):
     env = dict(os.environ)
