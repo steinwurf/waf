@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-from .dependency import Dependency 
+import traceback
+
+from .dependency import Dependency
 
 class DependencyManager(object):
 
@@ -56,13 +58,15 @@ class DependencyManager(object):
         try:
             path = self.__resolve_dependency(dependency)
         except Exception as e:
-            self.ctx.fatal("Failed resolving {} error: {}. Check logs for "
-                           "more information.".format(dependency, e))
+            self.ctx.fatal(
+                "Failed resolving dependency: {}\n{}\n\nERROR: {}\n\n{}".format(
+                    dependency.name, dependency, e, traceback.format_exc()))
 
         if not path:
             return
 
-        self.cache[dependency.name] = {'path': path, 'recurse': dependency.recurse}
+        self.cache[dependency.name] = \
+            {'path': path, 'recurse': dependency.recurse}
 
         if dependency.recurse:
             self.ctx.recurse(path)
@@ -114,6 +118,7 @@ class DependencyManager(object):
             self.ctx.to_log('Exception while fetching dependency: {}'.format(e))
 
             if not dependency.optional:
+                self.ctx.end_msg('Failed', color='RED')
                 raise
 
             # An optional dependency might be unavailable if the user

@@ -33,11 +33,12 @@ class TryResolver(object):
         :return: Path to resolved dependency as a string
         :raises NoPathResolved: if no resolver produced a valid path.
         """
+        last_exception = None
 
         for resolver in self.resolvers:
             try:
                 path = resolver.resolve()
-            except Exception as e:
+            except Exception as ex:
 
                 # Using exc_info will attache the current exception information
                 # to the log message (including traceback to where the
@@ -48,9 +49,13 @@ class TryResolver(object):
                 #
                 self.ctx.logger.debug("Source {} resolve failed:".format(
                     resolver), exc_info=True)
+                last_exception = ex
             else:
 
                 assert os.path.isdir(path)
                 return path
+
+        if last_exception:
+            raise last_exception
         else:
             raise NoPathResolvedError()

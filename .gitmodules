@@ -1,24 +1,24 @@
-[submodule "waf"]
+[submodule "third_party/waf"]
     path = third_party/waf
     url = https://github.com/waf-project/waf.git
     ignore = dirty
-[submodule "python-semver"]
+[submodule "third_party/python-semver"]
     path = third_party/python-semver
     url = https://github.com/k-bx/python-semver.git
     ignore = dirty
-[submodule "shutilwhich"]
+[submodule "third_party/shutilwhich"]
     path = third_party/shutilwhich
     url = https://github.com/mbr/shutilwhich.git
     ignore = dirty
-[submodule "pytest"]
+[submodule "third_party/pytest"]
     path = third_party/pytest
     url = https://github.com/pytest-dev/pytest.git
     ignore = dirty
-[submodule "mock"]
+[submodule "third_party/mock"]
     path = third_party/mock
     url = https://github.com/testing-cabal/mock.git
     ignore = dirty
-[submodule "py"]
+[submodule "third_party/py"]
     path = third_party/py
     url = https://github.com/pytest-dev/py.git
     ignore = dirty

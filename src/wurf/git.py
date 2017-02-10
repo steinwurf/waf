@@ -159,8 +159,7 @@ class Git(object):
         args = [self.git_binary, 'config', '--get', 'remote.origin.url']
         output = self.ctx.cmd_and_log(args, cwd=cwd)
 
-        tags = output.split('\n')
-        return [t for t in tags if t != '']
+        return output.strip()
 
 
 # try:

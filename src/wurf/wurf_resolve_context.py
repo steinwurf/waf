@@ -85,13 +85,14 @@ class WurfResolveContext(Context.Context):
 
         self.logger.debug('wurf: Resolve execute')
 
-        git_binary = shutilwhich.which('git')
+        # TODO: Do we really need the path to the git binary?
+        #git_binary = shutilwhich.which('git')
 
         default_bundle_path = os.path.join(
             self.path.abspath(), 'bundle_dependencies')
 
         self.registry = registry.build_registry(
-            ctx=self, git_binary=git_binary,
+            ctx=self, git_binary='git',
             semver=semver, default_bundle_path=default_bundle_path,
             bundle_config_path=self.bundle_config_path(),
             active_resolve=self.is_active_resolve(),

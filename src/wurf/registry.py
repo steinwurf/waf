@@ -100,7 +100,7 @@ class Registry(object):
             return provider_function(registry=self, **kwargs)
 
         self.registry[provider_name] = call
-        
+
         if provider_name in self.cache:
             # Clean the cache
             self.cache[provider_name] = {}
@@ -153,7 +153,7 @@ class Registry(object):
         Registry.cache_providers.add(func.__name__)
 
         return func
-        
+
     @staticmethod
     def provide(func):
 
@@ -166,16 +166,16 @@ class Registry(object):
 
 
 class Options(object):
-    
-    def __init__(self, args, parser, default_bundle_path, 
+
+    def __init__(self, args, parser, default_bundle_path,
         supported_git_protocols):
-        
+
         self.args = args
         self.parser = parser
-        
+
         self.known_args = {}
         self.unknown_args = []
-        
+
         # Using the %default placeholder:
         #    http://stackoverflow.com/a/1254491/1717320
         self.parser.add_argument('--bundle-path',
@@ -183,45 +183,45 @@ class Options(object):
             dest='--bundle-path',
             help='The folder where the bundled dependencies are downloaded.'
                  '(default: %(default)s)')
-        
+
         self.parser.add_argument('--git-protocol',
             dest='--git-protocol',
             help='Use a specific git protocol to download dependencies.'
                  'Supported protocols {}'.format(supported_git_protocols))
-        
+
         self.__parse()
-        
+
     def bundle_path(self):
-        return self.known_args['--bundle-path'] 
-        
+        return self.known_args['--bundle-path']
+
     def git_protocol(self):
-        return self.known_args['--git-protocol']    
-        
+        return self.known_args['--git-protocol']
+
     def path(self, dependency):
-        return self.known_args['--%s-path' % dependency.name]    
+        return self.known_args['--%s-path' % dependency.name]
 
     def use_checkout(self, dependency):
-        return self.known_args['--%s-use-checkout' % dependency.name] 
-        
+        return self.known_args['--%s-use-checkout' % dependency.name]
+
     def __parse(self):
-        
+
         known, unknown = self.parser.parse_known_args(args=self.args)
-        
+
         self.known_args = vars(known)
-        self.unknown_args = unknown    
-    
+        self.unknown_args = unknown
+
     def __add_path(self, dependency):
-        
+
         option = '--%s-path' % dependency.name
-        
+
         self.parser.add_argument(option,
             nargs='?',
             dest=option,
             help='Manually specify path for {}.'.format(
                 dependency.name))
-        
+
     def __add_use_checkout(self, dependency):
-        
+
         option = '--%s-use-checkout' % dependency.name
 
         self.parser.add_argument(option,
@@ -231,18 +231,14 @@ class Options(object):
                 dependency.name))
 
     def add_dependency(self, dependency):
-        
+
         self.__add_path(dependency)
-        
+
         if dependency.resolver == 'git':
-            
+
             self.__add_use_checkout(dependency)
 
         self.__parse()
-
-
-
-
 
 
 @Registry.cache
@@ -294,15 +290,14 @@ def options(registry):
     parser = registry.require('parser')
     args = registry.require('args')
     default_bundle_path = registry.require('default_bundle_path')
-    
+
     # We support the protocols we know how to rewrite
     supported_git_protocols = GitUrlRewriter.git_protocols.keys()
 
-    return Options(args=args, parser=parser, 
-        default_bundle_path=default_bundle_path, 
+    return Options(args=args, parser=parser,
+        default_bundle_path=default_bundle_path,
         supported_git_protocols=supported_git_protocols)
-    
-    
+
 
 @Registry.cache
 @Registry.provide
@@ -363,7 +358,6 @@ def git_protocol(registry):
     return protocol
 
 
-
 @Registry.provide
 def user_path_resolver(registry, dependency):
 
@@ -407,7 +401,7 @@ def git_resolvers(registry, dependency):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
-    
+
     bundle_path = options.bundle_path()
     name = dependency.name
     sources = registry.require('git_sources', dependency=dependency)
@@ -429,11 +423,11 @@ def git_checkout_resolvers(registry, dependency):
     """
 
     git = registry.require('git')
-    ctx = registry.require('ctx')    
+    ctx = registry.require('ctx')
     options = registry.require('options')
 
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
-    
+
     bundle_path = options.bundle_path()
     name = dependency.name
     checkout = dependency.checkout
@@ -458,7 +452,7 @@ def git_semver_resolvers(registry, dependency):
     ctx = registry.require('ctx')
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
     options = registry.require('options')
-    
+
     bundle_path = options.bundle_path()
     name = dependency.name
     major = dependency.major
@@ -485,7 +479,7 @@ def git_user_checkout_resolver(registry, dependency):
     ctx = registry.require('ctx')
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
     options = registry.require('options')
-    
+
     bundle_path = options.bundle_path()
     checkout = options.use_checkout(dependency=dependency)
 
@@ -577,7 +571,7 @@ def dependency_resolver(registry, dependency):
 
 @Registry.provide
 def dependency_manager(registry):
-    
+
     # Clean the cache such that we get "fresh" objects
     registry.purge_cache()
 
