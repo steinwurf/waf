@@ -38,9 +38,9 @@ def build(properties):
     #run_command(['git', 'submodule', 'update'])
 
     # The waf-light script used to build the waf binary is
-    # located in the third_party/waf folder
+    # located in the third_party/waf2 folder
     cwd = os.getcwd()
-    waf_path = os.path.join(cwd, 'waf')
+    waf_path = os.path.join(cwd, 'third_party', 'waf2')
 
     third_party = os.path.join(cwd, 'third_party')
 

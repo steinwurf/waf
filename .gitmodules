@@ -18,3 +18,7 @@
     path = third_party/py
     url = https://github.com/pytest-dev/py.git
     ignore = dirty
+[submodule "third_party/waf2"]
+    path = third_party/waf2
+    url = https://github.com/waf-project/waf.git
+    ignore = dirty
