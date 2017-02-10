@@ -9,23 +9,7 @@ import functools
 import shutilwhich
 import semver
 
-
-def test_copy_file(test_directory):
-    test_directory.copy_files('test/prog1/*')
-    test_directory.copy_file('build/waf')
-
-    print(test_directory.path())
-
-    r = test_directory.run('python','waf','configure')
-
-    assert r.returncode == 0
-    assert r.stdout.match('*finished successfully*')
-
-    r = test_directory.run('python', 'waf', 'build')
-
-    assert r.returncode == 0
-
-
+# TODO: Kill or rewrite this test file!
 
 def test_working_on_it(test_directory):
 
