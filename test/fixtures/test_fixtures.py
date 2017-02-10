@@ -25,3 +25,9 @@ def test_fixtures(test_directory):
 
     assert os.path.exists(os.path.join(sub2.path(), 'sub1'))
     assert os.path.exists(sub1_copy.path())
+
+    # Run a command that should be available on all platforms
+    r = sub1.run('python', '--version')
+
+    assert r.returncode == 0
+    assert r.stdout.match('Python *') or r.stderr.match('Python *')

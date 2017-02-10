@@ -8,7 +8,7 @@ def test_empty_wscript(test_directory):
 
     print(test_directory.path())
 
-    r = test_directory.run('python','waf','configure')
+    r = test_directory.run('python', 'waf', 'configure')
 
     assert r.returncode == 0
     assert r.stdout.match('*finished successfully*')
