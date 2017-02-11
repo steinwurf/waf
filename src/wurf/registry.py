@@ -517,7 +517,7 @@ def git_source_resolvers(registry, dependency):
     return resolvers
 
 @Registry.provide
-def passive_path_resolver(registry, dependency):
+def on_passive_load_path_resolver(registry, dependency):
     """ Builds a WurfPassivePathResolver instance.
 
     :param registry: A Registry instance.
@@ -537,42 +537,68 @@ def passive_path_resolver(registry, dependency):
         bundle_config_path=bundle_config_path)
 
 
-
-
 @Registry.provide
-def dependency_resolver(registry, dependency):
-    """ Builds a WurfSourceResolver instance."""
+def passive_dependency_resolver(registry, dependency):
+    
+    ctx = registry.require('ctx')
+    
+    resolvers = [
+        registry.require('on_passive_load_path_resolver', dependency=dependency)]
 
-    # Collect general options
+    try_resolver = TryResolver(resolvers=resolvers, ctx=ctx)
 
-
-    active_resolve = registry.require('active_resolve')
+    context_msg_resolver = ContextMsgResolver(resolver=try_resolver, 
+        ctx=ctx, dependency=dependency)
+        
+    optional_resolver = OptionalResolver(resolver=context_msg_resolver,
+        dependency=dependency)
+    
+    return try_resolver
+        
+@Registry.provide
+def active_dependency_resolver(registry, dependency):
+    
     bundle_config_path = registry.require('bundle_config_path')
 
     user_resolvers = [
-        registry.require('user_path_resolver', dependency=dependency),
-        registry.require('passive_path_resolver', dependency=dependency)]
+        registry.require('user_path_resolver', dependency=dependency)]
 
     resolver_key = "{}_source_resolvers".format(dependency.resolver)
 
     source_resolvers = registry.require(resolver_key, dependency=dependency)
 
-    ctx = registry.require('ctx')
-
     resolvers = user_resolvers + source_resolvers
 
-    print(registry.require('user_path_resolver', dependency=dependency))
-    print("wurf: resolvers {}".format(resolvers))
-
-    # Filter out missing resolvers
-    resolvers = [r for r in resolvers if r is not None]
-
     try_resolver = TryResolver(resolvers=resolvers, ctx=ctx)
+    
+    context_msg_resolver = ContextMsgResolver(resolver=try_resolver, 
+        ctx=ctx, dependency=dependency)
+
+    optional_resolver = OptionalResolver(resolver=context_msg_resolver,
+        dependency=dependency)
 
     return OnActiveStorePathResolver(
-        resolver=try_resolver, name=dependency.name,
-        sha1=dependency.sha1, active_resolve=active_resolve,
-        bundle_config_path=bundle_config_path)
+        resolver=optional_resolver, name=dependency.name,
+        sha1=dependency.sha1, bundle_config_path=bundle_config_path)
+    
+
+@Registry.provide
+def dependency_resolver(registry, dependency):
+    """ Builds a WurfSourceResolver instance."""
+
+    # This is where we "wire" together the resolvers. Which actually do the
+    # work of via some method obtaining a path to a dependency.
+    # 
+    # There are three resolver chains/configurations:
+    # 
+    # 1. The "active" chain: This chain goes to the network and fetches stuff
+    # 2. The "passive" chain: This chain will load information from the 
+    #    file system. 
+    # 3. The "help" chain: This chain tries to interate though as many 
+    #    dependencies as possible to get all options.
+
+    active_resolve = registry.require('active_resolve')
+
 
 
 @Registry.provide
