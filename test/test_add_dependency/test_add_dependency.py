@@ -82,9 +82,9 @@ def mkdir_libbaz(directory):
     return baz_dir
 
 
-    
+
 # @todo re-enable tests in this file
-    
+
 def test_add_dependency(test_directory):
 
     app_dir = mkdir_app(directory=test_directory)
@@ -101,7 +101,7 @@ def test_add_dependency(test_directory):
     baz_dir = mkdir_libbaz(directory=git_dir)
 
     # All setup - lets run some tests
-    #app_dir.run('python', 'waf', '--help')
+    app_dir.run('python', 'waf', '--help')
     app_dir.run('python', 'waf', 'configure', '-v')
     app_dir.run('python', 'waf', 'build', '-v')
 
@@ -122,5 +122,4 @@ def test_add_dependency_path(test_directory):
 
     app_dir.run('python', 'waf', 'configure', '--baz-path={}'.format(
         baz_dir.path()))
-    # TODO: Fix the passive resolve step to make this work
-    #app_dir.run('python', 'waf', 'build', '-v')
+    app_dir.run('python', 'waf', 'build', '-v')
