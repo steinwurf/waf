@@ -6,19 +6,16 @@ import json
 
 class OnActiveStorePathResolver(object):
 
-    def __init__(self, resolver, name, sha1, bundle_config_path):
+    def __init__(self, resolver, dependency, bundle_config_path):
         """ Construct an instance.
 
         :param resolver: A resolver which will do the actual job
-        :param name: Name of the dependency as a string
-        :param sha1: Hash of the depenency information as a string
+        :param dependency: A Dependency instance.
         :param bundle_config_path: A string containing the path to where the
             dependencies config json files should be / is stored.
         """
         self.resolver = resolver
-        self.name = name
-        self.sha1 = sha1
-        self.active_resolve = active_resolve
+        self.dependency = dependency
         self.bundle_config_path = bundle_config_path
 
     def resolve(self):
@@ -43,9 +40,9 @@ class OnActiveStorePathResolver(object):
         """
 
         config_path = os.path.join(
-            self.bundle_config_path, self.name + '.resolve.json')
+            self.bundle_config_path, self.dependency.name + '.resolve.json')
 
-        config = {'sha1': self.sha1, 'path': path}
+        config = {'sha1': self.dependency.sha1, 'path': path}
 
         with open(config_path, 'w') as config_file:
             json.dump(config, config_file)
