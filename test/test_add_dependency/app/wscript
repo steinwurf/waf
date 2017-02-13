@@ -9,8 +9,9 @@ import shutil
 
 import waflib
 from waflib.extras.wurf.git import Git
+from waflib.extras.wurf.error import Error
 
-class CloneError(Exception):
+class CloneError(Error):
     """Basic """
     def __init__(self, repository):
         super(CloneError, self).__init__(
@@ -49,11 +50,6 @@ def resolve(ctx):
 
             for lib_repository, lib_name in self.libraries.items():
                 if repository.endswith(lib_repository):
-
-                    lib_node = self.git_dir.find_node(lib_name)
-
-                    if not lib_node:
-                        raise CloneError(repository=repository)
 
                     lib_directory = self.git_dir.find_node(lib_name).abspath()
 

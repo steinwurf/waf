@@ -11,8 +11,11 @@ from waflib import Options
 from waflib import Logs
 from waflib import ConfigSet
 from waflib import Node
+from waflib.Errors import WafError
 
 from . import registry
+from .resolver_configuration import ResolverConfiguration
+from .error import CmdAndLogError
 
 from waflib.extras import shutilwhich
 from waflib.extras import semver
@@ -67,23 +70,19 @@ class WurfResolveContext(Context.Context):
 
     def execute(self):
 
+        # Figure out which resolver configuration we should use, this has to
+        # run before we create the build folder
+        configuration = self.resolver_configuration()
+
         # Create the nodes that will be used during the resolve step. The build
         # directory is also used by the waf BuildContext
         self.bldnode = self.path.make_node('build')
         self.bldnode.mkdir()
 
-        # Create different log files depending on whether this is an "active"
-        # resolve step
-
-        if self.is_active_resolve():
-            step = 'active'
-        else:
-            step = 'passive'
-
-        path = os.path.join(self.bldnode.abspath(), step+'.resolve.log')
+        path = os.path.join(self.bldnode.abspath(), configuration+'.resolve.log')
         self.logger = Logs.make_logger(path, 'cfg')
 
-        self.logger.debug('wurf: Resolve execute')
+        self.logger.debug('wurf: Resolve execute {}'.format(configuration))
 
         # TODO: Do we really need the path to the git binary?
         #git_binary = shutilwhich.which('git')
@@ -95,7 +94,7 @@ class WurfResolveContext(Context.Context):
             ctx=self, git_binary='git',
             semver=semver, default_bundle_path=default_bundle_path,
             bundle_config_path=self.bundle_config_path(),
-            active_resolve=self.is_active_resolve(),
+            resolver_configuration=configuration,
             utils=Utils, args=sys.argv[1:])
 
         self.dependency_manager = self.registry.require('dependency_manager')
@@ -123,19 +122,33 @@ class WurfResolveContext(Context.Context):
         return self.bldnode.abspath()
 
 
-    def is_active_resolve(self):
+    def resolver_configuration(self):
 
-        show_help = '-h' in sys.argv or '--help' in sys.argv
-
-        # If active_resolvers is true, then the dependency resolvers are
-        # allowed to download the dependencies. If it is false, then the
-        # dependency bundle will only recurse into the previously resolved
-        # dependencies to fetch the options from these.
-        return 'configure' in sys.argv and not show_help
-
+        if '-h' in sys.argv or '--help' in sys.argv:
+            return ResolverConfiguration.HELP
+        elif 'configure' in sys.argv:
+            # If active_resolvers, then the dependency resolvers are
+            # allowed to download the dependencies.
+            return ResolverConfiguration.ACTIVE
+        elif not self.root.find_node('build'):
+            # Project not yet configure - we don't have a build folder
+            return ResolverConfiguration.HELP
+        else:
+            return ResolverConfiguration.PASSIVE
 
     def add_dependency(self, **kwargs):
         """Adds a dependency.
         """
 
         self.dependency_manager.add_dependency(**kwargs)
+
+    def cmd_and_log(self, cmd, **kwargs):
+
+        try:
+            return super(WurfResolveContext, self).cmd_and_log(
+                cmd=cmd, **kwargs)
+        except WafError as e:
+            traceback = sys.exc_info()[2]
+            raise CmdAndLogError(error=e, traceback=traceback)
+        except:
+            raise

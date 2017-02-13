@@ -1,30 +1,19 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import argparse
-import sys
 import os
 
-from . import wurf_error
-
-class NoPathResolvedError(wurf_error.WurfError):
-    """Generic exception for wurf"""
-    def __init__(self):
-        super(NoPathResolvedError, self).__init__(
-            "Could not resolve dependency path.")
-
+from .error import Error
 
 class TryResolver(object):
-    """ Iterates through a list of resolvers until a path is resolved."""
+    """ Try to resolve."""
 
-    def __init__(self, resolvers, ctx):
+    def __init__(self, resolver, ctx):
         """ Construct an instance.
 
-        :param resolvers: A list of resolvers object for the available
-           sources
-        :param ctx: A Waf Context instance.
+        :param resolver: A resolver instance
         """
-        self.resolvers = resolvers
+        self.resolver = resolver
         self.ctx = ctx
 
     def resolve(self):
@@ -33,10 +22,9 @@ class TryResolver(object):
         :return: Path to resolved dependency as a string
         """
 
-        for resolver in self.resolvers:
-            try:
-                path = resolver.resolve()
-            except Exception as e:
+        try:
+            path = self.resolver.resolve()
+        except Error as e:
 
                 # Using exc_info will attache the current exception information
                 # to the log message (including traceback to where the
@@ -46,20 +34,18 @@ class TryResolver(object):
                 # https://docs.python.org/2/library/logging.html
                 #
                 self.ctx.logger.debug("Source {} resolve failed:".format(
-                    resolver), exc_info=True)
-            else:
-                
-                # The resolver did not raise an error, we check if it actually
-                # did produce a path for us. If not we loop to the next 
-                # resolver.
-                if path:
-                    assert os.path.isdir(path)
-                    return path
-                else:
-                    self.ctx.logger.debug("Source {} resolve failed (returned"
-                                          " None)".format(resolver))
-                    continue
+                    self.resolver), exc_info=True)
 
+                return None
+        except:
+            raise
+
+
+        # The resolver did not raise an error, we check if it actually
+        # did produce a path for us.
+        if path:
+            assert os.path.isdir(path)
         else:
-            # If we exhaused the resolver list we just return 
-            return None
+            self.ctx.logger.debug("Source {} resolve failed (returned"
+                                  " None)".format(self.resolver))
+        return path
