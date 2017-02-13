@@ -105,7 +105,7 @@ def test_add_dependency(test_directory):
     app_dir.run('python', 'waf', 'configure', '-v')
     app_dir.run('python', 'waf', 'build', '-v')
 
-def _test_add_dependency_path(test_directory):
+def test_add_dependency_path(test_directory):
 
     app_dir = mkdir_app(directory=test_directory)
 
