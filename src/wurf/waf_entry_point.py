@@ -37,15 +37,15 @@ _check_minimum_python_version(2, 7)
 # invoked.
 #
 # It will recurse out in the options(...) functions defined in the
-# wscript. We have customized it to launch the wurf_resolve_context which
+# wscript. We have customized it to launch the waf_resolve_context which
 # first recurses the resolve(...) functions to fetch any defined
 # dependencies.
-from . import wurf_options_context
-from . import wurf_configuration_context
-from . import wurf_build_context
+from . import waf_options_context
+from . import waf_configuration_context
+from . import waf_build_context
 
 # We add a number of methods to the ConfigurationContext and BuildContext
-# objects used in Waf's configure(...) and build(...) functions (found in 
+# objects used in Waf's configure(...) and build(...) functions (found in
 # most wscripts). To register these functions we just need to import the module
-# where they are defined: 
-from . import wurf_conf
+# where they are defined:
+from . import waf_conf

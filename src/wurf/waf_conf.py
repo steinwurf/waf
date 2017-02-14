@@ -9,11 +9,11 @@
 
 from waflib.Configure import conf
 
-from . import wurf_resolve_context
+from . import waf_resolve_context
 
 @conf
 def dependency_path(ctx, name):
     """
     Returns the dependency path
     """
-    return wurf_resolve_context.dependency_cache[name]['path']
+    return waf_resolve_context.dependency_cache[name]['path']

@@ -69,7 +69,7 @@ def build_waf_binary(tsk):
     tool_paths = ','.join(tool_paths)
 
     # The prelude option
-    prelude = '\timport waflib.extras.wurf.wurf_entry_point'
+    prelude = '\timport waflib.extras.wurf.waf_entry_point'
 
     # Build the command to execute
     command = "python waf-light configure build --make-waf --prelude='{}' --tools={}".format(

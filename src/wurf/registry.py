@@ -5,13 +5,11 @@ import argparse
 import os
 from collections import defaultdict
 
-from . import wurf_git_resolver
-
-from . import wurf_user_checkout_resolver
+from .git_resolver import GitResolver
 from .user_path_resolver import UserPathResolver
 from .context_msg_resolver import ContextMsgResolver
 from .dependency_manager import DependencyManager
-from .optional_resolver import OptionalResolver
+from .check_optional_resolver import CheckOptionalResolver
 from .on_active_store_path_resolver import OnActiveStorePathResolver
 from .on_passive_load_path_resolver import OnPassiveLoadPathResolver
 from .try_resolver import TryResolver
@@ -346,7 +344,7 @@ def git_resolvers(registry, dependency):
     sources = registry.require('git_sources', dependency=dependency)
 
     def wrap(source):
-        return wurf_git_resolver.GitResolver(
+        return GitResolver(
             git=git, ctx=ctx, name=name, bundle_path=bundle_path, source=source)
 
     resolvers = [wrap(source) for source in sources]
@@ -399,7 +397,7 @@ def git_checkout_resolver(registry, dependency):
     resolver = registry.require('git_checkout_list_resolver',
         dependency=dependency, checkout=dependency.checkout)
 
-    resolver = OptionalResolver(resolver=resolver, dependency=dependency)
+    resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
     resolver = ContextMsgResolver(method='Git checkout', resolver=resolver,
         ctx=ctx, dependency=dependency)
 
@@ -434,7 +432,7 @@ def git_semver_resolver(registry, dependency):
     resolvers = [wrap(git_resolver) for git_resolver in git_resolvers]
 
     resolver = ListResolver(resolvers=resolvers)
-    resolver = OptionalResolver(resolver=resolver, dependency=dependency)
+    resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
     resolver = ContextMsgResolver(method='Git semver', resolver=resolver,
         ctx=ctx, dependency=dependency)
 
@@ -517,7 +515,7 @@ def passive_dependency_resolver(registry, dependency):
     resolver = ContextMsgResolver(method='Load', resolver=resolver,
         ctx=ctx, dependency=dependency)
 
-    resolver = OptionalResolver(resolver=resolver,
+    resolver = CheckOptionalResolver(resolver=resolver,
         dependency=dependency)
 
     return resolver

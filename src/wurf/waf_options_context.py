@@ -63,9 +63,9 @@ import copy
 from waflib import Context
 from waflib import Options
 
-from . import wurf_resolve_context
+from . import waf_resolve_context
 
-class WurfOptionsContext(Options.OptionsContext):
+class WafOptionsContext(Options.OptionsContext):
     """ Custom options context which will initiate the dependency resolve step.
 
     Default waf will instantiate and use this context in two different ways:
@@ -80,7 +80,7 @@ class WurfOptionsContext(Options.OptionsContext):
     """
 
     def __init__(self, **kw):
-        super(WurfOptionsContext, self).__init__(**kw)
+        super(WafOptionsContext, self).__init__(**kw)
 
         # List containing the command-line arguments not parsed
         # by the resolve context options parser. These are the
@@ -109,10 +109,10 @@ class WurfOptionsContext(Options.OptionsContext):
         # second value retuned by parse_known_args(...)
         self.waf_options = self.wurf_options.unknown_args
 
-        super(WurfOptionsContext, self).execute()
+        super(WafOptionsContext, self).execute()
 
         # Call options in all dependencies
-        wurf_resolve_context.recurse_dependencies(self)
+        waf_resolve_context.recurse_dependencies(self)
 
 
     def parse_args(self, _args=None):
@@ -128,7 +128,7 @@ class WurfOptionsContext(Options.OptionsContext):
         assert(_args is None)
 
         try:
-            super(WurfOptionsContext, self).parse_args(_args=self.waf_options)
+            super(WafOptionsContext, self).parse_args(_args=self.waf_options)
 
         except SystemExit:
 

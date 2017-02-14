@@ -83,10 +83,10 @@ to your wscript's upload function::
         # Now lets recurse and execute the upload functions in dependencies 
         # wscripts. 
         
-        import waflib.extras.wurf.wurf_resolve_context
+        import waflib.extras.wurf.waf_resolve_context
         
         # Call upload in all dependencies
-        wurf_resolve_context.recurse_dependencies(self)
+        waf_resolve_context.recurse_dependencies(self)
 
 
 Bundle dependencies

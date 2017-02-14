@@ -3,7 +3,7 @@
 
 from waflib.Configure import ConfigurationContext
 
-from . import wurf_resolve_context
+from . import waf_resolve_context
 
 
 class WurfConfigurationContext(ConfigurationContext):
@@ -17,4 +17,4 @@ class WurfConfigurationContext(ConfigurationContext):
         super(WurfConfigurationContext, self).execute()
 
         # Call configure in all dependencies
-        wurf_resolve_context.recurse_dependencies(self)
+        waf_resolve_context.recurse_dependencies(self)

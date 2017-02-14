@@ -3,7 +3,7 @@
 
 from .error import DependencyError
 
-class OptionalResolver(object):
+class CheckOptionalResolver(object):
 
     def __init__(self, resolver, dependency):
         """ Construct an instance.
