@@ -35,7 +35,7 @@ def resolve(ctx):
         method='checkout',
         checkout='1.1.0',
         sources=['github.com/mbr/shutilwhich.git'])
-
+    # 
     # ctx.add_dependency(
     #     name='mock',
     #     recurse=False,
@@ -45,7 +45,16 @@ def resolve(ctx):
     #     checkout='2.0.0',
     #     sources=['github.com/testing-cabal/mock.git'])
 
+def options(opt):
+
+    opt.add_option('--skip_tests', default=False,
+        action='store_true', help='Skip running unit tests')
+
+
 def configure(conf):
+
+    # Store the option of whether we skip tests
+    conf.env.SKIP_TESTS = conf.options.skip_tests
 
     # Ensure that the waf-light program is available in the in the
     # waf folder. This is used to build the waf binary.
@@ -119,38 +128,38 @@ def build(bld):
 
     bld.add_group()
 
+    if not bld.env.SKIP_TESTS:
 
 
+        # Copy the waf binary to build directory
+        #bld(features='subst',
+        #    source=#bld.root.find_node(
+        #        str(os.path.join(bld.dependency_path('waf'), 'waf')),
+        #    target='waf',
+        #    is_copy=True)
 
-    # Copy the waf binary to build directory
-    #bld(features='subst',
-    #    source=#bld.root.find_node(
-    #        str(os.path.join(bld.dependency_path('waf'), 'waf')),
-    #    target='waf',
-    #    is_copy=True)
+        # Make a build group will ensure that
+        #bld.add_group()
 
-    # Make a build group will ensure that
-    #bld.add_group()
+        # Invoke tox to run all the pure Python unit tests. Tox creates
+        # virtualenvs for different setups and runs unit tests in them. See the
+        # tox.ini to see the configuration used and see
+        # https://tox.readthedocs.org/ for more information about tox.
+        #
+        # We run tox at the end since we will use the freshly built waf binary
+        # in some of the tests.
 
-    # Invoke tox to run all the pure Python unit tests. Tox creates
-    # virtualenvs for different setups and runs unit tests in them. See the
-    # tox.ini to see the configuration used and see
-    # https://tox.readthedocs.org/ for more information about tox.
-    #
-    # We run tox at the end since we will use the freshly built waf binary
-    # in some of the tests.
-
-    my_env = bld.env.derive()
-    my_env.env = os.environ
+        my_env = bld.env.derive()
+        my_env.env = os.environ
 
 
-    semver_path = bld.dependency_path('python-semver')
-    shutil_path = bld.dependency_path('shutilwhich')
-    wurf_path = os.path.join(os.getcwd(), 'src')
+        semver_path = bld.dependency_path('python-semver')
+        shutil_path = bld.dependency_path('shutilwhich')
+        wurf_path = os.path.join(os.getcwd(), 'src')
 
-    my_env.env.update({'PYTHONPATH': ':'.join(
-        [wurf_path, semver_path, shutil_path])})
+        my_env.env.update({'PYTHONPATH': ':'.join(
+            [wurf_path, semver_path, shutil_path])})
 
-    #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
-    bld(rule='tox', env=my_env, always=True)
-    #bld(rule='tox -- -s', env=my_env, always=True)
+        #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
+        bld(rule='tox', env=my_env, always=True)
+        #bld(rule='tox -- -s', env=my_env, always=True)

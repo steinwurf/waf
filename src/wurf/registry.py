@@ -169,6 +169,18 @@ class Registry(object):
 
 @Registry.cache
 @Registry.provide
+def bundle_path(registry):
+    mandatory_options = registry.require('mandatory_options')
+    bundle_path = mandatory_options.bundle_path()
+    bundle_path = os.path.abspath(os.path.expanduser(bundle_path))
+
+    waf_utils = registry.require('waf_utils')
+    waf_utils.check_dir(bundle_path)
+
+    return bundle_path
+
+@Registry.cache
+@Registry.provide
 def git_url_parser(registry):
     """ Parser for Git URLs. """
 
@@ -338,8 +350,8 @@ def git_resolvers(registry, dependency):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
+    bundle_path = registry.require('bundle_path')
 
-    bundle_path = options.bundle_path()
     name = dependency.name
     sources = registry.require('git_sources', dependency=dependency)
 
@@ -365,7 +377,7 @@ def git_checkout_list_resolver(registry, dependency, checkout):
 
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
 
-    bundle_path = options.bundle_path()
+    bundle_path = registry.require('bundle_path')
     name = dependency.name
 
     def wrap(resolver):
@@ -418,7 +430,7 @@ def git_semver_resolver(registry, dependency):
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
     options = registry.require('options')
 
-    bundle_path = options.bundle_path()
+    bundle_path = registry.require('bundle_path')
     name = dependency.name
     major = dependency.major
 
@@ -574,7 +586,7 @@ def dependency_manager(registry):
 
 
 def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
-    resolver_configuration, semver, utils, args):
+    resolver_configuration, semver, waf_utils, args):
     """ Builds a registry.
 
     :param ctx: A Waf Context instance.
@@ -585,7 +597,7 @@ def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
         dependencies config json files should be / is stored.
     :param resolver_configuration: Type of resolver chain to build.
     :param semver: The semver module
-    :param utils: The waflib.Utils module
+    :param waf_utils: The waflib.Utils module
     :param args: Argument strings as a list, typically this will come
         from sys.argv
 
@@ -600,7 +612,7 @@ def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
     registry.provide_value('bundle_config_path', bundle_config_path)
     registry.provide_value('resolver_configuration', resolver_configuration)
     registry.provide_value('semver', semver)
-    registry.provide_value('utils', utils)
+    registry.provide_value('waf_utils', waf_utils)
     registry.provide_value('args', args)
 
     return registry

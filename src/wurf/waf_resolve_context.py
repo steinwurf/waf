@@ -16,6 +16,7 @@ from waflib.Errors import WafError
 from . import registry
 from .resolver_configuration import ResolverConfiguration
 from .error import CmdAndLogError
+from .error import Error
 
 from waflib.extras import shutilwhich
 from waflib.extras import semver
@@ -94,7 +95,7 @@ class WafResolveContext(Context.Context):
             semver=semver, default_bundle_path=default_bundle_path,
             bundle_config_path=self.bundle_config_path(),
             resolver_configuration=configuration,
-            utils=Utils, args=sys.argv[1:])
+            waf_utils=Utils, args=sys.argv[1:])
 
         self.dependency_manager = self.registry.require('dependency_manager')
 
@@ -102,7 +103,12 @@ class WafResolveContext(Context.Context):
         # the wscripts. These will in turn call add_dependency(...) which will
         # trigger loading the dependency.
 
-        super(WafResolveContext, self).execute()
+        try:
+            super(WafResolveContext, self).execute()
+        except Error as e:
+            self.fatal("Error in resolve", ex=e)
+        except:
+            raise
 
         # Get the cache with the resolved dependencies
         global dependency_cache
@@ -129,7 +135,7 @@ class WafResolveContext(Context.Context):
             # If active_resolvers, then the dependency resolvers are
             # allowed to download the dependencies.
             return ResolverConfiguration.ACTIVE
-        elif not self.root.find_node('build'):
+        elif not self.path.find_node('build'):
             # Project not yet configure - we don't have a build folder
             return ResolverConfiguration.HELP
         else:

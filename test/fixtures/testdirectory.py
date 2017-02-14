@@ -143,9 +143,7 @@ class TestDirectory:
                     # Need to decode the stdout and stderr with the correct
                     # character encoding (http://stackoverflow.com/a/28996987)
                     universal_newlines=True,
-
                     env=env,
-
                     # Sets the current working directory to the path of
                     # the tmpdir
                     cwd=str(self.tmpdir))
@@ -153,7 +151,7 @@ class TestDirectory:
         stdout, stderr = popen.communicate()
 
         end_time = time.time()
-        
+
         result = runresult.RunResult(' '.join(args), self.path(),
             stdout, stderr, popen.returncode, end_time - start_time)
 
