@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Allow arbitrary git providers in wurf_dependency_resolve.
 * Minor: Allow optional dependencies that might not be resolved if they are
   unavailable to the user.
 * Minor: Allow option arguments without the = sign for the options that are
