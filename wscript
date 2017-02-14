@@ -36,6 +36,15 @@ def resolve(ctx):
         checkout='1.1.0',
         sources=['github.com/mbr/shutilwhich.git'])
 
+    # ctx.add_dependency(
+    #     name='mock',
+    #     recurse=False,
+    #     optional=False,
+    #     resolver='git',
+    #     method='checkout',
+    #     checkout='2.0.0',
+    #     sources=['github.com/testing-cabal/mock.git'])
+
 def configure(conf):
 
     # Ensure that the waf-light program is available in the in the

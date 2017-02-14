@@ -59,3 +59,11 @@ class CheckOutput:
         :return: A string representing the output.
         """
         return '\n'.join(self.output)
+
+    def __repr__(self):
+        """
+        Generate a string representation of this object for pretty prints.
+
+        :return: A string representing the output.
+        """
+        return 'CheckOutput: "{}"'.format('\n'.join(self.output))
