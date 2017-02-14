@@ -28,15 +28,7 @@ class OnPassiveLoadPathResolver(object):
         :return: The path as a string.
         """
 
-        config_path = os.path.join(
-            self.bundle_config_path, self.dependency.name + '.resolve.json')
-
-        if not os.path.isfile(config_path):
-            raise DependencyError('No config - re-run configure',
-                self.dependency)
-
-        with open(config_path, 'r') as config_file:
-            return json.load(config_file)
+        config = self.__read_config()
 
         if self.dependency.sha1 != config['sha1']:
             raise DependencyError('Failed sha1 check', self.dependency)
@@ -48,3 +40,17 @@ class OnPassiveLoadPathResolver(object):
                 self.dependency)
 
         return path
+
+    def __read_config(self):
+        """ Read the dependency config from file
+        """
+
+        config_path = os.path.join(
+            self.bundle_config_path, self.dependency.name + '.resolve.json')
+
+        if not os.path.isfile(config_path):
+            raise DependencyError('No config - re-run configure',
+                self.dependency)
+
+        with open(config_path, 'r') as config_file:
+            return json.load(config_file)
