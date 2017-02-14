@@ -14,6 +14,8 @@ bundle_dependencies
 
 # Python
 *.pyc
+*.cache
+.tox
 
 # Visual Studio ignore
 *.bat
