@@ -1,3 +1,0 @@
-[submodule "python-semver"]
-	path = third_party/python-semver
-    url = https://github.com/k-bx/python-semver.git
