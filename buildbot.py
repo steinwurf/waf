@@ -52,7 +52,7 @@ def build(properties):
     tool_paths = ','.join(tools)
 
     # The prelude option
-    prelude = '\timport waflib.extras.wurf.wurf_entry_point'
+    prelude = '\timport waflib.extras.wurf.waf_entry_point'
 
     command = ['python', 'waf-light', 'configure', 'build', '--make-waf']
     command += ['--prelude={}'.format(prelude)]
