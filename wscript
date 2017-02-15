@@ -37,14 +37,34 @@ def resolve(ctx):
         checkout='1.1.0',
         sources=['github.com/mbr/shutilwhich.git'])
 
+    # Testing dependencies
+
     ctx.add_dependency(
-        name='tox',
+        name='pytest',
         recurse=False,
         optional=False,
         resolver='git',
         method='checkout',
-        checkout='2.6.0',
-        sources=['github.com/tox-dev/tox.git'])
+        checkout='3.0.6',
+        sources=['github.com/pytest-dev/pytest.git'])
+
+    ctx.add_dependency(
+        name='py',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='1.4.32',
+        sources=['github.com/pytest-dev/py.git'])
+
+    ctx.add_dependency(
+        name='mock',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='2.0.0',
+        sources=['github.com/testing-cabal/mock.git'])
 
 def options(opt):
 
@@ -135,26 +155,28 @@ def build(bld):
 
         if bld.options.use_tox:
             _tox(bld=bld)
-
         else:
-            print("Should run pytest")
-        # env = dict(os.environ)
-        #
-        # tools_dir = [os.path.join(bld.dependency_path('mock'), 'mock'),
-        #              os.path.join(bld.dependency_path('shutilwhich'), 'shutilwhich'),
-        #              os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
-        #              'src/wurf']
-        #
-        # separator = ';' if sys.platform == 'win32' else ':'
-        # env['PYTHONPATH'] = separator.join(tools_dir)
-        #
-        # bld.cmd_and_log('python -m pytest test', cwd=os.getcwd(), env=env)
-
-        ########## OLD TOX CODE ################
+            _pytest(bld=bld)
 
 
-        #
-        #
+def _pytest(bld):
+
+    env = dict(os.environ)
+
+    tools_dir = [bld.dependency_path('pytest'),
+                 bld.dependency_path('py'),
+                 bld.dependency_path('mock'),
+                 os.path.join(bld.dependency_path('shutilwhich'), 'shutilwhich'),
+                 os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
+                 os.path.join(os.getcwd(),'src/wurf')]
+
+    separator = ';' if sys.platform == 'win32' else ':'
+    env['PYTHONPATH'] = separator.join(tools_dir)
+
+    bld.cmd_and_log('python -m pytest test', cwd=os.getcwd(), env=env)
+
+
+
 def _tox(bld):
 
     # Invoke tox to run all the pure Python unit tests. Tox creates
