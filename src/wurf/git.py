@@ -86,11 +86,14 @@ class Git(object):
         means read here:
 
             https://git-scm.com/docs/git-checkout
-
-            Search for: DETACHED HEAD
         """
         current, _ = self.branch(cwd=cwd)
-        return current.startswith('(HEAD detached at')
+        # Different git versions denote the detached HEAD state differently,
+        # possible variants are the following:
+        # * (no branch)
+        # * (detached from waf-1.9.7)
+        # * (HEAD detached at waf-1.9.7)
+        return current.startswith('(') and current.endswith(')')
 
     def checkout(self, branch, cwd):
         """
