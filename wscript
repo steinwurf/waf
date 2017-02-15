@@ -141,7 +141,27 @@ def build_waf_binary(tsk):
     waf_dest = bld.bldnode.make_node('waf')
     waf_dest.write(waf_src.read('rb'), 'wb')
 
+def run_pytest(tsk):
+    """
+    Task funning pytest
+    """
 
+    # Get the working directory
+    # Waf checks whether a path is a waflib.Node or string by checking
+    # isinstance(str) but in python3 most string are unicode, which makes the
+    # test fail.
+    cwd = str(getattr(tsk, 'cwd', None))
+    python_path = getattr(tsk.generator, 'python_path', None)
+
+    env = os.environ
+
+    separator = ';' if sys.platform == 'win32' else ':'
+    env.update({'PYTHONPATH': separator.join(python_path)})
+
+    # Get the waf BuildContext
+    bld = tsk.generator.bld
+    bld.cmd_and_log('python -m pytest test', cwd=cwd, 
+        quiet=waflib.Context.BOTH)
 
 def build(bld):
 
@@ -179,9 +199,6 @@ def build(bld):
 
 def _pytest(bld):
 
-    my_env = bld.env.derive()
-    my_env.env = os.environ
-
     tools_dir = [bld.dependency_path('pytest'),
                  bld.dependency_path('py'),
                  bld.dependency_path('mock'),
@@ -191,10 +208,13 @@ def _pytest(bld):
                  bld.dependency_path('python-semver'),
                  os.path.join(os.getcwd(),'src')]
 
-    separator = ';' if sys.platform == 'win32' else ':'
-    my_env.env.update({'PYTHONPATH': separator.join(tools_dir)})
+    bld(rule=run_pytest,
+        cwd=bld.path,
+        python_path=tools_dir,
+        always=True)
 
-    bld(rule='python -m pytest test', cwd=os.getcwd(), env=my_env, always=True)
+    return
+
 
 def _tox(bld):
 
