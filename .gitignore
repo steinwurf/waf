@@ -15,6 +15,7 @@ bundle_dependencies
 # Python
 *.pyc
 .cache
+.tox
 temp
 
 # Visual Studio ignore
