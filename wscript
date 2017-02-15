@@ -141,28 +141,6 @@ def build_waf_binary(tsk):
     waf_dest = bld.bldnode.make_node('waf')
     waf_dest.write(waf_src.read('rb'), 'wb')
 
-def run_pytest(tsk):
-    """
-    Task funning pytest
-    """
-
-    # Get the working directory
-    # Waf checks whether a path is a waflib.Node or string by checking
-    # isinstance(str) but in python3 most string are unicode, which makes the
-    # test fail.
-    cwd = str(getattr(tsk, 'cwd', None))
-    python_path = getattr(tsk.generator, 'python_path', None)
-
-    env = os.environ
-
-    separator = ';' if sys.platform == 'win32' else ':'
-    env.update({'PYTHONPATH': separator.join(python_path)})
-
-    # Get the waf BuildContext
-    bld = tsk.generator.bld
-    bld.cmd_and_log('python -m pytest test', cwd=cwd, 
-        quiet=waflib.Context.BOTH)
-
 def build(bld):
 
     # Waf checks that source files are available when we create the
@@ -199,21 +177,25 @@ def build(bld):
 
 def _pytest(bld):
 
-    tools_dir = [bld.dependency_path('pytest'),
-                 bld.dependency_path('py'),
-                 bld.dependency_path('mock'),
-                 bld.dependency_path('pbr'),
-                 bld.dependency_path('funcsigs'),
-                 bld.dependency_path('shutilwhich'),
-                 bld.dependency_path('python-semver'),
-                 os.path.join(os.getcwd(),'src')]
+    python_path = [bld.dependency_path('pytest'),
+                   bld.dependency_path('py'),
+                   bld.dependency_path('mock'),
+                   bld.dependency_path('pbr'),
+                   bld.dependency_path('funcsigs'),
+                   bld.dependency_path('shutilwhich'),
+                   bld.dependency_path('python-semver'),
+                   os.path.join(os.getcwd(),'src')]
 
-    bld(rule=run_pytest,
+    bld_env = bld.env.derive()
+    bld_env.env = dict(os.environ)
+
+    separator = ';' if sys.platform == 'win32' else ':'
+    bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
+
+    bld(rule='python -m pytest test',
         cwd=bld.path,
-        python_path=tools_dir,
+        env=bld_env,
         always=True)
-
-    return
 
 
 def _tox(bld):
