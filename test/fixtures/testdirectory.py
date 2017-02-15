@@ -58,6 +58,9 @@ class TestDirectory:
         # glob should return only one file
         files = glob.glob(filename)
 
+        print(filename)
+        print(files)
+
         assert len(files) == 1
 
         filename = files[0]

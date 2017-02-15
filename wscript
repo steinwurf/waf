@@ -66,6 +66,24 @@ def resolve(ctx):
         checkout='2.0.0',
         sources=['github.com/testing-cabal/mock.git'])
 
+    ctx.add_dependency(
+        name='pbr',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='1.10.0',
+        sources=['github.com/openstack-dev/pbr.git'])
+
+    ctx.add_dependency(
+        name='funcsigs',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='0.4',
+        sources=['github.com/aliles/funcsigs.git'])
+
 def options(opt):
 
     opt.add_option('--skip_tests', default=False,
@@ -161,21 +179,22 @@ def build(bld):
 
 def _pytest(bld):
 
-    env = dict(os.environ)
+    my_env = bld.env.derive()
+    my_env.env = os.environ
 
     tools_dir = [bld.dependency_path('pytest'),
                  bld.dependency_path('py'),
                  bld.dependency_path('mock'),
-                 os.path.join(bld.dependency_path('shutilwhich'), 'shutilwhich'),
-                 os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
-                 os.path.join(os.getcwd(),'src/wurf')]
+                 bld.dependency_path('pbr'),
+                 bld.dependency_path('funcsigs'),
+                 bld.dependency_path('shutilwhich'),
+                 bld.dependency_path('python-semver'),
+                 os.path.join(os.getcwd(),'src')]
 
     separator = ';' if sys.platform == 'win32' else ':'
-    env['PYTHONPATH'] = separator.join(tools_dir)
+    my_env.env.update({'PYTHONPATH': separator.join(tools_dir)})
 
-    bld.cmd_and_log('python -m pytest test', cwd=os.getcwd(), env=env)
-
-
+    bld(rule='python -m pytest test', cwd=os.getcwd(), env=my_env, always=True)
 
 def _tox(bld):
 

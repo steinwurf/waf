@@ -11,12 +11,12 @@ def test_self_build(test_directory):
     test_directory.copy_file('wscript')
     test_directory.copy_file('build/waf')
 
-    r = test_directory.run('python', 'waf', 'configure', '--skip_tests')
+    r = test_directory.run('python', 'waf', 'configure')
 
     assert r.returncode == 0
     assert r.stdout.match('*finished successfully*')
 
-    r = test_directory.run('python', 'waf', 'build')
+    r = test_directory.run('python', 'waf', 'build', '--skip_tests')
 
     assert r.returncode == 0
 
