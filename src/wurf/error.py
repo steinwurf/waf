@@ -10,7 +10,7 @@ class CmdAndLogError(Error):
     def __init__(self, error, traceback):
         self.error = error
         self.traceback = traceback
-        super(RunError, self).__init__()
+        super(CmdAndLogError, self).__init__()
 
 class DependencyError(Error):
     def __init__(self, msg, dependency):
