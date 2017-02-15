@@ -4,6 +4,7 @@
 import os
 import sys
 import argparse
+import traceback
 
 from waflib import Utils
 from waflib import Context
@@ -153,7 +154,7 @@ class WafResolveContext(Context.Context):
             return super(WafResolveContext, self).cmd_and_log(
                 cmd=cmd, **kwargs)
         except WafError as e:
-            traceback = sys.exc_info()[2]
+            traceback = traceback.format_exc()
             raise CmdAndLogError(error=e, traceback=traceback)
         except:
             raise

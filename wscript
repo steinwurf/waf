@@ -51,11 +51,11 @@ def options(opt):
     opt.add_option('--skip_tests', default=False,
         action='store_true', help='Skip running unit tests')
 
+    opt.add_option('--use_tox', default=False,
+        action='store_true', help='Run unit tests using tox')
+
 
 def configure(conf):
-
-    # Store the option of whether we skip tests
-    conf.env.SKIP_TESTS = conf.options.skip_tests
 
     # Ensure that the waf-light program is available in the in the
     # waf folder. This is used to build the waf binary.
@@ -63,7 +63,7 @@ def configure(conf):
         path_list=[conf.dependency_path('waf')])
 
     # Make sure we tox used for running unit tests
-    #conf.find_program('tox')
+    conf.find_program('tox', mandatory=False)
 
 def build_waf_binary(tsk):
     """
@@ -103,6 +103,8 @@ def build_waf_binary(tsk):
     waf_dest = bld.bldnode.make_node('waf')
     waf_dest.write(waf_src.read('rb'), 'wb')
 
+
+
 def build(bld):
 
     # Waf checks that source files are available when we create the
@@ -129,7 +131,11 @@ def build(bld):
 
     bld.add_group()
 
-    if not bld.env.SKIP_TESTS:
+    if not bld.options.skip_tests:
+
+        if bld.options.use_tox:
+            _tox(bld=bld)
+
         print
         # env = dict(os.environ)
         #
@@ -145,27 +151,34 @@ def build(bld):
 
         ########## OLD TOX CODE ################
 
-        # Invoke tox to run all the pure Python unit tests. Tox creates
-        # virtualenvs for different setups and runs unit tests in them. See the
-        # tox.ini to see the configuration used and see
-        # https://tox.readthedocs.org/ for more information about tox.
-        #
-        # We run tox at the end since we will use the freshly built waf binary
-        # in some of the tests.
 
-        # my_env = bld.env.derive()
-        # my_env.env = os.environ
         #
         #
-        # semver_path = bld.dependency_path('python-semver')
-        # shutil_path = bld.dependency_path('shutilwhich')
-        # wurf_path = os.path.join(os.getcwd(), 'src')
-        #
-        # my_env.env.update({'PYTHONPATH': ':'.join(
-        #     [wurf_path, semver_path, shutil_path])})
-        #
-        # # Print python evn
-        # #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
-        # bld(rule='tox', env=my_env, always=True)
-        # #bld(rule='tox -- -s', env=my_env, always=True)
-        #
+def _tox(bld):
+
+    # Invoke tox to run all the pure Python unit tests. Tox creates
+    # virtualenvs for different setups and runs unit tests in them. See the
+    # tox.ini to see the configuration used and see
+    # https://tox.readthedocs.org/ for more information about tox.
+    #
+    # We run tox at the end since we will use the freshly built waf binary
+    # in some of the tests.
+    #
+    if not bld.env.TOX:
+        bld.fatal("tox not found - re-run configure.")
+
+    my_env = bld.env.derive()
+    my_env.env = os.environ
+
+
+    semver_path = bld.dependency_path('python-semver')
+    shutil_path = bld.dependency_path('shutilwhich')
+    wurf_path = os.path.join(os.getcwd(), 'src')
+
+    my_env.env.update({'PYTHONPATH': ':'.join(
+        [wurf_path, semver_path, shutil_path])})
+
+    # Print python evn
+    #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
+    bld(rule='tox', env=my_env, always=True)
+    #bld(rule='tox -- -s', env=my_env, always=True)
