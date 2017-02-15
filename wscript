@@ -84,6 +84,15 @@ def resolve(ctx):
         checkout='0.4',
         sources=['github.com/aliles/funcsigs.git'])
 
+    ctx.add_dependency(
+        name='six',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='4141a3e',
+        sources=['github.com/benjaminp/six.git'])
+
 def options(opt):
 
     opt.add_option('--skip_tests', default=False,
@@ -182,6 +191,7 @@ def _pytest(bld):
                    bld.dependency_path('mock'),
                    bld.dependency_path('pbr'),
                    bld.dependency_path('funcsigs'),
+                   bld.dependency_path('six'),
                    bld.dependency_path('shutilwhich'),
                    bld.dependency_path('python-semver'),
                    os.path.join(os.getcwd(),'src')]
@@ -211,18 +221,14 @@ def _tox(bld):
     if not bld.env.TOX:
         bld.fatal("tox not found - re-run configure.")
 
-    my_env = bld.env.derive()
-    my_env.env = os.environ
-
+    bld_env = bld.env.derive()
+    bld_env.env = dict(os.environ)
 
     semver_path = bld.dependency_path('python-semver')
     shutil_path = bld.dependency_path('shutilwhich')
     wurf_path = os.path.join(os.getcwd(), 'src')
 
-    my_env.env.update({'PYTHONPATH': ':'.join(
+    bld_env.env.update({'PYTHONPATH': ':'.join(
         [wurf_path, semver_path, shutil_path])})
 
-    # Print python evn
-    #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
-    bld(rule='tox', env=my_env, always=True)
-    #bld(rule='tox -- -s', env=my_env, always=True)
+    bld(rule='tox', env=bld_env, always=True)
