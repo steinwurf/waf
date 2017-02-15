@@ -136,7 +136,8 @@ def build(bld):
         if bld.options.use_tox:
             _tox(bld=bld)
 
-        print
+        else:
+            print("Should run pytest")
         # env = dict(os.environ)
         #
         # tools_dir = [os.path.join(bld.dependency_path('mock'), 'mock'),
