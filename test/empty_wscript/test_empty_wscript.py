@@ -3,7 +3,7 @@
 
 
 def test_empty_wscript(test_directory):
-    test_directory.copy_files('test/empty_wscript/*')
+    test_directory.copy_file('test/empty_wscript/wscript')
     test_directory.copy_file('build/waf')
 
     print(test_directory.path())

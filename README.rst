@@ -5,7 +5,7 @@ We use Waf as our build tool. However, before adding the Waf
 file to the individual projects we first add some additional
 tools to Waf.
 
-These help us to handle library dependencies and tool-chains.
+These help us to handle library dependencies and toolchains.
 
 License
 =======
@@ -40,13 +40,13 @@ Note that the path to the tools must be absolute.
 Source code
 ===========
 
-The modifications and additions to Waf are in the `src/wurf` folder. The 
-main files included by Waf is the `src/wurf/wurf_entry_point.py`.
+The modifications and additions to Waf are in the `src/wurf` folder. The
+main files included by Waf is the `src/wurf/waf_entry_point.py`.
 
 Tools
 =====
 
-Loadable Steinwurf tools should start with the ``wurf_`` prefix
+Loadable Steinwurf tools should start with the ``waf_`` prefix
 to distinguish them from standard waf tools.
 
 Tests
@@ -68,15 +68,15 @@ available when specifying a dependency::
     def resolve(ctx):
         ctx.add_dependency(name='foo',
                            ...)
-                           
+
 recurse (boolean)
--------
-This option specifies whether waf should recurse into the dependency folder. 
+-----------------
+This option specifies whether waf should recurse into the dependency folder.
 
 This is useful if the dependency is itself a waf probject. When recursing into
-a folder waf will look for a wscript in the folder and execute its commands. 
+a folder waf will look for a wscript in the folder and execute its commands.
 
-Currently we will automatically (if recurse is True), recurse into and execute 
+Currently we will automatically (if recurse is True), recurse into and execute
 following waf commands: (resolve, options, configure, build)
 
 If you have a wscript where you would like to recurse dependencies for a custom
@@ -85,13 +85,13 @@ to your wscript's upload function::
 
     def upload(ctx):
         ... your code
-        # Now lets recurse and execute the upload functions in dependencies 
-        # wscripts. 
-        
-        import waflib.extras.wurf.wurf_resolve_context
-        
+        # Now lets recurse and execute the upload functions in dependencies
+        # wscripts.
+
+        import waflib.extras.wurf.waf_resolve_context
+
         # Call upload in all dependencies
-        wurf_resolve_context.recurse_dependencies(self)
+        waf_resolve_context.recurse_dependencies(self)
 
 
 Bundle dependencies
@@ -123,7 +123,7 @@ Third party dependencies will be under:
 
 - /home/mvp/bundle_dependencies/some_name/thing.py
 
-So 
+So
 
 
 ------
@@ -216,7 +216,7 @@ Finding the log output etc.
 
 We use pytest to run the waf commands (integration tests). pytest will create
 temporary folders etc. when running the tests. These are created on the fly and
-numbered. 
+numbered.
 
 One great feature of pytest is that is will maintain a symbolic link to the most
 current test invocation. On Linux this is found under::

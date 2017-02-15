@@ -4,6 +4,7 @@
 import os
 import sys
 import argparse
+import traceback
 
 from waflib import Utils
 from waflib import Context
@@ -16,6 +17,7 @@ from waflib.Errors import WafError
 from . import registry
 from .resolver_configuration import ResolverConfiguration
 from .error import CmdAndLogError
+from .error import Error
 
 from waflib.extras import shutilwhich
 from waflib.extras import semver
@@ -26,7 +28,7 @@ from waflib.extras import semver
 dependency_cache = dict()
 """Dictionary that stores the dependencies resolved.
 
-The dictionary will be initialized by the WurfResolveContext and can be
+The dictionary will be initialized by the WafResolveContext and can be
 used by all other contexts or tools that need to access the
 dependencies. The idea is that this will be the single place to look to
 figure out which dependencies exist.
@@ -56,7 +58,7 @@ def recurse_dependencies(ctx):
         ctx.recurse([path])
 
 
-class WurfResolveContext(Context.Context):
+class WafResolveContext(Context.Context):
 
     '''resolves the dependencies specified in the wscript's resolve function'''
 
@@ -64,9 +66,9 @@ class WurfResolveContext(Context.Context):
     fun = 'resolve'
 
     def __init__(self, **kw):
-        """ Create a WurfResolveContext
+        """ Create a WafResolveContext
         """
-        super(WurfResolveContext, self).__init__(**kw)
+        super(WafResolveContext, self).__init__(**kw)
 
     def execute(self):
 
@@ -95,7 +97,7 @@ class WurfResolveContext(Context.Context):
             semver=semver, default_bundle_path=default_bundle_path,
             bundle_config_path=self.bundle_config_path(),
             resolver_configuration=configuration,
-            utils=Utils, args=sys.argv[1:])
+            waf_utils=Utils, args=sys.argv[1:])
 
         self.dependency_manager = self.registry.require('dependency_manager')
 
@@ -103,7 +105,12 @@ class WurfResolveContext(Context.Context):
         # the wscripts. These will in turn call add_dependency(...) which will
         # trigger loading the dependency.
 
-        super(WurfResolveContext, self).execute()
+        try:
+            super(WafResolveContext, self).execute()
+        except Error as e:
+            self.fatal("Error in resolve", ex=e)
+        except:
+            raise
 
         # Get the cache with the resolved dependencies
         global dependency_cache
@@ -130,7 +137,7 @@ class WurfResolveContext(Context.Context):
             # If active_resolvers, then the dependency resolvers are
             # allowed to download the dependencies.
             return ResolverConfiguration.ACTIVE
-        elif not self.root.find_node('build'):
+        elif not self.path.find_node('build'):
             # Project not yet configure - we don't have a build folder
             return ResolverConfiguration.HELP
         else:
@@ -145,10 +152,10 @@ class WurfResolveContext(Context.Context):
     def cmd_and_log(self, cmd, **kwargs):
 
         try:
-            return super(WurfResolveContext, self).cmd_and_log(
+            return super(WafResolveContext, self).cmd_and_log(
                 cmd=cmd, **kwargs)
         except WafError as e:
-            traceback = sys.exc_info()[2]
-            raise CmdAndLogError(error=e, traceback=traceback)
+            tb = traceback.format_exc()
+            raise CmdAndLogError(error=e, traceback=tb)
         except:
             raise

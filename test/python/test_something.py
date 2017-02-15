@@ -11,9 +11,10 @@ import semver
 
 # TODO: Kill or rewrite this test file!
 
+
 def test_working_on_it(test_directory):
 
-
+    # @todo kill or rewrite
     dep = {"name":"waf", "patches": ["patches/patch01.patch",
            "patches/patch02.patch"], "optional":True,
            "sources":[{"resolver":"git", "url":"gitrepo.git"}]}

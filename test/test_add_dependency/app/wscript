@@ -53,7 +53,8 @@ def resolve(ctx):
 
                     lib_directory = self.git_dir.find_node(lib_name).abspath()
 
-                    shutil.copytree(src=lib_directory, dst=dst_directory)
+                    shutil.copytree(src=lib_directory, dst=dst_directory,
+                        symlinks=True)
 
                     assert os.path.isdir(dst_directory), "We should have a valid path here!"
                     return

@@ -15,16 +15,12 @@ def test_self_build(test_directory):
     root.copy_file('test/self_build/wscript')
     root.copy_file('build/waf')
 
-    # TODO: Remove this (waf should implicitly create the folder that is
-    # specified by the "bundle_path" option)
-    root.mkdir('bundle_dependencies')
-
     r = root.run('python', 'waf', 'configure')
 
     assert r.returncode == 0
     assert r.stdout.match('*finished successfully*')
 
-    r = root.run('python', 'waf', 'build')
+    r = root.run('python', 'waf', 'build', '--skip_tests'))
 
     assert r.returncode == 0
 

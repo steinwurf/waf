@@ -3,7 +3,6 @@
 
 import os
 import sys
-import shutil
 
 import waflib
 
@@ -38,6 +37,70 @@ def resolve(ctx):
         checkout='1.1.0',
         sources=['github.com/mbr/shutilwhich.git'])
 
+    # Testing dependencies
+
+    ctx.add_dependency(
+        name='pytest',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='3.0.6',
+        sources=['github.com/pytest-dev/pytest.git'])
+
+    ctx.add_dependency(
+        name='py',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='1.4.32',
+        sources=['github.com/pytest-dev/py.git'])
+
+    ctx.add_dependency(
+        name='mock',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='2.0.0',
+        sources=['github.com/testing-cabal/mock.git'])
+
+    ctx.add_dependency(
+        name='pbr',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='1.10.0',
+        sources=['github.com/openstack-dev/pbr.git'])
+
+    ctx.add_dependency(
+        name='funcsigs',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='0.4',
+        sources=['github.com/aliles/funcsigs.git'])
+
+    ctx.add_dependency(
+        name='six',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='4141a3e',
+        sources=['github.com/benjaminp/six.git'])
+
+def options(opt):
+
+    opt.add_option('--skip_tests', default=False,
+        action='store_true', help='Skip running unit tests')
+
+    opt.add_option('--use_tox', default=False,
+        action='store_true', help='Run unit tests using tox')
+
 
 def configure(conf):
 
@@ -47,10 +110,9 @@ def configure(conf):
         path_list=[conf.dependency_path('waf')])
 
     # Make sure we tox used for running unit tests
-    #conf.find_program('tox')
+    conf.find_program('tox', mandatory=False)
 
-
-def _build_waf_binary(tsk):
+def build_waf_binary(tsk):
     """
     Task for building the waf binary.
     """
@@ -73,11 +135,11 @@ def _build_waf_binary(tsk):
     tool_paths = ','.join(tool_paths)
 
     # The prelude option
-    prelude = '\timport waflib.extras.wurf.wurf_entry_point'
+    prelude = '\timport waflib.extras.wurf.waf_entry_point'
 
     # Build the command to execute
-    command = 'python waf-light configure build --make-waf --prelude="{}" ' \
-              '--tools={}'.format(prelude, tool_paths)
+    command = 'python waf-light configure build --make-waf --prelude="{}" '\
+        '--tools={}'.format(prelude, tool_paths)
 
     # Get the waf BuildContext
     bld = tsk.generator.bld
@@ -87,7 +149,6 @@ def _build_waf_binary(tsk):
     waf_src = bld.root.find_resource(os.path.join(wd, 'waf'))
     waf_dest = bld.bldnode.make_node('waf')
     waf_dest.write(waf_src.read('rb'), 'wb')
-
 
 def build(bld):
 
@@ -102,20 +163,52 @@ def build(bld):
     # executable was started - so we need to start it from the right
     # folder. Using cwd we can make sure the python process is lauched in
     # the right directory.
-    tools_dir = \
-    [
-        os.path.join(bld.dependency_path('shutilwhich'), 'shutilwhich'),
-        os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
-        'src/wurf'
-    ]
 
-    bld(rule=_build_waf_binary,
+
+    tools_dir = [os.path.join(bld.dependency_path('shutilwhich'), 'shutilwhich'),
+                 os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
+                 'src/wurf']
+
+    bld(rule=build_waf_binary,
         cwd=bld.dependency_path('waf'),
         tools_dir=tools_dir,
         always=True)
 
+    bld.add_group()
 
-def tox_test(bld):
+    if not bld.options.skip_tests:
+
+        if bld.options.use_tox:
+            _tox(bld=bld)
+        else:
+            _pytest(bld=bld)
+
+
+def _pytest(bld):
+
+    python_path = [bld.dependency_path('pytest'),
+                   bld.dependency_path('py'),
+                   bld.dependency_path('mock'),
+                   bld.dependency_path('pbr'),
+                   bld.dependency_path('funcsigs'),
+                   bld.dependency_path('six'),
+                   bld.dependency_path('shutilwhich'),
+                   bld.dependency_path('python-semver'),
+                   os.path.join(os.getcwd(),'src')]
+
+    bld_env = bld.env.derive()
+    bld_env.env = dict(os.environ)
+
+    separator = ';' if sys.platform == 'win32' else ':'
+    bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
+
+    bld(rule='python -m pytest test',
+        cwd=bld.path,
+        env=bld_env,
+        always=True)
+
+
+def _tox(bld):
 
     # Invoke tox to run all the pure Python unit tests. Tox creates
     # virtualenvs for different setups and runs unit tests in them. See the
@@ -124,54 +217,18 @@ def tox_test(bld):
     #
     # We run tox at the end since we will use the freshly built waf binary
     # in some of the tests.
+    #
+    if not bld.env.TOX:
+        bld.fatal("tox not found - re-run configure.")
 
-    #my_env = bld.env.derive()
-    #my_env.env = os.environ
+    bld_env = bld.env.derive()
+    bld_env.env = dict(os.environ)
 
-    #semver_path = bld.dependency_path('python-semver')
-    #shutil_path = bld.dependency_path('shutilwhich')
-    #wurf_path = os.path.join(os.getcwd(), 'src')
+    semver_path = bld.dependency_path('python-semver')
+    shutil_path = bld.dependency_path('shutilwhich')
+    wurf_path = os.path.join(os.getcwd(), 'src')
 
-    #my_env.env.update({'PYTHONPATH': ':'.join(
-    #    [wurf_path, semver_path, shutil_path])})
+    bld_env.env.update({'PYTHONPATH': ':'.join(
+        [wurf_path, semver_path, shutil_path])})
 
-    #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
-    #bld(rule='tox', env=my_env, always=True)
-    #bld(rule='tox -- -s', env=my_env, always=True)
-    pass
-
-
-def test(bld):
-    env = dict(os.environ)
-    cwd = os.getcwd()
-    third_party = os.path.join(cwd, 'third_party')
-
-    # Add the absolute paths to all the necessary packages
-    tools = [os.path.join(third_party, 'pytest'),
-             os.path.join(third_party, 'py'),
-             os.path.join(third_party, 'mock'),
-             os.path.join(third_party, 'shutilwhich'),
-             os.path.join(third_party, 'python-semver'),
-             os.path.join(cwd, 'src')]
-
-    separator = ';' if sys.platform == 'win32' else ':'
-    env['PYTHONPATH'] = separator.join(tools)
-
-    # Remove the previously created temp folder
-    if os.path.exists('temp'):
-
-        def onerror(func, path, exc_info):
-            import stat
-            if not os.access(path, os.W_OK):
-                # Is the error an access error ?
-                os.chmod(path, stat.S_IWUSR)
-                func(path)
-            else:
-                raise
-
-        shutil.rmtree('temp', onerror=onerror)
-
-    # Run the unit tests with pytest
-    if os.path.exists('test'):
-        bld.cmd_and_log('python -m pytest -x --basetemp=temp test\n',
-                        cwd=cwd, env=env)
+    bld(rule='tox', env=bld_env, always=True)

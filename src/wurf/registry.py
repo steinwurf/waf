@@ -5,13 +5,11 @@ import argparse
 import os
 from collections import defaultdict
 
-from . import wurf_git_resolver
-
-from . import wurf_user_checkout_resolver
+from .git_resolver import GitResolver
 from .user_path_resolver import UserPathResolver
 from .context_msg_resolver import ContextMsgResolver
 from .dependency_manager import DependencyManager
-from .optional_resolver import OptionalResolver
+from .check_optional_resolver import CheckOptionalResolver
 from .on_active_store_path_resolver import OnActiveStorePathResolver
 from .on_passive_load_path_resolver import OnPassiveLoadPathResolver
 from .try_resolver import TryResolver
@@ -168,6 +166,18 @@ class Registry(object):
 
         return func
 
+
+@Registry.cache
+@Registry.provide
+def bundle_path(registry):
+    mandatory_options = registry.require('mandatory_options')
+    bundle_path = mandatory_options.bundle_path()
+    bundle_path = os.path.abspath(os.path.expanduser(bundle_path))
+
+    waf_utils = registry.require('waf_utils')
+    waf_utils.check_dir(bundle_path)
+
+    return bundle_path
 
 @Registry.cache
 @Registry.provide
@@ -340,13 +350,13 @@ def git_resolvers(registry, dependency):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
+    bundle_path = registry.require('bundle_path')
 
-    bundle_path = options.bundle_path()
     name = dependency.name
     sources = registry.require('git_sources', dependency=dependency)
 
     def wrap(source):
-        return wurf_git_resolver.GitResolver(
+        return GitResolver(
             git=git, ctx=ctx, name=name, bundle_path=bundle_path, source=source)
 
     resolvers = [wrap(source) for source in sources]
@@ -367,7 +377,7 @@ def git_checkout_list_resolver(registry, dependency, checkout):
 
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
 
-    bundle_path = options.bundle_path()
+    bundle_path = registry.require('bundle_path')
     name = dependency.name
 
     def wrap(resolver):
@@ -399,7 +409,7 @@ def git_checkout_resolver(registry, dependency):
     resolver = registry.require('git_checkout_list_resolver',
         dependency=dependency, checkout=dependency.checkout)
 
-    resolver = OptionalResolver(resolver=resolver, dependency=dependency)
+    resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
     resolver = ContextMsgResolver(method='Git checkout', resolver=resolver,
         ctx=ctx, dependency=dependency)
 
@@ -420,7 +430,7 @@ def git_semver_resolver(registry, dependency):
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
     options = registry.require('options')
 
-    bundle_path = options.bundle_path()
+    bundle_path = registry.require('bundle_path')
     name = dependency.name
     major = dependency.major
 
@@ -434,7 +444,7 @@ def git_semver_resolver(registry, dependency):
     resolvers = [wrap(git_resolver) for git_resolver in git_resolvers]
 
     resolver = ListResolver(resolvers=resolvers)
-    resolver = OptionalResolver(resolver=resolver, dependency=dependency)
+    resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
     resolver = ContextMsgResolver(method='Git semver', resolver=resolver,
         ctx=ctx, dependency=dependency)
 
@@ -517,7 +527,7 @@ def passive_dependency_resolver(registry, dependency):
     resolver = ContextMsgResolver(method='Load', resolver=resolver,
         ctx=ctx, dependency=dependency)
 
-    resolver = OptionalResolver(resolver=resolver,
+    resolver = CheckOptionalResolver(resolver=resolver,
         dependency=dependency)
 
     return resolver
@@ -576,7 +586,7 @@ def dependency_manager(registry):
 
 
 def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
-    resolver_configuration, semver, utils, args):
+    resolver_configuration, semver, waf_utils, args):
     """ Builds a registry.
 
     :param ctx: A Waf Context instance.
@@ -587,7 +597,7 @@ def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
         dependencies config json files should be / is stored.
     :param resolver_configuration: Type of resolver chain to build.
     :param semver: The semver module
-    :param utils: The waflib.Utils module
+    :param waf_utils: The waflib.Utils module
     :param args: Argument strings as a list, typically this will come
         from sys.argv
 
@@ -602,7 +612,7 @@ def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
     registry.provide_value('bundle_config_path', bundle_config_path)
     registry.provide_value('resolver_configuration', resolver_configuration)
     registry.provide_value('semver', semver)
-    registry.provide_value('utils', utils)
+    registry.provide_value('waf_utils', waf_utils)
     registry.provide_value('args', args)
 
     return registry

@@ -27,7 +27,7 @@ class ContextMsgResolver(object):
         :return: The path as a string.
         """
 
-        self.ctx.start_msg('{} resolve dependency {}'.format(
+        self.ctx.start_msg('{} {}'.format(
             self.method, self.dependency.name))
 
         path = self.resolver.resolve()

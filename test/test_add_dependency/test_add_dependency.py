@@ -81,8 +81,6 @@ def mkdir_libbaz(directory):
 
     return baz_dir
 
-
-
 # @todo re-enable tests in this file
 
 def test_add_dependency(test_directory):
