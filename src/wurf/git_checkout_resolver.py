@@ -53,7 +53,7 @@ class GitCheckoutResolver(object):
         # If the checkout folder does not exist,
         # then clone from the git repository
         if not os.path.isdir(repo_path):
-            shutil.copytree(src=path, dst=repo_path)
+            shutil.copytree(src=path, dst=repo_path, symlinks=True)
             self.git.checkout(branch=self.checkout, cwd=repo_path)
         else:
 

@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import sys
 
 import waflib
 
@@ -35,15 +36,15 @@ def resolve(ctx):
         method='checkout',
         checkout='1.1.0',
         sources=['github.com/mbr/shutilwhich.git'])
-    # 
-    # ctx.add_dependency(
-    #     name='mock',
-    #     recurse=False,
-    #     optional=False,
-    #     resolver='git',
-    #     method='checkout',
-    #     checkout='2.0.0',
-    #     sources=['github.com/testing-cabal/mock.git'])
+
+    ctx.add_dependency(
+        name='tox',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='2.6.0',
+        sources=['github.com/tox-dev/tox.git'])
 
 def options(opt):
 
@@ -58,11 +59,11 @@ def configure(conf):
 
     # Ensure that the waf-light program is available in the in the
     # waf folder. This is used to build the waf binary.
-    conf.find_program('waf-light',
+    conf.find_program('waf-light', exts='',
         path_list=[conf.dependency_path('waf')])
 
     # Make sure we tox used for running unit tests
-    conf.find_program('tox')
+    #conf.find_program('tox')
 
 def build_waf_binary(tsk):
     """
@@ -90,8 +91,8 @@ def build_waf_binary(tsk):
     prelude = '\timport waflib.extras.wurf.waf_entry_point'
 
     # Build the command to execute
-    command = "python waf-light configure build --make-waf --prelude='{}' --tools={}".format(
-        prelude, tool_paths)
+    command = 'python waf-light configure build --make-waf --prelude="{}" '\
+        '--tools={}'.format(prelude, tool_paths)
 
     # Get the waf BuildContext
     bld = tsk.generator.bld
@@ -129,17 +130,20 @@ def build(bld):
     bld.add_group()
 
     if not bld.env.SKIP_TESTS:
+        print
+        # env = dict(os.environ)
+        #
+        # tools_dir = [os.path.join(bld.dependency_path('mock'), 'mock'),
+        #              os.path.join(bld.dependency_path('shutilwhich'), 'shutilwhich'),
+        #              os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
+        #              'src/wurf']
+        #
+        # separator = ';' if sys.platform == 'win32' else ':'
+        # env['PYTHONPATH'] = separator.join(tools_dir)
+        #
+        # bld.cmd_and_log('python -m pytest test', cwd=os.getcwd(), env=env)
 
-
-        # Copy the waf binary to build directory
-        #bld(features='subst',
-        #    source=#bld.root.find_node(
-        #        str(os.path.join(bld.dependency_path('waf'), 'waf')),
-        #    target='waf',
-        #    is_copy=True)
-
-        # Make a build group will ensure that
-        #bld.add_group()
+        ########## OLD TOX CODE ################
 
         # Invoke tox to run all the pure Python unit tests. Tox creates
         # virtualenvs for different setups and runs unit tests in them. See the
@@ -149,17 +153,19 @@ def build(bld):
         # We run tox at the end since we will use the freshly built waf binary
         # in some of the tests.
 
-        my_env = bld.env.derive()
-        my_env.env = os.environ
-
-
-        semver_path = bld.dependency_path('python-semver')
-        shutil_path = bld.dependency_path('shutilwhich')
-        wurf_path = os.path.join(os.getcwd(), 'src')
-
-        my_env.env.update({'PYTHONPATH': ':'.join(
-            [wurf_path, semver_path, shutil_path])})
-
-        #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
-        bld(rule='tox', env=my_env, always=True)
-        #bld(rule='tox -- -s', env=my_env, always=True)
+        # my_env = bld.env.derive()
+        # my_env.env = os.environ
+        #
+        #
+        # semver_path = bld.dependency_path('python-semver')
+        # shutil_path = bld.dependency_path('shutilwhich')
+        # wurf_path = os.path.join(os.getcwd(), 'src')
+        #
+        # my_env.env.update({'PYTHONPATH': ':'.join(
+        #     [wurf_path, semver_path, shutil_path])})
+        #
+        # # Print python evn
+        # #bld(rule="env | grep PYTHONPATH", env=my_env, always=True)
+        # bld(rule='tox', env=my_env, always=True)
+        # #bld(rule='tox -- -s', env=my_env, always=True)
+        #

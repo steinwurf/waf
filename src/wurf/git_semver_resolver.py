@@ -63,7 +63,7 @@ class GitSemverResolver(object):
         # If the checkout folder does not exist,
         # then clone from the git repository
         if not os.path.isdir(repo_path):
-            shutil.copytree(src=path, dst=repo_path)
+            shutil.copytree(src=path, dst=repo_path, symlinks=True)
             self.git.checkout(branch=tag, cwd=repo_path)
 
         # If the project contains submodules we also get those
