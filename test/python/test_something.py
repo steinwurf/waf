@@ -9,7 +9,6 @@ import functools
 import shutilwhich
 import semver
 
-# TODO: Kill or rewrite this test file!
 
 
 def test_working_on_it(test_directory):

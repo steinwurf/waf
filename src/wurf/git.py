@@ -88,6 +88,7 @@ class Git(object):
             https://git-scm.com/docs/git-checkout
         """
         current, _ = self.branch(cwd=cwd)
+
         # Different git versions denote the detached HEAD state differently,
         # possible variants are the following:
         # * (no branch)

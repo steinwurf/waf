@@ -12,7 +12,7 @@ def test_self_build(test_directory):
 
     src_dir = root.mkdir('src')
     src_dir.copy_dir(directory='src/wurf')
-    root.copy_file('test/self_build/wscript')
+    root.copy_file('wscript')
     root.copy_file('build/waf')
 
     r = root.run('python', 'waf', 'configure')
