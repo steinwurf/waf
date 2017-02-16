@@ -21,7 +21,7 @@ def configure(conf):
     conf.load('compiler_cxx')
 
 def build(bld):
-    bld.shlib(features='cxx',
+    bld.stlib(features='cxx',
               target='bar',
               use=['baz'],
               source='src/bar/bar.cpp',
