@@ -240,6 +240,7 @@ def _pytest(bld):
     python_path = [bld.dependency_path('tox'),
                    bld.dependency_path('pluggy'),
                    bld.dependency_path('py'),
+                   bld.dependency_path('virtualenv'),
                    bld.dependency_path('shutilwhich'),
                    bld.dependency_path('python-semver'),
                    os.path.join(os.getcwd(),'src')]
