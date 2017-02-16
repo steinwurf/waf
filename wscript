@@ -38,35 +38,16 @@ def resolve(ctx):
         sources=['github.com/mbr/shutilwhich.git'])
 
     # Testing dependencies
+
     ctx.add_dependency(
-        name='tox',
+        name='pytest',
         recurse=False,
         optional=False,
         resolver='git',
         method='checkout',
-        checkout='2.6.0',
-        sources=['github.com/tox-dev/tox.git'])
+        checkout='3.0.6',
+        sources=['github.com/pytest-dev/pytest.git'])
 
-    ctx.add_dependency(
-        name='pluggy',
-        recurse=False,
-        optional=False,
-        resolver='git',
-        method='checkout',
-        checkout='0.4.0',
-        sources=['github.com/pytest-dev/pluggy.git'])
-
-    # Testing dependencies
-
-    # ctx.add_dependency(
-    #     name='pytest',
-    #     recurse=False,
-    #     optional=False,
-    #     resolver='git',
-    #     method='checkout',
-    #     checkout='3.0.6',
-    #     sources=['github.com/pytest-dev/pytest.git'])
-    #
     ctx.add_dependency(
         name='py',
         recurse=False,
@@ -77,49 +58,13 @@ def resolve(ctx):
         sources=['github.com/pytest-dev/py.git'])
 
     ctx.add_dependency(
-        name='virtualenv',
+        name='mock',
         recurse=False,
         optional=False,
         resolver='git',
         method='checkout',
-        checkout='15.1.0',
-        sources=['github.com/pypa/virtualenv.git'])
-    #
-    # ctx.add_dependency(
-    #     name='mock',
-    #     recurse=False,
-    #     optional=False,
-    #     resolver='git',
-    #     method='checkout',
-    #     checkout='2.0.0',
-    #     sources=['github.com/testing-cabal/mock.git'])
-    #
-    # ctx.add_dependency(
-    #     name='pbr',
-    #     recurse=False,
-    #     optional=False,
-    #     resolver='git',
-    #     method='checkout',
-    #     checkout='1.10.0',
-    #     sources=['github.com/openstack-dev/pbr.git'])
-    #
-    # ctx.add_dependency(
-    #     name='funcsigs',
-    #     recurse=False,
-    #     optional=False,
-    #     resolver='git',
-    #     method='checkout',
-    #     checkout='0.4',
-    #     sources=['github.com/aliles/funcsigs.git'])
-    #
-    # ctx.add_dependency(
-    #     name='six',
-    #     recurse=False,
-    #     optional=False,
-    #     resolver='git',
-    #     method='checkout',
-    #     checkout='4141a3e',
-    #     sources=['github.com/benjaminp/six.git'])
+        checkout='1.0.1',
+        sources=['github.com/testing-cabal/mock.git'])
 
 def options(opt):
 
@@ -212,35 +157,14 @@ def build(bld):
             _pytest(bld=bld)
 
 
-# def _pytest(bld):
-#
-#     python_path = [bld.dependency_path('pytest'),
-#                    bld.dependency_path('py'),
-#                    bld.dependency_path('mock'),
-#                    bld.dependency_path('pbr'),
-#                    bld.dependency_path('funcsigs'),
-#                    bld.dependency_path('six'),
-#                    bld.dependency_path('shutilwhich'),
-#                    bld.dependency_path('python-semver'),
-#                    os.path.join(os.getcwd(),'src')]
-#
-#     bld_env = bld.env.derive()
-#     bld_env.env = dict(os.environ)
-#
-#     separator = ';' if sys.platform == 'win32' else ':'
-#     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
-#
-#     bld(rule='python -m pytest test',
-#         cwd=bld.path,
-#         env=bld_env,
-#         always=True)
-
 def _pytest(bld):
 
-    python_path = [bld.dependency_path('tox'),
-                   bld.dependency_path('pluggy'),
+    python_path = [bld.dependency_path('pytest'),
                    bld.dependency_path('py'),
-                   bld.dependency_path('virtualenv'),
+                   bld.dependency_path('mock'),
+                   #bld.dependency_path('pbr'),
+                   #bld.dependency_path('funcsigs'),
+                   #bld.dependency_path('six'),
                    bld.dependency_path('shutilwhich'),
                    bld.dependency_path('python-semver'),
                    os.path.join(os.getcwd(),'src')]
@@ -251,10 +175,31 @@ def _pytest(bld):
     separator = ';' if sys.platform == 'win32' else ':'
     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
 
-    bld(rule='python -m tox',
+    bld(rule='python -m pytest test',
         cwd=bld.path,
         env=bld_env,
         always=True)
+
+# def _pytest(bld):
+#
+#     python_path = [bld.dependency_path('tox'),
+#                    bld.dependency_path('pluggy'),
+#                    bld.dependency_path('py'),
+#                    bld.dependency_path('virtualenv'),
+#                    bld.dependency_path('shutilwhich'),
+#                    bld.dependency_path('python-semver'),
+#                    os.path.join(os.getcwd(),'src')]
+#
+#     bld_env = bld.env.derive()
+#     bld_env.env = dict(os.environ)
+#
+#     separator = ';' if sys.platform == 'win32' else ':'
+#     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
+#
+#     bld(rule='python -m tox',
+#         cwd=bld.path,
+#         env=bld_env,
+#         always=True)
 
 
 def _tox(bld):
