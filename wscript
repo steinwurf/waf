@@ -67,14 +67,14 @@ def resolve(ctx):
     #     checkout='3.0.6',
     #     sources=['github.com/pytest-dev/pytest.git'])
     #
-    # ctx.add_dependency(
-    #     name='py',
-    #     recurse=False,
-    #     optional=False,
-    #     resolver='git',
-    #     method='checkout',
-    #     checkout='1.4.32',
-    #     sources=['github.com/pytest-dev/py.git'])
+    ctx.add_dependency(
+        name='py',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='1.4.32',
+        sources=['github.com/pytest-dev/py.git'])
     #
     # ctx.add_dependency(
     #     name='mock',
@@ -230,6 +230,7 @@ def _pytest(bld):
 
     python_path = [bld.dependency_path('tox'),
                    bld.dependency_path('pluggy'),
+                   bld.dependency_path('py'),
                    bld.dependency_path('shutilwhich'),
                    bld.dependency_path('python-semver'),
                    os.path.join(os.getcwd(),'src')]
