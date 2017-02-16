@@ -75,6 +75,15 @@ def resolve(ctx):
         method='checkout',
         checkout='1.4.32',
         sources=['github.com/pytest-dev/py.git'])
+
+    ctx.add_dependency(
+        name='virtualenv',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='15.1.0',
+        sources=['github.com/pypa/virtualenv.git'])
     #
     # ctx.add_dependency(
     #     name='mock',
