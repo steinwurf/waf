@@ -12,6 +12,7 @@ from waflib import Options
 from waflib import Logs
 from waflib import ConfigSet
 from waflib import Node
+from waflib.Configure import conf
 from waflib.Errors import WafError
 
 from . import registry
@@ -34,6 +35,7 @@ dependencies. The idea is that this will be the single place to look to
 figure out which dependencies exist.
 """
 
+@conf
 def recurse_dependencies(ctx):
     """ Recurse the dependencies which have the resolve property set to True.
 
@@ -55,7 +57,7 @@ def recurse_dependencies(ctx):
         path = dependency['path']
 
         ctx.to_log("Path {} Type {}\n".format(path, type(path)))
-        ctx.recurse([path])
+        ctx.recurse([path], mandatory=False)
 
 
 class WafResolveContext(Context.Context):
@@ -78,6 +80,7 @@ class WafResolveContext(Context.Context):
 
         # Create the nodes that will be used during the resolve step. The build
         # directory is also used by the waf BuildContext
+        self.srcnode = self.path
         self.bldnode = self.path.make_node('build')
         self.bldnode.mkdir()
 
@@ -117,6 +120,13 @@ class WafResolveContext(Context.Context):
         dependency_cache = self.registry.require('cache')
 
         self.logger.debug('wurf: dependency_cache {}'.format(dependency_cache))
+
+
+    def is_toplevel(self):
+        """
+        Returns true if the current script is the top-level wscript
+        """
+        return self.srcnode == self.path
 
 
     def bundle_config_path(self):

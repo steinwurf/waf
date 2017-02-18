@@ -3,7 +3,6 @@
 
 from waflib.Build import BuildContext
 
-from . import waf_resolve_context
 
 class WafBuildContext(BuildContext):
 
@@ -20,5 +19,5 @@ class WafBuildContext(BuildContext):
         #  Which is more or less what we want to do. Here we recurse into to the
         #  dependencies build functions allowing them to also hook up
         #  user-defined build functions.
-        waf_resolve_context.recurse_dependencies(self)
+        self.recurse_dependencies()
         super(WafBuildContext, self).pre_build()

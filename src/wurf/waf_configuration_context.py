@@ -3,18 +3,19 @@
 
 from waflib.Configure import ConfigurationContext
 
-from . import waf_resolve_context
 
-
-class WurfConfigurationContext(ConfigurationContext):
+class WafConfigurationContext(ConfigurationContext):
 
 
     def __init__(self, **kw):
-        super(WurfConfigurationContext, self).__init__(**kw)
+        super(WafConfigurationContext, self).__init__(**kw)
 
-    def execute(self):
+    def pre_recurse(self, node):
 
-        super(WurfConfigurationContext, self).execute()
+        super(WafConfigurationContext, self).pre_recurse(node)
 
-        # Call configure in all dependencies
-        waf_resolve_context.recurse_dependencies(self)
+        # Call configure() in all dependencies before executing configure()
+        # in the top-level wscript: this allows us to configure the compiler
+        # as a FIRST STEP using wurf_cxx_mkspec in waf-tools
+        if self.is_toplevel():
+            self.recurse_dependencies()

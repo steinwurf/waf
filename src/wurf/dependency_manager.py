@@ -66,7 +66,7 @@ class DependencyManager(object):
         self.cache[dependency.name] = {'path': path, 'recurse': dependency.recurse}
 
         if dependency.recurse:
-            self.ctx.recurse(path)
+            self.ctx.recurse(path, mandatory=False)
 
     def __skip_dependency(self, dependency):
         """ Checks if we should skip the dependency.

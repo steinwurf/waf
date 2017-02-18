@@ -109,11 +109,11 @@ class WafOptionsContext(Options.OptionsContext):
         # second value retuned by parse_known_args(...)
         self.waf_options = self.wurf_options.unknown_args
 
-        super(WafOptionsContext, self).execute()
-
-        # Call options in all dependencies
+        # Call options() in all dependencies: all options must be defined
+        # before running OptionsContext.execute() where parse_args is called
         waf_resolve_context.recurse_dependencies(self)
 
+        super(WafOptionsContext, self).execute()
 
     def parse_args(self, _args=None):
         """ Override the parse_args(..) from the OptionsContext.
