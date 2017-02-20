@@ -197,6 +197,27 @@ def _pytest(bld):
         env=bld_env,
         always=True)
 
+# def _pytest(bld):
+#
+#     python_path = [bld.dependency_path('tox'),
+#                    bld.dependency_path('pluggy'),
+#                    bld.dependency_path('py'),
+#                    bld.dependency_path('virtualenv'),
+#                    bld.dependency_path('shutilwhich'),
+#                    bld.dependency_path('python-semver'),
+#                    os.path.join(os.getcwd(),'src')]
+#
+#     bld_env = bld.env.derive()
+#     bld_env.env = dict(os.environ)
+#
+#     separator = ';' if sys.platform == 'win32' else ':'
+#     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
+#
+#     bld(rule='python -m tox',
+#         cwd=bld.path,
+#         env=bld_env,
+#         always=True)
+
 
 def _tox(bld):
 

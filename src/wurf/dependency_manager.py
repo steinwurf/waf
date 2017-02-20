@@ -66,6 +66,8 @@ class DependencyManager(object):
         self.cache[dependency.name] = {'path': path, 'recurse': dependency.recurse}
 
         if dependency.recurse:
+            # We do not require the 'resolve' function to be implemented in 
+            # dependency projects. Therefore the mandatory=False.
             self.ctx.recurse(path, mandatory=False)
 
     def __skip_dependency(self, dependency):
