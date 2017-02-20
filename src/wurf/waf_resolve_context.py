@@ -84,6 +84,10 @@ class WafResolveContext(Context.Context):
         self.bldnode = self.path.make_node('build')
         self.bldnode.mkdir()
 
+        # Enable/disable colors based on the currently used terminal.
+        # Note: this prevents jumbled output if waf is invoked from an IDE
+        # that does not render colors in its output window
+        Logs.enable_colors(1)
         path = os.path.join(self.bldnode.abspath(), configuration+'.resolve.log')
         self.logger = Logs.make_logger(path, 'cfg')
 
