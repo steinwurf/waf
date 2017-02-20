@@ -86,13 +86,13 @@ class WafResolveContext(Context.Context):
 
         self.logger.debug('wurf: Resolve execute {}'.format(configuration))
 
-        git_binary = shutilwhich.which('git')
+        #git_binary = shutilwhich.which('git')
 
         default_bundle_path = os.path.join(
             self.path.abspath(), 'bundle_dependencies')
 
         self.registry = registry.build_registry(
-            ctx=self, git_binary=git_binary,
+            ctx=self, git_binary='git',
             semver=semver, default_bundle_path=default_bundle_path,
             bundle_config_path=self.bundle_config_path(),
             resolver_configuration=configuration,
