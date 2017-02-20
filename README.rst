@@ -36,13 +36,15 @@ Source code
 ===========
 
 The modifications and additions to Waf are in the `src/wurf` folder. The
-main files included by Waf is the `src/wurf/wurf_entry_point.py`.
+main file included by Waf is the `src/wurf/waf_entry_point.py`. This is a great
+place to start to understand our additions to `Waf`.
 
-Tools
-=====
+Waf specific code
+=================
 
-Loadable Steinwurf tools should start with the ``wurf_`` prefix
-to distinguish them from standard waf tools.
+Code that uses/imports code from core `Waf` are prefixed with `waf_`. This makes
+it easy to see which files are pure Python and which provide the integration 
+points with `Waf`.
 
 Tests
 =====
@@ -88,6 +90,63 @@ to your wscript's upload function::
         # Call upload in all dependencies
         waf_resolve_context.recurse_dependencies(self)
 
+
+Future features
+===============
+
+The following list contains the work-items that we have identified as "cool"
+features for the Waf dependency resolve extension. 
+
+Build symlinks
+--------------
+The purpose of this feature is to provide stable locations in the file system
+for the downloaded dependencies. This is very similar to how pytest (under 
+Linux) maintains a symlink to the latest unit-test invocation as 
+`/tmp/pytest-of-user/pytest-current` (this does seem to only happen when using
+`tox`, needs investigation).
+
+As a default several folders will be created during the process of resolving 
+dependencies. Several projects can share the same folder for resolved 
+dependencies (this is controlled using the `--bundle-path` option). To avoid 
+confusing / error-prone situations the folders are considered immutable. This 
+results in some overhead and knowing paths to dependencies may change as new 
+versions of them become available. E.g if the `gtest` dependency is currently
+located under `/tmp/gtest-1.6.7-someh4sh`, as soon as version `1.6.8` is 
+released and the user re-runs `python waf configure ...` the path may be 
+updated to `/tmp/gtest-1.6.8-someh4sh` as the resolver noticed a new version 
+became available. 
+
+This is problematic e.g. for IDE configurations where an user needs to manually 
+go and update the path in the IDE to the new location.
+
+To avoid this problem we propose to create a `build_symlinks` (controllable 
+using the `--symlinks-path` option) folder in the root of the project containing 
+symlinks to the named dependencies.
+
+For the previous example we would see the following in the `build_symlinks` 
+folder::
+
+    $ ll build_symlinks/
+    total 0
+    lrwxrwxrwx 1 usr usr 29 Feb 20 20:55 gtest -> /path/to/gtest-1.6.7-someh4sh
+  
+After re-running `./waf configure ...`::
+
+    $ ll build_symlinks/
+    total 0
+    lrwxrwxrwx 1 usr usr 29 Feb 20 20:57 gtest -> /path/to/gtest-1.6.8-someh4sh
+
+Add `--no-self-test` option
+---------------------------
+The self test will invoke a freshly built `waf` binary with the wscript of the
+project. This we should also be able to replace the current `waf` binary with
+a freshly built one.
+
+One issue with this, is that the self test will use the network to clone the 
+needed dependencies. This makes the test slow. It would therefore be beneficial
+to remove this test when running e.g. in a build system. 
+
+Add 
 
 Bundle dependencies
 ===================

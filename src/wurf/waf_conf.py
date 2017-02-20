@@ -17,3 +17,10 @@ def dependency_path(ctx, name):
     Returns the dependency path
     """
     return waf_resolve_context.dependency_cache[name]['path']
+
+@conf
+def is_toplevel(self):
+    """
+    Returns true if the current script is the top-level wscript
+    """
+    return self.srcnode == self.path
