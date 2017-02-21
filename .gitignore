@@ -7,7 +7,6 @@ waf3-*
 build
 build_symlinks
 bundle_dependencies
-build_symlinks
 
 # Emacs temp / auto save
 \#*#

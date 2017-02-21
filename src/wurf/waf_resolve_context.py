@@ -6,6 +6,8 @@ import sys
 import argparse
 import traceback
 
+from collections import OrderedDict
+
 from waflib import Utils
 from waflib import Context
 from waflib import Options
@@ -26,7 +28,7 @@ from waflib.extras import semver
 
 # To create the tree. https://gist.github.com/hrldcpr/2012250
 
-dependency_cache = dict()
+dependency_cache = OrderedDict()
 """Dictionary that stores the dependencies resolved.
 
 The dictionary will be initialized by the WafResolveContext and can be
@@ -41,7 +43,9 @@ def recurse_dependencies(ctx):
 
     :param ctx: A Waf Context instance.
     """
-
+    # Since dependency_cache is an OrderedDict, the dependencies will be
+    # enumerated in the same order as they were defined in the wscripts
+    # (waf-tools should be the first if it is defined)
     for name, dependency in dependency_cache.items():
 
         if not dependency['recurse']:
@@ -55,8 +59,6 @@ def recurse_dependencies(ctx):
             name, ctx.cmd, dependency['path']))
 
         path = dependency['path']
-
-        ctx.to_log("Path {} Type {}\n".format(path, type(path)))
         ctx.recurse([path], mandatory=False)
 
 
@@ -121,7 +123,7 @@ class WafResolveContext(Context.Context):
 
         # Get the cache with the resolved dependencies
         global dependency_cache
-        dependency_cache = self.registry.require('cache')
+        dependency_cache = self.registry.require('dependency_cache')
 
         self.logger.debug('wurf: dependency_cache {}'.format(dependency_cache))
 

@@ -3,7 +3,7 @@
 
 import argparse
 import os
-from collections import defaultdict
+from collections import OrderedDict
 
 from .git_resolver import GitResolver
 from .user_path_resolver import UserPathResolver
@@ -32,7 +32,7 @@ class WurfProvideRegistryError(Error):
         self.name = name
 
         super(WurfProvideRegistryError, self).__init__(
-            "Fatal error {} alredy added to registry".format(self.name))
+            "Fatal error {} already added to registry".format(self.name))
 
 class Registry(object):
 
@@ -216,8 +216,8 @@ def parser(registry):
 
 @Registry.cache
 @Registry.provide
-def cache(registry):
-    return dict()
+def dependency_cache(registry):
+    return OrderedDict()
 
 @Registry.cache
 @Registry.provide
@@ -578,11 +578,11 @@ def dependency_manager(registry):
     registry.purge_cache()
 
     ctx = registry.require('ctx')
-    cache = registry.require('cache')
+    dependency_cache = registry.require('dependency_cache')
     options = registry.require('options')
 
     return DependencyManager(registry=registry,
-        cache=cache, ctx=ctx, options=options)
+        dependency_cache=dependency_cache, ctx=ctx, options=options)
 
 
 def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,

@@ -47,8 +47,9 @@ place to start to understand our additions to `Waf`.
 Waf specific code
 =================
 
-Loadable Steinwurf tools should start with the ``waf_`` prefix
-to distinguish them from standard waf tools.
+Code that uses/imports code from core `Waf` are prefixed with `waf_`. This makes
+it easy to see which files are pure Python and which provide the integration
+points with `Waf`.
 
 Tests
 =====
@@ -99,41 +100,41 @@ Future features
 ===============
 
 The following list contains the work-items that we have identified as "cool"
-features for the Waf dependency resolve extension. 
+features for the Waf dependency resolve extension.
 
 Build symlinks
 --------------
 The purpose of this feature is to provide stable locations in the file system
-for the downloaded dependencies. This is very similar to how pytest (under 
-Linux) maintains a symlink to the latest unit-test invocation as 
+for the downloaded dependencies. This is very similar to how pytest (under
+Linux) maintains a symlink to the latest unit-test invocation as
 `/tmp/pytest-of-user/pytest-current` (this does seem to only happen when using
 `tox`, needs investigation).
 
-As a default several folders will be created during the process of resolving 
-dependencies. Several projects can share the same folder for resolved 
-dependencies (this is controlled using the `--bundle-path` option). To avoid 
-confusing / error-prone situations the folders are considered immutable. This 
-results in some overhead and knowing paths to dependencies may change as new 
+As a default several folders will be created during the process of resolving
+dependencies. Several projects can share the same folder for resolved
+dependencies (this is controlled using the `--bundle-path` option). To avoid
+confusing / error-prone situations the folders are considered immutable. This
+results in some overhead and knowing paths to dependencies may change as new
 versions of them become available. E.g if the `gtest` dependency is currently
-located under `/tmp/gtest-1.6.7-someh4sh`, as soon as version `1.6.8` is 
-released and the user re-runs `python waf configure ...` the path may be 
-updated to `/tmp/gtest-1.6.8-someh4sh` as the resolver noticed a new version 
-became available. 
+located under `/tmp/gtest-1.6.7-someh4sh`, as soon as version `1.6.8` is
+released and the user re-runs `python waf configure ...` the path may be
+updated to `/tmp/gtest-1.6.8-someh4sh` as the resolver noticed a new version
+became available.
 
-This is problematic e.g. for IDE configurations where an user needs to manually 
+This is problematic e.g. for IDE configurations where an user needs to manually
 go and update the path in the IDE to the new location.
 
-To avoid this problem we propose to create a `build_symlinks` (controllable 
-using the `--symlinks-path` option) folder in the root of the project containing 
+To avoid this problem we propose to create a `build_symlinks` (controllable
+using the `--symlinks-path` option) folder in the root of the project containing
 symlinks to the named dependencies.
 
-For the previous example we would see the following in the `build_symlinks` 
+For the previous example we would see the following in the `build_symlinks`
 folder::
 
     $ ll build_symlinks/
     total 0
     lrwxrwxrwx 1 usr usr 29 Feb 20 20:55 gtest -> /path/to/gtest-1.6.7-someh4sh
-  
+
 After re-running `./waf configure ...`::
 
     $ ll build_symlinks/
@@ -146,26 +147,26 @@ The self test will invoke a freshly built `waf` binary with the wscript of the
 project. This we should also be able to replace the current `waf` binary with
 a freshly built one.
 
-One issue with this, is that the self test will use the network to clone the 
+One issue with this, is that the self test will use the network to clone the
 needed dependencies. This makes the test slow. It would therefore be beneficial
-to remove this test when running e.g. in a build system. 
+to remove this test when running e.g. in a build system.
 
 Add `--force-resolve` option
 ----------------------------
 Certain resolvers utilize "shortcuts" such as using cached information about
 dependencies to speed the resolve step. Providing this option should by-pass
-such optimizations and do a full resolve - not relying on any form of cached 
-data. 
+such optimizations and do a full resolve - not relying on any form of cached
+data.
 
 Add `--no-resolve` option
 -------------------------
-As default the resolver will be invoked when configuring a waf project i.e. 
-invoking `python waf configure ...`. Depending on the number of dependencies 
+As default the resolver will be invoked when configuring a waf project i.e.
+invoking `python waf configure ...`. Depending on the number of dependencies
 this may take some time to complete. This is problematic if an user is for
-example re-configuring to change compiler. 
+example re-configuring to change compiler.
 
 Providing the `--fast-resolve` option should only invoke the resolvers for
-dependencies that have not already been downloaded. Already downloaded 
+dependencies that have not already been downloaded. Already downloaded
 dependencies should be loaded from the cache.
 
 Add support for `dependencies.json`
@@ -175,54 +176,54 @@ the dependencies and sending push notifications when new versions are available
 etc. will be a lot easier if dependencies are stored outside the wscript in
 some easy to process data structure.
 
-It is therefore recommended that users specify dependencies using the 
-`dependencies.json` file. 
+It is therefore recommended that users specify dependencies using the
+`dependencies.json` file.
 
 If needed it should still be possible to define the `resolve(...)` function
 in the wscript. This should only be used in situations where some information
-about a dependency is not know until runtime or when some computations are 
-needed to determine the dependency. In that case an user can define 
+about a dependency is not know until runtime or when some computations are
+needed to determine the dependency. In that case an user can define
 `resolve(...)` and write the needed Python code.
 
 To support both these ways of configuring we define the following "rules":
 
-1. If an user specifies a `resolve(...)` function in the wscript the resolver. 
+1. If an user specifies a `resolve(...)` function in the wscript the resolver.
    Will invoke only this (an existing `dependencies.json` will not be loaded
    automatically). The user may manually load the `dependencies.json` file using
-   add_dependency_file(...) method on the resolve context.  
-2. If no `resolve(...)` function is specified, the resolve system will 
-   automatically look for and load the `dependencies.json` file. 
- 
+   add_dependency_file(...) method on the resolve context.
+2. If no `resolve(...)` function is specified, the resolve system will
+   automatically look for and load the `dependencies.json` file.
+
 Print traceback if `-v` verbose flag is specified
 -------------------------------------------------
-To make error messages user-friendly the default is to redirect full tracebacks 
+To make error messages user-friendly the default is to redirect full tracebacks
 (showing where an error originated), to the log files. However, if running on
 a build system it is convinient to have the full traceback printed to the
-terminal, this avoid us having to log into the machine an manually retrieve the 
-log file. 
+terminal, this avoid us having to log into the machine an manually retrieve the
+log file.
 
 To support this behaviour will will print the error traceback to the screen
-if the verbose flag `-v` is specified. 
+if the verbose flag `-v` is specified.
 
-Dump resolved dependencies information to json. 
+Dump resolved dependencies information to json.
 -----------------------------------------------
-To support third party tooling working with information about an already 
+To support third party tooling working with information about an already
 resolved dependency we implement the `--dump-resolved-dependencies` option.
 
 This will write out information about resolved dependencies such as semver tag
-chosen etc. 
+chosen etc.
 
 Add `--freeze` option
 ---------------------
 
-The freeze option will write `frozen_dependencies.json` to the root folder. 
-This file will fix the path to the different named dependencies, all 
-dependencies needed must be found in the fozen file if present. 
+The freeze option will write `frozen_dependencies.json` to the root folder.
+This file will fix the path to the different named dependencies, all
+dependencies needed must be found in the fozen file if present.
 
 If the `frozen_dependencies.json` is present it will take precedence over all
-resolvers besides the `--project-path` options. 
+resolvers besides the `--project-path` options.
 
-This makes it possible to easily the create standalone archives, by simply 
+This makes it possible to easily the create standalone archives, by simply
 invoking::
 
     python waf configure --freeze
