@@ -176,9 +176,9 @@ def _pytest(bld):
     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
 
     # We override the default pytest temp folder with the basetemp option,
-    # so the test folders will be available in "build/pytest" on all platforms.
+    # so the test folders will be available in "pytest" on all platforms.
     # Note that pytest will purge this folder before running the tests.
-    test_command = 'python -m pytest --basetemp=build/pytest test'
+    test_command = 'python -m pytest --basetemp=pytest test'
 
     # Conditionally disable the tests that have the "networktest" marker
     if bld.options.skip_network_tests:
