@@ -175,23 +175,12 @@ def _pytest(bld):
     separator = ';' if sys.platform == 'win32' else ':'
     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
 
-    # Remove the previously created temp folder
-    # Note that pytest will also try to remove the basetemp folder, but on
-    # some platforms this rmtree operation fails without the error handler
-    if os.path.exists('build/pytest'):
-
-        def onerror(func, path, exc_info):
-            import stat
-            if not os.access(path, os.W_OK):
-                # Is the error an access error ?
-                os.chmod(path, stat.S_IWUSR)
-                func(path)
-            else:
-                raise
-
-        shutil.rmtree('build/pytest', onerror=onerror)
-
+    # We override the default pytest temp folder with the basetemp option,
+    # so the test folders will be available in "build/pytest" on all platforms.
+    # Note that pytest will purge this folder before running the tests.
     test_command = 'python -m pytest --basetemp=build/pytest test'
+
+    # Conditionally disable the tests that have the "networktest" marker
     if bld.options.skip_network_tests:
         test_command += ' -m "not networktest"'
 

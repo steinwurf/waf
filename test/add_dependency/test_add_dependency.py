@@ -35,7 +35,7 @@ The arrows indicate dependencies, so:
 """
 
 def mkdir_app(directory):
-    app_dir = directory.copy_dir(directory='test/test_add_dependency/app')
+    app_dir = directory.copy_dir(directory='test/add_dependency/app')
     app_dir.copy_file('build/waf')
     # Note: waf will call "git config --get remote.origin.url" in this folder,
     # so "git init" is required if the pytest temp folder is located within
@@ -46,7 +46,7 @@ def mkdir_app(directory):
 def mkdir_libfoo(directory):
 
     # Add foo dir
-    foo_dir = directory.copy_dir(directory='test/test_add_dependency/libfoo')
+    foo_dir = directory.copy_dir(directory='test/add_dependency/libfoo')
     foo_dir.run('git', 'init')
     foo_dir.run('git', 'add', '.')
 
@@ -61,7 +61,7 @@ def mkdir_libfoo(directory):
 def mkdir_libbar(directory):
 
     # Add bar dir
-    bar_dir = directory.copy_dir(directory='test/test_add_dependency/libbar')
+    bar_dir = directory.copy_dir(directory='test/add_dependency/libbar')
     bar_dir.run('git', 'init')
     bar_dir.run('git', 'add', '.')
     bar_dir.run('git', '-c', 'user.name=John', '-c',
@@ -72,7 +72,7 @@ def mkdir_libbar(directory):
 def mkdir_libbaz(directory):
 
     # Add baz dir
-    baz_dir = directory.copy_dir(directory='test/test_add_dependency/libbaz')
+    baz_dir = directory.copy_dir(directory='test/add_dependency/libbaz')
     baz_dir.run('git', 'init')
     baz_dir.run('git', 'add', '.')
     baz_dir.run('git', '-c', 'user.name=John', '-c',
@@ -82,6 +82,7 @@ def mkdir_libbaz(directory):
     return baz_dir
 
 # @todo re-enable tests in this file
+
 
 def test_add_dependency(test_directory):
 
@@ -104,6 +105,7 @@ def test_add_dependency(test_directory):
     #app_dir.run('python', 'waf', '--help')
     app_dir.run('python', 'waf', 'configure', '-v')
     app_dir.run('python', 'waf', 'build', '-v')
+
 
 def test_add_dependency_path(test_directory):
 
