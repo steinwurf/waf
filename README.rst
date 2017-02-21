@@ -41,7 +41,7 @@ Source code
 ===========
 
 The modifications and additions to Waf are in the `src/wurf` folder. The
-main files included by Waf is the `src/wurf/waf_entry_point.py`. This is a great
+main file included by Waf is the `src/wurf/waf_entry_point.py`. This is a great
 place to start to understand our additions to `Waf`.
 
 Waf specific code
@@ -68,8 +68,9 @@ In the following we will provide an overview of the options (and sub-options)
 available when specifying a dependency::
 
     def resolve(ctx):
-        ctx.add_dependency(name='foo',
-                           ...)
+        ctx.add_dependency(
+            name='foo',
+            ...)
 
 recurse (boolean)
 -----------------
@@ -266,42 +267,39 @@ So
 ------
 
 The basic idea to extend waf with the capability of fetching/downloading
-dependencies of projects automatically.
+dependencies of projects automatically::
 
-```
-class Resolver:
+    class Resolver:
 
-    def options(self, ctx):
-        ctx.add_option('')
+        def options(self, ctx):
+            ctx.add_option('')
 
-    def resolve(self, ctx):
-        print(ctx.options.foo)
+        def resolve(self, ctx):
+            print(ctx.options.foo)
 
 
-class Resolver:
+    class Resolver:
 
-    def options(self, ctx):
-        ctx.add_option('')
+        def options(self, ctx):
+            ctx.add_option('')
 
-    def resolve(self, ctx):
-        print(ctx.options.foo)
-```
+        def resolve(self, ctx):
+            print(ctx.options.foo)
+
 
 Log output
 ==========
 
 `waf` supports logging output in the tools and basic zone filtering. You can
-use it as follows:
+use it as follows::
 
-```
-from waflib import Logs
+    from waflib import Logs
 
-...
+    ...
 
-def some_function(param_one, param_two):
-    Log.debug('wurf: In some_function')
+    def some_function(param_one, param_two):
+        Log.debug('wurf: In some_function')
 
-```
 
 In the above example `wurf` is the zone so if you wIn our tools we use `wurf`
 
