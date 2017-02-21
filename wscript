@@ -28,15 +28,6 @@ def resolve(ctx):
         checkout='2.4.1',
         sources=['github.com/k-bx/python-semver.git'])
 
-    ctx.add_dependency(
-        name='shutilwhich',
-        recurse=False,
-        optional=False,
-        resolver='git',
-        method='checkout',
-        checkout='1.1.0',
-        sources=['github.com/mbr/shutilwhich.git'])
-
     # Testing dependencies
 
     ctx.add_dependency(
@@ -138,8 +129,7 @@ def build(bld):
     # the right directory.
 
 
-    tools_dir = [os.path.join(bld.dependency_path('shutilwhich'), 'shutilwhich'),
-                 os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
+    tools_dir = [os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
                  'src/wurf']
 
     bld(rule=build_waf_binary,
@@ -162,10 +152,6 @@ def _pytest(bld):
     python_path = [bld.dependency_path('pytest'),
                    bld.dependency_path('py'),
                    bld.dependency_path('mock'),
-                   #bld.dependency_path('pbr'),
-                   #bld.dependency_path('funcsigs'),
-                   #bld.dependency_path('six'),
-                   bld.dependency_path('shutilwhich'),
                    bld.dependency_path('python-semver'),
                    os.path.join(os.getcwd(),'src')]
 
@@ -179,27 +165,6 @@ def _pytest(bld):
         cwd=bld.path,
         env=bld_env,
         always=True)
-
-# def _pytest(bld):
-#
-#     python_path = [bld.dependency_path('tox'),
-#                    bld.dependency_path('pluggy'),
-#                    bld.dependency_path('py'),
-#                    bld.dependency_path('virtualenv'),
-#                    bld.dependency_path('shutilwhich'),
-#                    bld.dependency_path('python-semver'),
-#                    os.path.join(os.getcwd(),'src')]
-#
-#     bld_env = bld.env.derive()
-#     bld_env.env = dict(os.environ)
-#
-#     separator = ';' if sys.platform == 'win32' else ':'
-#     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
-#
-#     bld(rule='python -m tox',
-#         cwd=bld.path,
-#         env=bld_env,
-#         always=True)
 
 
 def _tox(bld):
@@ -215,14 +180,16 @@ def _tox(bld):
     if not bld.env.TOX:
         bld.fatal("tox not found - re-run configure.")
 
+    python_path = [bld.dependency_path('python-semver'),
+                   os.path.join(os.getcwd(),'src')]
+
     bld_env = bld.env.derive()
     bld_env.env = dict(os.environ)
 
     semver_path = bld.dependency_path('python-semver')
-    shutil_path = bld.dependency_path('shutilwhich')
     wurf_path = os.path.join(os.getcwd(), 'src')
 
-    bld_env.env.update({'PYTHONPATH': ':'.join(
-        [wurf_path, semver_path, shutil_path])})
+    separator = ';' if sys.platform == 'win32' else ':'
+    bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
 
     bld(rule='tox', env=bld_env, always=True)

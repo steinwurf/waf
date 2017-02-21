@@ -19,7 +19,6 @@ from .resolver_configuration import ResolverConfiguration
 from .error import CmdAndLogError
 from .error import Error
 
-from waflib.extras import shutilwhich
 from waflib.extras import semver
 
 
@@ -85,8 +84,6 @@ class WafResolveContext(Context.Context):
         self.logger = Logs.make_logger(path, 'cfg')
 
         self.logger.debug('wurf: Resolve execute {}'.format(configuration))
-
-        #git_binary = shutilwhich.which('git')
 
         default_bundle_path = os.path.join(
             self.path.abspath(), 'bundle_dependencies')
