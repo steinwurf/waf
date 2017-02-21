@@ -170,6 +170,8 @@ def _pytest(bld):
     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
 
     # Remove the previously created temp folder
+    # Note that pytest will also try to remove the basetemp folder, but on
+    # some platforms this rmtree operation fails without the error handler
     if os.path.exists('build/temp'):
 
         def onerror(func, path, exc_info):
