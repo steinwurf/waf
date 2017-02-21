@@ -70,11 +70,17 @@ def resolve(ctx):
 
 def options(opt):
 
-    opt.add_option('--run_tests', default=False,
-        action='store_true', help='Run all unit tests')
+    opt.add_option(
+        '--run_tests', default=False, action='store_true',
+        help='Run all unit tests')
 
-    opt.add_option('--use_tox', default=False,
-        action='store_true', help='Run unit tests using tox')
+    opt.add_option(
+        '--skip_network_tests', default=False, action='store_true',
+        help='Skip the unit tests that use network resources')
+
+    opt.add_option(
+        '--use_tox', default=False, action='store_true',
+        help='Run unit tests using tox')
 
 
 def configure(conf):
@@ -172,7 +178,7 @@ def _pytest(bld):
     # Remove the previously created temp folder
     # Note that pytest will also try to remove the basetemp folder, but on
     # some platforms this rmtree operation fails without the error handler
-    if os.path.exists('build/temp'):
+    if os.path.exists('build/pytest'):
 
         def onerror(func, path, exc_info):
             import stat
@@ -183,9 +189,13 @@ def _pytest(bld):
             else:
                 raise
 
-        shutil.rmtree('build/temp', onerror=onerror)
+        shutil.rmtree('build/pytest', onerror=onerror)
 
-    bld(rule='python -m pytest --basetemp=build/temp test',
+    test_command = 'python -m pytest --basetemp=build/pytest test'
+    if bld.options.skip_network_tests:
+        test_command += ' -m "not networktest"'
+
+    bld(rule=test_command,
         cwd=bld.path,
         env=bld_env,
         always=True)

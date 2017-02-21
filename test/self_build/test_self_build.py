@@ -2,7 +2,9 @@
 # encoding: utf-8
 
 import os
+import pytest
 
+@pytest.mark.networktest
 def test_self_build(test_directory):
     root = test_directory
 
