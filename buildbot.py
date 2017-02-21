@@ -15,16 +15,20 @@ def run_command(args, cwd=None, env=None):
     sys.stdout.flush()
     subprocess.check_call(args, cwd=cwd, env=env)
 
+
 def configure(properties):
     command = [sys.executable, 'waf', 'configure', '-v']
     run_command(command)
+
 
 def build(properties):
     command = [sys.executable, 'waf', 'build', '-v']
     run_command(command)
 
+
 def run_tests(properties):
-    pass
+    command = [sys.executable, 'waf', '-v', '--run_tests']
+    run_command(command)
 
 
 def install(properties):
