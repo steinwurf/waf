@@ -5,37 +5,29 @@ We use Waf as our build tool. However, before adding the Waf
 file to the individual projects we first add some additional
 tools to Waf.
 
-These help us to handle library dependencies and toolchains.
+These help us to handle / resolve library dependencies. The goal is to
+add functionality to Waf such that it can clone and download needed dependencies
+automatically.
 
 License
 =======
 This project is under the same BSD license as the Waf project. The license text
 can be found here: https://github.com/waf-project/waf/blob/master/waf-light#L6-L30
 
-Installation
-=============
+Building our custom Waf binary
+==============================
 
 Clone the repository::
 
-    git clone git://github.com/steinwurf/waf.git
-
-Since Waf is added as a git submodule, we need to run a couple
-extra commands to get the Waf source code::
-
-    cd waf
-    git submodule init
-    git submodule update
-
-Building Waf
-============
+    git clone https://github.com/steinwurf/waf.git
 
 Build waf and include our custom tools::
 
-    cd waf/waf
-    python waf-light --make-waf --tools=compat15,`cd ../tools && find $PWD -type f -name '*.py' | tr "\n" "," | sed "s/,$//g"`,`cd ../python-semver && find $PWD -type f -name 'semver.py'`
+    python waf configure
+    python waf build
 
-This will produce a waf binary which we may copy into our projects.
-Note that the path to the tools must be absolute.
+This will produce a waf binary in the `build` folder which we may copy into our
+projects.
 
 Source code
 ===========
@@ -43,6 +35,10 @@ Source code
 The modifications and additions to Waf are in the `src/wurf` folder. The
 main file included by Waf is the `src/wurf/waf_entry_point.py`. This is a great
 place to start to understand our additions to `Waf`.
+
+Waf will load this file automatically when starting up, which is acheived using
+the `--prelude` option of Waf. Described in the Waf book
+[here](https://waf.io/book/#_customization_and_redistribution).
 
 Waf specific code
 =================
