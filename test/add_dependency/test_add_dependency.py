@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import shutilwhich
-
 """ Integration testing of adding a dependency.
 
 This test is a bit involved so lets try to explain what it does:

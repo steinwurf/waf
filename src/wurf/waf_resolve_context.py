@@ -22,7 +22,6 @@ from .resolver_configuration import ResolverConfiguration
 from .error import CmdAndLogError
 from .error import Error
 
-from waflib.extras import shutilwhich
 from waflib.extras import semver
 
 
