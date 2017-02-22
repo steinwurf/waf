@@ -63,7 +63,7 @@ import copy
 from waflib import Context
 from waflib import Options
 
-from . import waf_resolve_context
+from . import waf_conf
 
 class WafOptionsContext(Options.OptionsContext):
     """ Custom options context which will initiate the dependency resolve step.
@@ -111,7 +111,7 @@ class WafOptionsContext(Options.OptionsContext):
 
         # Call options() in all dependencies: all options must be defined
         # before running OptionsContext.execute() where parse_args is called
-        waf_resolve_context.recurse_dependencies(self)
+        waf_conf.recurse_dependencies(self)
 
         super(WafOptionsContext, self).execute()
 

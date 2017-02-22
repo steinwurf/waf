@@ -28,7 +28,7 @@ from waflib.extras import semver
 
 # To create the tree. https://gist.github.com/hrldcpr/2012250
 
-dependency_cache = OrderedDict()
+dependency_cache = None
 """Dictionary that stores the dependencies resolved.
 
 The dictionary will be initialized by the WafResolveContext and can be
@@ -36,31 +36,6 @@ used by all other contexts or tools that need to access the
 dependencies. The idea is that this will be the single place to look to
 figure out which dependencies exist.
 """
-
-@conf
-def recurse_dependencies(ctx):
-    """ Recurse the dependencies which have the resolve property set to True.
-
-    :param ctx: A Waf Context instance.
-    """
-    # Since dependency_cache is an OrderedDict, the dependencies will be
-    # enumerated in the same order as they were defined in the wscripts
-    # (waf-tools should be the first if it is defined)
-    for name, dependency in dependency_cache.items():
-
-        if not dependency['recurse']:
-
-            ctx.to_log('Skipped recurse for name={} cmd={}\n'.format(
-                name, ctx.cmd))
-
-            continue
-
-        ctx.to_log("Recurse for {}: cmd={}, path={}\n".format(
-            name, ctx.cmd, dependency['path']))
-
-        path = dependency['path']
-        ctx.recurse([path], mandatory=False)
-
 
 class WafResolveContext(Context.Context):
 
@@ -94,9 +69,6 @@ class WafResolveContext(Context.Context):
         self.logger = Logs.make_logger(path, 'cfg')
 
         self.logger.debug('wurf: Resolve execute {}'.format(configuration))
-
-        # TODO: Do we really need the path to the git binary?
-        #git_binary = shutilwhich.which('git')
 
         default_bundle_path = os.path.join(
             self.path.abspath(), 'bundle_dependencies')
