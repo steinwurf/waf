@@ -6,12 +6,15 @@ import sys
 import argparse
 import traceback
 
+from collections import OrderedDict
+
 from waflib import Utils
 from waflib import Context
 from waflib import Options
 from waflib import Logs
 from waflib import ConfigSet
 from waflib import Node
+from waflib.Configure import conf
 from waflib.Errors import WafError
 
 from . import registry
@@ -24,7 +27,7 @@ from waflib.extras import semver
 
 # To create the tree. https://gist.github.com/hrldcpr/2012250
 
-dependency_cache = dict()
+dependency_cache = None
 """Dictionary that stores the dependencies resolved.
 
 The dictionary will be initialized by the WafResolveContext and can be
@@ -32,30 +35,6 @@ used by all other contexts or tools that need to access the
 dependencies. The idea is that this will be the single place to look to
 figure out which dependencies exist.
 """
-
-def recurse_dependencies(ctx):
-    """ Recurse the dependencies which have the resolve property set to True.
-
-    :param ctx: A Waf Context instance.
-    """
-
-    for name, dependency in dependency_cache.items():
-
-        if not dependency['recurse']:
-
-            ctx.to_log('Skipped recurse for name={} cmd={}\n'.format(
-                name, ctx.cmd))
-
-            continue
-
-        ctx.to_log("Recurse for {}: cmd={}, path={}\n".format(
-            name, ctx.cmd, dependency['path']))
-
-        path = dependency['path']
-
-        ctx.to_log("Path {} Type {}\n".format(path, type(path)))
-        ctx.recurse([path])
-
 
 class WafResolveContext(Context.Context):
 
@@ -77,9 +56,14 @@ class WafResolveContext(Context.Context):
 
         # Create the nodes that will be used during the resolve step. The build
         # directory is also used by the waf BuildContext
+        self.srcnode = self.path
         self.bldnode = self.path.make_node('build')
         self.bldnode.mkdir()
 
+        # Enable/disable colors based on the currently used terminal.
+        # Note: this prevents jumbled output if waf is invoked from an IDE
+        # that does not render colors in its output window
+        Logs.enable_colors(1)
         path = os.path.join(self.bldnode.abspath(), configuration+'.resolve.log')
         self.logger = Logs.make_logger(path, 'cfg')
 
@@ -110,9 +94,16 @@ class WafResolveContext(Context.Context):
 
         # Get the cache with the resolved dependencies
         global dependency_cache
-        dependency_cache = self.registry.require('cache')
+        dependency_cache = self.registry.require('dependency_cache')
 
         self.logger.debug('wurf: dependency_cache {}'.format(dependency_cache))
+
+
+    def is_toplevel(self):
+        """
+        Returns true if the current script is the top-level wscript
+        """
+        return self.srcnode == self.path
 
 
     def bundle_config_path(self):

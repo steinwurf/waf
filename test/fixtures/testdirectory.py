@@ -133,7 +133,7 @@ class TestDirectory:
         """
 
         if 'env' in kwargs:
-            env = kwargs
+            env = kwargs['env']
             del kwargs['env']
         else:
             env = os.environ.copy()

@@ -1,5 +1,6 @@
 import os
 
+
 def test_fixtures(test_directory):
     """ Unit test for the test_directory fixture"""
     assert os.path.exists(test_directory.path())
@@ -24,7 +25,7 @@ def test_fixtures(test_directory):
 
     assert os.path.exists(os.path.join(sub2.path(), 'sub1'))
     assert os.path.exists(sub1_copy.path())
-    
+
     # Run a command that should be available on all platforms
     r = sub1.run('python', '--version')
 

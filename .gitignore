@@ -5,8 +5,8 @@ waf3-*
 .waf3-*
 .lock-*
 build
-bundle_dependencies
 build_symlinks
+bundle_dependencies
 
 # Emacs temp / auto save
 \#*#
@@ -17,6 +17,7 @@ build_symlinks
 *.pyc
 .cache
 .tox
+pytest
 
 # Visual Studio ignore
 *.bat

@@ -3,6 +3,7 @@
 
 import os
 import sys
+import shutil
 
 import waflib
 
@@ -57,13 +58,20 @@ def resolve(ctx):
         checkout='1.0.1',
         sources=['github.com/testing-cabal/mock.git'])
 
+
 def options(opt):
 
-    opt.add_option('--skip_tests', default=False,
-        action='store_true', help='Skip running unit tests')
+    opt.add_option(
+        '--run_tests', default=False, action='store_true',
+        help='Run all unit tests')
 
-    opt.add_option('--use_tox', default=False,
-        action='store_true', help='Run unit tests using tox')
+    opt.add_option(
+        '--skip_network_tests', default=False, action='store_true',
+        help='Skip the unit tests that use network resources')
+
+    opt.add_option(
+        '--use_tox', default=False, action='store_true',
+        help='Run unit tests using tox')
 
 
 def configure(conf):
@@ -75,6 +83,7 @@ def configure(conf):
 
     # Make sure we tox used for running unit tests
     conf.find_program('tox', mandatory=False)
+
 
 def build_waf_binary(tsk):
     """
@@ -103,7 +112,7 @@ def build_waf_binary(tsk):
 
     # Build the command to execute
     command = 'python waf-light configure build --make-waf --prelude="{}" '\
-        '--tools={}'.format(prelude, tool_paths)
+              '--tools={}'.format(prelude, tool_paths)
 
     # Get the waf BuildContext
     bld = tsk.generator.bld
@@ -114,24 +123,18 @@ def build_waf_binary(tsk):
     waf_dest = bld.bldnode.make_node('waf')
     waf_dest.write(waf_src.read('rb'), 'wb')
 
+
 def build(bld):
 
-    # Waf checks that source files are available when we create the
-    # different tasks. We can ask waf to lazily do this because the waf
-    # binary is not created until after we run the waf-light build
-    # step. This is manipulated using the post_mode.
-    bld.post_mode = waflib.Build.POST_LAZY
+    tools_dir = \
+    [
+        os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
+        'src/wurf'
+    ]
 
-    # We need to invoke the waf-light from within the third_party/waf
-    # folder as waf-light will look for wscript in the folder where the
-    # executable was started - so we need to start it from the right
-    # folder. Using cwd we can make sure the python process is lauched in
-    # the right directory.
-
-
-    tools_dir = [os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
-                 'src/wurf']
-
+    # waf-light will look for the wscript in the folder where the process
+    # is started, so we must run this command in the folder where we
+    # resolved the waf dependency.
     bld(rule=build_waf_binary,
         cwd=bld.dependency_path('waf'),
         tools_dir=tools_dir,
@@ -139,7 +142,7 @@ def build(bld):
 
     bld.add_group()
 
-    if not bld.options.skip_tests:
+    if bld.options.run_tests:
 
         if bld.options.use_tox:
             _tox(bld=bld)
@@ -149,11 +152,14 @@ def build(bld):
 
 def _pytest(bld):
 
-    python_path = [bld.dependency_path('pytest'),
-                   bld.dependency_path('py'),
-                   bld.dependency_path('mock'),
-                   bld.dependency_path('python-semver'),
-                   os.path.join(os.getcwd(),'src')]
+    python_path = \
+    [
+        bld.dependency_path('pytest'),
+        bld.dependency_path('py'),
+        bld.dependency_path('mock'),
+        bld.dependency_path('python-semver'),
+        os.path.join(os.getcwd(), 'src')
+    ]
 
     bld_env = bld.env.derive()
     bld_env.env = dict(os.environ)
@@ -161,7 +167,16 @@ def _pytest(bld):
     separator = ';' if sys.platform == 'win32' else ':'
     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
 
-    bld(rule='python -m pytest test',
+    # We override the default pytest temp folder with the basetemp option,
+    # so the test folders will be available in "pytest" on all platforms.
+    # Note that pytest will purge this folder before running the tests.
+    test_command = 'python -m pytest --basetemp=pytest test'
+
+    # Conditionally disable the tests that have the "networktest" marker
+    if bld.options.skip_network_tests:
+        test_command += ' -m "not networktest"'
+
+    bld(rule=test_command,
         cwd=bld.path,
         env=bld_env,
         always=True)
@@ -180,14 +195,12 @@ def _tox(bld):
     if not bld.env.TOX:
         bld.fatal("tox not found - re-run configure.")
 
-    python_path = [bld.dependency_path('python-semver'),
-                   os.path.join(os.getcwd(),'src')]
+    semver_path = bld.dependency_path('python-semver')
+    wurf_path = os.path.join(os.getcwd(), 'src')
+    python_path = [semver_path, wurf_path]
 
     bld_env = bld.env.derive()
     bld_env.env = dict(os.environ)
-
-    semver_path = bld.dependency_path('python-semver')
-    wurf_path = os.path.join(os.getcwd(), 'src')
 
     separator = ';' if sys.platform == 'win32' else ':'
     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})

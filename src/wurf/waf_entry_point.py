@@ -21,7 +21,7 @@ def _check_minimum_python_version(major, minor):
             "required minimum version: {1}.{2}"
             .format(sys.version_info[:3], major, minor))
 
-# wurf_entry_point is loaded first in every project,
+# waf_entry_point is loaded first in every project,
 # therefore it is a good entry point to check the minimum Python version
 _check_minimum_python_version(2, 7)
 
@@ -40,6 +40,7 @@ _check_minimum_python_version(2, 7)
 # wscript. We have customized it to launch the waf_resolve_context which
 # first recurses the resolve(...) functions to fetch any defined
 # dependencies.
+from . import waf_resolve_context
 from . import waf_options_context
 from . import waf_configuration_context
 from . import waf_build_context

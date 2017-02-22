@@ -7,7 +7,7 @@ from .dependency import Dependency
 
 class DependencyManager(object):
 
-    def __init__(self, registry, cache, ctx, options):
+    def __init__(self, registry, dependency_cache, ctx, options):
         """ Construct an instance.
 
         As the manager resolves dependencies it will store the results
@@ -29,7 +29,7 @@ class DependencyManager(object):
         """
 
         self.registry = registry
-        self.cache = cache
+        self.dependency_cache = dependency_cache
         self.ctx = ctx
         self.options = options
 
@@ -63,10 +63,11 @@ class DependencyManager(object):
         if not path:
             return
 
-        self.cache[dependency.name] = {'path': path, 'recurse': dependency.recurse}
+        self.dependency_cache[dependency.name] = \
+            {'path': path, 'recurse': dependency.recurse}
 
         if dependency.recurse:
-            # We do not require the 'resolve' function to be implemented in 
+            # We do not require the 'resolve' function to be implemented in
             # dependency projects. Therefore the mandatory=False.
             self.ctx.recurse(path, mandatory=False)
 
