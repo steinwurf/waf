@@ -120,9 +120,9 @@ def test_add_dependency_path(test_directory):
     foo_dir = mkdir_libfoo(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)
 
-    # Test --baz-path option, by not putting this in the git_dir we make
-    # sure that our fake git clone step in the wscript cannot find it.
-    # Therefore the test will fail if for some reason, it tries to clone it.
+    # Test the --baz-path option: by not putting this dependency in the
+    # git_dir, we make sure that our fake git clone step in the wscript
+    # cannot find it. Therefore the test will fail if it tries to clone baz.
     path_test = test_directory.mkdir(directory='path_test')
     baz_dir = mkdir_libbaz(directory=path_test)
 
