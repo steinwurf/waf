@@ -46,8 +46,9 @@ class CreateSymlinkResolver(object):
 
             def symlink_windows(target, link_path):
                 # mklink is used to create an NTFS junction, i.e. symlink
-                os.system("mklink /J {} {}".format(
-                    link_path.replace('/', '\\'), target.replace('/', '\\')))
+                cmd = 'mklink /J "{}" "{}"'.format(
+                    link_path.replace('/', '\\'), target.replace('/', '\\'))
+                self.ctx.cmd_and_log(cmd)
 
             os_symlink = symlink_windows
 
