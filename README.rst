@@ -93,6 +93,22 @@ to your wscript's upload function::
         waf_resolve_context.recurse_dependencies(self)
 
 
+Features
+========
+
+`--skip_network_tests`
+---------------------------
+To test the freshly built Waf binary some unit test use network connectivity
+to resolve dependencies. This makes the tests slow. It would therefore be 
+beneficial to remove these tests when running e.g. on a build system.
+
+An example of such a test is the `self_build` test. The `self_build` test will 
+invoke a freshly built `waf` binary with the wscript used to build it -
+yes very meta :)
+
+Passing `--skip_network_tests` will skip any unit tests which rely on network
+connectivity.
+
 Future features
 ===============
 
@@ -138,15 +154,6 @@ After re-running `./waf configure ...`::
     total 0
     lrwxrwxrwx 1 usr usr 29 Feb 20 20:57 gtest -> /path/to/gtest-1.6.8-someh4sh
 
-Add `--no-self-test` option
----------------------------
-The self test will invoke a freshly built `waf` binary with the wscript of the
-project. This we should also be able to replace the current `waf` binary with
-a freshly built one.
-
-One issue with this, is that the self test will use the network to clone the
-needed dependencies. This makes the test slow. It would therefore be beneficial
-to remove this test when running e.g. in a build system.
 
 Add `--force-resolve` option
 ----------------------------
