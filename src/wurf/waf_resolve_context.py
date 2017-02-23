@@ -72,10 +72,14 @@ class WafResolveContext(Context.Context):
         default_bundle_path = os.path.join(
             self.path.abspath(), 'bundle_dependencies')
 
+        default_symlinks_path = os.path.join(
+            self.path.abspath(), 'build_symlinks')
+
         self.registry = registry.build_registry(
             ctx=self, git_binary='git',
             semver=semver, default_bundle_path=default_bundle_path,
             bundle_config_path=self.bundle_config_path(),
+            default_symlinks_path=default_symlinks_path,
             resolver_configuration=configuration,
             waf_utils=Utils, args=sys.argv[1:])
 

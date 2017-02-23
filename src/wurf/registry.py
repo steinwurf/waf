@@ -22,6 +22,7 @@ from .git import Git
 from .options import Options
 from .mandatory_options import MandatoryOptions
 from .resolver_configuration import ResolverConfiguration
+from .create_symlink_resolver import CreateSymlinkResolver
 
 from .error import Error
 
@@ -181,6 +182,18 @@ def bundle_path(registry):
 
 @Registry.cache
 @Registry.provide
+def symlinks_path(registry):
+    mandatory_options = registry.require('mandatory_options')
+    symlinks_path = mandatory_options.symlinks_path()
+    symlinks_path = os.path.abspath(os.path.expanduser(symlinks_path))
+
+    waf_utils = registry.require('waf_utils')
+    waf_utils.check_dir(symlinks_path)
+
+    return symlinks_path
+
+@Registry.cache
+@Registry.provide
 def git_url_parser(registry):
     """ Parser for Git URLs. """
 
@@ -228,12 +241,14 @@ def options(registry):
     parser = registry.require('parser')
     args = registry.require('args')
     default_bundle_path = registry.require('default_bundle_path')
+    default_symlinks_path = registry.require('default_symlinks_path')
 
     # We support the protocols we know how to rewrite
     supported_git_protocols = GitUrlRewriter.git_protocols.keys()
 
     return Options(args=args, parser=parser,
         default_bundle_path=default_bundle_path,
+        default_symlinks_path=default_symlinks_path,
         supported_git_protocols=supported_git_protocols)
 
 @Registry.cache
@@ -535,14 +550,20 @@ def passive_dependency_resolver(registry, dependency):
 @Registry.provide
 def active_dependency_resolver(registry, dependency):
 
+    ctx = registry.require('ctx')
     options = registry.require('options')
     bundle_config_path = registry.require('bundle_config_path')
+    symlinks_path = registry.require('symlinks_path')
 
     if options.path(dependency=dependency):
         resolver = registry.require('user_path_resolver', dependency=dependency)
     else:
         resolver_key = "{}_source_resolver".format(dependency.resolver)
         resolver = registry.require(resolver_key, dependency=dependency)
+
+    resolver = CreateSymlinkResolver(
+        resolver=resolver, dependency=dependency, symlinks_path=symlinks_path,
+        ctx=ctx)
 
     return OnActiveStorePathResolver(
         resolver=resolver, dependency=dependency,
@@ -586,15 +607,18 @@ def dependency_manager(registry):
 
 
 def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
-    resolver_configuration, semver, waf_utils, args):
+                   default_symlinks_path, resolver_configuration, semver,
+                   waf_utils, args):
     """ Builds a registry.
 
     :param ctx: A Waf Context instance.
     :param git_binary: A string containing the path to a git executable.
-    :param default_bundle_path: A string containing the path where dependencies
-        as default should be downloaded (unless the user overrides).
+    :param default_bundle_path: A string containing the path where the
+        dependencies should be downloaded per default.
     :param bundle_config_path: A string containing the path to where the
         dependencies config json files should be / is stored.
+    :param default_symlinks_path: A string containing the path where the
+        dependency symlinks should be created per default.
     :param resolver_configuration: Type of resolver chain to build.
     :param semver: The semver module
     :param waf_utils: The waflib.Utils module
@@ -610,6 +634,7 @@ def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
     registry.provide_value('git_binary', git_binary)
     registry.provide_value('default_bundle_path', default_bundle_path)
     registry.provide_value('bundle_config_path', bundle_config_path)
+    registry.provide_value('default_symlinks_path', default_symlinks_path)
     registry.provide_value('resolver_configuration', resolver_configuration)
     registry.provide_value('semver', semver)
     registry.provide_value('waf_utils', waf_utils)

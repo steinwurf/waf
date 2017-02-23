@@ -5,7 +5,7 @@
 class Options(object):
 
     def __init__(self, args, parser, default_bundle_path,
-        supported_git_protocols):
+                 default_symlinks_path, supported_git_protocols):
 
         self.args = args
         self.parser = parser
@@ -26,10 +26,19 @@ class Options(object):
             help='Use a specific git protocol to download dependencies.'
                  'Supported protocols {}'.format(supported_git_protocols))
 
+        self.parser.add_argument('--symlinks-path',
+            default=default_symlinks_path,
+            dest='--symlinks-path',
+            help='The folder where the dependency symlinks are placed.'
+                 '(default: %(default)s)')
+
         self.__parse()
 
     def bundle_path(self):
         return self.known_args['--bundle-path']
+
+    def symlinks_path(self):
+        return self.known_args['--symlinks-path']
 
     def git_protocol(self):
         return self.known_args['--git-protocol']

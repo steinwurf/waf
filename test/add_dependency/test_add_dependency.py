@@ -108,6 +108,12 @@ def test_add_dependency(test_directory):
     env['NOCLIMB'] = '1'
     app_dir.run('python', 'waf', '--help', env=env)
     app_dir.run('python', 'waf', 'configure', '-v')
+
+    # The symlinks should be available to all dependencies
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'baz'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
+
     app_dir.run('python', 'waf', 'build', '-v')
 
 
@@ -128,4 +134,10 @@ def test_add_dependency_path(test_directory):
 
     app_dir.run('python', 'waf', 'configure', '-v', '--baz-path={}'.format(
                 baz_dir.path()))
+
+    # The symlinks should be available to all dependencies
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'baz'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
+
     app_dir.run('python', 'waf', 'build', '-v')
