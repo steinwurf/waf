@@ -4,15 +4,13 @@
 
 class ContextMsgResolver(object):
 
-    def __init__(self, method, resolver, ctx, dependency):
+    def __init__(self, resolver, ctx, dependency):
         """ Construct an instance.
 
-        :param method: The resolver method as a string
         :param resolver: The resolver used to fecth the dependency
         :param ctx: A Waf Context instance.
         :param dependency: A Dependency instance.
         """
-        self.method = method
         self.resolver = resolver
         self.ctx = ctx
         self.dependency = dependency
@@ -26,9 +24,10 @@ class ContextMsgResolver(object):
 
         :return: The path as a string.
         """
+        
 
         self.ctx.start_msg('{} {}'.format(
-            self.method, self.dependency.name))
+            self.dependency.resolver_method, self.dependency.name))
 
         path = self.resolver.resolve()
 
@@ -38,7 +37,11 @@ class ContextMsgResolver(object):
             # print the status message and continue
             self.ctx.end_msg('Unavailable', color='RED')
         else:
-
-            self.ctx.end_msg(path)
+            
+            if self.dependency.is_symlink:
+                real_path = self.dependency.real_path
+                self.ctx.end_msg("{} => {}".format(path, real_path))
+            else:
+                self.ctx.end_msg(path)
 
         return path

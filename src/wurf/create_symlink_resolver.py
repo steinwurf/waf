@@ -80,6 +80,9 @@ class CreateSymlinkResolver(object):
             # Return the original path if something went wrong
             return path
 
+        self.dependency.is_symlink = True
+        self.dependency.real_path = path
+
         # Return the path to the new symlink
         return link_path
 

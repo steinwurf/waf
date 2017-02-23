@@ -3,6 +3,7 @@
 
 import hashlib
 import json
+import collections
 
 class Dependency(object):
 
@@ -30,15 +31,25 @@ class Dependency(object):
             assert dependency.recurse == True
 
         One additional attribute sha1 attribute is added to the dependency. The
-        sha1 attribute is a hash of all the dependency information. This allows
+        SHA1 attribute is a hash of all the dependency information. This allows
         us to e.g. easily compare whether two dependencies with the same name
-        in fact equal or whether one has some differnet options.
+        in fact equal or whether one has some different options.
 
-        Continuing the example from above this is easily quireid using the sha1
+        Continuing the example from above this is easily queried using the sha1
         attribute:
 
             # Access the sha1 attribute
             print("Dependency hash {}".format(dependency.sha1))
+
+        Additional attributes may be added to the dependency during resolve. 
+        However, they cannot overwrite the existing attributes created at 
+        construction time.
+        
+        So in the small example from before all the following attributes are 
+        read-only: name, recurse, optional, resolver, method, checkout, 
+        sources and sha1.
+        
+        Any other attributes can be added an modified as needed.
 
         :param kwargs: Keyword arguments containing options for the dependency.
         """
@@ -48,8 +59,9 @@ class Dependency(object):
         s = json.dumps(kwargs, sort_keys=True)
         sha1 = hashlib.sha1(s.encode('utf-8')).hexdigest()
 
-        self.info = kwargs
-        self.info['sha1'] = sha1
+        # kwargs is a dict, we add it as an instance attribute. 
+        object.__setattr__(self, 'read_only', kwargs)
+        self.read_only['sha1'] = sha1
 
         # For some operations like, storing a dependency in a dict as the key
         # it is needed that the dependency is hashable (returned as an integer). 
@@ -79,7 +91,12 @@ class Dependency(object):
         #    in external formats such as files
         # 2. Use the Python hash() function to generate a integer hash for 
         #    run-time usage (i.e. within the same interpreter session).
-        self.hash = None
+        #super(Dependency, self).__setattr__('hash', None)
+        self.read_only['hash'] = None
+        
+        # Resolver attributes (modifiable)
+        object.__setattr__(self, 'read_write', dict())
+        
         
     def __getattr__(self, option):
         """ Return the value corresponding to the option.
@@ -87,26 +104,39 @@ class Dependency(object):
         :param option: The name of the option to return as a string.
         :return: The option value.
         """
+        if option in self.read_only:
+            return self.read_only[option]
 
-        if option in self.info:
-            return self.info[option]
+        elif option in self.read_write:
+            return self.read_write[option]
+        
         else:
-            raise AttributeError("No such attribute: " + option)
+            return None
+
+
+    def __setattr__(self, name, value): 
+        """ Sets a resolver attribute."""
+
+        if name in self.read_only:
+            raise AttributeError("Attribute {} read-only.".format(name))
+        else:
+            self.read_write[name] = value   
 
     def __contains__(self, option):
         """ Checks if the option is available.
         
         :return: True if the option is available otherwise False
         """
-        return option in self.info
+        return (option in self.read_only) or (option in self.read_write)
 
     def __str__(self):
-        return str(self.info)
+        return "Dependency\ninfo: {}\nresolver info: {}".format(
+            self.read_only, self.read_write)
 
     def __hash__(self):
         """ :return: Integer hash value for the dependency. """
         
-        if not self.hash:
-            self.hash = hash(self.info['sha1'])
+        if not self.read_only['hash']:
+            self.read_only['hash'] = hash(self.read_only['sha1'])
         
-        return self.hash
+        return self.read_only['hash']
