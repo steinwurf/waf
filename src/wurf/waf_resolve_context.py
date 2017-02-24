@@ -50,6 +50,14 @@ class WafResolveContext(Context.Context):
 
     def execute(self):
 
+        # Check whether the main wscript has a resolve function defined,
+        # if not we create one. This is also done for other functions such
+        # as options by waf itself. See:
+        # https://github.com/waf-project/waf/blob/master/waflib/Scripting.py#L201-L207
+        #
+        if not 'resolve' in Context.g_module.__dict__:
+            Context.g_module.resolve = Utils.nada
+
         # Figure out which resolver configuration we should use, this has to
         # run before we create the build folder
         configuration = self.resolver_configuration()
