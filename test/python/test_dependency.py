@@ -24,3 +24,15 @@ def test_wurf_dependency():
     # Check there is a sha1 key
     assert "sha1" in w
     assert len(w.sha1) > 0
+        
+    # Check that we change the read-only attributes (the ones passed 
+    # at construction time)
+    with pytest.raises(Exception):
+        w.name = "waf2"
+    
+    w.name2 = "waf2"
+    assert w.name2 == "waf2"
+    
+    assert w.path is None
+    assert ('path' in w) == False
+    

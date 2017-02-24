@@ -327,10 +327,11 @@ def user_path_resolver(registry, dependency):
     path = mandatory_options.path(dependency=dependency)
 
     ctx = registry.require('ctx')
+    
+    # Set the resolver method on the dependency
+    dependency.resolver_method = 'User'
 
     resolver = UserPathResolver(dependency=dependency, path=path)
-    resolver = ContextMsgResolver(method='User', resolver=resolver, ctx=ctx,
-        dependency=dependency)
 
     return resolver
 
@@ -421,12 +422,13 @@ def git_checkout_resolver(registry, dependency):
     """
     ctx = registry.require('ctx')
 
+    # Set the resolver method on the dependency
+    dependency.resolver_method = 'Git checkout'
+
     resolver = registry.require('git_checkout_list_resolver',
         dependency=dependency, checkout=dependency.checkout)
 
     resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
-    resolver = ContextMsgResolver(method='Git checkout', resolver=resolver,
-        ctx=ctx, dependency=dependency)
 
     return resolver
 
@@ -449,6 +451,9 @@ def git_semver_resolver(registry, dependency):
     name = dependency.name
     major = dependency.major
 
+    # Set the resolver method on the dependency
+    dependency.resolver_method = 'Git semver'
+
     def wrap(resolver):
         resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
             semver=semver, name=name, bundle_path=bundle_path, major=major)
@@ -460,8 +465,6 @@ def git_semver_resolver(registry, dependency):
 
     resolver = ListResolver(resolvers=resolvers)
     resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
-    resolver = ContextMsgResolver(method='Git semver', resolver=resolver,
-        ctx=ctx, dependency=dependency)
 
     return resolver
 
@@ -479,6 +482,9 @@ def git_user_checkout_resolver(registry, dependency):
     mandatory_options = registry.require('mandatory_options')
     checkout = mandatory_options.use_checkout(dependency=dependency)
 
+    # Set the resolver method on the dependency
+    dependency.resolver_method = 'Git user checkout'
+
     # When the user specified the checkout one must succeed:
     resolver = registry.require('git_checkout_list_resolver',
         dependency=dependency, checkout=checkout)
@@ -486,9 +492,6 @@ def git_user_checkout_resolver(registry, dependency):
     resolver = MandatoryResolver(resolver=resolver,
         msg="User checkout of {} failed.".format(checkout),
         dependency=dependency)
-
-    resolver = ContextMsgResolver(method='Git user checkout', resolver=resolver,
-        ctx=ctx, dependency=dependency)
 
     return resolver
 
@@ -518,13 +521,16 @@ def help_dependency_resolver(registry, dependency):
     ctx = registry.require('ctx')
     bundle_config_path = registry.require('bundle_config_path')
 
+    # Set the resolver method on the dependency
+    dependency.resolver_method = 'Load (help)'
+
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
         bundle_config_path=bundle_config_path)
 
     resolver = TryResolver(resolver=resolver, ctx=ctx)
 
-    resolver = ContextMsgResolver(method='Load (help)', resolver=resolver,
-        ctx=ctx, dependency=dependency)
+    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx, 
+        dependency=dependency)
 
     return resolver
 
@@ -534,13 +540,16 @@ def passive_dependency_resolver(registry, dependency):
     ctx = registry.require('ctx')
     bundle_config_path = registry.require('bundle_config_path')
 
+    # Set the resolver method on the dependency
+    dependency.resolver_method = 'Load'
+
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
         bundle_config_path=bundle_config_path)
 
     resolver = TryResolver(resolver=resolver, ctx=ctx)
 
-    resolver = ContextMsgResolver(method='Load', resolver=resolver,
-        ctx=ctx, dependency=dependency)
+    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx, 
+        dependency=dependency)
 
     resolver = CheckOptionalResolver(resolver=resolver,
         dependency=dependency)
@@ -564,6 +573,9 @@ def active_dependency_resolver(registry, dependency):
     resolver = CreateSymlinkResolver(
         resolver=resolver, dependency=dependency, symlinks_path=symlinks_path,
         ctx=ctx)
+        
+    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx, 
+        dependency=dependency)
 
     return OnActiveStorePathResolver(
         resolver=resolver, dependency=dependency,

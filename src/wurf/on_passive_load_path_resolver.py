@@ -33,6 +33,10 @@ class OnPassiveLoadPathResolver(object):
         if self.dependency.sha1 != config['sha1']:
             raise DependencyError('Failed sha1 check', self.dependency)
 
+        if config['is_symlink']:
+            self.dependency.is_symlink = config['is_symlink']
+            self.dependency.real_path = str(config['real_path'])
+
         path = str(config['path'])
 
         if not os.path.isdir(path):
