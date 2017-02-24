@@ -93,21 +93,35 @@ to your wscript's upload function::
         waf_resolve_context.recurse_dependencies(self)
 
 
-Features
-========
+Options (building new Waf binaries)
+===================================
 
 `--skip_network_tests`
 ---------------------------
 To test the freshly built Waf binary some unit test use network connectivity
-to resolve dependencies. This makes the tests slow. It would therefore be 
+to resolve dependencies. This makes the tests slow. It would therefore be
 beneficial to remove these tests when running e.g. on a build system.
 
-An example of such a test is the `self_build` test. The `self_build` test will 
+An example of such a test is the `self_build` test. The `self_build` test will
 invoke a freshly built `waf` binary with the wscript used to build it -
 yes very meta :)
 
 Passing `--skip_network_tests` will skip any unit tests which rely on network
 connectivity.
+
+Features of Waf with resolve capabilities
+=========================================
+
+`--fast-resolve`
+----------------
+As default the resolver will be invoked when configuring a waf project i.e.
+invoking `python waf configure ...`. Depending on the number of dependencies
+this may take some time to complete. This is problematic if an user is for
+example re-configuring to change compiler.
+
+Providing the `--fast-resolve` option should only invoke the resolvers for
+dependencies that have not already been downloaded. Already downloaded
+dependencies should be loaded from the cache.
 
 Future features
 ===============
@@ -161,17 +175,6 @@ Certain resolvers utilize "shortcuts" such as using cached information about
 dependencies to speed the resolve step. Providing this option should by-pass
 such optimizations and do a full resolve - not relying on any form of cached
 data.
-
-Add `--no-resolve` option
--------------------------
-As default the resolver will be invoked when configuring a waf project i.e.
-invoking `python waf configure ...`. Depending on the number of dependencies
-this may take some time to complete. This is problematic if an user is for
-example re-configuring to change compiler.
-
-Providing the `--fast-resolve` option should only invoke the resolvers for
-dependencies that have not already been downloaded. Already downloaded
-dependencies should be loaded from the cache.
 
 Add support for `dependencies.json`
 -----------------------------------
