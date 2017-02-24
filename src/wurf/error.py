@@ -10,7 +10,7 @@ class CmdAndLogError(Error):
     def __init__(self, error, traceback):
         self.error = error
         self.traceback = traceback
-        msg = "Error: {}\nTraceback:{}".format(error, traceback)
+        msg = "Error: {}\n{}".format(error, traceback)
 
         super(CmdAndLogError, self).__init__(msg=msg)
 
