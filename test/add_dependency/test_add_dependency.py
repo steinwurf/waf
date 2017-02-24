@@ -115,6 +115,8 @@ def test_add_dependency(test_directory):
     assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
+    app_dir.run('python', 'waf', 'configure', '-v', '--fast-resolve')
+    app_dir.run('python', 'waf', 'build', '-v')
 
 
 def test_add_dependency_path(test_directory):
@@ -141,3 +143,4 @@ def test_add_dependency_path(test_directory):
     assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
+    app_dir.run('python', 'waf', 'configure', '-v', '--fast-resolve')

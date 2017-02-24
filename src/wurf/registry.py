@@ -327,7 +327,7 @@ def user_path_resolver(registry, dependency):
     path = mandatory_options.path(dependency=dependency)
 
     ctx = registry.require('ctx')
-    
+
     # Set the resolver method on the dependency
     dependency.resolver_method = 'User'
 
@@ -510,9 +510,23 @@ def git_source_resolver(registry, dependency):
     if checkout:
         return registry.require('git_user_checkout_resolver',
             dependency=dependency)
+
+    method_key = "git_{}_resolver".format(dependency.method)
+    git_resolver = registry.require(method_key, dependency=dependency)
+
+    if options.fast_resolve():
+        bundle_config_path = registry.require('bundle_config_path')
+
+        fast_resolver = OnPassiveLoadPathResolver(dependency=dependency,
+            bundle_config_path=bundle_config_path)
+
+        fast_resolver = TryResolver(resolver=fast_resolver, ctx=ctx)
+
+        return ListResolver(resolvers=[fast_resolver, git_resolver])
+
     else:
-        method_key = "git_{}_resolver".format(dependency.method)
-        return registry.require(method_key, dependency=dependency)
+
+        return git_resolver
 
 
 @Registry.provide
@@ -529,7 +543,7 @@ def help_dependency_resolver(registry, dependency):
 
     resolver = TryResolver(resolver=resolver, ctx=ctx)
 
-    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx, 
+    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx,
         dependency=dependency)
 
     return resolver
@@ -548,7 +562,7 @@ def passive_dependency_resolver(registry, dependency):
 
     resolver = TryResolver(resolver=resolver, ctx=ctx)
 
-    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx, 
+    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx,
         dependency=dependency)
 
     resolver = CheckOptionalResolver(resolver=resolver,
@@ -573,8 +587,8 @@ def active_dependency_resolver(registry, dependency):
     resolver = CreateSymlinkResolver(
         resolver=resolver, dependency=dependency, symlinks_path=symlinks_path,
         ctx=ctx)
-        
-    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx, 
+
+    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx,
         dependency=dependency)
 
     return OnActiveStorePathResolver(
@@ -592,8 +606,8 @@ def dependency_resolver(registry, dependency):
     # There are three resolver chains/configurations:
     #
     # 1. The "active" chain: This chain goes to the network and fetches stuff
-    # 2. The "passive" chain: This chain will load information from the
-    #    file system.
+    # 2. The "passive" or "no-resolve" chain: This chain will load information
+    #    from the file system.
     # 3. The "help" chain: This chain tries to interate though as many
     #    dependencies as possible to get all options.
 
