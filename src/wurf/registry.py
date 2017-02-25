@@ -515,6 +515,10 @@ def git_source_resolver(registry, dependency):
     git_resolver = registry.require(method_key, dependency=dependency)
 
     if options.fast_resolve():
+
+        # Set the resolver method on the dependency
+        dependency.resolver_action = 'fast/'+dependency.resolver_action
+
         bundle_config_path = registry.require('bundle_config_path')
 
         fast_resolver = OnPassiveLoadPathResolver(dependency=dependency,
