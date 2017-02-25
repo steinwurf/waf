@@ -123,6 +123,12 @@ Providing the `--fast-resolve` option should only invoke the resolvers for
 dependencies that have not already been downloaded. Already downloaded
 dependencies should be loaded from the cache.
 
+`--fast-resolve` is also useful when manually specifying resolve method for a
+dependency e.g. to manually set the path of a dependency `foo` using
+`--fast-resolve` will load all other dependencies from cache::
+
+    python waf configure --foo-path /tmp/foo --fast-resolve
+
 Future features
 ===============
 
