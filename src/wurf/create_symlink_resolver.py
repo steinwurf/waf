@@ -38,6 +38,10 @@ class CreateSymlinkResolver(object):
         link_name = self.dependency.name
         link_path = os.path.join(self.symlinks_path, link_name)
 
+        if link_path == path:
+            # Symlink is already in place. We may have loaded it from cache.
+            return path
+
         # os.symlink() is not available in Python 2.7 on Windows.
         # We use the original function if it is available, otherwise we
         # create a helper function for Windows

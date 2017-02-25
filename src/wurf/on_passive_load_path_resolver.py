@@ -40,7 +40,7 @@ class OnPassiveLoadPathResolver(object):
         path = str(config['path'])
 
         if not os.path.isdir(path):
-            raise DependencyErrors('Not valid path {}'.format(path),
+            raise DependencyError('Not valid path {}'.format(path),
                 self.dependency)
 
         return path

@@ -6,6 +6,11 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Full rewrite of our Waf depedency resolve code.
+* Minor: Adding support for `--fast-resolve` option
+
+Un-released changes
+-------------------
 * Minor: Allow arbitrary git providers in wurf_dependency_resolve.
 * Minor: Allow optional dependencies that might not be resolved if they are
   unavailable to the user.
