@@ -36,7 +36,10 @@ The arrows indicate dependencies, so:
 """
 
 def mkdir_app(directory):
-    app_dir = directory.copy_dir(directory='test/add_dependency/app')
+    app_dir = directory.mkdir('app')
+    app_dir.copy_file('test/add_dependency/app/main.cpp')
+    f = app_dir.copy_file('test/add_dependency/app/wscript')
+    #f.rename('wscript')
     app_dir.copy_file('test/add_dependency/fake_git_clone.py')
     app_dir.copy_file('build/waf')
     # Note: waf will call "git config --get remote.origin.url" in this folder,

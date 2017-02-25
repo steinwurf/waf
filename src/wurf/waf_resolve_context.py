@@ -93,12 +93,19 @@ class WafResolveContext(Context.Context):
 
         self.dependency_manager = self.registry.require('dependency_manager')
 
-        # Calling the context execute will call the resolve(...) functions in
-        # the wscripts. These will in turn call add_dependency(...) which will
-        # trigger loading the dependency.
-
         try:
+            # Calling the context execute will call the resolve(...) functions
+            # in the wscripts. These will in turn call add_dependency(...)
+            # which will trigger loading the dependency.
             super(WafResolveContext, self).execute()
+
+            # Now try to load dependencies from the resolve.json file. Note,
+            # that this is done after calling a possible user-defined
+            # resolve(...) function. Since we always want the allow the user to
+            # run custom code before we start resolving stuff.
+            self.dependency_manager.load_dependencies(self.path.abspath(),
+                mandatory=False)
+
         except Error as e:
             self.logger.debug("Error in resolve:".format(e), exc_info=True)
             self.fatal("Error: {}".format(e))

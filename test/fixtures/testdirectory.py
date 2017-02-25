@@ -53,6 +53,12 @@ class TestDirectory:
         return str(self.tmpdir)
 
     def copy_file(self, filename):
+        """ Copy the file to the test directory.
+
+        :param filename: The filename as a string.
+        :return A py.path.local object representing/pointing to the file copied
+           to its new location.
+        """
 
         # Expand filename by expanding wildcards e.g. 'dir/*/file.txt', the
         # glob should return only one file
@@ -68,7 +74,10 @@ class TestDirectory:
         # Copy the file to the tmpdir
         filepath = py.path.local(filename)
         filepath.copy(self.tmpdir)
+
         print("Copy: {} -> {}".format(filepath, self.tmpdir))
+
+        return self.tmpdir.join(filepath.basename)
 
     def copy_files(self, filename):
 
