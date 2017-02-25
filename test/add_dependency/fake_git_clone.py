@@ -42,21 +42,6 @@ class FakeGitClone(Git):
         """
         super(FakeGitClone, self).__init__(git_binary=git_binary, ctx=ctx)
 
-        # This is the directory on the file system which contains the
-        # test libraries. We use the url in the clone(...) function
-        # to find the library needed
-
-        #
-
-        # This mapping is use when performing a "fake" git clone.
-        #
-        # In the tests we will make "fake" git repositories available
-        # under the 'git_dir' folder using the following mapping.
-        # For the a given git URL the value in the dict below gives
-        # the directory name in the 'git_dir'.
-        # self.libraries = {'github.com/acme-corp/foo.git': 'libfoo',
-        #                   'gitlab.com/acme-corp/bar.git': 'libbar',
-        #                   'gitlab.com/acme/baz.git': 'libbaz' }
         self.clone_path = clone_path
 
     def clone(self, repository, directory, cwd):
