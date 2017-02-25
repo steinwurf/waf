@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import json
 
 """ Integration testing of adding a dependency.
 
@@ -36,6 +37,7 @@ The arrows indicate dependencies, so:
 
 def mkdir_app(directory):
     app_dir = directory.copy_dir(directory='test/add_dependency/app')
+    app_dir.copy_file('test/add_dependency/fake_git_clone.py')
     app_dir.copy_file('build/waf')
     # Note: waf will call "git config --get remote.origin.url" in this folder,
     # so "git init" is required if the pytest temp folder is located within
@@ -81,6 +83,9 @@ def mkdir_libbaz(directory):
     baz_dir.run('git', '-c', 'user.name=John', '-c',
                 'user.email=doe@email.org', 'commit', '-m', 'oki')
     baz_dir.run('git', 'tag', '3.1.2')
+    baz_dir.run('git', 'tag', '3.2.0')
+    baz_dir.run('git', 'tag', '3.3.0')
+    baz_dir.run('git', 'tag', '3.3.1')
 
     return baz_dir
 
@@ -99,6 +104,18 @@ def test_add_dependency(test_directory):
     foo_dir = mkdir_libfoo(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)
     baz_dir = mkdir_libbaz(directory=git_dir)
+
+    # Instead of doing an actual Git clone - we fake it and use the paths in
+    # this mapping
+    clone_path = {
+        'github.com/acme-corp/foo.git': foo_dir.path(),
+        'gitlab.com/acme-corp/bar.git': bar_dir.path(),
+        'gitlab.com/acme/baz.git': baz_dir.path() }
+
+    json_path = os.path.join(app_dir.path(), 'clone_path.json')
+
+    with open(json_path, 'w') as json_file:
+        json.dump(clone_path, json_file)
 
     # Note that waf "climbs" directories to find a lock file in higher
     # directories, and this test is executed within a subfolder of the
@@ -127,6 +144,17 @@ def test_add_dependency_path(test_directory):
 
     foo_dir = mkdir_libfoo(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)
+
+    # Instead of doing an actual Git clone - we fake it and use the paths in
+    # this mapping
+    clone_path = {
+        'github.com/acme-corp/foo.git': foo_dir.path(),
+        'gitlab.com/acme-corp/bar.git': bar_dir.path() }
+
+    json_path = os.path.join(app_dir.path(), 'clone_path.json')
+
+    with open(json_path, 'w') as json_file:
+        json.dump(clone_path, json_file)
 
     # Test the --baz-path option: by not putting this dependency in the
     # git_dir, we make sure that our fake git clone step in the wscript
