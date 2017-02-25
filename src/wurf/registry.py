@@ -327,9 +327,9 @@ def user_path_resolver(registry, dependency):
     path = mandatory_options.path(dependency=dependency)
 
     ctx = registry.require('ctx')
-    
+
     # Set the resolver method on the dependency
-    dependency.resolver_method = 'User'
+    dependency.resolver_action = 'user path'
 
     resolver = UserPathResolver(dependency=dependency, path=path)
 
@@ -423,7 +423,7 @@ def git_checkout_resolver(registry, dependency):
     ctx = registry.require('ctx')
 
     # Set the resolver method on the dependency
-    dependency.resolver_method = 'Git checkout'
+    dependency.resolver_action = 'git checkout'
 
     resolver = registry.require('git_checkout_list_resolver',
         dependency=dependency, checkout=dependency.checkout)
@@ -452,7 +452,7 @@ def git_semver_resolver(registry, dependency):
     major = dependency.major
 
     # Set the resolver method on the dependency
-    dependency.resolver_method = 'Git semver'
+    dependency.resolver_action = 'git semver'
 
     def wrap(resolver):
         resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
@@ -483,7 +483,7 @@ def git_user_checkout_resolver(registry, dependency):
     checkout = mandatory_options.use_checkout(dependency=dependency)
 
     # Set the resolver method on the dependency
-    dependency.resolver_method = 'Git user checkout'
+    dependency.resolver_action = 'git user checkout'
 
     # When the user specified the checkout one must succeed:
     resolver = registry.require('git_checkout_list_resolver',
@@ -521,15 +521,15 @@ def help_dependency_resolver(registry, dependency):
     ctx = registry.require('ctx')
     bundle_config_path = registry.require('bundle_config_path')
 
-    # Set the resolver method on the dependency
-    dependency.resolver_method = 'Load (help)'
+    # Set the resolver action on the dependency
+    dependency.resolver_chain = 'Load (help)'
 
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
         bundle_config_path=bundle_config_path)
 
     resolver = TryResolver(resolver=resolver, ctx=ctx)
 
-    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx, 
+    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx,
         dependency=dependency)
 
     return resolver
@@ -540,15 +540,15 @@ def passive_dependency_resolver(registry, dependency):
     ctx = registry.require('ctx')
     bundle_config_path = registry.require('bundle_config_path')
 
-    # Set the resolver method on the dependency
-    dependency.resolver_method = 'Load'
+    # Set the resolver action on the dependency
+    dependency.resolver_chain = 'Load'
 
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
         bundle_config_path=bundle_config_path)
 
     resolver = TryResolver(resolver=resolver, ctx=ctx)
 
-    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx, 
+    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx,
         dependency=dependency)
 
     resolver = CheckOptionalResolver(resolver=resolver,
@@ -564,6 +564,9 @@ def active_dependency_resolver(registry, dependency):
     bundle_config_path = registry.require('bundle_config_path')
     symlinks_path = registry.require('symlinks_path')
 
+    # Set the resolver action on the dependency
+    dependency.resolver_chain = 'Resolve'
+
     if options.path(dependency=dependency):
         resolver = registry.require('user_path_resolver', dependency=dependency)
     else:
@@ -573,8 +576,8 @@ def active_dependency_resolver(registry, dependency):
     resolver = CreateSymlinkResolver(
         resolver=resolver, dependency=dependency, symlinks_path=symlinks_path,
         ctx=ctx)
-        
-    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx, 
+
+    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx,
         dependency=dependency)
 
     return OnActiveStorePathResolver(
@@ -589,7 +592,7 @@ def dependency_resolver(registry, dependency):
     # This is where we "wire" together the resolvers. Which actually do the
     # work of via some method obtaining a path to a dependency.
     #
-    # There are three resolver chains/configurations:
+    # There are three main resolver chains/configurations:
     #
     # 1. The "active" chain: This chain goes to the network and fetches stuff
     # 2. The "passive" chain: This chain will load information from the

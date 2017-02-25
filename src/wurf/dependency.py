@@ -49,7 +49,22 @@ class Dependency(object):
         read-only: name, recurse, optional, resolver, method, checkout,
         sources and sha1.
 
-        Any other attributes can be added and modified as needed.
+        Any other attributes can be added and modified as needed. The following
+        documents used attributes with reserved meaning:
+
+        - "is_symlink" and "real_path": The "is_symlink" attribute denotes
+          whether the path returned by the resolver is a symbolic link. If
+          this is the case the "real_path" attribute of the dependency will
+          contain the path in the file-system which the symbolic link points
+          to.
+
+        - "resolver_chain": The "resolver_chain" this attribute assigns a
+          high-level name to the the chain of resolvers e.g. such as "Resolve",
+          "Load". This describes the high-level operation of the resolver chain.
+
+        - "resolver_action": The "resolver_action" this attribute describes the
+          specific action taken to resolve the dependency. For example:
+          "git checkout", "user path" etc. 
 
         :param kwargs: Keyword arguments containing options for the dependency.
         """
