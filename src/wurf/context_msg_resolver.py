@@ -16,19 +16,27 @@ class ContextMsgResolver(object):
         self.dependency = dependency
 
     def resolve(self):
-        """ Resolve a path to a dependency.
+        """ Print the resolved path to the terminal using Waf's Context.
 
-        If we are doing an "passive" resolver, meaning that waf was not invoked
-        with configure. Then we load the resolved path to the file-system.
-        Otherwise we raise an exception.
+        The print will format the start message differently depending on the
+        "resolver_chain" and "resolver_action" attributes of the dependency
+        object.
+
+        Finally the path will be printed different depending on the "is_symlink"
+        and "real_path" dependency object attributes.
+
+        See a description of these attributes in the Depencency object docs.
+
+        If the path is a symbolic link we print both the symbolic link and
+        actual path on the file-system.
 
         :return: The path as a string.
         """
 
         start_msg = '{} "{}"'.format(
-            self.dependency.resolver_action, self.dependency.name)
-        if self.dependency.resolver_method:
-            start_msg += ' ({})'.format(self.dependency.resolver_method)
+            self.dependency.resolver_chain, self.dependency.name)
+        if self.dependency.resolver_action:
+            start_msg += ' ({})'.format(self.dependency.resolver_action)
         self.ctx.start_msg(start_msg)
 
         path = self.resolver.resolve()
