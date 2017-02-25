@@ -25,24 +25,21 @@ class TryResolver(object):
         try:
             path = self.resolver.resolve()
         except Error as e:
+            # Using exc_info will attach the current exception information
+            # to the log message (including traceback to where the
+            # exception was thrown).
+            # Waf is using the standard Python Logger so you can check the
+            # docs here (read about the exc_info kwargs):
+            # https://docs.python.org/2/library/logging.html
+            self.ctx.logger.debug("Source {} resolve failed:".format(
+                self.resolver), exc_info=True)
 
-                # Using exc_info will attache the current exception information
-                # to the log message (including traceback to where the
-                # exception was thrown).
-                # Waf is using the standard Python Logger so you can check the
-                # docs here (read about the exc_info kwargs):
-                # https://docs.python.org/2/library/logging.html
-                #
-                self.ctx.logger.debug("Source {} resolve failed:".format(
-                    self.resolver), exc_info=True)
-
-                return None
+            return None
         except:
             raise
 
-
         # The resolver did not raise an error, we check if it actually
-        # did produce a path for us.
+        # produced a valid path for us.
         if path:
             assert os.path.isdir(path)
         else:

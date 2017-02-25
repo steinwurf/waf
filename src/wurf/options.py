@@ -32,6 +32,12 @@ class Options(object):
             help='The folder where the dependency symlinks are placed.'
                  '(default: %(default)s)')
 
+        self.parser.add_argument('--fast-resolve', dest='--fast-resolve',
+            action='store_true', default=False,
+            help='Load already resolved dependencies from file system. '
+                  'Useful for running configure without resolving dependencies '
+                  'again.')
+
         self.__parse()
 
     def bundle_path(self):
@@ -42,6 +48,9 @@ class Options(object):
 
     def git_protocol(self):
         return self.known_args['--git-protocol']
+
+    def fast_resolve(self):
+        return self.known_args['--fast-resolve']
 
     def path(self, dependency):
         return self.known_args['--%s-path' % dependency.name]
