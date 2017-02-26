@@ -52,12 +52,13 @@ class TestDirectory:
         """ :return: The path to the temporary directory as a string"""
         return str(self.tmpdir)
 
-    def copy_file(self, filename):
+    def copy_file(self, filename, rename_as=""):
         """ Copy the file to the test directory.
 
         :param filename: The filename as a string.
-        :return A py.path.local object representing/pointing to the file copied
-           to its new location.
+        :param rename_as: If specified rename the file represented by filename
+            to the name given in rename_as as a string.
+        :return: The path to the file in its new location as a string.
         """
 
         # Expand filename by expanding wildcards e.g. 'dir/*/file.txt', the
@@ -77,7 +78,14 @@ class TestDirectory:
 
         print("Copy: {} -> {}".format(filepath, self.tmpdir))
 
-        return self.tmpdir.join(filepath.basename)
+        filepath = self.tmpdir.join(filepath.basename)
+        if rename_as:
+            target = self.tmpdir.join(rename_as)
+            filepath.rename(target)
+            print("Rename: {} -> {}".format(filepath, target))
+            filepath = target
+
+        return str(filepath)
 
     def copy_files(self, filename):
 

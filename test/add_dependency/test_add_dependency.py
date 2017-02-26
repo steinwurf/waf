@@ -38,14 +38,16 @@ The arrows indicate dependencies, so:
 def mkdir_app(directory):
     app_dir = directory.mkdir('app')
     app_dir.copy_file('test/add_dependency/app/main.cpp')
-    f = app_dir.copy_file('test/add_dependency/app/wscript')
-    #f.rename('wscript')
+    app_dir.copy_file('test/add_dependency/app/wscript_json',
+        rename_as='wscript')
+
     app_dir.copy_file('test/add_dependency/fake_git_clone.py')
     app_dir.copy_file('build/waf')
     # Note: waf will call "git config --get remote.origin.url" in this folder,
     # so "git init" is required if the pytest temp folder is located within
     # the main waf folder
     app_dir.run('git', 'init')
+
     return app_dir
 
 
@@ -94,6 +96,9 @@ def mkdir_libbaz(directory):
 
 
 def test_add_dependency(test_directory):
+    """ Tests that dependencies declared in the wscript works. I.e. where we
+        call add_dependency(...) in the resolve function of the wscript.
+    """
 
     app_dir = mkdir_app(directory=test_directory)
 
