@@ -12,8 +12,7 @@ class GitSemverResolver(object):
     Read more about Semantic Versioning here: semver.org
     """
 
-    def __init__(self, git, git_resolver, ctx, semver, name, bundle_path,
-        major):
+    def __init__(self, git, git_resolver, ctx, semver, name, major):
         """ Construct an instance.
 
         :param git: A WurfGit instance
@@ -21,8 +20,6 @@ class GitSemverResolver(object):
         :param ctx: A Waf Context instance.
         :param semver: The semver module
         :param name: Name of the dependency as a string
-        :param bundle_path: Current working directory as a string. This is the place
-            where we should create new folders etc.
         :param major: The major version number to use as an int.
         """
         self.git = git
@@ -30,7 +27,6 @@ class GitSemverResolver(object):
         self.ctx = ctx
         self.semver = semver
         self.name = name
-        self.bundle_path = bundle_path
         self.major = major
 
     def resolve(self):
@@ -43,34 +39,32 @@ class GitSemverResolver(object):
 
         assert os.path.isdir(path)
 
-        # Use the path retuned to create a unique location for this checkout
-        repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
-
         tags = self.git.tags(cwd=path)
         tag = self.select_tag(major=self.major, tags=tags)
 
         if not tag:
-            self.ctx.fatal('No major tag {} for {} found. Candiates were: {}'.format(
-            self.major, self.name, tags))
+            self.ctx.fatal(
+                'No major tag {} for {} found. Candiates were: {}'.format(
+                    self.major, self.name, tags))
 
-        # The folder for storing different versions of this repository
-        repo_name = self.name + '-' + tag + '-' + repo_hash
-        repo_path = os.path.join(self.bundle_path, repo_name)
+        # Use the parent folder of the path retuned to store different
+        # versions of this repository
+        repo_folder = os.path.dirname(path)
+        tag_path = os.path.join(repo_folder, tag)
 
         self.ctx.to_log('wurf: GitSemverResolver name {} -> {}'.format(
-            self.name, repo_path))
+            self.name, tag_path))
 
-        # If the checkout folder does not exist,
-        # then clone from the git repository
-        if not os.path.isdir(repo_path):
-            shutil.copytree(src=path, dst=repo_path, symlinks=True)
-            self.git.checkout(branch=tag, cwd=repo_path)
+        # If the folder for the chosen tag does not exist,
+        # then copy the master and checkout the tag
+        if not os.path.isdir(tag_path):
+            shutil.copytree(src=path, dst=tag_path, symlinks=True)
+            self.git.checkout(branch=tag, cwd=tag_path)
 
-        # If the project contains submodules we also get those
-        #
-        self.git.pull_submodules(cwd=repo_path)
+        # If the project contains submodules, we also get those
+        self.git.pull_submodules(cwd=tag_path)
 
-        return repo_path
+        return tag_path
 
     def select_tag(self, major, tags):
         """

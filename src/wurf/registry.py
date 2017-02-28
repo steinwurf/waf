@@ -393,13 +393,12 @@ def git_checkout_list_resolver(registry, dependency, checkout):
 
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
 
-    bundle_path = registry.require('bundle_path')
     name = dependency.name
 
     def wrap(resolver):
 
         resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
-            name=name, bundle_path=bundle_path, checkout=checkout)
+            name=name, checkout=checkout)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx)
         return resolver
@@ -447,7 +446,6 @@ def git_semver_resolver(registry, dependency):
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
     options = registry.require('options')
 
-    bundle_path = registry.require('bundle_path')
     name = dependency.name
     major = dependency.major
 
@@ -456,7 +454,7 @@ def git_semver_resolver(registry, dependency):
 
     def wrap(resolver):
         resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
-            semver=semver, name=name, bundle_path=bundle_path, major=major)
+            semver=semver, name=name, major=major)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx)
         return resolver

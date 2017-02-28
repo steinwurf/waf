@@ -16,8 +16,8 @@ class GitResolver(object):
         :param url_resolver: A WurfGitUrlResolver instance.
         :param ctx: A Waf Context instance.
         :param name: The name of the dependency as a string
-        :param bundle_path: Current working directory as a string. This is the place
-            where we should create new folders etc.
+        :param bundle_path: Current working directory as a string. This is
+            the place where we should create new folders etc.
         :param source: THe URL of the dependency as a string
         """
         self.git = git
@@ -40,39 +40,45 @@ class GitResolver(object):
         # to uniquely identify the repository
         repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
 
-        # The folder for storing different versions of this repository
-        repo_name = self.name + '-master-' + repo_hash
-        repo_path = os.path.join(self.bundle_path, repo_name)
+        # The parent folder to store different versions of this repository
+        repo_folder = os.path.join(self.bundle_path,
+            '{}-{}'.format(self.name, repo_hash))
+
+        # Make sure that the repo_folder exists
+        if not os.path.exists(repo_folder):
+            self.ctx.to_log("wurf: GitResolver new repository "
+                            "folder: {}".format(repo_folder))
+            os.makedirs(repo_folder)
+
+        # The master will be available in the 'master' subfolder
+        master_path = os.path.join(repo_folder, 'master')
 
         self.ctx.to_log('wurf: GitResolver name {} -> {}'.format(
-            self.name, repo_path))
+            self.name, master_path))
 
         # If the master folder does not exist, do a git clone first
-        if not os.path.isdir(repo_path):
-            self.git.clone(repository=repo_url, directory=repo_name,
-                cwd=self.bundle_path)
+        if not os.path.isdir(master_path):
+            self.git.clone(repository=repo_url, directory='master',
+                cwd=repo_folder)
         else:
-
             # We only want to pull if we haven't just cloned. This avoids
             # having to type in the username and password twice when using
             # https as a git protocol.
-
             try:
                 # git pull will fail if the repository is unavailable
                 # This is not a problem if we have already downloaded
                 # the required version for this dependency
-                self.git.pull(cwd=repo_path)
+                self.git.pull(cwd=master_path)
             except Exception as e:
                 self.ctx.to_log('Exception when executing git pull:')
                 self.ctx.to_log(e)
 
-        assert os.path.isdir(repo_path), "We should have a valid path here!"
+        assert os.path.isdir(master_path), "We should have a valid path here!"
 
         # If the project contains submodules we also get those
-        self.git.pull_submodules(cwd=repo_path)
+        self.git.pull_submodules(cwd=master_path)
 
-        return repo_path
-
+        return master_path
 
     def __repr__(self):
         """
