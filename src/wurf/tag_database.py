@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+import json
 
 class TagDatabase(object):
 
@@ -12,7 +13,7 @@ class TagDatabase(object):
         self.ctx = ctx
         self.tags = None
 
-    def download_tags():
+    def download_tags(self):
         """
         Download the tag information.
         """
@@ -32,28 +33,28 @@ class TagDatabase(object):
             tags_json = response.read()
             self.ctx.to_log(
                 "Tags downloaded. File size: {}\n".format(len(tags_json)))
-            tags = json.loads(tags_json)
+            self.tags = json.loads(tags_json)
         except Exception as e:
-            tags = {}
+            self.tags = {}
             # Log the exception, including the traceback information
             self.ctx.logger.debug(
                 "Could not fetch tags.json from: {}".format(url),
                 exc_info=True)
 
-    def project_tags(project_name):
+    def project_tags(self, project_name):
         """
         Return the tag information for the given project name.
 
         :param project_name: The project name to query.
         """
         # Download the tag info - this should be done only once!
-        if tags is None:
+        if self.tags is None:
             self.download_tags()
 
-        if project_name in tags:
+        if project_name in self.tags:
             self.ctx.to_log("Registered tags for {}:\n{}".format(
-                project_name, tags[project_name]))
-            return tags[project_name]
+                project_name, self.tags[project_name]))
+            return self.tags[project_name]
         else:
             self.ctx.to_log("No registered tags for {}.".format(project_name))
             return None

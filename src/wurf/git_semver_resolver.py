@@ -12,20 +12,20 @@ class GitSemverResolver(object):
     Read more about Semantic Versioning here: semver.org
     """
 
-    def __init__(self, git, git_resolver, ctx, semver, name, major):
+    def __init__(self, git, git_resolver, ctx, semver_selector, name, major):
         """ Construct an instance.
 
         :param git: A WurfGit instance
         :param url_resolver: A WurfGitResolver instance.
         :param ctx: A Waf Context instance.
-        :param semver: The semver module
+        :param semver_selector: A SemverSelector instance.
         :param name: Name of the dependency as a string
         :param major: The major version number to use as an int.
         """
         self.git = git
         self.git_resolver = git_resolver
         self.ctx = ctx
-        self.semver = semver
+        self.semver_selector = semver_selector
         self.name = name
         self.major = major
 
@@ -40,7 +40,7 @@ class GitSemverResolver(object):
         assert os.path.isdir(path)
 
         tags = self.git.tags(cwd=path)
-        tag = self.select_tag(major=self.major, tags=tags)
+        tag = self.semver_selector.select_tag(major=self.major, tags=tags)
 
         if not tag:
             self.ctx.fatal(
@@ -65,45 +65,6 @@ class GitSemverResolver(object):
         self.git.pull_submodules(cwd=tag_path)
 
         return tag_path
-
-    def select_tag(self, major, tags):
-        """
-        Compare the available tags and return the newest tag for the
-        specific version.
-
-        :param tags: list of available tags
-        :return: the tag to use or None if not tag is compatible
-        """
-        assert isinstance(major, int), "Major version is not an int"
-
-        # Get tags with matching version
-        valid_tags = []
-
-        for tag in tags:
-            try:
-                t = self.semver.parse(tag)
-                if t['major'] != major:
-                    continue
-
-                valid_tags.append(tag)
-            except ValueError:  # ignore tags we cannot parse
-                pass
-
-        if len(valid_tags) == 0:
-            return None
-
-        # Now figure out which version is the newest. We may only
-        # use versions meeting the version requirement as specified by
-        # self.major, self.minor, and self.patch, to ensure compatibility see
-        # rules at semver.org
-
-        best_match = valid_tags[0]
-
-        for t in valid_tags:
-            if self.semver.match(best_match, "<" + t):
-                best_match = t
-
-        return best_match
 
     def __repr__(self):
         """

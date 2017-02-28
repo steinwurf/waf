@@ -23,6 +23,9 @@ from .options import Options
 from .mandatory_options import MandatoryOptions
 from .resolver_configuration import ResolverConfiguration
 from .create_symlink_resolver import CreateSymlinkResolver
+from .semver_selector import SemverSelector
+from .tag_database import TagDatabase
+from .existing_tag_resolver import ExistingTagResolver
 
 from .error import Error
 
@@ -34,6 +37,7 @@ class WurfProvideRegistryError(Error):
 
         super(WurfProvideRegistryError, self).__init__(
             "Fatal error {} already added to registry".format(self.name))
+
 
 class Registry(object):
 
@@ -180,6 +184,7 @@ def bundle_path(registry):
 
     return bundle_path
 
+
 @Registry.cache
 @Registry.provide
 def symlinks_path(registry):
@@ -192,12 +197,14 @@ def symlinks_path(registry):
 
     return symlinks_path
 
+
 @Registry.cache
 @Registry.provide
 def git_url_parser(registry):
     """ Parser for Git URLs. """
 
     return GitUrlParser()
+
 
 @Registry.cache
 @Registry.provide
@@ -211,6 +218,7 @@ def git_url_rewriter(registry):
     git_protocol = registry.require('git_protocol')
 
     return GitUrlRewriter(parser=parser, rewrite_protocol=git_protocol)
+
 
 @Registry.cache
 @Registry.provide
@@ -227,10 +235,12 @@ def parser(registry):
         # argparse: http://stackoverflow.com/a/14591302/1717320
         usage=argparse.SUPPRESS)
 
+
 @Registry.cache
 @Registry.provide
 def dependency_cache(registry):
     return OrderedDict()
+
 
 @Registry.cache
 @Registry.provide
@@ -251,15 +261,32 @@ def options(registry):
         default_symlinks_path=default_symlinks_path,
         supported_git_protocols=supported_git_protocols)
 
+
 @Registry.cache
 @Registry.provide
 def mandatory_options(registry):
-    """ Return the Options provider.
-
-    """
+    """ Return the Options provider. """
     options = registry.require('options')
 
     return MandatoryOptions(options=options)
+
+
+@Registry.cache
+@Registry.provide
+def semver_selector(registry):
+    """ Return the SemverSelector provider. """
+    semver = registry.require('semver')
+
+    return SemverSelector(semver=semver)
+
+
+@Registry.cache
+@Registry.provide
+def tag_database(registry):
+    """ Return the TagDatabase provider. """
+    ctx = registry.require('ctx')
+    return TagDatabase(ctx=ctx)
+
 
 @Registry.cache
 @Registry.provide
@@ -276,12 +303,11 @@ def project_git_protocol(registry):
         parent_url = git.remote_origin_url(cwd=os.getcwd())
 
     except Exception as e:
-
-        ctx.to_log('Exception when executing git.remote_origin_url {}'.format(e))
+        ctx.to_log(
+            'Exception when executing git.remote_origin_url: {}'.format(e))
         return None
 
     else:
-
         url = parser.parse(parent_url)
         return url.protocol
 
@@ -441,7 +467,7 @@ def git_semver_resolver(registry, dependency):
     """
 
     git = registry.require('git')
-    semver = registry.require('semver')
+    semver_selector = registry.require('semver_selector')
     ctx = registry.require('ctx')
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
     options = registry.require('options')
@@ -454,7 +480,7 @@ def git_semver_resolver(registry, dependency):
 
     def wrap(resolver):
         resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
-            semver=semver, name=name, major=major)
+            semver_selector=semver_selector, name=name, major=major)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx)
         return resolver
@@ -525,6 +551,20 @@ def git_source_resolver(registry, dependency):
         fast_resolver = TryResolver(resolver=fast_resolver, ctx=ctx)
 
         return ListResolver(resolvers=[fast_resolver, git_resolver])
+
+    elif dependency.method == 'semver':
+
+        sources = registry.require('git_sources', dependency=dependency)
+        semver_selector = registry.require('semver_selector')
+        tag_database = registry.require('tag_database')
+        bundle_path = registry.require('bundle_path')
+
+        existing_tag_resolver = ExistingTagResolver(ctx=ctx,
+            dependency=dependency, semver_selector=semver_selector,
+            tag_database=tag_database, bundle_path=bundle_path,
+            sources=sources)
+
+        return ListResolver(resolvers=[existing_tag_resolver, git_resolver])
 
     else:
 
