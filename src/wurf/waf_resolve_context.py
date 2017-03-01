@@ -48,6 +48,8 @@ class WafResolveContext(Context.Context):
         """
         super(WafResolveContext, self).__init__(**kw)
 
+        self.fun = 'resolve'
+
     def execute(self):
 
         # Check whether the main wscript has a resolve function defined,
@@ -157,6 +159,14 @@ class WafResolveContext(Context.Context):
         self.dependency_manager.add_dependency(**kwargs)
 
     def cmd_and_log(self, cmd, **kwargs):
+
+        # Seems the new waf needs the cwd to be a Node object we can make that
+        if 'cwd' in kwargs:
+            cwd = kwargs['cwd']
+            print("CWD: {}".format(cwd))
+            kwargs['cwd'] = self.root.find_dir(str(cwd))
+            assert kwargs['cwd']
+
 
         try:
             return super(WafResolveContext, self).cmd_and_log(

@@ -43,7 +43,6 @@ class Git(object):
         """
         Runs 'git clone <repository> <directory>' in the directory cwd.
         """
-
         args = [self.git_binary, 'clone', repository, directory]
         self.ctx.cmd_and_log(args, cwd=cwd)
 

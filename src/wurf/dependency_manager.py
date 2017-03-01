@@ -64,6 +64,8 @@ class DependencyManager(object):
         with open(resolve_path, 'r') as resolve_file:
             resolve_json = json.load(resolve_file)
 
+        print("RESOLVE JSON: {}".format(resolve_json))
+
         for dependency in resolve_json:
             self.add_dependency(**dependency)
 
@@ -88,13 +90,18 @@ class DependencyManager(object):
         if not path:
             return
 
+        print("RECURSE {}".format(dependency.recurse))
+
         self.dependency_cache[dependency.name] = \
             {'path': path, 'recurse': dependency.recurse}
 
         if dependency.recurse:
             # We do not require the 'resolve' function to be implemented in
             # dependency projects. Therefore the mandatory=False.
-            self.ctx.recurse(path, mandatory=False)
+            #
+            # @todo the str() here is needed as waf does not handle unicode
+            # in its find_node function. So that would be nice to fix.
+            self.ctx.recurse(str(path), mandatory=False)
 
             # We also do not require a resolve.json file
             self.load_dependencies(path, mandatory=False)
