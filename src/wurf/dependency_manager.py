@@ -64,8 +64,6 @@ class DependencyManager(object):
         with open(resolve_path, 'r') as resolve_file:
             resolve_json = json.load(resolve_file)
 
-        print("RESOLVE JSON: {}".format(resolve_json))
-
         for dependency in resolve_json:
             self.add_dependency(**dependency)
 
@@ -89,8 +87,6 @@ class DependencyManager(object):
 
         if not path:
             return
-
-        print("RECURSE {}".format(dependency.recurse))
 
         self.dependency_cache[dependency.name] = \
             {'path': path, 'recurse': dependency.recurse}

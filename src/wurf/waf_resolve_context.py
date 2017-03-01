@@ -160,10 +160,11 @@ class WafResolveContext(Context.Context):
 
     def cmd_and_log(self, cmd, **kwargs):
 
-        # Seems the new waf needs the cwd to be a Node object we can make that
+        # Seems the new waf needs the cwd to be a Node object. We do this
+        # adaption here to avoid introducing additional Waf dependencies in the
+        # other parts of the code.
         if 'cwd' in kwargs:
             cwd = kwargs['cwd']
-            print("CWD: {}".format(cwd))
             kwargs['cwd'] = self.root.find_dir(str(cwd))
             assert kwargs['cwd']
 
