@@ -129,6 +129,29 @@ dependency e.g. to manually set the path of a dependency `foo` using
 
     python waf configure --foo-path /tmp/foo --fast-resolve
 
+Support for `resolve.json`
+--------------------------
+Providing third-party tooling to work with the dependencies, i.e. monitoring
+the dependencies and sending push notifications when new versions are available
+etc. is a lot easier if dependencies are stored outside the `wscript` in an
+easy to process data structure.
+
+It is therefore recommended that users specify dependencies using a
+`resolve.json` file.
+
+If needed it is still possible to define the `resolve(...)` function
+in the `wscript`. This should only be used in situations where some information
+about a dependency is not known until runtime or when some computations are
+needed to determine some information regarding a dependency. In that case an
+user can define the `resolve(...)` function in the `wscript` and write the
+needed Python code.
+
+To support both these ways of configuring we define the following "rules":
+
+1. The user defined `resolve(...)` function will always be called before looking
+   for a `resolve.json` file.
+2. It is valid to mix both methods to define dependencies.
+
 Future features
 ===============
 
@@ -181,31 +204,6 @@ Certain resolvers utilize "shortcuts" such as using cached information about
 dependencies to speed the resolve step. Providing this option should by-pass
 such optimizations and do a full resolve - not relying on any form of cached
 data.
-
-Add support for `dependencies.json`
------------------------------------
-Providing third-party tooling to work with the dependencies, i.e. monitoring
-the dependencies and sending push notifications when new versions are available
-etc. will be a lot easier if dependencies are stored outside the wscript in
-some easy to process data structure.
-
-It is therefore recommended that users specify dependencies using the
-`dependencies.json` file.
-
-If needed it should still be possible to define the `resolve(...)` function
-in the wscript. This should only be used in situations where some information
-about a dependency is not know until runtime or when some computations are
-needed to determine the dependency. In that case an user can define
-`resolve(...)` and write the needed Python code.
-
-To support both these ways of configuring we define the following "rules":
-
-1. If an user specifies a `resolve(...)` function in the wscript the resolver.
-   Will invoke only this (an existing `dependencies.json` will not be loaded
-   automatically). The user may manually load the `dependencies.json` file using
-   add_dependency_file(...) method on the resolve context.
-2. If no `resolve(...)` function is specified, the resolve system will
-   automatically look for and load the `dependencies.json` file.
 
 Print traceback if `-v` verbose flag is specified
 -------------------------------------------------

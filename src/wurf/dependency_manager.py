@@ -100,7 +100,17 @@ class DependencyManager(object):
             # dependency projects. Therefore the mandatory=False.
             #
             # @todo the str() here is needed as waf does not handle unicode
-            # in its find_node function. So that would be nice to fix.
+            # in its find_node function (invoked from within recurse). So that
+            # would be nice to fix.
+            #
+            # If at some point we want to change this benaviour such that the
+            # resolve.json file is only loaded if the user does not specify
+            # a resolve(...) function. then we should be able to do that pretty
+            # easily by setting mandatory=True then catching the excpetion waf
+            # will rasie if it cannot finde the resolve(...) fucntion and only
+            # then try to load the dependencies. However, for now we will go
+            # with the approach where we do both without any of them being
+            # mandatory.
             self.ctx.recurse(str(path), mandatory=False)
 
             # We also do not require a resolve.json file
