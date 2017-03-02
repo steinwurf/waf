@@ -1,50 +1,63 @@
+import os
 import pytest
 import mock
-import os
 
 from wurf.git_checkout_resolver import GitCheckoutResolver
 
-def test_wurf_git_checkout_resolver(test_directory):
 
-    return
+def test_git_checkout_resolver(test_directory):
 
-    # Lets create a dir for the git resolver
-    # master_director = test_directory.mkdir('bla-master-01234')
-    # 
-    # git_resolver = mock.Mock()
-    # git_resolver.resolve.return_value = master_director.path()
-    # 
-    # resolver = WurfGitCheckoutResolver(
-    #     name='links',
-    #     checkout='my-branch',
-    #     git_resolver=git_resolver,
-    #     log=mock.Mock())
-    # 
-    # ctx = mock.Mock()
-    # cwd = test_directory.path()
-    # 
-    # path = resolver.resolve(ctx, cwd)
-    # 
-    # # Given  /tmp/test_wurf_git_resolver0/links-bla-04aeea yields:
-    # #
-    # #    links-bla-04aeea
-    # #
-    # # The destination is computed in the resolve function we just get it here
-    # # manually.
-    # destination = os.path.basename(os.path.normpath(path))
-    # 
-    # # The path should now exist
-    # assert(os.path.isdir(path))
-    # 
-    # ctx.git_checkout.assert_called_once_with(branch='my-branch', cwd=path)
-    # ctx.git_get_submodules.assert_called_once_with(repository_dir=path)
-    # 
-    # # Lets try to create the destination folder and check if we just pull:
-    # # Reset our context
-    # ctx = mock.Mock()
-    # ctx.git_default_scheme.return_value=None
-    # 
-    # path = resolver.resolve(ctx, cwd)
-    # 
-    # ctx.git_pull.assert_called_once_with(cwd=path)
-    # ctx.git_get_submodules.assert_called_once_with(repository_dir=path)
+    ctx = mock.Mock()
+    git = mock.Mock()
+    cwd = test_directory.path()
+
+    # Let's create a dir for the GitResolver
+    master_folder = test_directory.mkdir('links-master-01234')
+
+    git_resolver = mock.Mock()
+    git_resolver.resolve.return_value = master_folder.path()
+
+    name = 'links'
+    checkout = 'my-branch'
+    repo_url = 'https://gitlab.com/steinwurf/links.git'
+
+    resolver = GitCheckoutResolver(git=git, git_resolver=git_resolver,
+        ctx=ctx, name=name, bundle_path=cwd, checkout=checkout)
+
+    path = resolver.resolve()
+
+    # The checkout path should now exist
+    assert os.path.isdir(path)
+
+    git.checkout.assert_called_once_with(branch=checkout, cwd=path)
+    git.pull_submodules.assert_called_once_with(cwd=path)
+
+    # Reset the git mock
+    git.reset_mock()
+    # Simulate a normal branch (non-detached head)
+    git.is_detached_head.return_value = False
+
+    # The destination folder is already created, so the next resolve
+    # should just run git pull
+    path2 = resolver.resolve()
+
+    assert path2 == path
+
+    assert git.checkout.called == False
+    git.pull.assert_called_once_with(cwd=path)
+    git.pull_submodules.assert_called_once_with(cwd=path)
+
+    # Reset the git mock
+    git.reset_mock()
+    # Simulate a tag or a commit (detached head)
+    git.is_detached_head.return_value = True
+
+    # The destination folder is already created, so the next resolve
+    # should just run git pull
+    path3 = resolver.resolve()
+
+    assert path3 == path
+
+    assert git.checkout.called == False
+    assert git.pull.called == False
+    git.pull_submodules.assert_called_once_with(cwd=path)
