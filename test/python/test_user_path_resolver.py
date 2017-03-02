@@ -1,31 +1,33 @@
 import pytest
 import mock
-import argparse
 
 from wurf.user_path_resolver import UserPathResolver
+from wurf.error import DependencyError
 
-def test_user_path_resolver():
-    pass
 
-# def test_wurf_user_path_resolver_default():
-# 
-#     parser = argparse.ArgumentParser()
-#     args = ['--foo', '-b']
-#     
-#     resolver = WurfUserPathResolver(parser, args)
-#     
-#     ret = resolver.resolve('test')
-#     
-#     assert(ret == None)
-# 
-# 
-# def test_wurf_user_path_resolver():
-# 
-#     parser = argparse.ArgumentParser()
-#     args = ['--foo', '--test-path', '/home/stw/code', '-b']
-# 
-#     resolver = WurfUserPathResolver(parser, args)
-#     
-#     ret = resolver.resolve('test')
-#     
-#     assert(ret == '/home/stw/code')
+def test_user_path_resolver_invalid_path():
+
+    dependency = mock.Mock()
+    dependency.name = 'foo'
+
+    path = '/tmp/this_should_not_exist'
+
+    resolver = UserPathResolver(dependency=dependency, path=path)
+
+    # A DependencyError should be raised for a non-existent path
+    with pytest.raises(DependencyError):
+        resolver.resolve()
+
+
+def test_user_path_resolver_valid_path(test_directory):
+
+    dependency = mock.Mock()
+    dependency.name = 'foo'
+
+    path = test_directory.path()
+
+    resolver = UserPathResolver(dependency=dependency, path=path)
+
+    ret = resolver.resolve()
+
+    assert ret == path
