@@ -68,6 +68,10 @@ def options(opt):
         help='Run all unit tests')
 
     opt.add_option(
+        '--pytest_basetemp', default='pytest',
+        help='Set the basetemp folder where pytest executes the tests')
+
+    opt.add_option(
         '--skip_network_tests', default=False, action='store_true',
         help='Skip the unit tests that use network resources')
 
@@ -169,10 +173,13 @@ def _pytest(bld):
     separator = ';' if sys.platform == 'win32' else ':'
     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
 
-    # We override the default pytest temp folder with the basetemp option,
-    # so the test folders will be available in "pytest" on all platforms.
+    test_command = 'python -m pytest test'
+
+    # We override the pytest temp folder with the basetemp option,
+    # so the test folders will be available at the specified location
+    # on all platforms. The default location is the "pytest" local folder.
     # Note that pytest will purge this folder before running the tests.
-    test_command = 'python -m pytest --basetemp=pytest test'
+    test_command += ' --basetemp {}'.format(bld.options.pytest_basetemp)
 
     # Conditionally disable the tests that have the "networktest" marker
     if bld.options.skip_network_tests:
