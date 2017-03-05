@@ -25,6 +25,6 @@ class MandatoryResolver(object):
         path = self.resolver.resolve()
 
         if not path:
-            raise DependencyError(msg=self.msg, self.dependency)
+            raise DependencyError(msg=self.msg, dependency=self.dependency)
 
         return path
