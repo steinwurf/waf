@@ -31,3 +31,8 @@ def test_fixtures(test_directory):
 
     assert r.returncode == 0
     assert r.stdout.match('Python *') or r.stderr.match('Python *')
+
+    sub3 = test_directory.mkdir('sub3')
+    ok3_file = sub3.copy_file(ok_path, rename_as='ok3.txt')
+
+    assert os.path.isfile(ok3_file)
