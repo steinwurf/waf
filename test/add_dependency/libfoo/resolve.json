@@ -1,0 +1,12 @@
+[
+    {
+        "name": "bar",
+        "recurse": true,
+        "optional": false,
+        "resolver": "git",
+        "method": "checkout",
+        "checkout": "someh4sh",
+        "sources": ["bitbucket.com/acme-corp/bar.git",
+                    "gitlab.com/acme-corp/bar.git"]
+    }
+]

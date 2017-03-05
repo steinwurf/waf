@@ -2,8 +2,10 @@
 # encoding: utf-8
 
 import os
+import json
 
 from .dependency import Dependency
+from .error import Error
 
 class DependencyManager(object):
 
@@ -42,6 +44,29 @@ class DependencyManager(object):
         # purposes).
         self.seen_dependencies = {}
 
+    def load_dependencies(self, path, mandatory=False):
+        """ Loads dependencies from a resolve.json file.
+
+        :param path: Location where resolve.json should be found.
+        :param mandatory: True if the resolve.json file must exist.
+        """
+
+        resolve_path = os.path.join(path, 'resolve.json')
+
+        if not os.path.isfile(resolve_path):
+
+            if mandatory:
+                raise Error('Mandatory resolve.json not found here: {}'.format(
+                    resolve_path))
+            else:
+                return
+
+        with open(resolve_path, 'r') as resolve_file:
+            resolve_json = json.load(resolve_file)
+
+        for dependency in resolve_json:
+            self.add_dependency(**dependency)
+
     def add_dependency(self, **kwargs):
         """ Adds a dependency to the manager.
 
@@ -69,7 +94,23 @@ class DependencyManager(object):
         if dependency.recurse:
             # We do not require the 'resolve' function to be implemented in
             # dependency projects. Therefore the mandatory=False.
-            self.ctx.recurse(path, mandatory=False)
+            #
+            # @todo the str() here is needed as waf does not handle unicode
+            # in its find_node function (invoked from within recurse). So that
+            # would be nice to fix.
+            #
+            # If at some point we want to change this benaviour such that the
+            # resolve.json file is only loaded if the user does not specify
+            # a resolve(...) function. then we should be able to do that pretty
+            # easily by setting mandatory=True then catching the excpetion waf
+            # will rasie if it cannot finde the resolve(...) fucntion and only
+            # then try to load the dependencies. However, for now we will go
+            # with the approach where we do both without any of them being
+            # mandatory.
+            self.ctx.recurse(str(path), mandatory=False)
+
+            # We also do not require a resolve.json file
+            self.load_dependencies(path, mandatory=False)
 
     def __skip_dependency(self, dependency):
         """ Checks if we should skip the dependency.
