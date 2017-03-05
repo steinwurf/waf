@@ -227,19 +227,38 @@ chosen etc.
 Add `--freeze` option
 ---------------------
 
-The freeze option will write `frozen_dependencies.json` to the root folder.
-This file will fix the path to the different named dependencies, all
-dependencies needed must be found in the fozen file if present.
+The `--freeze` option will write `freeze_resolve.json` to the project folder.
+This file will describe the exact information about the project's dependencies.
 
-If the `frozen_dependencies.json` is present it will take precedence over all
+In general this is done the following way for different resolvers:
+
+ - `git` resolvers, will store the SHA1 commit id of the dependency.
+ - `http` resolvers, will store the SHA1 sum of the downloaded dependency.
+
+ If the `freeze_resolve.json` is present it will take precedence over all
+ resolvers besides the `--project-path` options.
+
+ You can commit the `freeze_resolve.json` file to the project e.g. when creating
+ a LTS (Long Term Support) release or similar. Where you want to pin the exact
+ commit id, etc. of the project.
+
+Add `--deep-freeze` option
+--------------------------
+
+The `--deep-freeze` will write a `deep_freeze_resolve.json` file in the project
+folder. It behaves differently from the `--freeze` option in that it will store
+the relative paths to the dependencies. The typical use-case for this is to
+download all dependencies into a folder stored within the project (default
+behavior) in order to make a stand-alone archive.
+
+If the `deep_freeze_resolve.json` is present it will take precedence over all
 resolvers besides the `--project-path` options.
 
 This makes it possible to easily the create standalone archives, by simply
 invoking::
 
-    python waf configure --freeze
+    python waf configure --deep-freeze
     python waf dist
-
 
 
 Bundle dependencies
