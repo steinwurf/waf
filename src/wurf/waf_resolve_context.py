@@ -48,8 +48,6 @@ class WafResolveContext(Context.Context):
         """
         super(WafResolveContext, self).__init__(**kw)
 
-        self.fun = 'resolve'
-
     def execute(self):
 
         # Check whether the main wscript has a resolve function defined,
