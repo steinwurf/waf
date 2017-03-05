@@ -14,7 +14,7 @@ def test_git_resolver(test_directory):
     # GitResolver checks that the directory is created during git.clone,
     # so we create it within the test_directory as a side effect
     def fake_git_clone(repository, directory, cwd):
-        test_directory.mkdir(directory)
+        os.makedirs(os.path.join(cwd, directory))
 
     git.clone = mock.Mock(side_effect=fake_git_clone)
 
@@ -29,9 +29,11 @@ def test_git_resolver(test_directory):
     # The destination path is determined in the resolve function,
     # we just get the folder name manually
     repo_name = os.path.basename(os.path.normpath(path))
+    assert repo_name == 'master'
+    repo_folder = os.path.dirname(os.path.normpath(path))
 
     git.clone.assert_called_once_with(
-        repository=repo_url, directory=repo_name, cwd=cwd)
+        repository=repo_url, directory='master', cwd=repo_folder)
 
     git.pull_submodules.assert_called_once_with(cwd=path)
 
