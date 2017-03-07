@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import hashlib
 import os
 
 class GitResolver(object):
@@ -9,24 +8,21 @@ class GitResolver(object):
     Base Git Resolver functionality. Clones/pulls a git repository.
     """
 
-    def __init__(self, git, ctx, name, bundle_path, source):
+    def __init__(self, git, ctx, name, parent_folder, source):
         """ Construct a new WurfGitResolver instance.
 
         :param git: A WurfGit instance
         :param url_resolver: A WurfGitUrlResolver instance.
         :param ctx: A Waf Context instance.
+        :param parent_folder: A ParentFolder instance.
         :param name: The name of the dependency as a string
-        :param bundle_path: Current working directory as a string. This is
-            the place where we should create new folders etc.
-        :param source: THe URL of the dependency as a string
+        :param source: The URL of the dependency as a string
         """
         self.git = git
         self.ctx = ctx
         self.name = name
-        self.bundle_path = bundle_path
+        self.parent_folder = parent_folder
         self.source = source
-
-        assert os.path.isabs(self.bundle_path)
 
     def resolve(self):
         """
@@ -36,13 +32,8 @@ class GitResolver(object):
         """
         repo_url = self.source
 
-        # Use the first 6 characters of the SHA1 hash of the repository url
-        # to uniquely identify the repository
-        repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
-
         # The parent folder to store different versions of this repository
-        repo_folder = os.path.join(self.bundle_path,
-            '{}-{}'.format(self.name, repo_hash))
+        repo_folder = self.parent_folder.parent_folder(self.name, repo_url)
 
         # Make sure that the repo_folder exists
         if not os.path.exists(repo_folder):

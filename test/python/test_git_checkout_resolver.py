@@ -11,7 +11,8 @@ def test_git_checkout_resolver(test_directory):
     git = mock.Mock()
     cwd = test_directory.path()
 
-    # Let's create a dir for the GitResolver
+    # Create a parent folder for the dependency and the corresponding
+    # subfolder for the 'master' checkout
     repo_folder = test_directory.mkdir('links-01234')
     master_folder = repo_folder.mkdir('master')
 

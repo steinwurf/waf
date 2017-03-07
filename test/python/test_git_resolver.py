@@ -9,7 +9,8 @@ def test_git_resolver(test_directory):
 
     ctx = mock.Mock()
     git = mock.Mock()
-    cwd = test_directory.path()
+    parent_folder = mock.Mock()
+    parent_folder.parent_folder.return_value = test_directory.path()
 
     # GitResolver checks that the directory is created during git.clone,
     # so we create it within the test_directory as a side effect
@@ -22,12 +23,10 @@ def test_git_resolver(test_directory):
     repo_url = 'https://gitlab.com/steinwurf/links.git'
 
     resolver = GitResolver(git=git, ctx=ctx, name=name,
-        bundle_path=cwd, source=repo_url)
+        parent_folder=parent_folder, source=repo_url)
 
     path = resolver.resolve()
 
-    # The destination path is determined in the resolve function,
-    # we just get the folder name manually
     repo_name = os.path.basename(os.path.normpath(path))
     assert repo_name == 'master'
     repo_folder = os.path.dirname(os.path.normpath(path))

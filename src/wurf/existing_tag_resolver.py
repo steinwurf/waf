@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 import os
-import hashlib
 
 class ExistingTagResolver(object):
     """
@@ -11,26 +10,22 @@ class ExistingTagResolver(object):
     """
 
     def __init__(self, ctx, dependency, semver_selector, tag_database,
-                 bundle_path, sources):
+                 parent_folder, sources):
         """ Construct a new ExistingTagResolver instance.
 
         :param ctx: A Waf Context instance.
         :param dependency: The Dependency object.
         :param semver_selector: A SemverSelector instance.
         :param tag_database: A TagDatabase instance.
-        :param bundle_path: Current working directory as a string. This is
-            the place where we should create new folders etc.
+        :param parent_folder: A ParentFolder instance.
         :param sources: The URLs of the dependency as a list of strings
         """
-
         self.ctx = ctx
         self.dependency = dependency
         self.semver_selector = semver_selector
         self.tag_database = tag_database
-        self.bundle_path = bundle_path
+        self.parent_folder = parent_folder
         self.sources = sources
-
-        assert os.path.isabs(self.bundle_path)
 
     def resolve(self):
         """
@@ -55,11 +50,9 @@ class ExistingTagResolver(object):
             if 'steinwurf' not in source:
                 continue
 
-            repo_hash = hashlib.sha1(source.encode('utf-8')).hexdigest()[:6]
-
             # The existing checkouts are stored in this parent folder
-            repo_folder = os.path.join(self.bundle_path,
-                '{}-{}'.format(self.dependency.name, repo_hash))
+            repo_folder = self.parent_folder.parent_folder(
+                self.dependency.name, source)
 
             if not os.path.exists(repo_folder):
                 continue

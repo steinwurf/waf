@@ -26,6 +26,7 @@ from .create_symlink_resolver import CreateSymlinkResolver
 from .semver_selector import SemverSelector
 from .tag_database import TagDatabase
 from .existing_tag_resolver import ExistingTagResolver
+from .parent_folder import ParentFolder
 
 from .error import Error
 
@@ -196,6 +197,14 @@ def symlinks_path(registry):
     waf_utils.check_dir(symlinks_path)
 
     return symlinks_path
+
+
+@Registry.cache
+@Registry.provide
+def parent_folder(registry):
+    bundle_path = registry.require('bundle_path')
+
+    return ParentFolder(bundle_path=bundle_path)
 
 
 @Registry.cache
@@ -392,14 +401,14 @@ def git_resolvers(registry, dependency):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
-    bundle_path = registry.require('bundle_path')
+    parent_folder = registry.require('parent_folder')
 
     name = dependency.name
     sources = registry.require('git_sources', dependency=dependency)
 
     def wrap(source):
-        return GitResolver(
-            git=git, ctx=ctx, name=name, bundle_path=bundle_path, source=source)
+        return GitResolver(git=git, ctx=ctx, parent_folder=parent_folder,
+                           name=name, source=source)
 
     resolvers = [wrap(source) for source in sources]
     return resolvers
@@ -557,11 +566,11 @@ def git_source_resolver(registry, dependency):
         sources = registry.require('git_sources', dependency=dependency)
         semver_selector = registry.require('semver_selector')
         tag_database = registry.require('tag_database')
-        bundle_path = registry.require('bundle_path')
+        parent_folder = registry.require('parent_folder')
 
         existing_tag_resolver = ExistingTagResolver(ctx=ctx,
             dependency=dependency, semver_selector=semver_selector,
-            tag_database=tag_database, bundle_path=bundle_path,
+            tag_database=tag_database, parent_folder=parent_folder,
             sources=sources)
 
         return ListResolver(resolvers=[existing_tag_resolver, git_resolver])
