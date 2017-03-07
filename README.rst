@@ -242,6 +242,11 @@ In general this is done the following way for different resolvers:
  a LTS (Long Term Support) release or similar. Where you want to pin the exact
  commit id, etc. of the project.
 
+ As an example::
+
+     # Writes / overwrites an existing freeze_resolve.json
+     python waf configure --freeze
+
 Add `--deep-freeze` option
 --------------------------
 

@@ -21,8 +21,9 @@ from .git_url_rewriter import GitUrlRewriter
 from .git import Git
 from .options import Options
 from .mandatory_options import MandatoryOptions
-from .resolver_configuration import ResolverConfiguration
 from .create_symlink_resolver import CreateSymlinkResolver
+from .configuration import Configuration
+from .write_deep_freeze_resolve_json import WriteDeepFreezeResolveJson
 
 from .error import Error
 
@@ -617,13 +618,32 @@ def dependency_resolver(registry, dependency):
     #    from the file system.
     # 3. The "help" chain: This chain tries to interate though as many
     #    dependencies as possible to get all options.
-
-    resolver_configuration = registry.require('resolver_configuration')
-    resolver_key = "{}_dependency_resolver".format(resolver_configuration)
+    #
+    resolver_chain = registry.require('resolver_chain')
+    resolver_key = "{}_dependency_resolver".format(resolver_chain)
 
     return registry.require(resolver_key, dependency=dependency)
 
+@Registry.cache
+@Registry.provide
+def resolver_chain(registry):
+    configuration = registry.require('configuration')
+    return configuration.resolver_chain()
 
+@Registry.provide
+def configuration(registry):
+    options = registry.require('options')
+    args = registry.require('args')
+    project_path = registry.require('project_path')
+
+    return Configuration(options=options, args=args, project_path=project_path)
+
+@Registry.provide
+def write_deep_freeze_resolve_json(registry):
+
+    project_path = registry.require('project_path')
+
+    return WriteDeepFreezeResolveJson(project_path=project_path)
 
 @Registry.provide
 def dependency_manager(registry):
@@ -634,14 +654,20 @@ def dependency_manager(registry):
     ctx = registry.require('ctx')
     dependency_cache = registry.require('dependency_cache')
     options = registry.require('options')
+    configuration = registry.require('configuration')
 
-    return DependencyManager(registry=registry,
+    manager = DependencyManager(registry=registry,
         dependency_cache=dependency_cache, ctx=ctx, options=options)
 
+    if configuration.write_deep_freeze():
+        manager.add_post_resolve_action(
+            registry.require('write_deep_freeze_resolve_json'))
+
+    return manager
 
 def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
-                   default_symlinks_path, resolver_configuration, semver,
-                   waf_utils, args):
+                   default_symlinks_path, semver,
+                   waf_utils, args, project_path):
     """ Builds a registry.
 
     :param ctx: A Waf Context instance.
@@ -652,11 +678,11 @@ def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
         dependencies config json files should be / is stored.
     :param default_symlinks_path: A string containing the path where the
         dependency symlinks should be created per default.
-    :param resolver_configuration: Type of resolver chain to build.
     :param semver: The semver module
     :param waf_utils: The waflib.Utils module
     :param args: Argument strings as a list, typically this will come
         from sys.argv
+    :param project_path: The path to the project as a string
 
     :returns:
         A new Registery instance.
@@ -668,9 +694,9 @@ def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
     registry.provide_value('default_bundle_path', default_bundle_path)
     registry.provide_value('bundle_config_path', bundle_config_path)
     registry.provide_value('default_symlinks_path', default_symlinks_path)
-    registry.provide_value('resolver_configuration', resolver_configuration)
     registry.provide_value('semver', semver)
     registry.provide_value('waf_utils', waf_utils)
     registry.provide_value('args', args)
+    registry.provide_value('project_path', project_path)
 
     return registry

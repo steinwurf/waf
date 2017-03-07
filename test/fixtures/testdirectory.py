@@ -137,6 +137,14 @@ class TestDirectory:
         f = self.tmpdir.join(filename)
         f.write(content)
 
+    def contains_file(self, filename):
+        """ Checks for the existance of a file.
+
+        :param filename: The filename to check for.
+        :return: True if the file is contained within the test directory.
+        """
+        return os.path.isfile(os.path.join(self.path(), filename))
+
     def run(self, *args, **kwargs):
         """Runs the command in the test directory.
 

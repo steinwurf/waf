@@ -18,7 +18,6 @@ from waflib.Configure import conf
 from waflib.Errors import WafError
 
 from . import registry
-from .resolver_configuration import ResolverConfiguration
 from .error import CmdAndLogError
 from .error import Error
 
@@ -58,24 +57,11 @@ class WafResolveContext(Context.Context):
         if not 'resolve' in Context.g_module.__dict__:
             Context.g_module.resolve = Utils.nada
 
-        # Figure out which resolver configuration we should use, this has to
-        # run before we create the build folder
-        configuration = self.resolver_configuration()
-
         # Create the nodes that will be used during the resolve step. The build
         # directory is also used by the waf BuildContext
         self.srcnode = self.path
         self.bldnode = self.path.make_node('build')
         self.bldnode.mkdir()
-
-        # Enable/disable colors based on the currently used terminal.
-        # Note: this prevents jumbled output if waf is invoked from an IDE
-        # that does not render colors in its output window
-        Logs.enable_colors(1)
-        path = os.path.join(self.bldnode.abspath(), configuration+'.resolve.log')
-        self.logger = Logs.make_logger(path, 'cfg')
-
-        self.logger.debug('wurf: Resolve execute {}'.format(configuration))
 
         default_bundle_path = os.path.join(
             self.path.abspath(), 'bundle_dependencies')
@@ -88,8 +74,22 @@ class WafResolveContext(Context.Context):
             semver=semver, default_bundle_path=default_bundle_path,
             bundle_config_path=self.bundle_config_path(),
             default_symlinks_path=default_symlinks_path,
-            resolver_configuration=configuration,
-            waf_utils=Utils, args=sys.argv[1:])
+            waf_utils=Utils, args=sys.argv[1:],
+            project_path=self.path.abspath())
+
+        # Enable/disable colors based on the currently used terminal.
+        # Note: this prevents jumbled output if waf is invoked from an IDE
+        # that does not render colors in its output window
+        Logs.enable_colors(1)
+
+        # Lets make a different log file for the different resolver chains
+        resolver_chain = self.registry.require('resolver_chain')
+
+        path = os.path.join(self.bldnode.abspath(),
+            resolver_chain+'.resolve.log')
+
+        self.logger = Logs.make_logger(path, 'cfg')
+        self.logger.debug('wurf: Resolve execute {}'.format(resolver_chain))
 
         self.dependency_manager = self.registry.require('dependency_manager')
 
@@ -118,6 +118,8 @@ class WafResolveContext(Context.Context):
 
         self.logger.debug('wurf: dependency_cache {}'.format(dependency_cache))
 
+        # Invoke the post resolve user-defined functions
+        self.dependency_manager.post_resolve()
 
     def is_toplevel(self):
         """
@@ -136,20 +138,6 @@ class WafResolveContext(Context.Context):
         return self.bldnode.abspath()
 
 
-    def resolver_configuration(self):
-
-        if '-h' in sys.argv or '--help' in sys.argv:
-            return ResolverConfiguration.HELP
-        elif 'configure' in sys.argv:
-            # If active_resolvers, then the dependency resolvers are
-            # allowed to download the dependencies.
-            return ResolverConfiguration.ACTIVE
-        elif not self.path.find_node('build'):
-            # Project not yet configure - we don't have a build folder
-            return ResolverConfiguration.HELP
-        else:
-            return ResolverConfiguration.PASSIVE
-
     def add_dependency(self, **kwargs):
         """Adds a dependency.
         """
@@ -165,7 +153,6 @@ class WafResolveContext(Context.Context):
             cwd = kwargs['cwd']
             kwargs['cwd'] = self.root.find_dir(str(cwd))
             assert kwargs['cwd']
-
 
         try:
             return super(WafResolveContext, self).cmd_and_log(

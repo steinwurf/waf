@@ -181,6 +181,11 @@ def test_resolve_json(test_directory):
     app_dir.run('python', 'waf', 'configure', '-v', '--fast-resolve')
     app_dir.run('python', 'waf', 'build', '-v')
 
+    app_dir.run('python', 'waf', 'configure', '-v', '--deep-freeze')
+    assert app_dir.contains_file('deep_freeze_resolve.json')
+
+    app_dir.run('python', 'waf', 'configure', '-v')
+
 
 def test_add_dependency(test_directory):
     """ Tests that dependencies declared in the wscript works. I.e. where we
