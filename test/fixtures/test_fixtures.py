@@ -35,4 +35,12 @@ def test_fixtures(test_directory):
     sub3 = test_directory.mkdir('sub3')
     ok3_file = sub3.copy_file(ok_path, rename_as='ok3.txt')
 
+    assert test_directory.contains_dir('sub3')
+    assert not test_directory.contains_dir('notheredir')
+
     assert os.path.isfile(ok3_file)
+    assert sub3.contains_file('ok3.txt')
+    assert not sub3.contains_file('noherefile.txt')
+
+    sub3.rmdir()
+    assert not test_directory.contains_dir('sub3')

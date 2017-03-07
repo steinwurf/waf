@@ -576,6 +576,28 @@ def passive_dependency_resolver(registry, dependency):
     return resolver
 
 @Registry.provide
+def deep_freeze_dependency_resolver_(registry, dependency):
+
+    ctx = registry.require('ctx')
+    bundle_config_path = registry.require('bundle_config_path')
+
+    # Set the resolver action on the dependency
+    dependency.resolver_chain = 'Load'
+
+    resolver = OnPassiveLoadPathResolver(dependency=dependency,
+        bundle_config_path=bundle_config_path)
+
+    resolver = TryResolver(resolver=resolver, ctx=ctx)
+
+    resolver = ContextMsgResolver(resolver=resolver, ctx=ctx,
+        dependency=dependency)
+
+    resolver = CheckOptionalResolver(resolver=resolver,
+        dependency=dependency)
+
+    return resolver
+
+@Registry.provide
 def active_dependency_resolver(registry, dependency):
 
     ctx = registry.require('ctx')

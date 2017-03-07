@@ -48,6 +48,14 @@ class TestDirectory:
         """
         return TestDirectory(self.tmpdir.mkdir(directory))
 
+    def rmdir(self):
+        """ Remove the directory."""
+        self.tmpdir.remove()
+
+        # @todo not sure if this is a good idea, but I guess the tmpdir is
+        # invalid after the remove?
+        self.tmpdir = None
+
     def path(self):
         """ :return: The path to the temporary directory as a string"""
         return str(self.tmpdir)
@@ -144,6 +152,14 @@ class TestDirectory:
         :return: True if the file is contained within the test directory.
         """
         return os.path.isfile(os.path.join(self.path(), filename))
+
+    def contains_dir(self, dirname):
+        """ Checks for the existance of a directory.
+
+        :param dirname: The directory name to check for.
+        :return: True if the directory is contained within the test directory.
+        """
+        return os.path.isdir(os.path.join(self.path(), dirname))
 
     def run(self, *args, **kwargs):
         """Runs the command in the test directory.

@@ -184,6 +184,10 @@ def test_resolve_json(test_directory):
     app_dir.run('python', 'waf', 'configure', '-v', '--deep-freeze')
     assert app_dir.contains_file('deep_freeze_resolve.json')
 
+    # Now we can delete the git folders - as we should be able to configure
+    # from the frozen dependencies
+    git_dir.rmdir()
+
     app_dir.run('python', 'waf', 'configure', '-v')
 
 
