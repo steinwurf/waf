@@ -39,6 +39,28 @@ class Git(object):
         int_list = [int(s) for s in re.findall('\\d+', output)]
         return tuple(int_list)
 
+    def current_commit(self, cwd):
+        """
+        Runs 'git log -1' parse and return the commit id (SHA1) of the commit
+        currently checked out into the working copy.
+        """
+        args = [self.git_binary, 'log', '-1']
+        output = self.ctx.cmd_and_log(args, cwd=cwd).strip()
+
+        parser = re.compile(
+        r"""
+        ^               # Match beginning of line
+        commit          # Match the word commit
+        \s              # Match the space character
+        (               # Match and group
+           [0-9a-f]{40}   # Match 40 hexadecimal characters
+        )               # End of group
+        $               # Match end of line
+        """, re.VERBOSE | re.MULTILINE)
+
+        result = parser.match(output)
+        return result.group(1)
+
     def clone(self, repository, directory, cwd):
         """
         Runs 'git clone <repository> <directory>' in the directory cwd.

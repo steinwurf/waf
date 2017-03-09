@@ -18,6 +18,21 @@ def test_wurf_git_version():
 
     assert(git.version() == (2,7,4))
 
+def test_wurf_git_current_commit():
+
+    ctx = mock.Mock()
+    ctx.cmd_and_log.return_value ="""commit 044d59505f3b63645c7fb7dec145154b8e518086
+Author: Morten V. Pedersen <morten@mortenvp.com>
+Date:   Thu Mar 9 20:35:37 2017 +0100"""
+
+    git = Git('/bin/git_binary', ctx)
+
+    assert git.current_commit(cwd='/tmp') == "044d59505f3b63645c7fb7dec145154b8e518086"
+    ctx.cmd_and_log.assert_called_once_with(
+        ['/bin/git_binary', 'log', '-1'], cwd='/tmp')
+
+    ctx.cmd_and_log.return_value = 'git version 2.7.4'
+
 def test_wurf_git_clone():
 
     ctx = mock.Mock()

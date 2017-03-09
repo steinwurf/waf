@@ -12,26 +12,23 @@ class GitSemverResolver(object):
     Read more about Semantic Versioning here: semver.org
     """
 
-    def __init__(self, git, git_resolver, ctx, semver, name, bundle_path,
-        major):
+    def __init__(self, git, git_resolver, ctx, semver, bundle_path, dependency):
         """ Construct an instance.
 
         :param git: A WurfGit instance
         :param url_resolver: A WurfGitResolver instance.
         :param ctx: A Waf Context instance.
         :param semver: The semver module
-        :param name: Name of the dependency as a string
         :param bundle_path: Current working directory as a string. This is the place
             where we should create new folders etc.
-        :param major: The major version number to use as an int.
+        :param dependency: The dependency instance.
         """
         self.git = git
         self.git_resolver = git_resolver
         self.ctx = ctx
         self.semver = semver
-        self.name = name
         self.bundle_path = bundle_path
-        self.major = major
+        self.dependency = dependency
 
     def resolve(self):
         """ Fetches the dependency if necessary.
@@ -47,18 +44,21 @@ class GitSemverResolver(object):
         repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
 
         tags = self.git.tags(cwd=path)
-        tag = self.select_tag(major=self.major, tags=tags)
+        tag = self.select_tag(major=self.dependency.major, tags=tags)
 
         if not tag:
             self.ctx.fatal('No major tag {} for {} found. Candiates were: {}'.format(
-            self.major, self.name, tags))
+            self.dependency.major, self.dependency.name, tags))
+
+        # Record the selected tag
+        self.dependency.git_tag = tag
 
         # The folder for storing different versions of this repository
-        repo_name = self.name + '-' + tag + '-' + repo_hash
+        repo_name = self.dependency.name + '-' + tag + '-' + repo_hash
         repo_path = os.path.join(self.bundle_path, repo_name)
 
         self.ctx.to_log('wurf: GitSemverResolver name {} -> {}'.format(
-            self.name, repo_path))
+            self.dependency.name, repo_path))
 
         # If the checkout folder does not exist,
         # then clone from the git repository

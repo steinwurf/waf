@@ -25,6 +25,7 @@ from .create_symlink_resolver import CreateSymlinkResolver
 from .configuration import Configuration
 from .store_lock_path_resolver import StoreLockPathResolver
 from .load_lock_path_resolver import LoadLockPathResolver
+from .store_lock_version_resolver import StoreLockVersionResolver
 
 from .error import Error
 
@@ -401,7 +402,7 @@ def git_checkout_list_resolver(registry, dependency, checkout):
     def wrap(resolver):
 
         resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
-            name=name, bundle_path=bundle_path, checkout=checkout)
+            dependency=dependency, bundle_path=bundle_path, checkout=checkout)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx)
         return resolver
@@ -450,15 +451,13 @@ def git_semver_resolver(registry, dependency):
     options = registry.require('options')
 
     bundle_path = registry.require('bundle_path')
-    name = dependency.name
-    major = dependency.major
 
     # Set the resolver method on the dependency
     dependency.resolver_action = 'git semver'
 
     def wrap(resolver):
         resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
-            semver=semver, name=name, bundle_path=bundle_path, major=major)
+            semver=semver, bundle_path=bundle_path, dependency=dependency)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx)
         return resolver
@@ -634,6 +633,10 @@ def active_dependency_resolver(registry, dependency):
         resolver = StoreLockPathResolver(resolver=resolver,
             dependency=dependency, project_path=project_path)
 
+    elif configuration.write_lock_versions():
+        resolver = StoreLockVersionResolver(resolver=resolver,
+            dependency=dependency, project_path=project_path)
+
     return resolver
 
 @Registry.provide
@@ -687,6 +690,9 @@ def dependency_manager(registry):
 
     if configuration.write_lock_paths():
         StoreLockPathResolver.prepare_directory(project_path=project_path)
+
+    if configuration.write_lock_versions():
+        StoreLockVersionResolver.prepare_directory(project_path=project_path)
 
     return manager
 

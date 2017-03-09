@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+from .error import Error
 
 class Options(object):
 
@@ -43,6 +44,11 @@ class Options(object):
             help='Creates the resolve_lock_paths directory which contains the '
                  'paths to all resolved dependencies.')
 
+        self.parser.add_argument('--lock_versions', dest='--lock_versions',
+            action='store_true', default=False,
+            help='Creates the resolve_lock_versions directory which contains '
+                 'the specific versions of all resolved dependencies.')
+
         self.__parse()
 
     def bundle_path(self):
@@ -60,6 +66,9 @@ class Options(object):
     def lock_paths(self):
         return self.known_args['--lock_paths']
 
+    def lock_versions(self):
+        return self.known_args['--lock_versions']
+
     def path(self, dependency):
         return self.known_args['--%s-path' % dependency.name]
 
@@ -72,6 +81,9 @@ class Options(object):
 
         self.known_args = vars(known)
         self.unknown_args = unknown
+
+        if self.lock_versions() and self.lock_paths():
+            raise Error('Incompatible options')
 
     def __add_path(self, dependency):
 

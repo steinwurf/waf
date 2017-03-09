@@ -9,6 +9,7 @@ def test_git_checkout_resolver(test_directory):
 
     ctx = mock.Mock()
     git = mock.Mock()
+    dependency = mock.Mock()
     cwd = test_directory.path()
 
     # Let's create a dir for the GitResolver
@@ -17,12 +18,12 @@ def test_git_checkout_resolver(test_directory):
     git_resolver = mock.Mock()
     git_resolver.resolve.return_value = master_folder.path()
 
-    name = 'links'
+    dependency.name = 'links'
     checkout = 'my-branch'
     repo_url = 'https://gitlab.com/steinwurf/links.git'
 
     resolver = GitCheckoutResolver(git=git, git_resolver=git_resolver,
-        ctx=ctx, name=name, bundle_path=cwd, checkout=checkout)
+        ctx=ctx, dependency=dependency, bundle_path=cwd, checkout=checkout)
 
     path = resolver.resolve()
 

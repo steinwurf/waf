@@ -11,6 +11,7 @@ class Configuration(object):
     PASSIVE = 'passive'
     HELP = 'help'
     LOCK_PATH = 'lock_path'
+    LOCK_VERSION = 'lock_version'
 
     def __init__(self, project_path, args, options):
         """ Construct an instance.
@@ -36,6 +37,9 @@ class Configuration(object):
 
         elif self.choose_lock_path_chain():
             return Configuration.LOCK_PATH
+
+        elif self.choose_lock_version_chain():
+            return Configuration.LOCK_VERSION
 
         elif self.choose_active_chain():
             return Configuration.ACTIVE
@@ -79,17 +83,39 @@ class Configuration(object):
 
         if self.options.lock_paths():
             # The --lock_paths options was passed so we do not want to load
-            # but rather store a deep freeze file
+            # but rather store locked path files
             return False
 
         lock_paths_dir = os.path.join(self.project_path, 'resolve_lock_paths')
 
         if not os.path.isdir(lock_paths_dir):
-            # No deep freeze file exist
+            # No lock path directory
             return False
 
         # If all above checks out, we want to resolve the dependencies using the
         # lock paths directory
+        return True
+
+    def choose_lock_version_chain(self):
+
+        if not 'configure' in self.args:
+            # We are not configuring
+            return False
+
+        if self.options.lock_versions():
+            # The --lock_versions options was passed so we do not want to load
+            # but rather store locked version files
+            return False
+
+        lock_versions_dir = os.path.join(self.project_path,
+            'resolve_lock_versions')
+
+        if not os.path.isdir(lock_versions_dir):
+            # No lock versions directory
+            return False
+
+        # If all above checks out, we want to resolve the dependencies using the
+        # lock verions directory
         return True
 
     def choose_active_chain(self):
@@ -107,5 +133,15 @@ class Configuration(object):
 
         if self.resolver_chain() != Configuration.ACTIVE:
             raise Error("Re-configure poject to use --lock_paths.")
+
+        return True
+
+    def write_lock_versions(self):
+
+        if not self.options.lock_versions():
+            return False
+
+        if self.resolver_chain() != Configuration.ACTIVE:
+            raise Error("Re-configure poject to use --lock_versions.")
 
         return True

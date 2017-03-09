@@ -181,7 +181,11 @@ def test_resolve_json(test_directory):
     app_dir.run('python', 'waf', 'configure', '-v', '--fast-resolve')
     app_dir.run('python', 'waf', 'build', '-v')
 
-    # Test the --lock-paths options
+    # Test the --lock_versions options
+    app_dir.run('python', 'waf', 'configure', '-v', '--lock_versions')
+    assert app_dir.contains_dir('resolve_lock_versions')
+
+    # Test the --lock_paths options
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths')
     assert app_dir.contains_dir('resolve_lock_paths')
 
