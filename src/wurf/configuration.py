@@ -10,7 +10,7 @@ class Configuration(object):
     ACTIVE = 'active'
     PASSIVE = 'passive'
     HELP = 'help'
-    DEEP_FREEZE = 'deep_freeze'
+    LOCK_PATH = 'lock_path'
 
     def __init__(self, project_path, args, options):
         """ Construct an instance.
@@ -34,8 +34,8 @@ class Configuration(object):
         if self.choose_help_chain():
             return Configuration.HELP
 
-        elif self.choose_deep_freeze_chain():
-            return Configuration.DEEP_FREEZE
+        elif self.choose_lock_path_chain():
+            return Configuration.LOCK_PATH
 
         elif self.choose_active_chain():
             return Configuration.ACTIVE
@@ -71,26 +71,25 @@ class Configuration(object):
 
         return False
 
-    def choose_deep_freeze_chain(self):
+    def choose_lock_path_chain(self):
 
         if not 'configure' in self.args:
             # We are not configuring
             return False
 
-        if self.options.deep_freeze():
-            # The --deep-freeze options was passed so we do not want to load
+        if self.options.lock_paths():
+            # The --lock_paths options was passed so we do not want to load
             # but rather store a deep freeze file
             return False
 
-        deep_freeze_file = os.path.join(self.project_path,
-            'deep_freeze_resolve.json')
+        lock_paths_dir = os.path.join(self.project_path, 'resolve_lock_paths')
 
-        if not os.path.isfile(deep_freeze_file):
+        if not os.path.isdir(lock_paths_dir):
             # No deep freeze file exist
             return False
 
         # If all above checks out, we want to resolve the dependencies using the
-        # deep freeze file
+        # lock paths directory
         return True
 
     def choose_active_chain(self):
@@ -101,12 +100,12 @@ class Configuration(object):
 
         return False
 
-    def write_deep_freeze(self):
+    def write_lock_paths(self):
 
-        if not self.options.deep_freeze():
+        if not self.options.lock_paths():
             return False
 
         if self.resolver_chain() != Configuration.ACTIVE:
-            raise Error("Re-configure poject to use --deep-freeze.")
+            raise Error("Re-configure poject to use --lock_paths.")
 
         return True

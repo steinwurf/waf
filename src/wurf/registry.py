@@ -23,7 +23,8 @@ from .options import Options
 from .mandatory_options import MandatoryOptions
 from .create_symlink_resolver import CreateSymlinkResolver
 from .configuration import Configuration
-from .write_deep_freeze_resolve_json import WriteDeepFreezeResolveJson
+from .store_lock_path_resolver import StoreLockPathResolver
+from .load_lock_path_resolver import LoadLockPathResolver
 
 from .error import Error
 
@@ -541,7 +542,8 @@ def help_dependency_resolver(registry, dependency):
     bundle_config_path = registry.require('bundle_config_path')
 
     # Set the resolver action on the dependency
-    dependency.resolver_chain = 'Load (help)'
+    dependency.resolver_chain = 'Load'
+    dependency.resolver_action = 'help'
 
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
         bundle_config_path=bundle_config_path)
@@ -576,16 +578,17 @@ def passive_dependency_resolver(registry, dependency):
     return resolver
 
 @Registry.provide
-def deep_freeze_dependency_resolver_(registry, dependency):
+def lock_path_dependency_resolver(registry, dependency):
 
     ctx = registry.require('ctx')
-    bundle_config_path = registry.require('bundle_config_path')
+    project_path = registry.require('project_path')
 
     # Set the resolver action on the dependency
     dependency.resolver_chain = 'Load'
+    dependency.resolver_action = 'locked path'
 
-    resolver = OnPassiveLoadPathResolver(dependency=dependency,
-        bundle_config_path=bundle_config_path)
+    resolver = LoadLockPathResolver(dependency=dependency,
+        project_path=project_path)
 
     resolver = TryResolver(resolver=resolver, ctx=ctx)
 
@@ -604,6 +607,8 @@ def active_dependency_resolver(registry, dependency):
     options = registry.require('options')
     bundle_config_path = registry.require('bundle_config_path')
     symlinks_path = registry.require('symlinks_path')
+    configuration = registry.require('configuration')
+    project_path = registry.require('project_path')
 
     # Set the resolver action on the dependency
     dependency.resolver_chain = 'Resolve'
@@ -621,10 +626,15 @@ def active_dependency_resolver(registry, dependency):
     resolver = ContextMsgResolver(resolver=resolver, ctx=ctx,
         dependency=dependency)
 
-    return OnActiveStorePathResolver(
+    resolver = OnActiveStorePathResolver(
         resolver=resolver, dependency=dependency,
         bundle_config_path=bundle_config_path)
 
+    if configuration.write_lock_paths():
+        resolver = StoreLockPathResolver(resolver=resolver,
+            dependency=dependency, project_path=project_path)
+
+    return resolver
 
 @Registry.provide
 def dependency_resolver(registry, dependency):
@@ -661,13 +671,6 @@ def configuration(registry):
     return Configuration(options=options, args=args, project_path=project_path)
 
 @Registry.provide
-def write_deep_freeze_resolve_json(registry):
-
-    project_path = registry.require('project_path')
-
-    return WriteDeepFreezeResolveJson(project_path=project_path)
-
-@Registry.provide
 def dependency_manager(registry):
 
     # Clean the cache such that we get "fresh" objects
@@ -677,13 +680,13 @@ def dependency_manager(registry):
     dependency_cache = registry.require('dependency_cache')
     options = registry.require('options')
     configuration = registry.require('configuration')
+    project_path = registry.require('project_path')
 
     manager = DependencyManager(registry=registry,
         dependency_cache=dependency_cache, ctx=ctx, options=options)
 
-    if configuration.write_deep_freeze():
-        manager.add_post_resolve_action(
-            registry.require('write_deep_freeze_resolve_json'))
+    if configuration.write_lock_paths():
+        StoreLockPathResolver.prepare_directory(project_path=project_path)
 
     return manager
 

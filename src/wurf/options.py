@@ -38,9 +38,9 @@ class Options(object):
                   'Useful for running configure without resolving dependencies '
                   'again.')
 
-        self.parser.add_argument('--deep-freeze', dest='--deep-freeze',
+        self.parser.add_argument('--lock_paths', dest='--lock_paths',
             action='store_true', default=False,
-            help='Creates the deep_freeze_resolve.json file which contains the '
+            help='Creates the resolve_lock_paths directory which contains the '
                  'paths to all resolved dependencies.')
 
         self.__parse()
@@ -57,8 +57,8 @@ class Options(object):
     def fast_resolve(self):
         return self.known_args['--fast-resolve']
 
-    def deep_freeze(self):
-        return self.known_args['--deep-freeze']
+    def lock_paths(self):
+        return self.known_args['--lock_paths']
 
     def path(self, dependency):
         return self.known_args['--%s-path' % dependency.name]
