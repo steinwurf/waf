@@ -9,9 +9,9 @@
         "sources": ["bitbucket.com/acme-corp/bar.git",
                     "gitlab.com/acme-corp/bar.git"]
     },
-	{
+    {
         "name": "goo",
-		"internal": true,
+        "internal": true,
         "resolver": "git",
         "method": "semver",
         "major": 5,

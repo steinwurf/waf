@@ -13,5 +13,4 @@
         "major": 3,
         "sources": ["gitlab.com/acme/baz.git"]
     }
-
 ]

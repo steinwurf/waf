@@ -27,10 +27,8 @@ def resolve(ctx):
 def options(opt):
     opt.load('compiler_cxx')
 
-
 def configure(conf):
     conf.load('compiler_cxx')
-
 
 def build(bld):
     bld.program(features='cxx',
