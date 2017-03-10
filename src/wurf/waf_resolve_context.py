@@ -77,16 +77,16 @@ class WafResolveContext(Context.Context):
 
         self.logger.debug('wurf: Resolve execute {}'.format(configuration))
 
-        default_bundle_path = os.path.join(
-            self.path.abspath(), 'bundle_dependencies')
+        default_resolve_path = os.path.join(
+            self.path.abspath(), 'resolved_dependencies')
 
         default_symlinks_path = os.path.join(
             self.path.abspath(), 'build_symlinks')
 
         self.registry = registry.build_registry(
             ctx=self, git_binary='git',
-            semver=semver, default_bundle_path=default_bundle_path,
-            bundle_config_path=self.bundle_config_path(),
+            semver=semver, default_resolve_path=default_resolve_path,
+            resolve_config_path=self.resolve_config_path(),
             default_symlinks_path=default_symlinks_path,
             resolver_configuration=configuration,
             waf_utils=Utils, args=sys.argv[1:])
@@ -126,7 +126,7 @@ class WafResolveContext(Context.Context):
         return self.srcnode == self.path
 
 
-    def bundle_config_path(self):
+    def resolve_config_path(self):
         """Returns the bundle config path.
 
         The bundle config path will be used to store/load configuration for
