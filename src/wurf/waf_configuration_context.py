@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from waflib import Context
+from waflib import Utils
+
 from waflib.Configure import ConfigurationContext
 
 
@@ -9,6 +12,14 @@ class WafConfigurationContext(ConfigurationContext):
 
     def __init__(self, **kw):
         super(WafConfigurationContext, self).__init__(**kw)
+
+    def execute(self):
+        # If the main wscript has no "configure" function, bind it to an
+        # empty function. This allows us to omit configure.
+        if not 'configure' in Context.g_module.__dict__:
+            Context.g_module.configure = Utils.nada
+
+        super(WafConfigurationContext, self).execute()
 
     def pre_recurse(self, node):
 
