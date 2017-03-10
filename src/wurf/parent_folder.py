@@ -10,15 +10,15 @@ class ParentFolder(object):
     dependency can be stored.
     """
 
-    def __init__(self, bundle_path):
+    def __init__(self, resolve_path):
         """ Construct a new instance.
 
-        :param bundle_path: Current working directory as a string. This is
+        :param resolve_path: Current working directory as a string. This is
             the place where we should create new folders etc.
         """
-        self.bundle_path = bundle_path
+        self.resolve_path = resolve_path
 
-        assert os.path.isabs(self.bundle_path)
+        assert os.path.isabs(self.resolve_path)
 
     def parent_folder(self, name, source):
         """
@@ -36,7 +36,7 @@ class ParentFolder(object):
         repo_hash = hashlib.sha1(source.encode('utf-8')).hexdigest()[:6]
 
         repo_folder = os.path.join(
-            self.bundle_path, '{}-{}'.format(name, repo_hash))
+            self.resolve_path, '{}-{}'.format(name, repo_hash))
 
         return repo_folder
 

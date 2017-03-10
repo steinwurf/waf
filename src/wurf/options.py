@@ -4,7 +4,7 @@
 
 class Options(object):
 
-    def __init__(self, args, parser, default_bundle_path,
+    def __init__(self, args, parser, default_resolve_path,
                  default_symlinks_path, supported_git_protocols):
 
         self.args = args
@@ -15,9 +15,9 @@ class Options(object):
 
         # Using the %default placeholder:
         #    http://stackoverflow.com/a/1254491/1717320
-        self.parser.add_argument('--bundle_path',
-            default=default_bundle_path,
-            dest='--bundle_path',
+        self.parser.add_argument('--resolve_path',
+            default=default_resolve_path,
+            dest='--resolve_path',
             help='The folder where the bundled dependencies are downloaded.'
                  '(default: %(default)s)')
 
@@ -40,8 +40,8 @@ class Options(object):
 
         self.__parse()
 
-    def bundle_path(self):
-        return self.known_args['--bundle_path']
+    def resolve_path(self):
+        return self.known_args['--resolve_path']
 
     def symlinks_path(self):
         return self.known_args['--symlinks_path']
