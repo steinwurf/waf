@@ -513,7 +513,7 @@ def git_user_checkout_resolver(registry, dependency):
     ctx = registry.require('ctx')
 
     mandatory_options = registry.require('mandatory_options')
-    checkout = mandatory_options.use_checkout(dependency=dependency)
+    checkout = mandatory_options.checkout(dependency=dependency)
 
     # Set the resolver method on the dependency
     dependency.resolver_action = 'git user checkout'
@@ -537,7 +537,7 @@ def git_source_resolver(registry, dependency):
     """
     ctx = registry.require('ctx')
     options = registry.require('options')
-    checkout = options.use_checkout(dependency=dependency)
+    checkout = options.checkout(dependency=dependency)
 
     # If the user specified a checkout we should use that
     if checkout:

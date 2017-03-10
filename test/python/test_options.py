@@ -20,7 +20,7 @@ def test_bundle_path():
 
 
     parser = argparse.ArgumentParser()
-    args = ['--foo', '--bundle-path', '/tmp/bundlehere', '-b']
+    args = ['--foo', '--bundle_path', '/tmp/bundlehere', '-b']
 
     options = Options(args=args, parser=parser, default_bundle_path="",
         default_symlinks_path="", supported_git_protocols="")
@@ -48,7 +48,7 @@ def test_symlinks_path():
     assert options.symlinks_path() == default_path
 
     parser = argparse.ArgumentParser()
-    args = ['--foo', '--symlinks-path', '/tmp/symlinks', '-b']
+    args = ['--foo', '--symlinks_path', '/tmp/symlinks', '-b']
 
     options = Options(args=args, parser=parser, default_bundle_path="",
         default_symlinks_path=default_path, supported_git_protocols="")
@@ -63,8 +63,8 @@ def test_user_path_to_dependency():
 
     # Path specified
     parser = argparse.ArgumentParser()
-    args = ['--foo', '--bundle-path', '/tmp/bundlehere',
-            '--foo-path', '/home/stw/code', '-b']
+    args = ['--foo', '--bundle_path', '/tmp/bundlehere',
+            '--foo_path', '/home/stw/code', '-b']
 
     options = Options(args=args, parser=parser, default_bundle_path="",
         default_symlinks_path="", supported_git_protocols="")
@@ -75,8 +75,8 @@ def test_user_path_to_dependency():
 
     # Path specified
     parser = argparse.ArgumentParser()
-    args = ['--foo', '--bundle-path', '/tmp/bundlehere',
-            '--foo-path', '/home/stw/code1', '-b']
+    args = ['--foo', '--bundle_path', '/tmp/bundlehere',
+            '--foo_path', '/home/stw/code1', '-b']
 
     options = Options(args=args, parser=parser, default_bundle_path="",
         default_symlinks_path="", supported_git_protocols="")
@@ -97,7 +97,7 @@ def test_git_protocol():
     assert options.git_protocol() == None
 
     parser = argparse.ArgumentParser()
-    args = ['--foo', '--git-protocol', 'myproto://', '-b']
+    args = ['--foo', '--git_protocol', 'myproto://', '-b']
 
     options = Options(args=args, parser=parser, default_bundle_path="",
         default_symlinks_path="", supported_git_protocols="")
@@ -116,7 +116,7 @@ def test_fast_resolve():
     assert options.fast_resolve() == False
 
     parser = argparse.ArgumentParser()
-    args = ['--foo', '--fast-resolve', '-b']
+    args = ['--foo', '--fast_resolve', '-b']
 
     options = Options(args=args, parser=parser, default_bundle_path="",
         default_symlinks_path="", supported_git_protocols="")

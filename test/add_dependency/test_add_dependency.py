@@ -178,7 +178,7 @@ def test_resolve_json(test_directory):
     assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
-    app_dir.run('python', 'waf', 'configure', '-v', '--fast-resolve')
+    app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
     app_dir.run('python', 'waf', 'build', '-v')
 
 
@@ -227,7 +227,7 @@ def test_add_dependency(test_directory):
     assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
-    app_dir.run('python', 'waf', 'configure', '-v', '--fast-resolve')
+    app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
     app_dir.run('python', 'waf', 'build', '-v')
 
 
@@ -257,7 +257,7 @@ def test_add_dependency_path(test_directory):
     path_test = test_directory.mkdir(directory='path_test')
     baz_dir = mkdir_libbaz(directory=path_test)
 
-    app_dir.run('python', 'waf', 'configure', '-v', '--baz-path={}'.format(
+    app_dir.run('python', 'waf', 'configure', '-v', '--baz_path={}'.format(
                 baz_dir.path()))
 
     # The symlinks should be available to all dependencies
@@ -266,4 +266,4 @@ def test_add_dependency_path(test_directory):
     assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
-    app_dir.run('python', 'waf', 'configure', '-v', '--fast-resolve')
+    app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
