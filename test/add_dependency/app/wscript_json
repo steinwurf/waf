@@ -10,10 +10,8 @@ import json
 from fake_git_clone import FakeGitClone
 
 def resolve(ctx):
-
     # Provide the clone mapping - needed in the FakeGitClone. The json file
     # is created in test_add_dependency.py
-    #
     with open('clone_path.json') as json_file:
         clone_path = json.load(json_file)
 
@@ -25,33 +23,16 @@ def resolve(ctx):
     # Rebuild the dependency manager
     ctx.dependency_manager = ctx.registry.require('dependency_manager')
 
-    # ctx.add_dependency(
-    #     name='foo',
-    #     recurse=True,
-    #     optional=False,
-    #     resolver='git',
-    #     method='checkout',
-    #     checkout='1.3.3.7',
-    #     sources=['github.com/acme-corp/foo.git'])
-    #
-    # ctx.add_dependency(
-    #     name='baz',
-    #     recurse=True,
-    #     optional=False,
-    #     resolver='git',
-    #     method='semver',
-    #     major=3,
-    #     sources=['gitlab.com/acme/baz.git'])
 
 def options(opt):
-
     opt.load('compiler_cxx')
+
 
 def configure(conf):
     conf.load('compiler_cxx')
 
-def build(bld):
 
+def build(bld):
     bld.program(features='cxx',
                 source='main.cpp',
                 target='app',

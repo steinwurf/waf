@@ -1,8 +1,6 @@
 [
     {
         "name": "foo",
-        "recurse": true,
-        "optional": false,
         "resolver": "git",
         "method": "checkout",
         "checkout": "1.3.3.7",
@@ -10,11 +8,10 @@
     },
     {
         "name": "baz",
-        "recurse": true,
-        "optional": false,
         "resolver": "git",
         "method": "semver",
         "major": 3,
         "sources": ["gitlab.com/acme/baz.git"]
     }
+
 ]

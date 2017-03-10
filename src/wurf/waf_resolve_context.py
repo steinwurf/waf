@@ -37,15 +37,13 @@ figure out which dependencies exist.
 """
 
 class WafResolveContext(Context.Context):
-
     '''resolves the dependencies specified in the wscript's resolve function'''
 
     cmd = 'resolve'
     fun = 'resolve'
 
     def __init__(self, **kw):
-        """ Create a WafResolveContext
-        """
+        """ Create a WafResolveContext"""
         super(WafResolveContext, self).__init__(**kw)
 
     def execute(self):
@@ -99,13 +97,6 @@ class WafResolveContext(Context.Context):
             # which will trigger loading the dependency.
             super(WafResolveContext, self).execute()
 
-            # Now try to load dependencies from the resolve.json file. Note,
-            # that this is done after calling a possible user-defined
-            # resolve(...) function. Since we always want the allow the user to
-            # run custom code before we start resolving stuff.
-            self.dependency_manager.load_dependencies(self.path.abspath(),
-                mandatory=False)
-
         except Error as e:
             self.logger.debug("Error in resolve:".format(e), exc_info=True)
             self.fatal("Error: {}".format(e))
@@ -118,6 +109,16 @@ class WafResolveContext(Context.Context):
 
         self.logger.debug('wurf: dependency_cache {}'.format(dependency_cache))
 
+    def post_recurse(self, node):
+        # As the last step in recurse, try to load the dependencies from the
+        # 'resolve.json' file if it is present next to the wscript.
+        # This is done after calling a possible user-defined
+        # resolve() function, since we always want to allow the user to
+        # run custom code before the actual resolving starts.
+        self.dependency_manager.load_dependencies(self.path.abspath(),
+            mandatory=False)
+
+        super(WafResolveContext, self).post_recurse(node)
 
     def is_toplevel(self):
         """
@@ -125,16 +126,13 @@ class WafResolveContext(Context.Context):
         """
         return self.srcnode == self.path
 
-
     def bundle_config_path(self):
         """Returns the bundle config path.
 
         The bundle config path will be used to store/load configuration for
         the different dependencies that are resolved.
         """
-
         return self.bldnode.abspath()
-
 
     def resolver_configuration(self):
 
@@ -151,13 +149,10 @@ class WafResolveContext(Context.Context):
             return ResolverConfiguration.PASSIVE
 
     def add_dependency(self, **kwargs):
-        """Adds a dependency.
-        """
-
+        """Adds a dependency."""
         self.dependency_manager.add_dependency(**kwargs)
 
     def cmd_and_log(self, cmd, **kwargs):
-
         # Seems the new waf needs the cwd to be a Node object. We do this
         # adaption here to avoid introducing additional Waf dependencies in the
         # other parts of the code.
@@ -165,7 +160,6 @@ class WafResolveContext(Context.Context):
             cwd = kwargs['cwd']
             kwargs['cwd'] = self.root.find_dir(str(cwd))
             assert kwargs['cwd']
-
 
         try:
             return super(WafResolveContext, self).cmd_and_log(
