@@ -9,16 +9,16 @@ from .error import Error
 
 class StoreLockVersionResolver(object):
 
-    def __init__(self, resolver, dependency, project_path):
+    def __init__(self, resolver, lock_cache, dependency):
         """ Construct an instance.
 
         :param resolver: A resolver which will do the actual job
+        :param lock_cache: The lock cache to store the version information in.
         :param dependency: A Dependency instance.
-        :param project_path: The path to the project as a string
         """
         self.resolver = resolver
+        self.lock_cache = lock_cache
         self.dependency = dependency
-        self.project_path = project_path
 
     def resolve(self):
         """ Resolve a path to a dependency.
@@ -31,19 +31,6 @@ class StoreLockVersionResolver(object):
 
         path = self.resolver.resolve()
 
-        self.__write_config(path=path)
-
-        return path
-
-    def __write_config(self, path):
-        """ Write the dependency config to file
-
-        :param path: The path to the dependency as a string.
-        """
-
-        config_path = os.path.join(self.project_path, 'resolve_lock_versions',
-            self.dependency.name + '.lock_version.json')
-
         checkout = None
 
         if self.dependency.git_tag:
@@ -53,21 +40,7 @@ class StoreLockVersionResolver(object):
         else:
             raise Error('Not stable checkout information found.')
 
-        config = {'sha1': self.dependency.sha1, 'checkout': checkout }
+        self.lock_cache['dependencies'][self.dependency.name] = {
+            'sha1': self.dependency.sha1, 'checkout': checkout }
 
-        with open(config_path, 'w') as config_file:
-            json.dump(config, config_file)
-
-    @staticmethod
-    def prepare_directory(project_path):
-        """ Prepare the resolve_lock_versions directory.
-
-        If it already exists remove the content in it.
-        """
-
-        lock_versions = os.path.join(project_path, 'resolve_lock_versions')
-
-        if os.path.isdir(lock_versions):
-            shutil.rmtree(lock_versions)
-
-        os.makedirs(lock_versions)
+        return path

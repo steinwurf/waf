@@ -118,8 +118,12 @@ class WafResolveContext(Context.Context):
 
         self.logger.debug('wurf: dependency_cache {}'.format(dependency_cache))
 
-        # Invoke the post resolve user-defined functions
-        self.dependency_manager.post_resolve()
+        # If needed execute any actions which cannot run until after the
+        # dependency resolution has completed
+        post_resolver_actions = self.registry.require('post_resolver_actions')
+
+        for action in post_resolver_actions:
+            action()
 
     def is_toplevel(self):
         """

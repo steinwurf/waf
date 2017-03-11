@@ -3,6 +3,7 @@
 
 import argparse
 import os
+import json
 from collections import OrderedDict
 
 from .git_resolver import GitResolver
@@ -234,6 +235,20 @@ def parser(registry):
 @Registry.provide
 def dependency_cache(registry):
     return OrderedDict()
+
+@Registry.cache
+@Registry.provide
+def lock_cache(registry):
+
+    options = registry.require('options')
+
+    if options.lock_versions():
+        return {'type':'versions', 'dependencies': {}}
+    elif options.lock_paths():
+        return {'type':'paths', 'dependencies': {}}
+    else:
+        raise Error('WHAT SHOULD NOT BE CALLED THEN?')
+
 
 @Registry.cache
 @Registry.provide
@@ -555,7 +570,7 @@ def help_dependency_resolver(registry, dependency):
     return resolver
 
 @Registry.provide
-def passive_dependency_resolver(registry, dependency):
+def load_dependency_resolver(registry, dependency):
 
     ctx = registry.require('ctx')
     bundle_config_path = registry.require('bundle_config_path')
@@ -600,7 +615,7 @@ def lock_path_dependency_resolver(registry, dependency):
     return resolver
 
 @Registry.provide
-def active_dependency_resolver(registry, dependency):
+def store_dependency_resolver(registry, dependency):
 
     ctx = registry.require('ctx')
     options = registry.require('options')
@@ -629,15 +644,50 @@ def active_dependency_resolver(registry, dependency):
         resolver=resolver, dependency=dependency,
         bundle_config_path=bundle_config_path)
 
-    if configuration.write_lock_paths():
-        resolver = StoreLockPathResolver(resolver=resolver,
-            dependency=dependency, project_path=project_path)
-
-    elif configuration.write_lock_versions():
-        resolver = StoreLockVersionResolver(resolver=resolver,
-            dependency=dependency, project_path=project_path)
-
     return resolver
+
+@Registry.provide
+def store_lock_dependency_resolver(registry, dependency):
+
+    resolver = registry.require('store_dependency_resolver',
+        dependency=dependency)
+
+    project_path = registry.require('project_path')
+
+    lock_cache = registry.require('lock_cache')
+    lock_type = lock_cache['type']
+
+    if lock_type == 'versions':
+        return StoreLockVersionResolver(resolver=resolver,
+            lock_cache=lock_cache, dependency=dependency)
+    elif lock_type == 'paths':
+        return StoreLockPathResolver(resolver=resolver,
+            lock_cache=lock_cache, project_path=project_path,
+            dependency=dependency)
+    else:
+        raise Error("Unknown lock type {}".format(lock_type))
+
+@Registry.provide
+def load_lock_dependency_resolver(registry, dependency):
+
+    resolver = registry.require('store_dependency_resolver',
+        dependency=dependency)
+
+    project_path = registry.require('project_path')
+
+    lock_cache = registry.require('lock_cache')
+    lock_type = lock_cache['type']
+
+    if lock_type == 'versions':
+        return StoreLockVersionResolver(resolver=resolver,
+            lock_cache=lock_cache, dependency=dependency)
+    elif lock_type == 'paths':
+        return StoreLockPathResolver(resolver=resolver,
+            lock_cache=lock_cache, project_path=project_path,
+            dependency=dependency)
+    else:
+        raise Error("Unknown lock type {}".format(lock_type))
+
 
 @Registry.provide
 def dependency_resolver(registry, dependency):
@@ -656,6 +706,8 @@ def dependency_resolver(registry, dependency):
     #
     resolver_chain = registry.require('resolver_chain')
     resolver_key = "{}_dependency_resolver".format(resolver_chain)
+
+    print("RESOLVER KEY: {}".format(resolver_key))
 
     return registry.require(resolver_key, dependency=dependency)
 
@@ -682,19 +734,53 @@ def dependency_manager(registry):
     ctx = registry.require('ctx')
     dependency_cache = registry.require('dependency_cache')
     options = registry.require('options')
-    configuration = registry.require('configuration')
-    project_path = registry.require('project_path')
 
-    manager = DependencyManager(registry=registry,
+    return DependencyManager(registry=registry,
         dependency_cache=dependency_cache, ctx=ctx, options=options)
 
-    if configuration.write_lock_paths():
-        StoreLockPathResolver.prepare_directory(project_path=project_path)
+@Registry.provide
+def store_lock_action(registry):
 
-    if configuration.write_lock_versions():
-        StoreLockVersionResolver.prepare_directory(project_path=project_path)
+    lock_cache = registry.require('lock_cache')
+    project_path = registry.require('project_path')
 
-    return manager
+    def action():
+
+        config_path = os.path.join(project_path, 'lock_resolve.json')
+
+        with open(config_path, 'w') as config_file:
+            json.dump(lock_cache, config_file)
+
+    return action
+
+@Registry.provide
+def remove_lock_action(registry):
+
+    project_path = registry.require('project_path')
+
+    def action():
+
+        lock_path = os.path.join(project_path, 'lock_resolve.json')
+
+        if os.path.isfile(lock_path):
+            os.remove(lock_path)
+
+    return action
+
+@Registry.provide
+def post_resolver_actions(registry):
+
+    configuration = registry.require('configuration')
+
+    actions = []
+
+    if configuration.resolver_chain() == Configuration.STORE_LOCK:
+        actions.append(registry.require('store_lock_action'))
+
+    elif configuration.resolver_chain() == Configuration.STORE:
+        actions.append(registry.require('remove_lock_action'))
+
+    return actions
 
 def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
                    default_symlinks_path, semver,

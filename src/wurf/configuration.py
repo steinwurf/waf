@@ -7,11 +7,11 @@ from .error import Error
 
 class Configuration(object):
 
-    ACTIVE = 'active'
-    PASSIVE = 'passive'
+    STORE = 'store'
+    LOAD = 'load'
     HELP = 'help'
-    LOCK_PATH = 'lock_path'
-    LOCK_VERSION = 'lock_version'
+    STORE_LOCK = 'store_lock'
+    LOAD_LOCK = 'load_lock'
 
     def __init__(self, project_path, args, options):
         """ Construct an instance.
@@ -35,17 +35,17 @@ class Configuration(object):
         if self.choose_help_chain():
             return Configuration.HELP
 
-        elif self.choose_lock_path_chain():
-            return Configuration.LOCK_PATH
+        elif self.choose_load_lock_chain():
+            return Configuration.LOAD_LOCK
 
-        elif self.choose_lock_version_chain():
-            return Configuration.LOCK_VERSION
+        elif self.choose_store_lock_chain():
+            return Configuration.STORE_LOCK
 
-        elif self.choose_active_chain():
-            return Configuration.ACTIVE
+        elif self.choose_store_chain():
+            return Configuration.STORE
 
         else:
-            return Configuration.PASSIVE
+            return Configuration.LOAD
 
     def choose_help_chain(self):
         """ Choose whether we should use the help resolver chain.
@@ -75,50 +75,38 @@ class Configuration(object):
 
         return False
 
-    def choose_lock_path_chain(self):
+    def choose_load_lock_chain(self):
+
+        if 'configure' in self.args:
+            # We are configuring
+            return False
+
+        # We are not configuring, check for lock file
+        lock_file = os.path.join(self.project_path, 'lock_resolve.json')
+
+        if not os.path.isfile(lock_file):
+            # No lock file
+            return False
+
+        # If all above checks out, we want to resolve the dependencies using the
+        # lock file
+        return True
+
+    def choose_store_lock_chain(self):
 
         if not 'configure' in self.args:
             # We are not configuring
             return False
 
-        if self.options.lock_paths():
-            # The --lock_paths options was passed so we do not want to load
-            # but rather store locked path files
-            return False
+        # We are configuring
+        if self.options.lock_paths() or self.options.lock_versions():
+            # One of the lock options were passed, so we want to write the lock
+            # file rather than use it.
+            return True
 
-        lock_paths_dir = os.path.join(self.project_path, 'resolve_lock_paths')
+        return False
 
-        if not os.path.isdir(lock_paths_dir):
-            # No lock path directory
-            return False
-
-        # If all above checks out, we want to resolve the dependencies using the
-        # lock paths directory
-        return True
-
-    def choose_lock_version_chain(self):
-
-        if not 'configure' in self.args:
-            # We are not configuring
-            return False
-
-        if self.options.lock_versions():
-            # The --lock_versions options was passed so we do not want to load
-            # but rather store locked version files
-            return False
-
-        lock_versions_dir = os.path.join(self.project_path,
-            'resolve_lock_versions')
-
-        if not os.path.isdir(lock_versions_dir):
-            # No lock versions directory
-            return False
-
-        # If all above checks out, we want to resolve the dependencies using the
-        # lock verions directory
-        return True
-
-    def choose_active_chain(self):
+    def choose_store_chain(self):
 
         if 'configure' in self.args:
             # We are not configuring
@@ -126,22 +114,26 @@ class Configuration(object):
 
         return False
 
-    def write_lock_paths(self):
 
-        if not self.options.lock_paths():
-            return False
+    def prepare_directories(self):
 
-        if self.resolver_chain() != Configuration.ACTIVE:
-            raise Error("Re-configure poject to use --lock_paths.")
+        if self.resolver_chain() == Configuration.HELP:
+            # If we are just diplaying help nothing is needed
+            return
 
-        return True
+        if self.resolver_chain() == Configuration.ACTIVE_LOCK_PATHS:
+            # If we are lokcing paths - we have to prepare the directory
+            lock_paths = os.path.join(project_path, 'resolve_lock_paths')
 
-    def write_lock_versions(self):
+            if os.path.isdir(lock_paths):
+                shutil.rmtree(lock_paths)
 
-        if not self.options.lock_versions():
-            return False
+            os.makedirs(lock_paths)
 
-        if self.resolver_chain() != Configuration.ACTIVE:
-            raise Error("Re-configure poject to use --lock_versions.")
+        elif self.resolver_chain() != Configuration.PASSIVE_LOCK_PATHS:
+            # If we are not loading from lcoked paths we make sure the
+            # directory is not there
+            lock_paths = os.path.join(project_path, 'resolve_lock_paths')
 
-        return True
+            if os.path.isdir(lock_paths):
+                shutil.rmtree(lock_paths)

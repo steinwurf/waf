@@ -183,17 +183,21 @@ def test_resolve_json(test_directory):
 
     # Test the --lock_versions options
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_versions')
-    assert app_dir.contains_dir('resolve_lock_versions')
+    assert app_dir.contains_file('lock_resolve.json')
+    app_dir.run('python', 'waf', 'build', '-v')
+
+    app_dir.run('python', 'waf', 'configure', '-v')
+    assert not app_dir.contains_file('lock_resolve.json')
 
     # Test the --lock_paths options
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths')
-    assert app_dir.contains_dir('resolve_lock_paths')
+    assert app_dir.contains_file('lock_resolve.json')
 
     # Now we can delete the git folders - as we should be able to configure
     # from the frozen dependencies
-    git_dir.rmdir()
+    #git_dir.rmdir()
 
-    app_dir.run('python', 'waf', 'configure', '-v')
+    #app_dir.run('python', 'waf', 'configure', '-v')
 
 
 def test_add_dependency(test_directory):

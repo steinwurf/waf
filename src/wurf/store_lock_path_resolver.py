@@ -9,16 +9,19 @@ from .error import Error
 
 class StoreLockPathResolver(object):
 
-    def __init__(self, resolver, dependency, project_path):
+    def __init__(self, resolver, lock_cache, project_path, dependency):
         """ Construct an instance.
 
         :param resolver: A resolver which will do the actual job
+        :param lock_cache: The lock cache to store the version information in.
+        :param project_path: The path to the project whoms dependencies we are
+           resolving as a string.
         :param dependency: A Dependency instance.
-        :param project_path: The path to the project as a string
         """
         self.resolver = resolver
-        self.dependency = dependency
+        self.lock_cache = lock_cache
         self.project_path = project_path
+        self.dependency = dependency
 
     def resolve(self):
         """ Resolve a path to a dependency.
@@ -32,7 +35,16 @@ class StoreLockPathResolver(object):
         path = self.resolver.resolve()
 
         self.__check_path(path=path)
-        self.__write_config(path=path)
+
+        if self.dependency.is_symlink:
+            lock_path = self.dependency.real_path
+        else:
+            lock_path = path
+
+        lock_path = os.path.relpath(path=lock_path, start=self.project_path)
+
+        self.lock_cache['dependencies'][self.dependency.name] = {
+            'sha1': self.dependency.sha1, 'path': lock_path }
 
         return path
 
@@ -43,34 +55,3 @@ class StoreLockPathResolver(object):
 
         if not child.startswith(parent):
             raise Error("Locked paths must be a within parent project")
-
-    def __write_config(self, path):
-        """ Write the dependency config to file
-
-        :param path: The path to the dependency as a string.
-        """
-
-        config_path = os.path.join(self.project_path, 'resolve_lock_paths',
-            self.dependency.name + '.lock_path.json')
-
-        if self.dependency.is_symlink:
-            path = self.dependency.real_path
-
-        config = {'sha1': self.dependency.sha1, 'path': path }
-
-        with open(config_path, 'w') as config_file:
-            json.dump(config, config_file)
-
-    @staticmethod
-    def prepare_directory(project_path):
-        """ Prepare the resolve_lock_paths directory.
-
-        If it already exists remove the content in it.
-        """
-
-        lock_paths = os.path.join(project_path, 'resolve_lock_paths')
-
-        if os.path.isdir(lock_paths):
-            shutil.rmtree(lock_paths)
-
-        os.makedirs(lock_paths)

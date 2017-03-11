@@ -265,6 +265,25 @@ invoking::
     python waf configure --deep-freeze
     python waf dist
 
+Alternative lock implementation
+--------------------------------
+
+We write a lock_resolve.json file into to the project directory.
+
+There are two possible chains:
+
+LOAD_LOCK
+STORE_LOCK
+
+In the LOAD_LOCK chain we dispatch on the lock type like with do with normal
+dependencies. So like:
+
+resolver_key = "{}_lock_resolver".format(lock.type)
+
+STORE_LOCK is also not so bad dependening on the lock type we add two different
+store resolvers after the active chain.  
+
+
 
 Bundle dependencies
 ===================
