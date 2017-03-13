@@ -51,6 +51,16 @@ class Dependency(object):
         to "customize" the way resolvers are constructed, this can be done
         using the rewrite(...) function.
 
+        Note on rewrite(...) and SHA1: One obvious question to raise is whether
+        we should re-calculate the SHA1 after a rewrite. We currently do not do
+        this. Reason for this is that the SHA1 is mainly used to check if the
+        user provided information, passed in e.g. add_dependency(...), has been
+        changed. If this happens the SHA1 will flag a mismatch, and the user
+        should do a reconfigure to continue. The fact that we rewrite(...) the
+        depenency information e.g. to use a user-defined git checkout does not
+        change this. In fact after having resolved the dependency we do not
+        really care how we got there.
+
         Any other attributes can be added and modified as needed. The following
         documents used attributes with reserved meaning:
 

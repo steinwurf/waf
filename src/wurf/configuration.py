@@ -17,13 +17,13 @@ class Configuration(object):
     # 4. The "store_lock" works like "store", but also write a lock file
     #    to the project directory - fixating a dependency to a specific
     #    version or path
-    # 5. The "load_lock" will load the depenency information from the lock
-    #    file if it exists.
+    # 5. The "store_from_lock" will load the depenency information from the lock
+    #    file and fetch dependencies.
     STORE = 'store'
     LOAD = 'load'
     HELP = 'help'
     STORE_LOCK = 'store_lock'
-    LOAD_LOCK = 'load_lock'
+    STORE_FROM_LOCK = 'store_from_lock'
 
     # The file name of the lock file used to fix dependencies to a specific
     # verions or path
@@ -48,22 +48,22 @@ class Configuration(object):
 
     def resolver_chain(self):
 
-        if self.choose_help_chain():
+        if self.choose_help():
             return Configuration.HELP
 
-        elif self.choose_load_lock_chain():
-            return Configuration.LOAD_LOCK
-
-        elif self.choose_store_lock_chain():
+        elif self.choose_store_lock():
             return Configuration.STORE_LOCK
 
-        elif self.choose_store_chain():
+        elif self.choose_store_from_lock():
+            return Configuration.STORE_FROM_LOCK
+
+        elif self.choose_store():
             return Configuration.STORE
 
         else:
             return Configuration.LOAD
 
-    def choose_help_chain(self):
+    def choose_help(self):
         """ Choose whether we should use the help resolver chain.
 
         There are two cases where we want to use the help chain:
@@ -91,10 +91,10 @@ class Configuration(object):
 
         return False
 
-    def choose_load_lock_chain(self):
+    def choose_store_from_lock(self):
 
-        if 'configure' in self.args:
-            # We are configuring
+        if not 'configure' in self.args:
+            # We are not configuring
             return False
 
         # We are not configuring, check for lock file
@@ -108,7 +108,7 @@ class Configuration(object):
         # lock file
         return True
 
-    def choose_store_lock_chain(self):
+    def choose_store_lock(self):
 
         if not 'configure' in self.args:
             # We are not configuring
@@ -122,34 +122,10 @@ class Configuration(object):
 
         return False
 
-    def choose_store_chain(self):
+    def choose_store(self):
 
         if 'configure' in self.args:
             # We are not configuring
             return True
 
         return False
-
-
-    def prepare_directories(self):
-
-        if self.resolver_chain() == Configuration.HELP:
-            # If we are just diplaying help nothing is needed
-            return
-
-        if self.resolver_chain() == Configuration.ACTIVE_LOCK_PATHS:
-            # If we are lokcing paths - we have to prepare the directory
-            lock_paths = os.path.join(project_path, 'resolve_lock_paths')
-
-            if os.path.isdir(lock_paths):
-                shutil.rmtree(lock_paths)
-
-            os.makedirs(lock_paths)
-
-        elif self.resolver_chain() != Configuration.PASSIVE_LOCK_PATHS:
-            # If we are not loading from lcoked paths we make sure the
-            # directory is not there
-            lock_paths = os.path.join(project_path, 'resolve_lock_paths')
-
-            if os.path.isdir(lock_paths):
-                shutil.rmtree(lock_paths)
