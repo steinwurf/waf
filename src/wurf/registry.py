@@ -27,8 +27,11 @@ from .configuration import Configuration
 from .store_lock_path_resolver import StoreLockPathResolver
 from .load_lock_path_resolver import LoadLockPathResolver
 from .store_lock_version_resolver import StoreLockVersionResolver
+from .check_lock_cache_resolver import CheckLockCacheResolver
 
 from .error import Error
+from .error import DependencyError
+
 
 class WurfProvideRegistryError(Error):
     """Generic exception for wurf"""
@@ -238,7 +241,7 @@ def dependency_cache(registry):
 
 @Registry.cache
 @Registry.provide
-def lock_cache(registry):
+def store_lock_cache(registry):
 
     options = registry.require('options')
 
@@ -247,7 +250,18 @@ def lock_cache(registry):
     elif options.lock_paths():
         return {'type':'paths', 'dependencies': {}}
     else:
-        raise Error('WHAT SHOULD NOT BE CALLED THEN?')
+        raise Error('Store lock cache requested, with unknown lock type.')
+
+@Registry.cache
+@Registry.provide
+def load_lock_cache(registry):
+
+    project_path = registry.require('project_path')
+
+    lock_path = os.path.join(project_path, Configuration.LOCK_FILE)
+
+    with open(lock_path, 'r') as lock_file:
+        return json.load(lock_file)
 
 
 @Registry.cache
@@ -488,10 +502,10 @@ def git_semver_resolver(registry, dependency):
 @Registry.cache
 @Registry.provide
 def git_user_checkout_resolver(registry, dependency):
-    """ Builds a WurfGitCheckoutResolver instance.
+    """ Builds resolver that uses a user specified checkout.
 
     :param registry: A Registry instance.
-    :param dependency: A WurfDependency instance.
+    :param dependency: A Dependency instance.
     """
     ctx = registry.require('ctx')
 
@@ -507,6 +521,44 @@ def git_user_checkout_resolver(registry, dependency):
 
     resolver = MandatoryResolver(resolver=resolver,
         msg="User checkout of {} failed.".format(checkout),
+        dependency=dependency)
+
+    return resolver
+
+@Registry.cache
+@Registry.provide
+def git_load_lock_dependency_resolver(registry, dependency):
+    """ Builds resolver that uses a specific checkout provided by the lock file.
+
+    :param registry: A Registry instance.
+    :param dependency: A Dependency instance.
+    """
+
+    assert None, "THIS IS NOT LOAD THIS IS STORE"
+
+    lock_cache = registry.require('load_lock_cache')
+    checkout = lock_cache['dependencies'][dependency.name]['checkout']
+
+    if dependency.method == 'semver':
+        dependency.rewrite(attribute='method', value='checkout',
+            reason="Using lock file.")
+        dependency.rewrite(attribute='checkout', value=checkout,
+            reason="Using lock file.")
+        dependency.rewrite(attribute='major', value=None,
+            reason="Using lock file.")
+
+    elif dependency.method == 'checkout':
+        dependency.rewrite(attribute='checkout', value=checkout,
+            reason="Using lock file.")
+
+    else:
+        raise Error("Unknown git dependency method {}".format(
+            dependency.method))
+
+    resolver = registry.require('store_dependency_resolver',
+        dependency=dependency)
+
+    resolver = CheckLockCacheResolver(resolver=resolver, lock_cache=lock_cache,
         dependency=dependency)
 
     return resolver
@@ -654,7 +706,7 @@ def store_lock_dependency_resolver(registry, dependency):
 
     project_path = registry.require('project_path')
 
-    lock_cache = registry.require('lock_cache')
+    lock_cache = registry.require('store_lock_cache')
     lock_type = lock_cache['type']
 
     if lock_type == 'versions':
@@ -667,24 +719,19 @@ def store_lock_dependency_resolver(registry, dependency):
     else:
         raise Error("Unknown lock type {}".format(lock_type))
 
+
 @Registry.provide
 def load_lock_dependency_resolver(registry, dependency):
 
-    resolver = registry.require('store_dependency_resolver',
-        dependency=dependency)
-
-    project_path = registry.require('project_path')
-
-    lock_cache = registry.require('lock_cache')
+    lock_cache = registry.require('load_lock_cache')
     lock_type = lock_cache['type']
 
     if lock_type == 'versions':
-        return StoreLockVersionResolver(resolver=resolver,
-            lock_cache=lock_cache, dependency=dependency)
+        resolver_key = "{}_load_lock_dependency_resolver".format(
+            dependency.resolver)
+        return registry.require(resolver_key, dependency=dependency)
     elif lock_type == 'paths':
-        return StoreLockPathResolver(resolver=resolver,
-            lock_cache=lock_cache, project_path=project_path,
-            dependency=dependency)
+        raise Error("Not implemented")
     else:
         raise Error("Unknown lock type {}".format(lock_type))
 
@@ -696,18 +743,8 @@ def dependency_resolver(registry, dependency):
     # This is where we "wire" together the resolvers. Which actually do the
     # work of via some method obtaining a path to a dependency.
     #
-    # There are three main resolver chains/configurations:
-    #
-    # 1. The "active" chain: This chain goes to the network and fetches stuff
-    # 2. The "passive" or "no-resolve" chain: This chain will load information
-    #    from the file system.
-    # 3. The "help" chain: This chain tries to interate though as many
-    #    dependencies as possible to get all options.
-    #
     resolver_chain = registry.require('resolver_chain')
     resolver_key = "{}_dependency_resolver".format(resolver_chain)
-
-    print("RESOLVER KEY: {}".format(resolver_key))
 
     return registry.require(resolver_key, dependency=dependency)
 
@@ -741,12 +778,12 @@ def dependency_manager(registry):
 @Registry.provide
 def store_lock_action(registry):
 
-    lock_cache = registry.require('lock_cache')
+    lock_cache = registry.require('store_lock_cache')
     project_path = registry.require('project_path')
 
     def action():
 
-        config_path = os.path.join(project_path, 'lock_resolve.json')
+        config_path = os.path.join(project_path, Configuration.LOCK_FILE)
 
         with open(config_path, 'w') as config_file:
             json.dump(lock_cache, config_file)
@@ -755,12 +792,16 @@ def store_lock_action(registry):
 
 @Registry.provide
 def remove_lock_action(registry):
+    """ Current not used. Could be used with --purge-lock or something similar
+    """
+
+    # @todo remove
 
     project_path = registry.require('project_path')
 
     def action():
 
-        lock_path = os.path.join(project_path, 'lock_resolve.json')
+        lock_path = os.path.join(project_path, Configuration.LOCK_FILE)
 
         if os.path.isfile(lock_path):
             os.remove(lock_path)
@@ -776,9 +817,6 @@ def post_resolver_actions(registry):
 
     if configuration.resolver_chain() == Configuration.STORE_LOCK:
         actions.append(registry.require('store_lock_action'))
-
-    elif configuration.resolver_chain() == Configuration.STORE:
-        actions.append(registry.require('remove_lock_action'))
 
     return actions
 

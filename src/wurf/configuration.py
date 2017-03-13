@@ -7,11 +7,27 @@ from .error import Error
 
 class Configuration(object):
 
+    # These are the main resolver chains/configurations:
+    #
+    # 1. The "store" chain: This chain goes to the network and fetches stuff
+    # 2. The "load" or chain: This chain will load information
+    #    from the file system.
+    # 3. The "help" chain: This chain tries to interate though as many
+    #    dependencies as possible to get all options.
+    # 4. The "store_lock" works like "store", but also write a lock file
+    #    to the project directory - fixating a dependency to a specific
+    #    version or path
+    # 5. The "load_lock" will load the depenency information from the lock
+    #    file if it exists.
     STORE = 'store'
     LOAD = 'load'
     HELP = 'help'
     STORE_LOCK = 'store_lock'
     LOAD_LOCK = 'load_lock'
+
+    # The file name of the lock file used to fix dependencies to a specific
+    # verions or path
+    LOCK_FILE = 'lock_resolve.json'
 
     def __init__(self, project_path, args, options):
         """ Construct an instance.

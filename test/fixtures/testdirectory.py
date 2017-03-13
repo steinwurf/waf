@@ -56,6 +56,13 @@ class TestDirectory:
         # invalid after the remove?
         self.tmpdir = None
 
+    def rmfile(self, filename):
+        """ Remove a file.
+
+        :param filename The name of the file to remove as a string
+        """
+        os.remove(os.path.join(self.path(), filename))
+
     def path(self):
         """ :return: The path to the temporary directory as a string"""
         return str(self.tmpdir)

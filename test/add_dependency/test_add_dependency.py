@@ -186,8 +186,7 @@ def test_resolve_json(test_directory):
     assert app_dir.contains_file('lock_resolve.json')
     app_dir.run('python', 'waf', 'build', '-v')
 
-    app_dir.run('python', 'waf', 'configure', '-v')
-    assert not app_dir.contains_file('lock_resolve.json')
+    app_dir.rmfile('lock_resolve.json')
 
     # Test the --lock_paths options
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths')

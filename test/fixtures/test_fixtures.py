@@ -13,6 +13,8 @@ def test_fixtures(test_directory):
     ok_path = os.path.join(sub1.path(), 'ok.txt')
 
     assert os.path.isfile(ok_path)
+    sub1.rmfile('ok.txt')
+    assert not os.path.isfile(ok_path)
 
     sub1.write_file('ok2.txt', 'hello_world2')
 
