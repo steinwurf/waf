@@ -636,18 +636,34 @@ def load_dependency_resolver(registry, dependency):
     return resolver
 
 @Registry.provide
-def path_store_from_lock_dependency_resolver(registry, dependency):
+def store_from_lock_path_dependency_resolver(registry, dependency):
 
     lock_cache = registry.require('load_lock_cache')
     path = lock_cache['dependencies'][dependency.name]['path']
 
-    dependency.rewrite(attribute='method', value='lock_path',
-        reason="Using lock file.")
+    dependency.rewrite(attribute='method', value='use_path',
+        reason="Lockf file path specified.")
 
     resolver = registry.require('store_dependency_resolver',
         dependency=dependency)
 
     resolver = CheckLockCacheResolver(resolver=resolver, lock_cache=lock_cache,
+        dependency=dependency)
+
+    return resolver
+
+@Registry.provide
+def store_user_path_dependency_resolver(registry, dependency):
+
+    mandatory_options = registry.require('mandatory_options')
+    path = mandatory_options.path(dependency=dependency)
+
+    dependency.use_path = path
+
+    dependency.rewrite(attribute='method', value='use_path',
+        reason="User path specified.")
+
+    resolver = registry.require('store_dependency_resolver',
         dependency=dependency)
 
     return resolver
@@ -682,7 +698,7 @@ def store_dependency_resolver(registry, dependency):
     return resolver
 
 @Registry.provide
-def store_lock_dependency_resolver(registry, dependency):
+def store_and_lock_dependency_resolver(registry, dependency):
 
     resolver = registry.require('store_dependency_resolver',
         dependency=dependency)
@@ -739,8 +755,6 @@ def dependency_resolver(registry, dependency):
 
     return ContextMsgResolver(resolver=resolver, ctx=ctx,
         dependency=dependency)
-
-
 
 @Registry.cache
 @Registry.provide

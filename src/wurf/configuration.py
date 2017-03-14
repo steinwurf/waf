@@ -22,7 +22,7 @@ class Configuration(object):
     STORE = 'store'
     LOAD = 'load'
     HELP = 'help'
-    STORE_LOCK = 'store_lock'
+    STORE_AND_LOCK = 'store_and_lock'
     STORE_FROM_LOCK = 'store_from_lock'
 
     # The file name of the lock file used to fix dependencies to a specific
@@ -51,8 +51,8 @@ class Configuration(object):
         if self.choose_help():
             return Configuration.HELP
 
-        elif self.choose_store_lock():
-            return Configuration.STORE_LOCK
+        elif self.choose_store_and_lock():
+            return Configuration.STORE_AND_LOCK
 
         elif self.choose_store_from_lock():
             return Configuration.STORE_FROM_LOCK
@@ -108,7 +108,7 @@ class Configuration(object):
         # lock file
         return True
 
-    def choose_store_lock(self):
+    def choose_store_and_lock(self):
 
         if not 'configure' in self.args:
             # We are not configuring
