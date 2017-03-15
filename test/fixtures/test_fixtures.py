@@ -51,9 +51,11 @@ def test_fixtures(test_directory):
     sub4.mkdir('sub5')
 
     # Will look for 'sub4/sub5'
-    assert test_directory.contains_dir('sub4', 'sub5')
+    assert test_directory.contains_dir(os.path.join('sub4', 'sub5'))
+    assert test_directory.contains_dir(os.path.join('sub*', 'sub5'))
+    assert test_directory.contains_dir(os.path.join('sub*', 's*5'))
 
     sub5 = sub4.join('sub5')
     sub5.rmdir()
 
-    assert not test_directory.contains_dir('sub4', 'sub5')
+    assert not test_directory.contains_dir(os.path.join('sub4', 'sub5'))

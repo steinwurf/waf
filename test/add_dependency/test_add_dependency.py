@@ -163,9 +163,10 @@ def run_commands(app_dir, git_dir):
     app_dir.run('python', 'waf', 'build', '-v')
 
     # @todo fix tests
-    #assert app_dir.contains_dir('bundle_dependencies','foo-1.3.3.7-2869e4')
-    #ssert app_dir.contains_dir('bundle_dependencies','baz-3.3.1-fbc718')
-    #assert app_dir.contains_dir('bundle_dependencies','bar-someh4sh-c915a2')
+    bundle_dir = app_dir.join('bundle_dependencies')
+    assert bundle_dir.contains_dir('foo-1.3.3.7-*')
+    assert bundle_dir.contains_dir('baz-3.3.1-*')
+    assert bundle_dir.contains_dir('bar-someh4sh-*')
 
     # This configure should happen from the lock
     app_dir.run('python', 'waf', 'configure', '-v')

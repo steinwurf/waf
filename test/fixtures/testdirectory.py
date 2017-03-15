@@ -169,13 +169,18 @@ class TestDirectory:
         """
         return os.path.isfile(os.path.join(self.path(), filename))
 
-    def contains_dir(self, *directories):
+    def contains_dir(self, directory):
         """ Checks for the existance of a directory.
 
         :param dirname: The directory name to check for.
         :return: True if the directory is contained within the test directory.
         """
-        return os.path.isdir(os.path.join(self.path(), *directories))
+
+        # Expand filename by expanding wildcards e.g. 'dir/*/file.txt', the
+        # glob should return only one file
+        directories = glob.glob(os.path.join(self.path(), directory))
+
+        return len(directories) == 1
 
     def run(self, *args, **kwargs):
         """Runs the command in the test directory.
