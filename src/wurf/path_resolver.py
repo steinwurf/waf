@@ -5,7 +5,7 @@ import os
 
 from .error import DependencyError
 
-class UserPathResolver(object):
+class PathResolver(object):
     """
     User Path Resolver functionality. Allows the user to specify the path.
     """

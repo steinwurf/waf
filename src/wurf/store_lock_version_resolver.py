@@ -40,7 +40,7 @@ class StoreLockVersionResolver(object):
         else:
             raise Error('Not stable checkout information found.')
 
-        self.lock_cache['dependencies'][self.dependency.name] = {
-            'sha1': self.dependency.sha1, 'checkout': checkout }
+        self.lock_cache.add_checkout(dependency=self.dependency,
+            checkout=checkout)
 
         return path

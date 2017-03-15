@@ -19,11 +19,11 @@ class Configuration(object):
     #    version or path
     # 5. The "store_from_lock" will load the depenency information from the lock
     #    file and fetch dependencies.
-    STORE = 'store'
+    RESOLVE = 'resolve'
     LOAD = 'load'
     HELP = 'help'
-    STORE_AND_LOCK = 'store_and_lock'
-    STORE_FROM_LOCK = 'store_from_lock'
+    RESOLVE_AND_LOCK = 'resolve_and_lock'
+    RESOLVE_FROM_LOCK = 'resolve_from_lock'
 
     # The file name of the lock file used to fix dependencies to a specific
     # verions or path
@@ -51,14 +51,14 @@ class Configuration(object):
         if self.choose_help():
             return Configuration.HELP
 
-        elif self.choose_store_and_lock():
-            return Configuration.STORE_AND_LOCK
+        elif self.choose_resolve_and_lock():
+            return Configuration.RESOLVE_AND_LOCK
 
-        elif self.choose_store_from_lock():
-            return Configuration.STORE_FROM_LOCK
+        elif self.choose_resolve_from_lock():
+            return Configuration.RESOLVE_FROM_LOCK
 
-        elif self.choose_store():
-            return Configuration.STORE
+        elif self.choose_resolve():
+            return Configuration.RESOLVE
 
         else:
             return Configuration.LOAD
@@ -91,7 +91,7 @@ class Configuration(object):
 
         return False
 
-    def choose_store_from_lock(self):
+    def choose_resolve_from_lock(self):
 
         if not 'configure' in self.args:
             # We are not configuring
@@ -108,7 +108,7 @@ class Configuration(object):
         # lock file
         return True
 
-    def choose_store_and_lock(self):
+    def choose_resolve_and_lock(self):
 
         if not 'configure' in self.args:
             # We are not configuring
@@ -122,7 +122,7 @@ class Configuration(object):
 
         return False
 
-    def choose_store(self):
+    def choose_resolve(self):
 
         if 'configure' in self.args:
             # We are not configuring

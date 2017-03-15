@@ -43,8 +43,7 @@ class StoreLockPathResolver(object):
 
         lock_path = os.path.relpath(path=lock_path, start=self.project_path)
 
-        self.lock_cache['dependencies'][self.dependency.name] = {
-            'sha1': self.dependency.sha1, 'path': lock_path }
+        self.lock_cache.add_path(dependency=self.dependency, path=lock_path)
 
         return path
 

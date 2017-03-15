@@ -24,19 +24,11 @@ class CheckLockCacheResolver(object):
         :return: Path to resolved dependency as a string
         """
 
-        lock_dependencies = self.lock_cache['dependencies']
-
-        if self.dependency.name not in lock_dependencies:
+        if self.dependency not in self.lock_cache:
             raise DependencyError(
-                msg="Not found in lock cache: {}".format(lock_cache),
+                msg="Not found in lock cache: {}".format(self.lock_cache),
                 dependency=self.dependency)
 
-        lock_dependency = lock_dependencies[self.dependency.name]
-        lock_sha1 = lock_dependency['sha1']
-
-        if self.dependency.sha1 != lock_sha1:
-            raise DependencyError(
-                msg="SHA1 mismatch. Locked SHA1: {}".format(lock_sha1),
-                dependency=self.dependency)
+        self.lock_cache.check_sha1(dependency=self.dependency)
 
         return self.resolver.resolve()
