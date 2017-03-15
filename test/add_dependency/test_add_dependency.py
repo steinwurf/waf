@@ -133,35 +133,7 @@ def mkdir_libbaz(directory):
 
     return baz_dir
 
-def test_resolve_json(test_directory):
-    """ Tests that dependencies declared in the wscript works. I.e. where we
-        call add_dependency(...) in the resolve function of the wscript.
-    """
-
-    app_dir = mkdir_app_json(directory=test_directory)
-
-    # Make a directory where we place the libraries that we would have cloned
-    # if we had use the full waf resolve functionality.
-    #
-    # To avoid relying on network connectivity we simply place the
-    # libraries there and then fake the git clone step.
-    git_dir = test_directory.mkdir(directory='git_dir')
-
-    foo_dir = mkdir_libfoo_json(directory=git_dir)
-    bar_dir = mkdir_libbar(directory=git_dir)
-    baz_dir = mkdir_libbaz(directory=git_dir)
-
-    # Instead of doing an actual Git clone - we fake it and use the paths in
-    # this mapping
-    clone_path = {
-        'github.com/acme-corp/foo.git': foo_dir.path(),
-        'gitlab.com/acme-corp/bar.git': bar_dir.path(),
-        'gitlab.com/acme/baz.git': baz_dir.path() }
-
-    json_path = os.path.join(app_dir.path(), 'clone_path.json')
-
-    with open(json_path, 'w') as json_file:
-        json.dump(clone_path, json_file)
+def run_commands(app_dir, git_dir):
 
     # Note that waf "climbs" directories to find a lock file in higher
     # directories, and this test is executed within a subfolder of the
@@ -203,6 +175,38 @@ def test_resolve_json(test_directory):
     app_dir.run('python', 'waf', 'build', '-v')
 
 
+def test_resolve_json(test_directory):
+    """ Tests that dependencies declared in the wscript works. I.e. where we
+        call add_dependency(...) in the resolve function of the wscript.
+    """
+
+    app_dir = mkdir_app_json(directory=test_directory)
+
+    # Make a directory where we place the libraries that we would have cloned
+    # if we had use the full waf resolve functionality.
+    #
+    # To avoid relying on network connectivity we simply place the
+    # libraries there and then fake the git clone step.
+    git_dir = test_directory.mkdir(directory='git_dir')
+
+    foo_dir = mkdir_libfoo_json(directory=git_dir)
+    bar_dir = mkdir_libbar(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir)
+
+    # Instead of doing an actual Git clone - we fake it and use the paths in
+    # this mapping
+    clone_path = {
+        'github.com/acme-corp/foo.git': foo_dir.path(),
+        'gitlab.com/acme-corp/bar.git': bar_dir.path(),
+        'gitlab.com/acme/baz.git': baz_dir.path() }
+
+    json_path = os.path.join(app_dir.path(), 'clone_path.json')
+
+    with open(json_path, 'w') as json_file:
+        json.dump(clone_path, json_file)
+
+    run_commands(app_dir=app_dir, git_dir=git_dir)
+
 
 def test_add_dependency(test_directory):
     """ Tests that dependencies declared in the wscript works. I.e. where we
@@ -234,23 +238,7 @@ def test_add_dependency(test_directory):
     with open(json_path, 'w') as json_file:
         json.dump(clone_path, json_file)
 
-    # Note that waf "climbs" directories to find a lock file in higher
-    # directories, and this test is executed within a subfolder of the
-    # project's main folder (that already has a lock file). To prevent this
-    # behavior, we need to invoke help with the NOCLIMB variable.
-    env = dict(os.environ)
-    env['NOCLIMB'] = '1'
-    app_dir.run('python', 'waf', '--help', env=env)
-    app_dir.run('python', 'waf', 'configure', '-v')
-
-    # The symlinks should be available to all dependencies
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'baz'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
-
-    app_dir.run('python', 'waf', 'build', '-v')
-    app_dir.run('python', 'waf', 'configure', '-v', '--fast-resolve')
-    app_dir.run('python', 'waf', 'build', '-v')
+    run_commands(app_dir=app_dir, git_dir=git_dir)
 
 
 def test_add_dependency_path(test_directory):
