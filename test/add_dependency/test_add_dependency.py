@@ -160,31 +160,62 @@ def run_commands(app_dir, git_dir):
     # Test the --lock_versions options
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_versions')
     assert app_dir.contains_file('lock_resolve.json')
+
+    # The symlinks should be available to all dependencies
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'baz'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
+
     app_dir.run('python', 'waf', 'build', '-v')
 
-    # @todo fix tests
     bundle_dir = app_dir.join('bundle_dependencies')
     assert bundle_dir.contains_dir('foo-1.3.3.7-*')
     assert bundle_dir.contains_dir('baz-3.3.1-*')
     assert bundle_dir.contains_dir('bar-someh4sh-*')
 
+    bundle_dir.rmdir()
+
     # This configure should happen from the lock
     app_dir.run('python', 'waf', 'configure', '-v')
+
+    assert app_dir.contains_dir('build_symlinks', 'foo')
+    assert app_dir.contains_dir('build_symlinks', 'baz')
+    assert app_dir.contains_dir('build_symlinks', 'bar')
+
     app_dir.run('python', 'waf', 'build', '-v')
 
+    lock_path = os.path.join(app_dir.path(), 'lock_resolve.json')
+    with open(lock_path, 'r') as lock_file:
+        lock = json.load(lock_file)
+
+    bundle_dir = app_dir.join('bundle_dependencies')
+    for name, data in lock['dependencies'].items():
+        assert bundle_dir.contains_dir("{}-{}-*".format(name, data['checkout']))
+
     app_dir.rmfile('lock_resolve.json')
+    bundle_dir.rmdir()
 
     # Test the --lock_paths options
-    app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths')
+    app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths',
+        '--bundle-path', 'locked')
+
+    assert app_dir.contains_dir('build_symlinks', 'foo')
+    assert app_dir.contains_dir('build_symlinks', 'baz')
+    assert app_dir.contains_dir('build_symlinks', 'bar')
+
     assert app_dir.contains_file('lock_resolve.json')
     app_dir.run('python', 'waf', 'build', '-v')
     # This configure should happen from the lock
     # Now we can delete the git folders - as we should be able to configure
     # from the frozen dependencies
-    #
 
-    #git_dir.rmdir()
+    git_dir.rmdir()
     app_dir.run('python', 'waf', 'configure', '-v')
+
+    assert app_dir.contains_dir('build_symlinks', 'foo')
+    assert app_dir.contains_dir('build_symlinks', 'baz')
+    assert app_dir.contains_dir('build_symlinks', 'bar')
+
     app_dir.run('python', 'waf', 'build', '-v')
 
 

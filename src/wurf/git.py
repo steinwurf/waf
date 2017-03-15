@@ -41,25 +41,13 @@ class Git(object):
 
     def current_commit(self, cwd):
         """
-        Runs 'git log -1' parse and return the commit id (SHA1) of the commit
+        Runs 'git rev-parse HEAD' parse and return the commit id (SHA1) of the commit
         currently checked out into the working copy.
         """
-        args = [self.git_binary, 'log', '-1']
+        args = [self.git_binary, 'rev-parse', 'HEAD']
         output = self.ctx.cmd_and_log(args, cwd=cwd).strip()
 
-        parser = re.compile(
-        r"""
-        ^               # Match beginning of line
-        commit          # Match the word commit
-        \s              # Match the space character
-        (               # Match and group
-           [0-9a-f]{40}   # Match 40 hexadecimal characters
-        )               # End of group
-        $               # Match end of line
-        """, re.VERBOSE | re.MULTILINE)
-
-        result = parser.match(output)
-        return result.group(1)
+        return output
 
     def clone(self, repository, directory, cwd):
         """
