@@ -56,6 +56,15 @@ class TestDirectory:
         # invalid after the remove?
         self.tmpdir = None
 
+    def join(self, *args):
+        """ Get a TestDirectory instance representing a path.
+
+        """
+        path = self.tmpdir.join(*args)
+        assert path.isdir()
+
+        return TestDirectory(tmpdir=path)
+
     def rmfile(self, filename):
         """ Remove a file.
 
@@ -160,13 +169,13 @@ class TestDirectory:
         """
         return os.path.isfile(os.path.join(self.path(), filename))
 
-    def contains_dir(self, dirname):
+    def contains_dir(self, *directories):
         """ Checks for the existance of a directory.
 
         :param dirname: The directory name to check for.
         :return: True if the directory is contained within the test directory.
         """
-        return os.path.isdir(os.path.join(self.path(), dirname))
+        return os.path.isdir(os.path.join(self.path(), *directories))
 
     def run(self, *args, **kwargs):
         """Runs the command in the test directory.

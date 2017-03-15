@@ -83,13 +83,14 @@ class WafResolveContext(Context.Context):
         Logs.enable_colors(1)
 
         # Lets make a different log file for the different resolver chains
-        resolver_chain = self.registry.require('resolver_chain')
+        configuration = self.registry.require('configuration')
 
         path = os.path.join(self.bldnode.abspath(),
-            resolver_chain+'.resolve.log')
+            configuration.resolver_chain()+'.resolve.log')
 
         self.logger = Logs.make_logger(path, 'cfg')
-        self.logger.debug('wurf: Resolve execute {}'.format(resolver_chain))
+        self.logger.debug('wurf: Resolve execute {}'.format(
+            configuration.resolver_chain()))
 
         self.dependency_manager = self.registry.require('dependency_manager')
 
