@@ -173,7 +173,10 @@ def _pytest(bld):
     separator = ';' if sys.platform == 'win32' else ':'
     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
 
-    test_command = 'python -m pytest test'
+    # Make python not write any .pyc files. These may linger around
+    # in the file system and make some tests pass although their .py
+    # counter-part has been e.g. deleted
+    test_command = 'python -B -m pytest test'
 
     # We override the pytest temp folder with the basetemp option,
     # so the test folders will be available at the specified location
