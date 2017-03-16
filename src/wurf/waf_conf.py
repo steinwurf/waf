@@ -49,4 +49,5 @@ def recurse_dependencies(ctx):
             name, ctx.cmd, dependency['path']))
 
         path = dependency['path']
-        ctx.recurse([path], mandatory=False)
+        # str() is needed as waf does not handle unicode in find_node
+        ctx.recurse([str(path)], once=False, mandatory=False)

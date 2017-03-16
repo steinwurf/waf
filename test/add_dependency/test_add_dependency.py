@@ -170,7 +170,14 @@ def test_resolve_json(test_directory):
     env = dict(os.environ)
     env['NOCLIMB'] = '1'
     app_dir.run('python', 'waf', '--help', env=env)
-    app_dir.run('python', 'waf', 'configure', '-v')
+    # We should be able to use --foo_magic_option that is defined in 'foo'
+    app_dir.run('python', 'waf', 'configure', '-v', '--foo_magic_option=xyz')
+
+    # After configure, the help text should include the description of
+    # --foo_magic_option (defined in the 'foo' wscript)
+    r = app_dir.run('python', 'waf', '--help')
+    assert r.returncode == 0
+    assert r.stdout.match('*Magic option for foo*')
 
     # The symlinks should be available to all dependencies
     assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
@@ -219,7 +226,14 @@ def test_add_dependency(test_directory):
     env = dict(os.environ)
     env['NOCLIMB'] = '1'
     app_dir.run('python', 'waf', '--help', env=env)
-    app_dir.run('python', 'waf', 'configure', '-v')
+    # We should be able to use --foo_magic_option that is defined in 'foo'
+    app_dir.run('python', 'waf', 'configure', '-v', '--foo_magic_option=xyz')
+
+    # After configure, the help text should include the description of
+    # --foo_magic_option (defined in the 'foo' wscript)
+    r = app_dir.run('python', 'waf', '--help')
+    assert r.returncode == 0
+    assert r.stdout.match('*Magic option for foo*')
 
     # The symlinks should be available to all dependencies
     assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))

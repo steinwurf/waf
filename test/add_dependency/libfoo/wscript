@@ -26,6 +26,11 @@ def resolve(ctx):
         sources=["gitlab.com/acme/goo.git"])
 
 def options(opt):
+    opts = opt.add_option_group('Foo options')
+    opts.add_option(
+        '--foo_magic_option', default=None, dest='foo_magic_option',
+        help="Magic option for foo")
+
     opt.load('compiler_cxx')
 
 def configure(conf):
