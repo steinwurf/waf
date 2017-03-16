@@ -102,19 +102,7 @@ class DependencyManager(object):
             # @todo the str() here is needed as waf does not handle unicode
             # in its find_node function (invoked from within recurse). So that
             # would be nice to fix.
-            #
-            # If at some point we want to change this benaviour such that the
-            # resolve.json file is only loaded if the user does not specify
-            # a resolve(...) function. then we should be able to do that pretty
-            # easily by setting mandatory=True then catching the excpetion waf
-            # will rasie if it cannot finde the resolve(...) fucntion and only
-            # then try to load the dependencies. However, for now we will go
-            # with the approach where we do both without any of them being
-            # mandatory.
-            self.ctx.recurse(str(path), mandatory=False)
-
-            # We also do not require a resolve.json file
-            self.load_dependencies(path, mandatory=False)
+            self.ctx.recurse([str(path)], mandatory=False)
 
     def __skip_dependency(self, dependency):
         """ Checks if we should skip the dependency.
@@ -122,6 +110,10 @@ class DependencyManager(object):
         :param dependency: A WurfDependency instance.
         :return: True if the dependency should be skipped, otherwise False.
         """
+        if dependency.internal and not self.ctx.is_toplevel():
+            # Internal dependencies should be skipped, if this is not the
+            # top-level wscript
+            return True
 
         if dependency.name in self.seen_dependencies:
 
@@ -133,7 +125,7 @@ class DependencyManager(object):
                     "SHA1 mismatch adding dependency {} was {}".format(
                     dependency, seen_dependency))
 
-            # This dependency is already in the seen_dependency  lets leave
+            # This dependency is already in the seen_dependencies
             return True
 
         self.seen_dependencies[dependency.name] = dependency

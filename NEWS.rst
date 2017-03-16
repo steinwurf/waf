@@ -7,7 +7,7 @@ of every change, see the Git log.
 Latest
 ------
 * Major: Full rewrite of our Waf depedency resolve code.
-* Minor: Adding support for `--fast-resolve` option.
+* Minor: Adding support for `--fast_resolve` option.
 * Minor: Adding support for `resolve.json` files.
 
 Un-released changes

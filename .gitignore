@@ -6,7 +6,7 @@ waf3-*
 .lock-*
 build
 build_symlinks
-bundle_dependencies
+resolved_dependencies
 
 # Emacs temp / auto save
 \#*#

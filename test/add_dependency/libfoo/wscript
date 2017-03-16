@@ -15,7 +15,22 @@ def resolve(ctx):
         sources=['bitbucket.com/acme-corp/bar.git',
                  'gitlab.com/acme-corp/bar.git'])
 
+    # The following internal dependency does not exist, and it should be
+    # skipped when configuring the top-level "app"
+    ctx.add_dependency(
+        name='goo',
+        internal=True,
+        resolver='git',
+        method='semver',
+        major=5,
+        sources=["gitlab.com/acme/goo.git"])
+
 def options(opt):
+    opts = opt.add_option_group('Foo options')
+    opts.add_option(
+        '--foo_magic_option', default=None, dest='foo_magic_option',
+        help="Magic option for foo")
+
     opt.load('compiler_cxx')
 
 def configure(conf):

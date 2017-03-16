@@ -8,5 +8,13 @@
         "checkout": "someh4sh",
         "sources": ["bitbucket.com/acme-corp/bar.git",
                     "gitlab.com/acme-corp/bar.git"]
+    },
+    {
+        "name": "goo",
+        "internal": true,
+        "resolver": "git",
+        "method": "semver",
+        "major": 5,
+        "sources": ["gitlab.com/acme/goo.git"]
     }
 ]

@@ -22,7 +22,7 @@ def test_self_build(test_directory):
     assert r.returncode == 0
     assert r.stdout.match('*finished successfully*')
 
-    # Configure again with an existing "bundle_dependencies" folder
+    # Configure again with an existing "resolved_dependencies" folder
     r = root.run('python', 'waf', 'configure')
 
     assert r.returncode == 0

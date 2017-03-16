@@ -142,7 +142,14 @@ def run_commands(app_dir, git_dir):
     env = dict(os.environ)
     env['NOCLIMB'] = '1'
     app_dir.run('python', 'waf', '--help', env=env)
-    app_dir.run('python', 'waf', 'configure', '-v')
+
+    # We should be able to use --foo_magic_option that is defined in 'foo'
+    app_dir.run('python', 'waf', 'configure', '-v', '--foo_magic_option=xyz')
+
+    # After configure, the help text should include the description of
+    # --foo_magic_option (defined in the 'foo' wscript)
+    r = app_dir.run('python', 'waf', '--help')
+    assert r.stdout.match('*Magic option for foo*')
 
     # The symlinks should be available to all dependencies
     assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
@@ -150,11 +157,11 @@ def run_commands(app_dir, git_dir):
     assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
-    app_dir.run('python', 'waf', 'configure', '-v', '--fast-resolve')
+    app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
     app_dir.run('python', 'waf', 'build', '-v')
 
     # Lets remove the resolved dependencies
-    bundle_dir = app_dir.join('bundle_dependencies')
+    bundle_dir = app_dir.join('resolved_dependencies')
     bundle_dir.rmdir()
 
     # Test the --lock_versions options
@@ -168,10 +175,10 @@ def run_commands(app_dir, git_dir):
 
     app_dir.run('python', 'waf', 'build', '-v')
 
-    bundle_dir = app_dir.join('bundle_dependencies')
-    assert bundle_dir.contains_dir('foo-1.3.3.7-*')
-    assert bundle_dir.contains_dir('baz-3.3.1-*')
-    assert bundle_dir.contains_dir('bar-someh4sh-*')
+    bundle_dir = app_dir.join('resolved_dependencies')
+    assert bundle_dir.contains_dir('foo','1.3.3.7-*')
+    assert bundle_dir.contains_dir('baz','3.3.1-*')
+    assert bundle_dir.contains_dir('bar','someh4sh-*')
 
     bundle_dir.rmdir()
 
@@ -188,16 +195,16 @@ def run_commands(app_dir, git_dir):
     with open(lock_path, 'r') as lock_file:
         lock = json.load(lock_file)
 
-    bundle_dir = app_dir.join('bundle_dependencies')
+    bundle_dir = app_dir.join('resolved_dependencies')
     for name, data in lock['dependencies'].items():
-        assert bundle_dir.contains_dir("{}-{}-*".format(name, data['checkout']))
+        assert bundle_dir.contains_dir(name, "{}-*".format(data['checkout']))
 
     app_dir.rmfile('lock_resolve.json')
     bundle_dir.rmdir()
 
     # Test the --lock_paths options
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths',
-        '--bundle-path', 'locked')
+        '--resolve_path', 'locked')
 
     assert app_dir.contains_dir('build_symlinks', 'foo')
     assert app_dir.contains_dir('build_symlinks', 'baz')
@@ -311,7 +318,7 @@ def test_add_dependency_path(test_directory):
     path_test = test_directory.mkdir(directory='path_test')
     baz_dir = mkdir_libbaz(directory=path_test)
 
-    app_dir.run('python', 'waf', 'configure', '-v', '--baz-path={}'.format(
+    app_dir.run('python', 'waf', 'configure', '-v', '--baz_path={}'.format(
                 baz_dir.path()))
 
     # The symlinks should be available to all dependencies
@@ -320,4 +327,4 @@ def test_add_dependency_path(test_directory):
     assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
-    app_dir.run('python', 'waf', 'configure', '-v', '--fast-resolve')
+    app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')

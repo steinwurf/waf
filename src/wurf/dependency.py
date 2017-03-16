@@ -10,8 +10,7 @@ class Dependency(object):
     def __init__(self, **kwargs):
         """ Construct an instance.
 
-        Basically an small object to store information about a dependency and
-        make it available in an easy way.
+        A small object to store information about a dependency.
 
         Small example (from a dictionary):
 
@@ -30,13 +29,13 @@ class Dependency(object):
             assert dependency.name == 'foo'
             assert dependency.recurse == True
 
-        One additional attribute sha1 attribute is added to the dependency. The
-        SHA1 attribute is a hash of all the dependency information. This allows
+        The 'sha1' extra attribute is added to the dependency, which is
+        a hash value of all the dependency information. This allows
         us to e.g. easily compare whether two dependencies with the same name
-        in fact equal or whether one has some different options.
+        are equal or whether one has some different options.
 
-        Continuing the example from above this is easily queried using the sha1
-        attribute:
+        Continuing the example from above, this value can be queried using the
+        sha1 attribute:
 
             # Access the sha1 attribute
             print("Dependency hash {}".format(dependency.sha1))
@@ -70,9 +69,9 @@ class Dependency(object):
           contain the path in the file-system which the symbolic link points
           to.
 
-        - "resolver_chain": The "resolver_chain" this attribute assigns a
-          high-level name to the the chain of resolvers e.g. such as "Resolve",
-          "Load". This describes the high-level operation of the resolver chain.
+        - "resolver_chain": This attribute assigns a high-level name to the
+          chain of resolvers, such as "Resolve" or "Load". This describes
+          the high-level operation of the resolver chain.
 
         - "resolver_action": The "resolver_action" this attribute describes the
           specific action taken to resolve the dependency. For example:
@@ -86,8 +85,15 @@ class Dependency(object):
 
         :param kwargs: Keyword arguments containing options for the dependency.
         """
-
         assert "sha1" not in kwargs
+
+        # Set default values for some common attributes
+        if 'recurse' not in kwargs:
+            kwargs['recurse'] = True
+        if 'optional' not in kwargs:
+            kwargs['optional'] = False
+        if 'internal' not in kwargs:
+            kwargs['internal'] = False
 
         s = json.dumps(kwargs, sort_keys=True)
         sha1 = hashlib.sha1(s.encode('utf-8')).hexdigest()
@@ -201,7 +207,6 @@ class Dependency(object):
         :param attribute: The name of the attribute as a string
         :param value: The value of the attribute
         """
-
         if attribute in self.info:
             raise AttributeError("Attribute {} read-only.".format(attribute))
         else:

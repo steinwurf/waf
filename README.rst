@@ -112,22 +112,22 @@ connectivity.
 Features of Waf with resolve capabilities
 =========================================
 
-`--fast-resolve`
+`--fast_resolve`
 ----------------
 As default the resolver will be invoked when configuring a waf project i.e.
 invoking `python waf configure ...`. Depending on the number of dependencies
 this may take some time to complete. This is problematic if an user is for
 example re-configuring to change compiler.
 
-Providing the `--fast-resolve` option should only invoke the resolvers for
+Providing the `--fast_resolve` option should only invoke the resolvers for
 dependencies that have not already been downloaded. Already downloaded
 dependencies should be loaded from the cache.
 
-`--fast-resolve` is also useful when manually specifying resolve method for a
+`--fast_resolve` is also useful when manually specifying resolve method for a
 dependency e.g. to manually set the path of a dependency `foo` using
-`--fast-resolve` will load all other dependencies from cache::
+`--fast_resolve` will load all other dependencies from cache::
 
-    python waf configure --foo-path /tmp/foo --fast-resolve
+    python waf configure --foo-path /tmp/foo --fast_resolve
 
 Support for `resolve.json`
 --------------------------
@@ -281,7 +281,7 @@ dependencies. So like:
 resolver_key = "{}_lock_resolver".format(lock.type)
 
 STORE_LOCK is also not so bad dependening on the lock type we add two different
-store resolvers after the active chain.  
+store resolvers after the active chain.
 
 
 
@@ -312,7 +312,7 @@ Now when running unit tests our source files will be under:
 
 Third party dependencies will be under:
 
-- /home/mvp/bundle_dependencies/some_name/thing.py
+- /home/mvp/resolved_dependencies/some_name/thing.py
 
 So
 

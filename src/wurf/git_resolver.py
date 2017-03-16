@@ -1,32 +1,30 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import hashlib
 import os
+import hashlib
 
 class GitResolver(object):
     """
     Base Git Resolver functionality. Clones/pulls a git repository.
     """
 
-    def __init__(self, git, ctx, name, bundle_path, source):
+    def __init__(self, git, ctx, name, working_path, source):
         """ Construct a new WurfGitResolver instance.
 
         :param git: A WurfGit instance
         :param url_resolver: A WurfGitUrlResolver instance.
         :param ctx: A Waf Context instance.
-        :param name: The name of the dependency as a string
-        :param bundle_path: Current working directory as a string. This is the place
+        :param working_path: Current working directory as a string. This is the place
             where we should create new folders etc.
-        :param source: THe URL of the dependency as a string
+        :param name: The name of the dependency as a string
+        :param source: The URL of the dependency as a string
         """
         self.git = git
         self.ctx = ctx
         self.name = name
-        self.bundle_path = bundle_path
+        self.working_path = working_path
         self.source = source
-
-        assert os.path.isabs(self.bundle_path)
 
     def resolve(self):
         """
@@ -41,22 +39,17 @@ class GitResolver(object):
         repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
 
         # The folder for storing different versions of this repository
-        repo_name = self.name + '-master-' + repo_hash
-        repo_path = os.path.join(self.bundle_path, repo_name)
-
-        self.ctx.to_log('wurf: GitResolver name {} -> {}'.format(
-            self.name, repo_path))
+        repo_name = 'master-' + repo_hash
+        repo_path = os.path.join(self.working_path, repo_name)
 
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(repo_path):
             self.git.clone(repository=repo_url, directory=repo_name,
-                cwd=self.bundle_path)
+                cwd=self.working_path)
         else:
-
             # We only want to pull if we haven't just cloned. This avoids
             # having to type in the username and password twice when using
             # https as a git protocol.
-
             try:
                 # git pull will fail if the repository is unavailable
                 # This is not a problem if we have already downloaded
@@ -72,7 +65,6 @@ class GitResolver(object):
         self.git.pull_submodules(cwd=repo_path)
 
         return repo_path
-
 
     def __repr__(self):
         """

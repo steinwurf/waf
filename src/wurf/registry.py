@@ -29,6 +29,10 @@ from .load_lock_path_resolver import LoadLockPathResolver
 from .store_lock_version_resolver import StoreLockVersionResolver
 from .check_lock_cache_resolver import CheckLockCacheResolver
 from .lock_cache import LockCache
+from .semver_selector import SemverSelector
+from .tag_database import TagDatabase
+from .existing_tag_resolver import ExistingTagResolver
+from .parent_folder import ParentFolder
 
 from .error import Error
 from .error import DependencyError
@@ -42,6 +46,7 @@ class WurfProvideRegistryError(Error):
 
         super(WurfProvideRegistryError, self).__init__(
             "Fatal error {} already added to registry".format(self.name))
+
 
 class Registry(object):
 
@@ -178,15 +183,28 @@ class Registry(object):
 
 @Registry.cache
 @Registry.provide
-def bundle_path(registry):
+def resolve_path(registry):
     mandatory_options = registry.require('mandatory_options')
-    bundle_path = mandatory_options.bundle_path()
-    bundle_path = os.path.abspath(os.path.expanduser(bundle_path))
+    resolve_path = mandatory_options.resolve_path()
+    resolve_path = os.path.abspath(os.path.expanduser(resolve_path))
 
     waf_utils = registry.require('waf_utils')
-    waf_utils.check_dir(bundle_path)
+    waf_utils.check_dir(resolve_path)
 
-    return bundle_path
+    return resolve_path
+
+
+@Registry.cache
+@Registry.provide
+def dependency_path(registry, dependency):
+    resolve_path = registry.require('resolve_path')
+
+    dependency_path = os.path.join(resolve_path, dependency.name)
+    waf_utils = registry.require('waf_utils')
+    waf_utils.check_dir(dependency_path)
+
+    return dependency_path
+
 
 @Registry.cache
 @Registry.provide
@@ -200,12 +218,22 @@ def symlinks_path(registry):
 
     return symlinks_path
 
+
+@Registry.cache
+@Registry.provide
+def parent_folder(registry):
+    resolve_path = registry.require('resolve_path')
+
+    return ParentFolder(resolve_path=resolve_path)
+
+
 @Registry.cache
 @Registry.provide
 def git_url_parser(registry):
     """ Parser for Git URLs. """
 
     return GitUrlParser()
+
 
 @Registry.cache
 @Registry.provide
@@ -220,6 +248,7 @@ def git_url_rewriter(registry):
 
     return GitUrlRewriter(parser=parser, rewrite_protocol=git_protocol)
 
+
 @Registry.cache
 @Registry.provide
 def parser(registry):
@@ -230,15 +259,17 @@ def parser(registry):
         # This will be handled by waf's default options context.
         add_help=False,
         # Remove printing usage help, like:
-        #    usage: waf [--bundle-path]
+        #    usage: waf [--some-option]
         # When printing help, this seems to be an undocumented feature of
         # argparse: http://stackoverflow.com/a/14591302/1717320
         usage=argparse.SUPPRESS)
+
 
 @Registry.cache
 @Registry.provide
 def dependency_cache(registry):
     return OrderedDict()
+
 
 @Registry.cache
 @Registry.provide
@@ -265,26 +296,43 @@ def options(registry):
     """
     parser = registry.require('parser')
     args = registry.require('args')
-    default_bundle_path = registry.require('default_bundle_path')
+    default_resolve_path = registry.require('default_resolve_path')
     default_symlinks_path = registry.require('default_symlinks_path')
 
     # We support the protocols we know how to rewrite
     supported_git_protocols = GitUrlRewriter.git_protocols.keys()
 
     return Options(args=args, parser=parser,
-        default_bundle_path=default_bundle_path,
+        default_resolve_path=default_resolve_path,
         default_symlinks_path=default_symlinks_path,
         supported_git_protocols=supported_git_protocols)
+
 
 @Registry.cache
 @Registry.provide
 def mandatory_options(registry):
-    """ Return the Options provider.
-
-    """
+    """ Return the Options provider. """
     options = registry.require('options')
 
     return MandatoryOptions(options=options)
+
+
+@Registry.cache
+@Registry.provide
+def semver_selector(registry):
+    """ Return the SemverSelector provider. """
+    semver = registry.require('semver')
+
+    return SemverSelector(semver=semver)
+
+
+@Registry.cache
+@Registry.provide
+def tag_database(registry):
+    """ Return the TagDatabase provider. """
+    ctx = registry.require('ctx')
+    return TagDatabase(ctx=ctx)
+
 
 @Registry.cache
 @Registry.provide
@@ -301,12 +349,11 @@ def project_git_protocol(registry):
         parent_url = git.remote_origin_url(cwd=os.getcwd())
 
     except Exception as e:
-
-        ctx.to_log('Exception when executing git.remote_origin_url {}'.format(e))
+        ctx.to_log(
+            'Exception when executing git.remote_origin_url: {}'.format(e))
         return None
 
     else:
-
         url = parser.parse(parent_url)
         return url.protocol
 
@@ -391,14 +438,14 @@ def git_resolvers(registry, dependency):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
-    bundle_path = registry.require('bundle_path')
+    dependency_path = registry.require('dependency_path', dependency=dependency)
 
     name = dependency.name
     sources = registry.require('git_sources', dependency=dependency)
 
     def wrap(source):
-        return GitResolver(
-            git=git, ctx=ctx, name=name, bundle_path=bundle_path, source=source)
+        return GitResolver(git=git, ctx=ctx, working_path=dependency_path,
+                           name=name, source=source)
 
     resolvers = [wrap(source) for source in sources]
     return resolvers
@@ -416,16 +463,15 @@ def git_checkout_list_resolver(registry, dependency, checkout):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
+    dependency_path = registry.require('dependency_path', dependency=dependency)
 
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
-
-    bundle_path = registry.require('bundle_path')
-    name = dependency.name
 
     def wrap(resolver):
 
         resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
-            dependency=dependency, bundle_path=bundle_path, checkout=checkout)
+            dependency=dependency, working_path=dependency_path,
+            checkout=checkout)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx)
         return resolver
@@ -468,19 +514,19 @@ def resolve_git_semver(registry, dependency):
     """
 
     git = registry.require('git')
-    semver = registry.require('semver')
+    semver_selector = registry.require('semver_selector')
     ctx = registry.require('ctx')
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
     options = registry.require('options')
-
-    bundle_path = registry.require('bundle_path')
+    dependency_path = registry.require('dependency_path', dependency=dependency)
 
     # Set the resolver method on the dependency
     dependency.resolver_action = 'git semver'
 
     def wrap(resolver):
         resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
-            semver=semver, bundle_path=bundle_path, dependency=dependency)
+            semver_selector=semver_selector, working_path=dependency_path,
+            dependency=dependency)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx)
         return resolver
@@ -504,7 +550,7 @@ def resolve_git_user_checkout(registry, dependency):
     ctx = registry.require('ctx')
 
     mandatory_options = registry.require('mandatory_options')
-    checkout = mandatory_options.use_checkout(dependency=dependency)
+    checkout = mandatory_options.checkout(dependency=dependency)
 
     # Set the resolver method on the dependency
     dependency.resolver_action = 'git user checkout'
@@ -529,7 +575,7 @@ def resolve_git(registry, dependency):
     """
     ctx = registry.require('ctx')
     options = registry.require('options')
-    checkout = options.use_checkout(dependency=dependency)
+    checkout = options.checkout(dependency=dependency)
 
     # If the user specified a checkout we should use that
     if checkout:
@@ -544,14 +590,28 @@ def resolve_git(registry, dependency):
         # Set the resolver action on the dependency
         dependency.resolver_action = 'fast/'+dependency.resolver_action
 
-        bundle_config_path = registry.require('bundle_config_path')
+        resolve_config_path = registry.require('resolve_config_path')
 
         fast_resolver = OnPassiveLoadPathResolver(dependency=dependency,
-            bundle_config_path=bundle_config_path)
+            resolve_config_path=resolve_config_path)
 
         fast_resolver = TryResolver(resolver=fast_resolver, ctx=ctx)
 
         return ListResolver(resolvers=[fast_resolver, git_resolver])
+
+    elif dependency.method == 'semver':
+
+        sources = registry.require('git_sources', dependency=dependency)
+        semver_selector = registry.require('semver_selector')
+        tag_database = registry.require('tag_database')
+        parent_folder = registry.require('parent_folder')
+
+        existing_tag_resolver = ExistingTagResolver(ctx=ctx,
+            dependency=dependency, semver_selector=semver_selector,
+            tag_database=tag_database, parent_folder=parent_folder,
+            sources=sources)
+
+        return ListResolver(resolvers=[existing_tag_resolver, git_resolver])
 
     else:
 
@@ -628,14 +688,14 @@ def resolve_lock_path(registry, dependency):
 def help_chain(registry, dependency):
 
     ctx = registry.require('ctx')
-    bundle_config_path = registry.require('bundle_config_path')
+    resolve_config_path = registry.require('resolve_config_path')
 
     # Set the resolver action on the dependency
     dependency.resolver_chain = 'Load'
     dependency.resolver_action = 'help'
 
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
-        bundle_config_path=bundle_config_path)
+        resolve_config_path=resolve_config_path)
 
     resolver = TryResolver(resolver=resolver, ctx=ctx)
 
@@ -646,13 +706,13 @@ def help_chain(registry, dependency):
 def load_chain(registry, dependency):
 
     ctx = registry.require('ctx')
-    bundle_config_path = registry.require('bundle_config_path')
+    resolve_config_path = registry.require('resolve_config_path')
 
     # Set the resolver action on the dependency
     dependency.resolver_chain = 'Load'
 
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
-        bundle_config_path=bundle_config_path)
+        resolve_config_path=resolve_config_path)
 
     resolver = TryResolver(resolver=resolver, ctx=ctx)
 
@@ -667,7 +727,7 @@ def resolve_chain(registry, dependency):
 
     ctx = registry.require('ctx')
     options = registry.require('options')
-    bundle_config_path = registry.require('bundle_config_path')
+    resolve_config_path = registry.require('resolve_config_path')
     symlinks_path = registry.require('symlinks_path')
     configuration = registry.require('configuration')
     project_path = registry.require('project_path')
@@ -687,7 +747,7 @@ def resolve_chain(registry, dependency):
 
     resolver = OnActiveStorePathResolver(
         resolver=resolver, dependency=dependency,
-        bundle_config_path=bundle_config_path)
+        resolve_config_path=resolve_config_path)
 
     return resolver
 
@@ -804,16 +864,16 @@ def post_resolver_actions(registry):
     return actions
 
 
-def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
+def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
                    default_symlinks_path, semver,
                    waf_utils, args, project_path):
     """ Builds a registry.
 
     :param ctx: A Waf Context instance.
     :param git_binary: A string containing the path to a git executable.
-    :param default_bundle_path: A string containing the path where the
+    :param default_resolve_path: A string containing the path where the
         dependencies should be downloaded per default.
-    :param bundle_config_path: A string containing the path to where the
+    :param resolve_config_path: A string containing the path to where the
         dependencies config json files should be / is stored.
     :param default_symlinks_path: A string containing the path where the
         dependency symlinks should be created per default.
@@ -830,8 +890,8 @@ def build_registry(ctx, git_binary, default_bundle_path, bundle_config_path,
 
     registry.provide_value('ctx', ctx)
     registry.provide_value('git_binary', git_binary)
-    registry.provide_value('default_bundle_path', default_bundle_path)
-    registry.provide_value('bundle_config_path', bundle_config_path)
+    registry.provide_value('default_resolve_path', default_resolve_path)
+    registry.provide_value('resolve_config_path', resolve_config_path)
     registry.provide_value('default_symlinks_path', default_symlinks_path)
     registry.provide_value('semver', semver)
     registry.provide_value('waf_utils', waf_utils)
