@@ -1,0 +1,9 @@
+[
+    {
+        "name": "waf-tools",
+        "resolver": "git",
+        "method": "checkout",
+        "checkout": "use-new-waf",
+        "sources": ["github.com/steinwurf/waf-tools.git"]
+    }
+]
