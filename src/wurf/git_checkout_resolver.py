@@ -10,7 +10,7 @@ class GitCheckoutResolver(object):
     Git Commit Resolver functionality. Checks out a specific commit.
     """
 
-    def __init__(self, git, git_resolver, ctx, dependency, working_path,
+    def __init__(self, git, git_resolver, ctx, dependency, cwd,
         checkout):
         """ Construct an instance.
 
@@ -18,7 +18,7 @@ class GitCheckoutResolver(object):
         :param url_resolver: A WurfGitResolver instance.
         :param ctx: A Waf Context instance.
         :param dependency: Dependency instance.
-        :param working_path: Current working directory as a string. This is the place
+        :param cwd: Current working directory as a string. This is the place
             where we should create new folders etc.
         :param checkout: The branch, tag, or sha1 as a string.
         """
@@ -26,7 +26,7 @@ class GitCheckoutResolver(object):
         self.git_resolver = git_resolver
         self.ctx = ctx
         self.dependency = dependency
-        self.working_path = working_path
+        self.cwd = cwd
         self.checkout = checkout
 
     def resolve(self):
@@ -39,14 +39,19 @@ class GitCheckoutResolver(object):
 
         assert os.path.isdir(path)
 
-        # @todo return path if checkout is the same
+        # @todo re-eanble
+        if self.git.current_branch(cwd=path) == self.checkout:
+            return path
+
+        if self.git.current_commit(cwd=path) == self.checkout:
+            return path
 
         # Use the path retuned to create a unique location for this checkout
         repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
 
         # The folder for storing different versions of this repository
         repo_name = self.checkout + '-' + repo_hash
-        repo_path = os.path.join(self.working_path, repo_name)
+        repo_path = os.path.join(self.cwd, repo_name)
 
         self.ctx.to_log('wurf: GitCheckoutResolver name {} -> {}'.format(
             self.dependency.name, repo_path))

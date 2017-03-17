@@ -40,7 +40,9 @@ class CreateSymlinkResolver(object):
         if os.path.exists(link_path):
             if os.path.realpath(link_path) == os.path.realpath(path):
                 # Symlink is already in place. We may have loaded it from cache.
-                return path
+                self.dependency.is_symlink = True
+                self.dependency.real_path = os.path.realpath(path)
+                return link_path
 
         # os.symlink() is not available in Python 2.7 on Windows.
         # We use the original function if it is available, otherwise we

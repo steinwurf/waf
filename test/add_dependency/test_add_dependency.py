@@ -66,6 +66,13 @@ def mkdir_app_json(directory):
 
     return app_dir
 
+def commit_file(directory, filename, content):
+
+    directory.write_file(filename, content)
+    directory.run('git', 'add', '.')
+    directory.run('git', '-c', 'user.name=John', '-c',
+                  'user.email=doe@email.org', 'commit', '-m', 'oki')
+
 
 def mkdir_libfoo(directory):
 
@@ -83,6 +90,9 @@ def mkdir_libfoo(directory):
     foo_dir.run('git', '-c', 'user.name=John', '-c',
                 'user.email=doe@email.org', 'commit', '-m', 'oki')
     foo_dir.run('git', 'tag', '1.3.3.7')
+
+    commit_file(directory=foo_dir, filename='ok.txt', content='hello world')
+
     return foo_dir
 
 def mkdir_libfoo_json(directory):
@@ -103,6 +113,10 @@ def mkdir_libfoo_json(directory):
     foo_dir.run('git', '-c', 'user.name=John', '-c',
                 'user.email=doe@email.org', 'commit', '-m', 'oki')
     foo_dir.run('git', 'tag', '1.3.3.7')
+
+    commit_file(directory=foo_dir, filename='ok.txt', content='hello world')
+
+
     return foo_dir
 
 
@@ -115,6 +129,7 @@ def mkdir_libbar(directory):
     bar_dir.run('git', '-c', 'user.name=John', '-c',
                 'user.email=doe@email.org', 'commit', '-m', 'oki')
     bar_dir.run('git', 'tag', 'someh4sh')
+
     return bar_dir
 
 
@@ -130,6 +145,10 @@ def mkdir_libbaz(directory):
     baz_dir.run('git', 'tag', '3.2.0')
     baz_dir.run('git', 'tag', '3.3.0')
     baz_dir.run('git', 'tag', '3.3.1')
+
+    commit_file(directory=baz_dir, filename='ok.txt', content='hello world')
+
+    baz_dir.run('git', 'tag', '4.0.0')
 
     return baz_dir
 
@@ -161,8 +180,8 @@ def run_commands(app_dir, git_dir):
     app_dir.run('python', 'waf', 'build', '-v')
 
     # Lets remove the resolved dependencies
-    bundle_dir = app_dir.join('resolved_dependencies')
-    bundle_dir.rmdir()
+    resolve_dir = app_dir.join('resolved_dependencies')
+    resolve_dir.rmdir()
 
     # Test the --lock_versions options
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_versions')
@@ -175,12 +194,12 @@ def run_commands(app_dir, git_dir):
 
     app_dir.run('python', 'waf', 'build', '-v')
 
-    bundle_dir = app_dir.join('resolved_dependencies')
-    assert bundle_dir.contains_dir('foo','1.3.3.7-*')
-    assert bundle_dir.contains_dir('baz','3.3.1-*')
-    assert bundle_dir.contains_dir('bar','someh4sh-*')
+    resolve_dir = app_dir.join('resolved_dependencies')
+    assert resolve_dir.contains_dir('foo','1.3.3.7-*')
+    assert resolve_dir.contains_dir('baz','3.3.1-*')
+    assert resolve_dir.contains_dir('bar','someh4sh-*')
 
-    bundle_dir.rmdir()
+    resolve_dir.rmdir()
 
     # This configure should happen from the lock
     app_dir.run('python', 'waf', 'configure', '-v')
@@ -195,12 +214,26 @@ def run_commands(app_dir, git_dir):
     with open(lock_path, 'r') as lock_file:
         lock = json.load(lock_file)
 
-    bundle_dir = app_dir.join('resolved_dependencies')
-    for name, data in lock['dependencies'].items():
-        assert bundle_dir.contains_dir(name, "{}-*".format(data['checkout']))
+    resolve_dir = app_dir.join('resolved_dependencies')
+
+    # The content of resolved dependencies is intersting now :)
+    # We've just resolved from the lock_resolve.json file
+    # containing the versions needed.
+    #
+    # The on some repositories we the commit we are asking for
+    # is the same as on the master and some not.
+    #
+    # foo should use the commit id in the lock file
+    assert resolve_dir.contains_dir("foo", "{}-*".format(
+        lock['dependencies']['foo']['checkout']))
+    # bar is locked to the same commit as the master so it will
+    # skip the git checkout and just return the master path
+    assert resolve_dir.contains_dir('bar', 'master-*')
+    # baz has it's tag in the lock file, so it will be available there
+    assert resolve_dir.contains_dir('baz', '3.3.1-*')
 
     app_dir.rmfile('lock_resolve.json')
-    bundle_dir.rmdir()
+    resolve_dir.rmdir()
 
     # Test the --lock_paths options
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths',
@@ -212,11 +245,10 @@ def run_commands(app_dir, git_dir):
 
     assert app_dir.contains_file('lock_resolve.json')
     app_dir.run('python', 'waf', 'build', '-v')
+
     # This configure should happen from the lock
     # Now we can delete the git folders - as we should be able to configure
     # from the frozen dependencies
-
-    git_dir.rmdir()
     app_dir.run('python', 'waf', 'configure', '-v')
 
     assert app_dir.contains_dir('build_symlinks', 'foo')

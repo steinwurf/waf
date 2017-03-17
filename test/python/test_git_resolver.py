@@ -9,7 +9,7 @@ def test_git_resolver(test_directory):
 
     ctx = mock.Mock()
     git = mock.Mock()
-    working_path = test_directory.path()
+    cwd = test_directory.path()
 
     # GitResolver checks that the directory is created during git.clone,
     # so we create it within the test_directory as a side effect
@@ -22,7 +22,7 @@ def test_git_resolver(test_directory):
     repo_url = 'https://gitlab.com/steinwurf/links.git'
 
     resolver = GitResolver(git=git, ctx=ctx, name=name,
-        working_path=working_path, source=repo_url)
+        cwd=cwd, source=repo_url)
 
     path = resolver.resolve()
 

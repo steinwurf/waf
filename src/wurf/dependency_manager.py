@@ -104,6 +104,9 @@ class DependencyManager(object):
             # would be nice to fix.
             self.ctx.recurse([str(path)], mandatory=False)
 
+            # We also do not require a resolve.json file
+            self.load_dependencies(path, mandatory=False)
+
     def __skip_dependency(self, dependency):
         """ Checks if we should skip the dependency.
 

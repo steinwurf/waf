@@ -9,13 +9,13 @@ class GitResolver(object):
     Base Git Resolver functionality. Clones/pulls a git repository.
     """
 
-    def __init__(self, git, ctx, name, working_path, source):
+    def __init__(self, git, ctx, name, cwd, source):
         """ Construct a new WurfGitResolver instance.
 
         :param git: A WurfGit instance
         :param url_resolver: A WurfGitUrlResolver instance.
         :param ctx: A Waf Context instance.
-        :param working_path: Current working directory as a string. This is the place
+        :param cwd: Current working directory as a string. This is the place
             where we should create new folders etc.
         :param name: The name of the dependency as a string
         :param source: The URL of the dependency as a string
@@ -23,7 +23,7 @@ class GitResolver(object):
         self.git = git
         self.ctx = ctx
         self.name = name
-        self.working_path = working_path
+        self.cwd = cwd
         self.source = source
 
     def resolve(self):
@@ -40,12 +40,12 @@ class GitResolver(object):
 
         # The folder for storing different versions of this repository
         repo_name = 'master-' + repo_hash
-        repo_path = os.path.join(self.working_path, repo_name)
+        repo_path = os.path.join(self.cwd, repo_name)
 
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(repo_path):
             self.git.clone(repository=repo_url, directory=repo_name,
-                cwd=self.working_path)
+                cwd=self.cwd)
         else:
             # We only want to pull if we haven't just cloned. This avoids
             # having to type in the username and password twice when using

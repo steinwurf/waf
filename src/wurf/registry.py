@@ -444,7 +444,7 @@ def git_resolvers(registry, dependency):
     sources = registry.require('git_sources', dependency=dependency)
 
     def wrap(source):
-        return GitResolver(git=git, ctx=ctx, working_path=dependency_path,
+        return GitResolver(git=git, ctx=ctx, cwd=dependency_path,
                            name=name, source=source)
 
     resolvers = [wrap(source) for source in sources]
@@ -470,7 +470,7 @@ def git_checkout_list_resolver(registry, dependency, checkout):
     def wrap(resolver):
 
         resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
-            dependency=dependency, working_path=dependency_path,
+            dependency=dependency, cwd=dependency_path,
             checkout=checkout)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx)
@@ -525,7 +525,7 @@ def resolve_git_semver(registry, dependency):
 
     def wrap(resolver):
         resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
-            semver_selector=semver_selector, working_path=dependency_path,
+            semver_selector=semver_selector, cwd=dependency_path,
             dependency=dependency)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx)

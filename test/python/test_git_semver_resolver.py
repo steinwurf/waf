@@ -29,7 +29,7 @@ def test_git_semver_resolver(test_directory):
     semver_selector.select_tag.return_value = selected_tag
 
     resolver = GitSemverResolver(git=git, git_resolver=git_resolver,
-        ctx=ctx, semver_selector=semver_selector,working_path=repo_folder.path(),
+        ctx=ctx, semver_selector=semver_selector,cwd=repo_folder.path(),
         dependency=dependency)
 
     path = resolver.resolve()

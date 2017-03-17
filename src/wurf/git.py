@@ -89,6 +89,13 @@ class Git(object):
 
         return current, others
 
+    def current_branch(self, cwd):
+        """
+        Uses git.branch(...) but only returns the current one
+        """
+        current, _ = self.branch(cwd=cwd)
+        return current
+
     def is_detached_head(self, cwd):
         """
         Checks if the repository is in detached HEAD state. See learn what this
