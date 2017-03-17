@@ -92,6 +92,8 @@ class WafOptionsContext(Options.OptionsContext):
 
     def execute(self):
 
+        self.srcnode = self.path
+
         # Create and execute the resolve context
         ctx = Context.create_context('resolve')
 
@@ -114,6 +116,12 @@ class WafOptionsContext(Options.OptionsContext):
         waf_conf.recurse_dependencies(self)
 
         super(WafOptionsContext, self).execute()
+
+    def is_toplevel(self):
+        """
+        Returns true if the current script is the top-level wscript
+        """
+        return self.srcnode == self.path
 
     def parse_args(self, _args=None):
         """ Override the parse_args(..) from the OptionsContext.
