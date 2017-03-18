@@ -224,10 +224,10 @@ resolved dependency we implement the `--dump-resolved-dependencies` option.
 This will write out information about resolved dependencies such as semver tag
 chosen etc.
 
-Add `--freeze` option
+Add `--lock_versions` option
 ---------------------
 
-The `--freeze` option will write `freeze_resolve.json` to the project folder.
+The `--lock_versions` option will write `lock_resolve.json` to the project folder.
 This file will describe the exact information about the project's dependencies.
 
 In general this is done the following way for different resolvers:
@@ -235,54 +235,37 @@ In general this is done the following way for different resolvers:
  - `git` resolvers, will store the SHA1 commit id of the dependency.
  - `http` resolvers, will store the SHA1 sum of the downloaded dependency.
 
- If the `freeze_resolve.json` is present it will take precedence over all
- resolvers besides the `--project-path` options.
+ If the `lock_resolve.json` is present it will take precedence over all
+ resolvers besides the user options such as manually specifying checkout or
+ path.
 
- You can commit the `freeze_resolve.json` file to the project e.g. when creating
+ You can commit the `lock_resolve.json` file to the project e.g. when creating
  a LTS (Long Term Support) release or similar. Where you want to pin the exact
  commit id, etc. of the project.
 
  As an example::
 
-     # Writes / overwrites an existing freeze_resolve.json
-     python waf configure --freeze
+     # Writes / overwrites an existing lock_resolve.json
+     python waf configure --lock_versions
 
-Add `--deep-freeze` option
+Add `--lock_paths` option
 --------------------------
 
-The `--deep-freeze` will write a `deep_freeze_resolve.json` file in the project
-folder. It behaves differently from the `--freeze` option in that it will store
+The `--lock_paths` will write a `lock_resolve.json` file in the project
+folder. It behaves differently from the `--lock_versions` option in that it will store
 the relative paths to the dependencies. The typical use-case for this is to
 download all dependencies into a folder stored within the project (default
 behavior) in order to make a stand-alone archive.
 
-If the `deep_freeze_resolve.json` is present it will take precedence over all
-resolvers besides the `--project-path` options.
+If the `lock_resolve.json` is present it will take precedence over all
+resolvers besides the user options such as manually specifying checkout or
+path.
 
 This makes it possible to easily the create standalone archives, by simply
 invoking::
 
-    python waf configure --deep-freeze
+    python waf configure --lock_paths
     python waf dist
-
-Alternative lock implementation
---------------------------------
-
-We write a lock_resolve.json file into to the project directory.
-
-There are two possible chains:
-
-LOAD_LOCK
-STORE_LOCK
-
-In the LOAD_LOCK chain we dispatch on the lock type like with do with normal
-dependencies. So like:
-
-resolver_key = "{}_lock_resolver".format(lock.type)
-
-STORE_LOCK is also not so bad dependening on the lock type we add two different
-store resolvers after the active chain.
-
 
 
 Bundle dependencies

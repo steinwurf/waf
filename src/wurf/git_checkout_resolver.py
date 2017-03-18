@@ -39,7 +39,6 @@ class GitCheckoutResolver(object):
 
         assert os.path.isdir(path)
 
-        # @todo re-eanble
         if self.git.current_branch(cwd=path) == self.checkout:
             return path
 
