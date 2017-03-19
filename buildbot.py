@@ -17,17 +17,17 @@ def run_command(args, cwd=None, env=None):
 
 
 def configure(properties):
-    command = [sys.executable, 'waf', 'configure', '-v']
+    command = [sys.executable, 'waf', 'configure', '-v', '--zones=resolve']
     run_command(command)
 
 
 def build(properties):
-    command = [sys.executable, 'waf', 'build', '-v']
+    command = [sys.executable, 'waf', 'build', '-v', '--zones=resolve']
     run_command(command)
 
 
 def run_tests(properties):
-    command = [sys.executable, 'waf', '-v', '--run_tests']
+    command = [sys.executable, 'waf', '-v', '--run_tests', '--zones=resolve']
     run_command(command)
 
 
