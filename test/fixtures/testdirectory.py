@@ -48,6 +48,30 @@ class TestDirectory:
         """
         return TestDirectory(self.tmpdir.mkdir(directory))
 
+    def rmdir(self):
+        """ Remove the directory."""
+        self.tmpdir.remove()
+
+        # @todo not sure if this is a good idea, but I guess the tmpdir is
+        # invalid after the remove?
+        self.tmpdir = None
+
+    def join(self, *args):
+        """ Get a TestDirectory instance representing a path.
+
+        """
+        path = self.tmpdir.join(*args)
+        assert path.isdir()
+
+        return TestDirectory(tmpdir=path)
+
+    def rmfile(self, filename):
+        """ Remove a file.
+
+        :param filename The name of the file to remove as a string
+        """
+        os.remove(os.path.join(self.path(), filename))
+
     def path(self):
         """ :return: The path to the temporary directory as a string"""
         return str(self.tmpdir)
@@ -136,6 +160,34 @@ class TestDirectory:
 
         f = self.tmpdir.join(filename)
         f.write(content)
+
+    def contains_file(self, filename):
+        """ Checks for the existance of a file.
+
+        :param filename: The filename to check for.
+        :return: True if the file is contained within the test directory.
+        """
+        return os.path.isfile(os.path.join(self.path(), filename))
+
+    def contains_dir(self, *directories):
+        """ Checks for the existance of a directory.
+
+        :param dirname: The directory name to check for.
+        :return: True if the directory is contained within the test directory.
+        """
+
+        # Expand filename by expanding wildcards e.g. 'dir/*/file.txt', the
+        # glob should return only one file
+        directories = glob.glob(os.path.join(self.path(), *directories))
+
+        if len(directories) != 1:
+            return False
+
+        # Follow symlinks
+        if not os.path.exists(directories[0]):
+            return False
+
+        return True
 
     def run(self, *args, **kwargs):
         """Runs the command in the test directory.

@@ -10,19 +10,23 @@ class GitCheckoutResolver(object):
     Git Commit Resolver functionality. Checks out a specific commit.
     """
 
-    def __init__(self, git, git_resolver, ctx, name, checkout):
+    def __init__(self, git, git_resolver, ctx, dependency, cwd,
+        checkout):
         """ Construct an instance.
 
         :param git: A WurfGit instance
         :param url_resolver: A WurfGitResolver instance.
         :param ctx: A Waf Context instance.
-        :param name: Name of the dependency as a string
+        :param dependency: Dependency instance.
+        :param cwd: Current working directory as a string. This is the place
+            where we should create new folders etc.
         :param checkout: The branch, tag, or sha1 as a string.
         """
         self.git = git
         self.git_resolver = git_resolver
         self.ctx = ctx
-        self.name = name
+        self.dependency = dependency
+        self.cwd = cwd
         self.checkout = checkout
 
     def resolve(self):
@@ -35,35 +39,42 @@ class GitCheckoutResolver(object):
 
         assert os.path.isdir(path)
 
-        # If the requested checkout is the master, just return the path
-        if self.checkout == 'master':
+        if self.git.current_branch(cwd=path) == self.checkout:
             return path
 
-        # Use the parent folder of the path retuned to store different
-        # versions of this repository
-        repo_folder = os.path.dirname(path)
-        checkout_path = os.path.join(repo_folder, self.checkout)
+        if self.git.current_commit(cwd=path) == self.checkout:
+            return path
+
+        # Use the path retuned to create a unique location for this checkout
+        repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
+
+        # The folder for storing different versions of this repository
+        repo_name = self.checkout + '-' + repo_hash
+        repo_path = os.path.join(self.cwd, repo_name)
 
         self.ctx.to_log('wurf: GitCheckoutResolver name {} -> {}'.format(
-            self.name, checkout_path))
+            self.dependency.name, repo_path))
 
         # If the folder for the chosen version does not exist,
-        # then copy the master and checkout that version
-        if not os.path.isdir(checkout_path):
-            shutil.copytree(src=path, dst=checkout_path, symlinks=True)
-            self.git.checkout(branch=self.checkout, cwd=checkout_path)
+        # then copy the current repo and checkout that version
+        if not os.path.isdir(repo_path):
+            shutil.copytree(src=path, dst=repo_path, symlinks=True)
+            self.git.checkout(branch=self.checkout, cwd=repo_path)
         else:
 
-            if not self.git.is_detached_head(cwd=checkout_path):
+            if not self.git.is_detached_head(cwd=repo_path):
                 # If the checkout is a tag or a commit (we will be in detached
                 # HEAD state), then we cannot pull. On the other hand,
                 # the pull operation should be executed to update a branch.
-                self.git.pull(cwd=checkout_path)
+                self.git.pull(cwd=repo_path)
 
         # If the project contains submodules, we also get those
-        self.git.pull_submodules(cwd=checkout_path)
+        self.git.pull_submodules(cwd=repo_path)
 
-        return checkout_path
+        # Record the commmit id of the current working copy
+        self.dependency.git_commit = self.git.current_commit(cwd=repo_path)
+
+        return repo_path
 
     def __repr__(self):
         """

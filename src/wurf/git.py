@@ -39,6 +39,16 @@ class Git(object):
         int_list = [int(s) for s in re.findall('\\d+', output)]
         return tuple(int_list)
 
+    def current_commit(self, cwd):
+        """
+        Runs 'git rev-parse HEAD' parse and return the commit id (SHA1) of the commit
+        currently checked out into the working copy.
+        """
+        args = [self.git_binary, 'rev-parse', 'HEAD']
+        output = self.ctx.cmd_and_log(args, cwd=cwd).strip()
+
+        return output
+
     def clone(self, repository, directory, cwd):
         """
         Runs 'git clone <repository> <directory>' in the directory cwd.
@@ -78,6 +88,13 @@ class Git(object):
             self.ctx.fatal('Failed to locate current branch')
 
         return current, others
+
+    def current_branch(self, cwd):
+        """
+        Uses git.branch(...) but only returns the current one
+        """
+        current, _ = self.branch(cwd=cwd)
+        return current
 
     def is_detached_head(self, cwd):
         """

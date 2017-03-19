@@ -44,6 +44,10 @@ class DependencyManager(object):
         # purposes).
         self.seen_dependencies = {}
 
+        # Actions to be executed once all dependencies have been resolved
+        # will only be invoked if the post_resolve(...) fuction is invoked.
+        self.post_resolve_actions = []
+
     def load_dependencies(self, path, mandatory=False):
         """ Loads dependencies from a resolve.json file.
 
@@ -100,6 +104,9 @@ class DependencyManager(object):
             # would be nice to fix.
             self.ctx.recurse([str(path)], mandatory=False)
 
+            # We also do not require a resolve.json file
+            self.load_dependencies(path, mandatory=False)
+
     def __skip_dependency(self, dependency):
         """ Checks if we should skip the dependency.
 
@@ -127,3 +134,12 @@ class DependencyManager(object):
         self.seen_dependencies[dependency.name] = dependency
 
         return False
+
+    def post_resolve(self):
+        """ Function called when all dependencies have been resolved. """
+
+        for action in self.post_resolve_actions:
+            action(dependency_manager=self)
+
+    def add_post_resolve_action(self, action):
+        self.post_resolve_actions.append(action)

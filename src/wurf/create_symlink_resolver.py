@@ -35,12 +35,14 @@ class CreateSymlinkResolver(object):
         if not path:
             return path
 
-        link_name = self.dependency.name
-        link_path = os.path.join(self.symlinks_path, link_name)
+        link_path = os.path.join(self.symlinks_path, self.dependency.name)
 
-        if link_path == path:
-            # Symlink is already in place. We may have loaded it from cache.
-            return path
+        if os.path.exists(link_path):
+            if os.path.realpath(link_path) == os.path.realpath(path):
+                # Symlink is already in place. We may have loaded it from cache.
+                self.dependency.is_symlink = True
+                self.dependency.real_path = os.path.realpath(path)
+                return link_path
 
         # os.symlink() is not available in Python 2.7 on Windows.
         # We use the original function if it is available, otherwise we
@@ -62,7 +64,7 @@ class CreateSymlinkResolver(object):
 
             # We need to remove the symlink if it already exists,
             # since it may point to an incorrect folder
-            if os.path.exists(link_path):
+            if os.path.lexists(link_path):
                 if sys.platform == 'win32':
                     # On Windows, the symlink is not considered a link, but
                     # a directory, so it is removed with rmdir. The contents

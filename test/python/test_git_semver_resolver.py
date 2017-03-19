@@ -13,11 +13,12 @@ def test_git_semver_resolver(test_directory):
 
     # Create a parent folder for the dependency and the corresponding
     # subfolder for the 'master' checkout
-    repo_folder = test_directory.mkdir('links-01234')
-    master_folder = repo_folder.mkdir('master')
+    repo_folder = test_directory.mkdir('links')
+    master_folder = repo_folder.mkdir('master-01234')
 
-    name = 'links'
-    major = 5
+    dependency = mock.Mock()
+    dependency.name = 'links'
+    dependency.major = 5
     selected_tag = '5.1.0'
     repo_url = 'https://gitlab.com/steinwurf/links.git'
 
@@ -28,7 +29,8 @@ def test_git_semver_resolver(test_directory):
     semver_selector.select_tag.return_value = selected_tag
 
     resolver = GitSemverResolver(git=git, git_resolver=git_resolver,
-        ctx=ctx, semver_selector=semver_selector, name=name, major=major)
+        ctx=ctx, semver_selector=semver_selector,cwd=repo_folder.path(),
+        dependency=dependency)
 
     path = resolver.resolve()
 

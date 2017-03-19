@@ -112,22 +112,22 @@ connectivity.
 Features of Waf with resolve capabilities
 =========================================
 
-`--fast-resolve`
+`--fast_resolve`
 ----------------
 As default the resolver will be invoked when configuring a waf project i.e.
 invoking `python waf configure ...`. Depending on the number of dependencies
 this may take some time to complete. This is problematic if an user is for
 example re-configuring to change compiler.
 
-Providing the `--fast-resolve` option should only invoke the resolvers for
+Providing the `--fast_resolve` option should only invoke the resolvers for
 dependencies that have not already been downloaded. Already downloaded
 dependencies should be loaded from the cache.
 
-`--fast-resolve` is also useful when manually specifying resolve method for a
+`--fast_resolve` is also useful when manually specifying resolve method for a
 dependency e.g. to manually set the path of a dependency `foo` using
-`--fast-resolve` will load all other dependencies from cache::
+`--fast_resolve` will load all other dependencies from cache::
 
-    python waf configure --foo-path /tmp/foo --fast-resolve
+    python waf configure --foo-path /tmp/foo --fast_resolve
 
 Support for `resolve.json`
 --------------------------
@@ -152,12 +152,6 @@ To support both these ways of configuring we define the following "rules":
    for a `resolve.json` file.
 2. It is valid to mix both methods to define dependencies.
 
-Future features
-===============
-
-The following list contains the work-items that we have identified as "cool"
-features for the Waf dependency resolve extension.
-
 Build symlinks
 --------------
 The purpose of this feature is to provide stable locations in the file system
@@ -181,7 +175,7 @@ This is problematic e.g. for IDE configurations where an user needs to manually
 go and update the path in the IDE to the new location.
 
 To avoid this problem we propose to create a `build_symlinks` (controllable
-using the `--symlinks-path` option) folder in the root of the project containing
+using the `--symlinks_path` option) folder in the root of the project containing
 symlinks to the named dependencies.
 
 For the previous example we would see the following in the `build_symlinks`
@@ -196,6 +190,58 @@ After re-running `./waf configure ...`::
     $ ll build_symlinks/
     total 0
     lrwxrwxrwx 1 usr usr 29 Feb 20 20:57 gtest -> /path/to/gtest-1.6.8-someh4sh
+
+
+Add `--lock_versions` option
+---------------------
+
+The `--lock_versions` option will write `lock_resolve.json` to the project folder.
+This file will describe the exact information about the project's dependencies.
+
+In general this is done the following way for different resolvers:
+
+ - `git` resolvers, will store the SHA1 commit id of the dependency.
+ - `http` resolvers, will store the SHA1 sum of the downloaded dependency.
+
+ If the `lock_resolve.json` is present it will take precedence over all
+ resolvers besides the user options such as manually specifying checkout or
+ path.
+
+ You can commit the `lock_resolve.json` file to the project e.g. when creating
+ a LTS (Long Term Support) release or similar. Where you want to pin the exact
+ commit id, etc. of the project.
+
+ As an example::
+
+     # Writes / overwrites an existing lock_resolve.json
+     python waf configure --lock_versions
+
+Add `--lock_paths` option
+--------------------------
+
+The `--lock_paths` will write a `lock_resolve.json` file in the project
+folder. It behaves differently from the `--lock_versions` option in that it will store
+the relative paths to the dependencies. The typical use-case for this is to
+download all dependencies into a folder stored within the project (default
+behavior) in order to make a stand-alone archive.
+
+If the `lock_resolve.json` is present it will take precedence over all
+resolvers besides the user options such as manually specifying checkout or
+path.
+
+This makes it possible to easily the create standalone archives, by simply
+invoking::
+
+    python waf configure --lock_paths
+    python waf dist
+
+
+Future features
+===============
+
+The following list contains the work-items that we have identified as "cool"
+features for the Waf dependency resolve extension.
+
 
 
 Add `--force-resolve` option
@@ -223,22 +269,6 @@ resolved dependency we implement the `--dump-resolved-dependencies` option.
 
 This will write out information about resolved dependencies such as semver tag
 chosen etc.
-
-Add `--freeze` option
----------------------
-
-The freeze option will write `frozen_dependencies.json` to the root folder.
-This file will fix the path to the different named dependencies, all
-dependencies needed must be found in the fozen file if present.
-
-If the `frozen_dependencies.json` is present it will take precedence over all
-resolvers besides the `--project-path` options.
-
-This makes it possible to easily the create standalone archives, by simply
-invoking::
-
-    python waf configure --freeze
-    python waf dist
 
 
 
@@ -269,7 +299,7 @@ Now when running unit tests our source files will be under:
 
 Third party dependencies will be under:
 
-- /home/mvp/bundle_dependencies/some_name/thing.py
+- /home/mvp/resolved_dependencies/some_name/thing.py
 
 So
 

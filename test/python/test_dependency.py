@@ -12,6 +12,7 @@ def test_dependency():
         "recurse": False,
         "resolver": "git",
         "method": "checkout",
+        "checkout": "somebranch",
         "sources": ["gitrepo1.git", "gitrepo2.git"]
     }
 
@@ -22,6 +23,7 @@ def test_dependency():
     assert w.recurse == False
     assert w.resolver == "git"
     assert w.method == "checkout"
+    assert w.checkout == "somebranch"
     assert w.sources == ["gitrepo1.git", "gitrepo2.git"]
 
     # Check there is a sha1 key
@@ -38,6 +40,14 @@ def test_dependency():
 
     assert w.path is None
     assert ('path' in w) == False
+
+    w.rewrite(attribute='method', value='semver', reason='testing it')
+    w.rewrite(attribute='major', value=3, reason='testing it')
+    w.rewrite(attribute='checkout', value=None, reason='testing it')
+
+    assert w.method == "semver"
+    assert w.major == 3
+    assert 'checkout' not in w
 
 
 def test_dependency_default_values():

@@ -13,6 +13,8 @@ def test_fixtures(test_directory):
     ok_path = os.path.join(sub1.path(), 'ok.txt')
 
     assert os.path.isfile(ok_path)
+    sub1.rmfile('ok.txt')
+    assert not os.path.isfile(ok_path)
 
     sub1.write_file('ok2.txt', 'hello_world2')
 
@@ -35,4 +37,25 @@ def test_fixtures(test_directory):
     sub3 = test_directory.mkdir('sub3')
     ok3_file = sub3.copy_file(ok_path, rename_as='ok3.txt')
 
+    assert test_directory.contains_dir('sub3')
+    assert not test_directory.contains_dir('notheredir')
+
     assert os.path.isfile(ok3_file)
+    assert sub3.contains_file('ok3.txt')
+    assert not sub3.contains_file('noherefile.txt')
+
+    sub3.rmdir()
+    assert not test_directory.contains_dir('sub3')
+
+    sub4 = test_directory.mkdir('sub4')
+    sub4.mkdir('sub5')
+
+    # Will look for 'sub4/sub5'
+    assert test_directory.contains_dir(os.path.join('sub4', 'sub5'))
+    assert test_directory.contains_dir(os.path.join('sub*', 'sub5'))
+    assert test_directory.contains_dir(os.path.join('sub*', 's*5'))
+
+    sub5 = sub4.join('sub5')
+    sub5.rmdir()
+
+    assert not test_directory.contains_dir(os.path.join('sub4', 'sub5'))

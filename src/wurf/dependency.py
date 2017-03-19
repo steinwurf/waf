@@ -45,8 +45,20 @@ class Dependency(object):
         construction time.
 
         So in the small example from before all the following attributes are
-        read-only: name, recurse, optional, resolver, method, checkout,
-        sources and sha1.
+        not directly modifiable: name, recurse, optional, resolver, method,
+        checkout, sources and sha1. If these attributes needs to be modifid e.g.
+        to "customize" the way resolvers are constructed, this can be done
+        using the rewrite(...) function.
+
+        Note on rewrite(...) and SHA1: One obvious question to raise is whether
+        we should re-calculate the SHA1 after a rewrite. We currently do not do
+        this. Reason for this is that the SHA1 is mainly used to check if the
+        user provided information, passed in e.g. add_dependency(...), has been
+        changed. If this happens the SHA1 will flag a mismatch, and the user
+        should do a reconfigure to continue. The fact that we rewrite(...) the
+        depenency information e.g. to use a user-defined git checkout does not
+        change this. In fact after having resolved the dependency we do not
+        really care how we got there.
 
         Any other attributes can be added and modified as needed. The following
         documents used attributes with reserved meaning:
@@ -61,9 +73,15 @@ class Dependency(object):
           chain of resolvers, such as "Resolve" or "Load". This describes
           the high-level operation of the resolver chain.
 
-        - "resolver_action": This attribute describes the specific action
-          taken to resolve the dependency. For example: "git checkout",
-          "user path".
+        - "resolver_action": The "resolver_action" this attribute describes the
+          specific action taken to resolve the dependency. For example:
+          "git checkout", "user path" etc.
+
+        - "git_tag": This attribute is specified if the dependency is
+          resolved to a specific git tag.
+
+        - "git_commit" If specified this attribute contains a specific git
+          commit id (SHA1) where the dependency has been resolved.
 
         :param kwargs: Keyword arguments containing options for the dependency.
         """
@@ -81,8 +99,8 @@ class Dependency(object):
         sha1 = hashlib.sha1(s.encode('utf-8')).hexdigest()
 
         # kwargs is a dict, we add it as an instance attribute.
-        object.__setattr__(self, 'read_only', kwargs)
-        self.read_only['sha1'] = sha1
+        object.__setattr__(self, 'info', kwargs)
+        self.info['sha1'] = sha1
 
         # For some operations like, storing a dependency in a dict as the key
         # it is needed that the dependency is hashable (returned as an integer).
@@ -113,10 +131,59 @@ class Dependency(object):
         # 2. Use the Python hash() function to generate a integer hash for
         #    run-time usage (i.e. within the same interpreter session).
 
-        self.read_only['hash'] = None
+        self.info['hash'] = None
 
         # Resolver attributes (modifiable)
         object.__setattr__(self, 'read_write', dict())
+
+        # Audit log (tracking changes to the info attribute)
+        object.__setattr__(self, 'audit', list())
+
+    def rewrite(self, attribute, value, reason):
+        """ Rewrites an info attribute.
+
+        :param attribute: The name of the attribute as a string
+        :param value: The value of the attribute. If the value is None the
+            attribute will be deleted.
+        :param reason: The reason for the modification, as a string.
+        """
+
+        if value == None:
+            self.__delete(attribute=attribute, reason=reason)
+        elif attribute not in self.info:
+            self.__create(attribute=attribute, value=value, reason=reason)
+        else:
+            self.__modify(attribute=attribute, value=value, reason=reason)
+
+    def __delete(self, attribute, reason):
+        """ Deletes an info attribute."""
+
+        if attribute not in self.info:
+            raise AttributeError(
+                "Cannot delete non existing attribute {}".format(attribute))
+
+        audit = 'Deleting "{}". Reason: {}'.format(attribute, reason)
+
+        del self.info[attribute]
+        self.audit.append(audit)
+
+    def __create(self, attribute, value, reason):
+        """ Creates an info attribute."""
+
+        audit = 'Creating "{}" value "{}". Reason: {}'.format(
+            attribute, value, reason)
+
+        self.audit.append(audit)
+        self.info[attribute] = value
+
+    def __modify(self, attribute, value, reason):
+        """ Modifies an info attribute."""
+
+        audit = 'Modifying "{}" from "{}" to "{}". Reason: {}'.format(
+            attribute, self.info[attribute], value, reason)
+
+        self.audit.append(audit)
+        self.info[attribute] = value
 
     def __getattr__(self, attribute):
         """ Return the value corresponding to the attribute.
@@ -125,8 +192,8 @@ class Dependency(object):
         :return: The attribute value, if the attribute does not exist
             return None
         """
-        if attribute in self.read_only:
-            return self.read_only[attribute]
+        if attribute in self.info:
+            return self.info[attribute]
 
         elif attribute in self.read_write:
             return self.read_write[attribute]
@@ -140,7 +207,7 @@ class Dependency(object):
         :param attribute: The name of the attribute as a string
         :param value: The value of the attribute
         """
-        if attribute in self.read_only:
+        if attribute in self.info:
             raise AttributeError("Attribute {} read-only.".format(attribute))
         else:
             self.read_write[attribute] = value
@@ -150,16 +217,17 @@ class Dependency(object):
 
         :return: True if the attribute is available otherwise False
         """
-        return (attribute in self.read_only) or (attribute in self.read_write)
+        return (attribute in self.info) or (attribute in self.read_write)
 
     def __str__(self):
         """ :return: String representation of the dependency. """
-        return "Dependency\nread only: {}\nread write: {}".format(
-            self.read_only, self.read_write)
+        return "Dependency\ninfo: {}\nread write: {}\naudit: {}".format(
+            self.info, self.read_write, self.audit)
 
     def __hash__(self):
         """ :return: Integer hash value for the dependency. """
-        if not self.read_only['hash']:
-            self.read_only['hash'] = hash(self.read_only['sha1'])
 
-        return self.read_only['hash']
+        if not self.info['hash']:
+            self.info['hash'] = hash(self.info['sha1'])
+
+        return self.info['hash']

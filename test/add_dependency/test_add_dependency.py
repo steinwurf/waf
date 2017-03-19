@@ -66,6 +66,13 @@ def mkdir_app_json(directory):
 
     return app_dir
 
+def commit_file(directory, filename, content):
+
+    directory.write_file(filename, content)
+    directory.run('git', 'add', '.')
+    directory.run('git', '-c', 'user.name=John', '-c',
+                  'user.email=doe@email.org', 'commit', '-m', 'oki')
+
 
 def mkdir_libfoo(directory):
 
@@ -83,6 +90,9 @@ def mkdir_libfoo(directory):
     foo_dir.run('git', '-c', 'user.name=John', '-c',
                 'user.email=doe@email.org', 'commit', '-m', 'oki')
     foo_dir.run('git', 'tag', '1.3.3.7')
+
+    commit_file(directory=foo_dir, filename='ok.txt', content='hello world')
+
     return foo_dir
 
 def mkdir_libfoo_json(directory):
@@ -103,6 +113,10 @@ def mkdir_libfoo_json(directory):
     foo_dir.run('git', '-c', 'user.name=John', '-c',
                 'user.email=doe@email.org', 'commit', '-m', 'oki')
     foo_dir.run('git', 'tag', '1.3.3.7')
+
+    commit_file(directory=foo_dir, filename='ok.txt', content='hello world')
+
+
     return foo_dir
 
 
@@ -115,6 +129,7 @@ def mkdir_libbar(directory):
     bar_dir.run('git', '-c', 'user.name=John', '-c',
                 'user.email=doe@email.org', 'commit', '-m', 'oki')
     bar_dir.run('git', 'tag', 'someh4sh')
+
     return bar_dir
 
 
@@ -131,7 +146,117 @@ def mkdir_libbaz(directory):
     baz_dir.run('git', 'tag', '3.3.0')
     baz_dir.run('git', 'tag', '3.3.1')
 
+    commit_file(directory=baz_dir, filename='ok.txt', content='hello world')
+
+    baz_dir.run('git', 'tag', '4.0.0')
+
     return baz_dir
+
+def run_commands(app_dir, git_dir):
+
+    # Note that waf "climbs" directories to find a lock file in higher
+    # directories, and this test is executed within a subfolder of the
+    # project's main folder (that already has a lock file). To prevent this
+    # behavior, we need to invoke help with the NOCLIMB variable.
+    env = dict(os.environ)
+    env['NOCLIMB'] = '1'
+    app_dir.run('python', 'waf', '--help', env=env)
+
+    # We should be able to use --foo_magic_option that is defined in 'foo'
+    app_dir.run('python', 'waf', 'configure', '-v', '--foo_magic_option=xyz')
+
+    # After configure, the help text should include the description of
+    # --foo_magic_option (defined in the 'foo' wscript)
+    r = app_dir.run('python', 'waf', '--help')
+    assert r.stdout.match('*Magic option for foo*')
+
+    # The symlinks should be available to all dependencies
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'baz'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
+
+    app_dir.run('python', 'waf', 'build', '-v')
+    app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
+    app_dir.run('python', 'waf', 'build', '-v')
+
+    # Lets remove the resolved dependencies
+    resolve_dir = app_dir.join('resolved_dependencies')
+    resolve_dir.rmdir()
+
+    # Test the --lock_versions options
+    app_dir.run('python', 'waf', 'configure', '-v', '--lock_versions')
+    assert app_dir.contains_file('lock_resolve.json')
+
+    # The symlinks should be available to all dependencies
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'baz'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
+
+    app_dir.run('python', 'waf', 'build', '-v')
+
+    resolve_dir = app_dir.join('resolved_dependencies')
+    assert resolve_dir.contains_dir('foo','1.3.3.7-*')
+    assert resolve_dir.contains_dir('baz','3.3.1-*')
+    assert resolve_dir.contains_dir('bar','someh4sh-*')
+
+    resolve_dir.rmdir()
+
+    # This configure should happen from the lock
+    app_dir.run('python', 'waf', 'configure', '-v')
+
+    assert app_dir.contains_dir('build_symlinks', 'foo')
+    assert app_dir.contains_dir('build_symlinks', 'baz')
+    assert app_dir.contains_dir('build_symlinks', 'bar')
+
+    app_dir.run('python', 'waf', 'build', '-v')
+
+    lock_path = os.path.join(app_dir.path(), 'lock_resolve.json')
+    with open(lock_path, 'r') as lock_file:
+        lock = json.load(lock_file)
+
+    resolve_dir = app_dir.join('resolved_dependencies')
+
+    # The content of resolved dependencies is intersting now :)
+    # We've just resolved from the lock_resolve.json file
+    # containing the versions needed.
+    #
+    # The on some repositories we the commit we are asking for
+    # is the same as on the master and some not.
+    #
+    # foo should use the commit id in the lock file
+    assert resolve_dir.contains_dir("foo", "{}-*".format(
+        lock['dependencies']['foo']['checkout']))
+    # bar is locked to the same commit as the master so it will
+    # skip the git checkout and just return the master path
+    assert resolve_dir.contains_dir('bar', 'master-*')
+    # baz has it's tag in the lock file, so it will be available there
+    assert resolve_dir.contains_dir('baz', '3.3.1-*')
+
+    app_dir.rmfile('lock_resolve.json')
+    resolve_dir.rmdir()
+
+    # Test the --lock_paths options
+    app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths',
+        '--resolve_path', 'locked')
+
+    assert app_dir.contains_dir('build_symlinks', 'foo')
+    assert app_dir.contains_dir('build_symlinks', 'baz')
+    assert app_dir.contains_dir('build_symlinks', 'bar')
+
+    assert app_dir.contains_file('lock_resolve.json')
+    app_dir.run('python', 'waf', 'build', '-v')
+
+    # This configure should happen from the lock
+    # Now we can delete the git folders - as we should be able to configure
+    # from the frozen dependencies
+    app_dir.run('python', 'waf', 'configure', '-v')
+
+    assert app_dir.contains_dir('build_symlinks', 'foo')
+    assert app_dir.contains_dir('build_symlinks', 'baz')
+    assert app_dir.contains_dir('build_symlinks', 'bar')
+
+    app_dir.run('python', 'waf', 'build', '-v')
+
 
 def test_resolve_json(test_directory):
     """ Tests that dependencies declared in the wscript works. I.e. where we
@@ -163,30 +288,7 @@ def test_resolve_json(test_directory):
     with open(json_path, 'w') as json_file:
         json.dump(clone_path, json_file)
 
-    # Note that waf "climbs" directories to find a lock file in higher
-    # directories, and this test is executed within a subfolder of the
-    # project's main folder (that already has a lock file). To prevent this
-    # behavior, we need to invoke help with the NOCLIMB variable.
-    env = dict(os.environ)
-    env['NOCLIMB'] = '1'
-    app_dir.run('python', 'waf', '--help', env=env)
-    # We should be able to use --foo_magic_option that is defined in 'foo'
-    app_dir.run('python', 'waf', 'configure', '-v', '--foo_magic_option=xyz')
-
-    # After configure, the help text should include the description of
-    # --foo_magic_option (defined in the 'foo' wscript)
-    r = app_dir.run('python', 'waf', '--help')
-    assert r.returncode == 0
-    assert r.stdout.match('*Magic option for foo*')
-
-    # The symlinks should be available to all dependencies
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'baz'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
-
-    app_dir.run('python', 'waf', 'build', '-v')
-    app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
-    app_dir.run('python', 'waf', 'build', '-v')
+    run_commands(app_dir=app_dir, git_dir=git_dir)
 
 
 def test_add_dependency(test_directory):
@@ -219,30 +321,7 @@ def test_add_dependency(test_directory):
     with open(json_path, 'w') as json_file:
         json.dump(clone_path, json_file)
 
-    # Note that waf "climbs" directories to find a lock file in higher
-    # directories, and this test is executed within a subfolder of the
-    # project's main folder (that already has a lock file). To prevent this
-    # behavior, we need to invoke help with the NOCLIMB variable.
-    env = dict(os.environ)
-    env['NOCLIMB'] = '1'
-    app_dir.run('python', 'waf', '--help', env=env)
-    # We should be able to use --foo_magic_option that is defined in 'foo'
-    app_dir.run('python', 'waf', 'configure', '-v', '--foo_magic_option=xyz')
-
-    # After configure, the help text should include the description of
-    # --foo_magic_option (defined in the 'foo' wscript)
-    r = app_dir.run('python', 'waf', '--help')
-    assert r.returncode == 0
-    assert r.stdout.match('*Magic option for foo*')
-
-    # The symlinks should be available to all dependencies
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'baz'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
-
-    app_dir.run('python', 'waf', 'build', '-v')
-    app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
-    app_dir.run('python', 'waf', 'build', '-v')
+    run_commands(app_dir=app_dir, git_dir=git_dir)
 
 
 def test_add_dependency_path(test_directory):
@@ -281,3 +360,29 @@ def test_add_dependency_path(test_directory):
 
     app_dir.run('python', 'waf', 'build', '-v')
     app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
+
+def test_create_standalone_archive(test_directory):
+
+    app_dir = mkdir_app(directory=test_directory)
+
+    git_dir = test_directory.mkdir(directory='git_dir')
+
+    foo_dir = mkdir_libfoo(directory=git_dir)
+    bar_dir = mkdir_libbar(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir)
+
+    # Instead of doing an actual Git clone - we fake it and use the paths in
+    # this mapping
+    clone_path = {
+        'github.com/acme-corp/foo.git': foo_dir.path(),
+        'gitlab.com/acme-corp/bar.git': bar_dir.path(),
+        'gitlab.com/acme/baz.git': baz_dir.path() }
+
+    json_path = os.path.join(app_dir.path(), 'clone_path.json')
+
+    with open(json_path, 'w') as json_file:
+        json.dump(clone_path, json_file)
+
+    app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths')
+    app_dir.run('python', 'waf', '-v', 'dist')
+    assert app_dir.contains_file('test_add_dependency-1.0.0.tar.bz2')

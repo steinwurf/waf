@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+from .error import Error
 
 class Options(object):
 
@@ -38,6 +39,16 @@ class Options(object):
                   'Useful for running configure without resolving dependencies '
                   'again.')
 
+        self.parser.add_argument('--lock_paths', dest='--lock_paths',
+            action='store_true', default=False,
+            help='Creates the resolve_lock_paths directory which contains the '
+                 'paths to all resolved dependencies.')
+
+        self.parser.add_argument('--lock_versions', dest='--lock_versions',
+            action='store_true', default=False,
+            help='Creates the resolve_lock_versions directory which contains '
+                 'the specific versions of all resolved dependencies.')
+
         self.__parse()
 
     def resolve_path(self):
@@ -52,6 +63,12 @@ class Options(object):
     def fast_resolve(self):
         return self.known_args['--fast_resolve']
 
+    def lock_paths(self):
+        return self.known_args['--lock_paths']
+
+    def lock_versions(self):
+        return self.known_args['--lock_versions']
+
     def path(self, dependency):
         return self.known_args['--%s_path' % dependency.name]
 
@@ -64,6 +81,9 @@ class Options(object):
 
         self.known_args = vars(known)
         self.unknown_args = unknown
+
+        if self.lock_versions() and self.lock_paths():
+            raise Error('Incompatible options')
 
     def __add_path(self, dependency):
 
