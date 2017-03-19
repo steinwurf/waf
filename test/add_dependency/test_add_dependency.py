@@ -360,3 +360,29 @@ def test_add_dependency_path(test_directory):
 
     app_dir.run('python', 'waf', 'build', '-v')
     app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
+
+def test_create_standalone_archive(test_directory):
+
+    app_dir = mkdir_app(directory=test_directory)
+
+    git_dir = test_directory.mkdir(directory='git_dir')
+
+    foo_dir = mkdir_libfoo(directory=git_dir)
+    bar_dir = mkdir_libbar(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir)
+
+    # Instead of doing an actual Git clone - we fake it and use the paths in
+    # this mapping
+    clone_path = {
+        'github.com/acme-corp/foo.git': foo_dir.path(),
+        'gitlab.com/acme-corp/bar.git': bar_dir.path(),
+        'gitlab.com/acme/baz.git': baz_dir.path() }
+
+    json_path = os.path.join(app_dir.path(), 'clone_path.json')
+
+    with open(json_path, 'w') as json_file:
+        json.dump(clone_path, json_file)
+
+    app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths')
+    app_dir.run('python', 'waf', '-v', 'dist')
+    assert app_dir.contains_file('test_add_dependency-1.0.0.tar.bz2')
