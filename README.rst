@@ -152,12 +152,6 @@ To support both these ways of configuring we define the following "rules":
    for a `resolve.json` file.
 2. It is valid to mix both methods to define dependencies.
 
-Future features
-===============
-
-The following list contains the work-items that we have identified as "cool"
-features for the Waf dependency resolve extension.
-
 Build symlinks
 --------------
 The purpose of this feature is to provide stable locations in the file system
@@ -181,7 +175,7 @@ This is problematic e.g. for IDE configurations where an user needs to manually
 go and update the path in the IDE to the new location.
 
 To avoid this problem we propose to create a `build_symlinks` (controllable
-using the `--symlinks-path` option) folder in the root of the project containing
+using the `--symlinks_path` option) folder in the root of the project containing
 symlinks to the named dependencies.
 
 For the previous example we would see the following in the `build_symlinks`
@@ -197,32 +191,6 @@ After re-running `./waf configure ...`::
     total 0
     lrwxrwxrwx 1 usr usr 29 Feb 20 20:57 gtest -> /path/to/gtest-1.6.8-someh4sh
 
-
-Add `--force-resolve` option
-----------------------------
-Certain resolvers utilize "shortcuts" such as using cached information about
-dependencies to speed the resolve step. Providing this option should by-pass
-such optimizations and do a full resolve - not relying on any form of cached
-data.
-
-Print traceback if `-v` verbose flag is specified
--------------------------------------------------
-To make error messages user-friendly the default is to redirect full tracebacks
-(showing where an error originated), to the log files. However, if running on
-a build system it is convinient to have the full traceback printed to the
-terminal, this avoid us having to log into the machine an manually retrieve the
-log file.
-
-To support this behaviour will will print the error traceback to the screen
-if the verbose flag `-v` is specified.
-
-Dump resolved dependencies information to json.
------------------------------------------------
-To support third party tooling working with information about an already
-resolved dependency we implement the `--dump-resolved-dependencies` option.
-
-This will write out information about resolved dependencies such as semver tag
-chosen etc.
 
 Add `--lock_versions` option
 ---------------------
@@ -266,6 +234,42 @@ invoking::
 
     python waf configure --lock_paths
     python waf dist
+
+
+Future features
+===============
+
+The following list contains the work-items that we have identified as "cool"
+features for the Waf dependency resolve extension.
+
+
+
+Add `--force-resolve` option
+----------------------------
+Certain resolvers utilize "shortcuts" such as using cached information about
+dependencies to speed the resolve step. Providing this option should by-pass
+such optimizations and do a full resolve - not relying on any form of cached
+data.
+
+Print traceback if `-v` verbose flag is specified
+-------------------------------------------------
+To make error messages user-friendly the default is to redirect full tracebacks
+(showing where an error originated), to the log files. However, if running on
+a build system it is convinient to have the full traceback printed to the
+terminal, this avoid us having to log into the machine an manually retrieve the
+log file.
+
+To support this behaviour will will print the error traceback to the screen
+if the verbose flag `-v` is specified.
+
+Dump resolved dependencies information to json.
+-----------------------------------------------
+To support third party tooling working with information about an already
+resolved dependency we implement the `--dump-resolved-dependencies` option.
+
+This will write out information about resolved dependencies such as semver tag
+chosen etc.
+
 
 
 Bundle dependencies
