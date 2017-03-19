@@ -327,21 +327,18 @@ dependencies of projects automatically::
             print(ctx.options.foo)
 
 
-Log output
-==========
+Log output / debugging
+======================
 
-`waf` supports logging output in the tools and basic zone filtering. You can
-use it as follows::
+We use the logging system provided by `waf`. If you have an issue with the
+resolve functionality you can add the `-v` verbose flags to see more information
+pass `-vvv` to see all debug information. Alternatively you can use the
+`--zones` filter to see the resolver debug messages only.
 
-    from waflib import Logs
+::
 
-    ...
+    python waf configure -v --zones=resolve
 
-    def some_function(param_one, param_two):
-        Log.debug('wurf: In some_function')
-
-
-In the above example `wurf` is the zone so if you wIn our tools we use `wurf`
 
 
 
