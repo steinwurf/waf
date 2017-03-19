@@ -152,8 +152,8 @@ To support both these ways of configuring we define the following "rules":
    for a `resolve.json` file.
 2. It is valid to mix both methods to define dependencies.
 
-Build symlinks
---------------
+Resolve symlinks
+----------------
 The purpose of this feature is to provide stable locations in the file system
 for the downloaded dependencies. This is very similar to how pytest (under
 Linux) maintains a symlink to the latest unit-test invocation as
@@ -162,7 +162,7 @@ Linux) maintains a symlink to the latest unit-test invocation as
 
 As a default several folders will be created during the process of resolving
 dependencies. Several projects can share the same folder for resolved
-dependencies (this is controlled using the `--bundle-path` option). To avoid
+dependencies (this is controlled using the `--resolve_path` option). To avoid
 confusing / error-prone situations the folders are considered immutable. This
 results in some overhead and knowing paths to dependencies may change as new
 versions of them become available. E.g if the `gtest` dependency is currently
@@ -174,20 +174,20 @@ became available.
 This is problematic e.g. for IDE configurations where an user needs to manually
 go and update the path in the IDE to the new location.
 
-To avoid this problem we propose to create a `build_symlinks` (controllable
+To avoid this problem we propose to create a `resolve_symlinks` (controllable
 using the `--symlinks_path` option) folder in the root of the project containing
 symlinks to the named dependencies.
 
-For the previous example we would see the following in the `build_symlinks`
+For the previous example we would see the following in the `resolve_symlinks`
 folder::
 
-    $ ll build_symlinks/
+    $ ll resolve_symlinks/
     total 0
     lrwxrwxrwx 1 usr usr 29 Feb 20 20:55 gtest -> /path/to/gtest-1.6.7-someh4sh
 
 After re-running `./waf configure ...`::
 
-    $ ll build_symlinks/
+    $ ll resolve_symlinks/
     total 0
     lrwxrwxrwx 1 usr usr 29 Feb 20 20:57 gtest -> /path/to/gtest-1.6.8-someh4sh
 

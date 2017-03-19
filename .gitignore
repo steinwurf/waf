@@ -5,7 +5,7 @@ waf3-*
 .waf3-*
 .lock-*
 build
-build_symlinks
+resolve_symlinks
 resolved_dependencies
 
 # Emacs temp / auto save

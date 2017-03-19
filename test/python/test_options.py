@@ -37,7 +37,7 @@ def test_resolve_path():
 
 def test_symlinks_path():
 
-    default_path = 'build_symlinks'
+    default_path = 'resolve_symlinks'
 
     parser = argparse.ArgumentParser()
     args = ['--foo', '-b']

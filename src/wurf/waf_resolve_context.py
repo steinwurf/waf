@@ -65,7 +65,7 @@ class WafResolveContext(Context.Context):
             self.path.abspath(), 'resolved_dependencies')
 
         default_symlinks_path = os.path.join(
-            self.path.abspath(), 'build_symlinks')
+            self.path.abspath(), 'resolve_symlinks')
 
         self.registry = registry.build_registry(
             ctx=self, git_binary='git',
