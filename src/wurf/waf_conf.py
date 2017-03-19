@@ -42,7 +42,7 @@ def recurse_dependencies(ctx):
         if not dependency['recurse']:
 
             if Logs.verbose:
-                Logs.debug('resolve: Skipped recurse for name={} cmd={}'.format(
+                Logs.debug('resolve: Skipped recurse {} cmd={}'.format(
                     name, ctx.cmd))
 
             continue
