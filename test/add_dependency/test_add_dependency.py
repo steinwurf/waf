@@ -171,9 +171,9 @@ def run_commands(app_dir, git_dir):
     assert r.stdout.match('*Magic option for foo*')
 
     # The symlinks should be available to all dependencies
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'baz'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'foo'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'baz'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
     app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
@@ -188,9 +188,9 @@ def run_commands(app_dir, git_dir):
     assert app_dir.contains_file('lock_resolve.json')
 
     # The symlinks should be available to all dependencies
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'baz'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'foo'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'baz'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
 
@@ -204,9 +204,9 @@ def run_commands(app_dir, git_dir):
     # This configure should happen from the lock
     app_dir.run('python', 'waf', 'configure', '-v')
 
-    assert app_dir.contains_dir('build_symlinks', 'foo')
-    assert app_dir.contains_dir('build_symlinks', 'baz')
-    assert app_dir.contains_dir('build_symlinks', 'bar')
+    assert app_dir.contains_dir('resolve_symlinks', 'foo')
+    assert app_dir.contains_dir('resolve_symlinks', 'baz')
+    assert app_dir.contains_dir('resolve_symlinks', 'bar')
 
     app_dir.run('python', 'waf', 'build', '-v')
 
@@ -239,9 +239,9 @@ def run_commands(app_dir, git_dir):
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths',
         '--resolve_path', 'locked')
 
-    assert app_dir.contains_dir('build_symlinks', 'foo')
-    assert app_dir.contains_dir('build_symlinks', 'baz')
-    assert app_dir.contains_dir('build_symlinks', 'bar')
+    assert app_dir.contains_dir('resolve_symlinks', 'foo')
+    assert app_dir.contains_dir('resolve_symlinks', 'baz')
+    assert app_dir.contains_dir('resolve_symlinks', 'bar')
 
     assert app_dir.contains_file('lock_resolve.json')
     app_dir.run('python', 'waf', 'build', '-v')
@@ -251,9 +251,9 @@ def run_commands(app_dir, git_dir):
     # from the frozen dependencies
     app_dir.run('python', 'waf', 'configure', '-v')
 
-    assert app_dir.contains_dir('build_symlinks', 'foo')
-    assert app_dir.contains_dir('build_symlinks', 'baz')
-    assert app_dir.contains_dir('build_symlinks', 'bar')
+    assert app_dir.contains_dir('resolve_symlinks', 'foo')
+    assert app_dir.contains_dir('resolve_symlinks', 'baz')
+    assert app_dir.contains_dir('resolve_symlinks', 'bar')
 
     app_dir.run('python', 'waf', 'build', '-v')
 
@@ -354,9 +354,9 @@ def test_add_dependency_path(test_directory):
                 baz_dir.path()))
 
     # The symlinks should be available to all dependencies
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'foo'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'baz'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'build_symlinks', 'bar'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'foo'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'baz'))
+    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
     app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
