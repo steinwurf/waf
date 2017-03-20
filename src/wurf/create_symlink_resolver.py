@@ -64,7 +64,7 @@ class CreateSymlinkResolver(object):
 
             # We need to remove the symlink if it already exists,
             # since it may point to an incorrect folder
-            if os.path.exists(link_path):
+            if os.path.lexists(link_path):
                 if sys.platform == 'win32':
                     # On Windows, the symlink is not considered a link, but
                     # a directory, so it is removed with rmdir. The contents
