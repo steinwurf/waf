@@ -183,10 +183,11 @@ def _pytest(bld):
     # on all platforms. The default location is the "pytest" local folder.
     #
     # Note that pytest will purge this folder before running the tests.
+    # @todo This is currently broken on win32,
     basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
 
     if os.path.isdir(basetemp):
-        shutil.rmtree(basetemp)
+        shutil.rmtree(basetemp, ignore_errors=True)
 
     test_command += ' --basetemp {}'.format(basetemp)
 
