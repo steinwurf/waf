@@ -200,7 +200,11 @@ def _pytest(bld):
                     os.chmod(filename, stat.S_IWUSR)
                     os.remove(filename)
                 for name in dirs:
-                    os.rmdir(os.path.join(root, name))
+                    dir = os.path.join(root, name)
+                    if os.path.islink(dir):
+                        os.unlink(dir)
+                    else:
+                        os.rmdir(dir)
             os.rmdir(top)
 
         rmtree(basetemp)
