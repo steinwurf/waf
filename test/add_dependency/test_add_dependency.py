@@ -177,7 +177,6 @@ def run_commands(app_dir, git_dir):
 
     app_dir.run('python', 'waf', 'build', '-v')
     app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
-    #app_dir.run('python', 'waf', 'clean')
     app_dir.run('python', 'waf', 'build', '-v')
 
     # Test the zones print
