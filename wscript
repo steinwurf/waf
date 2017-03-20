@@ -181,8 +181,29 @@ def _pytest(bld):
     # We override the pytest temp folder with the basetemp option,
     # so the test folders will be available at the specified location
     # on all platforms. The default location is the "pytest" local folder.
-    # Note that pytest will purge this folder before running the tests.
-    test_command += ' --basetemp {}'.format(bld.options.pytest_basetemp)
+    basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
+    test_command += ' --basetemp {}'.format(basetemp)
+
+    # We need to manually remove the previously created basetemp folder,
+    # because pytest uses os.listdir in the removal process, and that fails
+    # if there are any broken symlinks in that folder.
+    # Note that shutil.rmtree fails with the same error, so we use os.walk
+    # to traverse the directory tree from the bottom up as recommended here:
+    # http://stackoverflow.com/a/2656408
+    if os.path.exists(basetemp):
+
+        def rmtree(top):
+            import stat
+            for root, dirs, files in os.walk(top, topdown=False):
+                for name in files:
+                    filename = os.path.join(root, name)
+                    os.chmod(filename, stat.S_IWUSR)
+                    os.remove(filename)
+                for name in dirs:
+                    os.rmdir(os.path.join(root, name))
+            os.rmdir(top)
+
+        rmtree(basetemp)
 
     # Conditionally disable the tests that have the "networktest" marker
     if bld.options.skip_network_tests:
