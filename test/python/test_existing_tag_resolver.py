@@ -4,6 +4,7 @@ import mock
 import shutil
 
 from wurf.existing_tag_resolver import ExistingTagResolver
+from wurf.git_semver_resolver import GitSemverResolver
 
 
 def test_existing_tag_resolver(test_directory):
@@ -61,3 +62,57 @@ def test_existing_tag_resolver(test_directory):
     # Now the latest tag is only present in repo_folder2
     path = resolver.resolve()
     assert path == latest_tag_folder2.path()
+
+def test_existing_tag_resolver_with_semver(test_directory):
+
+    ctx = mock.Mock()
+    git = mock.Mock()
+    cwd = test_directory.path()
+
+    # Create a parent folder for the dependency and the corresponding
+    # subfolder for the 'master' checkout
+    repo_folder = test_directory.mkdir('links-01234')
+    master_folder = repo_folder.mkdir('master')
+
+    dependency = mock.Mock()
+    dependency.name = 'links'
+    dependency.major = 5
+    latest_tag = '5.1.0'
+    # The sources should contain the 'steinwurf' string, otherwise the
+    # ExistingTagResolver will ignore them
+    sources = ['https://gitlab.com/steinwurf/links.git']
+
+    git_resolver = mock.Mock()
+    git_resolver.resolve.return_value = master_folder.path()
+
+    semver_selector = mock.Mock()
+    semver_selector.select_tag.return_value = latest_tag
+
+    tag_database = mock.Mock()
+    tag_database.project_tags.return_value = ['5.1.0', '5.0.0']
+
+    parent_folder = mock.Mock()
+    parent_folder.parent_folder.return_value = repo_folder.path()
+
+    resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
+        semver_selector=semver_selector, tag_database=tag_database,
+        parent_folder=parent_folder, sources=sources)
+
+    # repo_folder is empty, so the resolver should return None
+    path = resolver.resolve()
+    assert path == None
+
+    # Now we invoke the GitSemverResolver to get the latest tag
+    git_semver_resolver = GitSemverResolver(git=git, git_resolver=git_resolver,
+        ctx=ctx, semver_selector=semver_selector, dependency=dependency)
+
+    path = git_semver_resolver.resolve()
+
+    # The folder containing tag 5.1.0 should now exist
+    assert repo_folder.contains_dir('5.1.0')
+    latest_tag_folder = repo_folder.join('5.1.0')
+    assert path == latest_tag_folder.path()
+
+    # The ExistingTagResolver should find the latest tag in repo_folder
+    path = resolver.resolve()
+    assert path == latest_tag_folder.path()
