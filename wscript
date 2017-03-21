@@ -190,6 +190,8 @@ def _pytest(bld):
     if basenode:
         print("BASENODE {}".format(basenode))
         basenode.delete()
+    else:
+        print("NO BASENODE")
 
     test_command += ' --basetemp {}'.format(basetemp)
 
