@@ -188,6 +188,7 @@ def _pytest(bld):
 
     basenode = bld.path.find_node(basetemp)
     if basenode:
+        print("BASENODE {}".format(basenode))
         basenode.delete()
 
     test_command += ' --basetemp {}'.format(basetemp)
