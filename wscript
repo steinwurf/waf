@@ -186,12 +186,6 @@ def _pytest(bld):
     # @todo This is currently broken on win32,
     basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
 
-    basenode = bld.path.find_node(basetemp)
-    if basenode:
-        print("BASENODE {}".format(basenode))
-        basenode.delete()
-    else:
-        print("NO BASENODE")
 
     test_command += ' --basetemp {}'.format(basetemp)
 
