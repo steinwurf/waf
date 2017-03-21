@@ -186,8 +186,9 @@ def _pytest(bld):
     # @todo This is currently broken on win32,
     basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
 
-    if os.path.isdir(basetemp):
-        shutil.rmtree(basetemp, ignore_errors=True)
+    basenode = bld.path.find_node(basetemp)
+    if basenode:
+        basenode.delete()
 
     test_command += ' --basetemp {}'.format(basetemp)
 
