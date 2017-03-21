@@ -339,7 +339,10 @@ pass `-vvv` to see all debug information. Alternatively you can use the
 
     python waf configure -v --zones=resolve
 
+The default zone printed by `waf` when adding the verbose flag `-v` is
+`runner`, so if you want to see that also pass::
 
+    python waf configure -v --zones=resolve,runner
 
 
 Fixing unit tests
