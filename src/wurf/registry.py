@@ -255,14 +255,8 @@ def parser(registry):
     return argparse.ArgumentParser(description='Resolve Options',
         # add_help=False will remove the default handling of --help and -h
         # https://docs.python.org/3/library/argparse.html#add-help
-        #
         # This will be handled by waf's default options context.
-        add_help=False,
-        # Remove printing usage help, like:
-        #    usage: waf [--some-option]
-        # When printing help, this seems to be an undocumented feature of
-        # argparse: http://stackoverflow.com/a/14591302/1717320
-        usage=argparse.SUPPRESS)
+        add_help=False)
 
 
 @Registry.cache

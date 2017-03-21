@@ -14,24 +14,22 @@ class Options(object):
         self.known_args = {}
         self.unknown_args = []
 
-        # Using the %default placeholder:
-        #    http://stackoverflow.com/a/1254491/1717320
         self.parser.add_argument('--resolve_path',
             default=default_resolve_path,
             dest='--resolve_path',
-            help='The folder where the bundled dependencies are downloaded.'
-                 '(default: %(default)s)')
+            help="The folder where the resolved dependencies are downloaded. "
+                 "[default: '{}']".format(default_resolve_path))
 
         self.parser.add_argument('--git_protocol',
             dest='--git_protocol',
-            help='Use a specific git protocol to download dependencies.'
-                 'Supported protocols {}'.format(supported_git_protocols))
+            help='Use a specific git protocol to download dependencies. '
+                 'Supported protocols: {}'.format(supported_git_protocols))
 
         self.parser.add_argument('--symlinks_path',
             default=default_symlinks_path,
             dest='--symlinks_path',
-            help='The folder where the dependency symlinks are placed.'
-                 '(default: %(default)s)')
+            help="The folder where the dependency symlinks are placed. "
+                 "[default: '{}']".format(default_symlinks_path))
 
         self.parser.add_argument('--fast_resolve', dest='--fast_resolve',
             action='store_true', default=False,

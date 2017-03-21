@@ -38,6 +38,8 @@ class CreateSymlinkResolver(object):
         link_path = os.path.join(self.symlinks_path, self.dependency.name)
 
         if os.path.exists(link_path):
+            # On Windows, os.path.realpath does not follow the symlink,
+            # therefore the two sides are only equal if link_path == path
             if os.path.realpath(link_path) == os.path.realpath(path):
                 # Symlink is already in place. We may have loaded it from cache.
                 self.dependency.is_symlink = True
