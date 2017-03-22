@@ -47,4 +47,4 @@ class OnActiveStorePathResolver(object):
             'real_path': self.dependency.real_path }
 
         with open(config_path, 'w') as config_file:
-            json.dump(config, config_file)
+            json.dump(config, config_file, indent=4, sort_keys=True)
