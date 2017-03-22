@@ -99,13 +99,9 @@ class DependencyManager(object):
             # We do not require the 'resolve' function to be implemented in
             # dependency projects. Therefore the mandatory=False.
             #
-            # @todo the str() here is needed as waf does not handle unicode
-            # in its find_node function (invoked from within recurse). So that
-            # would be nice to fix.
+            # str() is needed as waf does not handle unicode in its find_node
+            # function (invoked from within recurse).
             self.ctx.recurse([str(path)], mandatory=False)
-
-            # We also do not require a resolve.json file
-            self.load_dependencies(path, mandatory=False)
 
     def __skip_dependency(self, dependency):
         """ Checks if we should skip the dependency.

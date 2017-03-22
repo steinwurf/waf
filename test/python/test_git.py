@@ -25,10 +25,10 @@ def test_wurf_git_current_commit():
 
     git = Git('/bin/git_binary', ctx)
 
-    assert git.current_commit(cwd='/tmp') == "044d59505f3b63645c7fb7dec145154b8e518086"
+    assert git.current_commit(cwd='/tmp') == \
+        "044d59505f3b63645c7fb7dec145154b8e518086"
     ctx.cmd_and_log.assert_called_once_with(
         ['/bin/git_binary', 'rev-parse', 'HEAD'], cwd='/tmp')
-
 
 def test_wurf_git_clone():
 

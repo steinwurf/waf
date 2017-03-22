@@ -98,13 +98,6 @@ class WafResolveContext(Context.Context):
             # which will trigger loading the dependency.
             super(WafResolveContext, self).execute()
 
-            # As the last step in recurse, try to load the dependencies from the
-            # 'resolve.json' file if it is present next to the wscript.
-            # This is done after calling a possible user-defined
-            # resolve() function, since we always want to allow the user to
-            # run custom code before the actual resolving starts.
-            self.dependency_manager.load_dependencies(self.path.abspath(),
-                mandatory=False)
         except Error as e:
             self.logger.debug("Error in resolve:".format(e), exc_info=True)
             self.fatal("Error: {}".format(e))
@@ -123,6 +116,17 @@ class WafResolveContext(Context.Context):
 
         for action in post_resolver_actions:
             action()
+
+    def post_recurse(self, node):
+        # As the last step in recurse, try to load the dependencies from the
+        # 'resolve.json' file if it is present next to the wscript.
+        # This is done after calling a possible user-defined
+        # resolve() function, since we always want to allow the user to
+        # run custom code before the actual resolving starts.
+        self.dependency_manager.load_dependencies(self.path.abspath(),
+            mandatory=False)
+
+        super(WafResolveContext, self).post_recurse(node)
 
     def is_toplevel(self):
         """

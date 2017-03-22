@@ -30,7 +30,7 @@ class LockCache(object):
 
     def write_to_file(self, lock_path):
         with open(lock_path, 'w') as lock_file:
-            json.dump(self.lock_cache, lock_file)
+            json.dump(self.lock_cache, lock_file, indent=4, sort_keys=True)
 
     def add_path(self, dependency, path):
         self.lock_cache['dependencies'][dependency.name] = {

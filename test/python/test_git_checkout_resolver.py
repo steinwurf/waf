@@ -25,7 +25,7 @@ def test_git_checkout_resolver(test_directory):
     repo_url = 'https://gitlab.com/steinwurf/links.git'
 
     resolver = GitCheckoutResolver(git=git, git_resolver=git_resolver,
-        ctx=ctx, dependency=dependency, cwd=cwd, checkout=checkout)
+        ctx=ctx, dependency=dependency, checkout=checkout)
 
     path = resolver.resolve()
 

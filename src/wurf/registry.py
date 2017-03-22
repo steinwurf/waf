@@ -196,18 +196,6 @@ def resolve_path(registry):
 
 @Registry.cache
 @Registry.provide
-def dependency_path(registry, dependency):
-    resolve_path = registry.require('resolve_path')
-
-    dependency_path = os.path.join(resolve_path, dependency.name)
-    waf_utils = registry.require('waf_utils')
-    waf_utils.check_dir(dependency_path)
-
-    return dependency_path
-
-
-@Registry.cache
-@Registry.provide
 def symlinks_path(registry):
     mandatory_options = registry.require('mandatory_options')
     symlinks_path = mandatory_options.symlinks_path()
@@ -255,14 +243,8 @@ def parser(registry):
     return argparse.ArgumentParser(description='Resolve Options',
         # add_help=False will remove the default handling of --help and -h
         # https://docs.python.org/3/library/argparse.html#add-help
-        #
         # This will be handled by waf's default options context.
-        add_help=False,
-        # Remove printing usage help, like:
-        #    usage: waf [--some-option]
-        # When printing help, this seems to be an undocumented feature of
-        # argparse: http://stackoverflow.com/a/14591302/1717320
-        usage=argparse.SUPPRESS)
+        add_help=False)
 
 
 @Registry.cache
@@ -438,13 +420,13 @@ def git_resolvers(registry, dependency):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
-    dependency_path = registry.require('dependency_path', dependency=dependency)
+    parent_folder = registry.require('parent_folder')
 
     name = dependency.name
     sources = registry.require('git_sources', dependency=dependency)
 
     def wrap(source):
-        return GitResolver(git=git, ctx=ctx, cwd=dependency_path,
+        return GitResolver(git=git, ctx=ctx, parent_folder=parent_folder,
                            name=name, source=source)
 
     resolvers = [wrap(source) for source in sources]
@@ -463,15 +445,13 @@ def git_checkout_list_resolver(registry, dependency, checkout):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
-    dependency_path = registry.require('dependency_path', dependency=dependency)
 
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
 
     def wrap(resolver):
 
         resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
-            dependency=dependency, cwd=dependency_path,
-            checkout=checkout)
+            dependency=dependency, checkout=checkout)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx)
         return resolver
@@ -518,15 +498,13 @@ def resolve_git_semver(registry, dependency):
     ctx = registry.require('ctx')
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
     options = registry.require('options')
-    dependency_path = registry.require('dependency_path', dependency=dependency)
 
     # Set the resolver method on the dependency
     dependency.resolver_action = 'git semver'
 
     def wrap(resolver):
         resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
-            semver_selector=semver_selector, cwd=dependency_path,
-            dependency=dependency)
+            semver_selector=semver_selector, dependency=dependency)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx)
         return resolver

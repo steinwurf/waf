@@ -202,9 +202,9 @@ def run_commands(app_dir, git_dir):
     app_dir.run('python', 'waf', 'build', '-v')
 
     resolve_dir = app_dir.join('resolved_dependencies')
-    assert resolve_dir.contains_dir('foo','1.3.3.7-*')
-    assert resolve_dir.contains_dir('baz','3.3.1-*')
-    assert resolve_dir.contains_dir('bar','someh4sh-*')
+    assert resolve_dir.contains_dir('foo-*','1.3.3.7')
+    assert resolve_dir.contains_dir('baz-*','3.3.1')
+    assert resolve_dir.contains_dir('bar-*','someh4sh')
 
     resolve_dir.rmdir()
 
@@ -226,18 +226,15 @@ def run_commands(app_dir, git_dir):
     # The content of resolved dependencies is intersting now :)
     # We've just resolved from the lock_resolve.json file
     # containing the versions needed.
-    #
-    # The on some repositories we the commit we are asking for
-    # is the same as on the master and some not.
-    #
+
     # foo should use the commit id in the lock file
-    assert resolve_dir.contains_dir("foo", "{}-*".format(
+    assert resolve_dir.contains_dir("foo-*", "{}".format(
         lock['dependencies']['foo']['checkout']))
     # bar is locked to the same commit as the master so it will
     # skip the git checkout and just return the master path
-    assert resolve_dir.contains_dir('bar', 'master-*')
-    # baz has it's tag in the lock file, so it will be available there
-    assert resolve_dir.contains_dir('baz', '3.3.1-*')
+    assert resolve_dir.contains_dir('bar-*', 'master')
+    # baz has its tag in the lock file, so it will be available there
+    assert resolve_dir.contains_dir('baz-*', '3.3.1')
 
     app_dir.rmfile('lock_resolve.json')
     resolve_dir.rmdir()
@@ -391,5 +388,5 @@ def test_create_standalone_archive(test_directory):
         json.dump(clone_path, json_file)
 
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths')
-    app_dir.run('python', 'waf', '-v', 'dist')
-    assert app_dir.contains_file('test_add_dependency-1.0.0.tar.bz2')
+    app_dir.run('python', 'waf', '-v', 'standalone')
+    assert app_dir.contains_file('test_add_dependency-1.0.0.zip')
