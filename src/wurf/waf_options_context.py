@@ -111,6 +111,9 @@ class WafOptionsContext(Options.OptionsContext):
         # second value retuned by parse_known_args(...)
         self.waf_options = self.wurf_options.unknown_args
 
+        # Load any extra tools that define regular options for waf
+        self.load('wurf.waf_standalone_context')
+
         # Call options() in all dependencies: all options must be defined
         # before running OptionsContext.execute() where parse_args is called
         waf_conf.recurse_dependencies(self)

@@ -44,6 +44,7 @@ from . import waf_resolve_context
 from . import waf_options_context
 from . import waf_configuration_context
 from . import waf_build_context
+from . import waf_standalone_context
 
 # We add a number of methods to the ConfigurationContext and BuildContext
 # objects used in Waf's configure(...) and build(...) functions (found in

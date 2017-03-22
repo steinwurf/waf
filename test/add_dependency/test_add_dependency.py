@@ -388,5 +388,5 @@ def test_create_standalone_archive(test_directory):
         json.dump(clone_path, json_file)
 
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths')
-    app_dir.run('python', 'waf', '-v', 'dist')
-    assert app_dir.contains_file('test_add_dependency-1.0.0.tar.bz2')
+    app_dir.run('python', 'waf', '-v', 'standalone')
+    assert app_dir.contains_file('test_add_dependency-1.0.0.zip')
