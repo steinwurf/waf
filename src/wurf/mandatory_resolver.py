@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-from .error import DependencyError
+from .error import TopLevelError
 
 class MandatoryResolver(object):
     """ Iterates through a list of resolvers until a path is resolved."""
@@ -16,7 +16,6 @@ class MandatoryResolver(object):
         self.msg = msg
         self.dependency = dependency
 
-
     def resolve(self):
         """ Resolve the dependency.
 
@@ -25,6 +24,6 @@ class MandatoryResolver(object):
         path = self.resolver.resolve()
 
         if not path:
-            raise DependencyError(msg=self.msg, dependency=self.dependency)
+            raise TopLevelError(msg=self.msg, dependency=self.dependency)
 
         return path

@@ -99,8 +99,8 @@ class WafResolveContext(Context.Context):
             super(WafResolveContext, self).execute()
 
         except Error as e:
-            self.logger.debug("Error in resolve:".format(e), exc_info=True)
-            self.fatal("Error: {}".format(e))
+            self.logger.debug("Error in resolve:\n", exc_info=True)
+            self.fatal(str(e))
         except:
             raise
 

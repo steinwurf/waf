@@ -428,7 +428,7 @@ def git_resolvers(registry, dependency):
 
     def wrap(source):
         return GitResolver(git=git, ctx=ctx, parent_folder=parent_folder,
-                           name=name, source=source)
+                           dependency=dependency, source=source)
 
     resolvers = [wrap(source) for source in sources]
     return resolvers
@@ -454,7 +454,8 @@ def git_checkout_list_resolver(registry, dependency, checkout):
         resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
             dependency=dependency, checkout=checkout)
 
-        resolver = TryResolver(resolver=resolver, ctx=ctx)
+        resolver = TryResolver(resolver=resolver, ctx=ctx,
+            dependency=dependency)
         return resolver
 
     resolvers = [wrap(git_resolver) for git_resolver in git_resolvers]
@@ -507,7 +508,7 @@ def resolve_git_user_checkout(registry, dependency):
         dependency=dependency, checkout=checkout)
 
     resolver = MandatoryResolver(resolver=resolver,
-        msg="User checkout of {} failed.".format(checkout),
+        msg="User checkout of '{}' failed.".format(checkout),
         dependency=dependency)
 
     return resolver
@@ -534,7 +535,8 @@ def resolve_git_semver(registry, dependency):
         resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
             semver_selector=semver_selector, dependency=dependency)
 
-        resolver = TryResolver(resolver=resolver, ctx=ctx)
+        resolver = TryResolver(resolver=resolver, ctx=ctx,
+            dependency=dependency)
         return resolver
 
     resolvers = [wrap(git_resolver) for git_resolver in git_resolvers]
@@ -574,7 +576,8 @@ def resolve_git(registry, dependency):
         fast_resolver = OnPassiveLoadPathResolver(dependency=dependency,
             resolve_config_path=resolve_config_path)
 
-        fast_resolver = TryResolver(resolver=fast_resolver, ctx=ctx)
+        fast_resolver = TryResolver(resolver=fast_resolver, ctx=ctx,
+            dependency=dependency)
 
         return ListResolver(resolvers=[fast_resolver, git_resolver])
 
@@ -676,7 +679,7 @@ def help_chain(registry, dependency):
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
         resolve_config_path=resolve_config_path)
 
-    resolver = TryResolver(resolver=resolver, ctx=ctx)
+    resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
 
     return resolver
 
@@ -693,7 +696,7 @@ def load_chain(registry, dependency):
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
         resolve_config_path=resolve_config_path)
 
-    resolver = TryResolver(resolver=resolver, ctx=ctx)
+    resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
 
     resolver = CheckOptionalResolver(resolver=resolver,
         dependency=dependency)

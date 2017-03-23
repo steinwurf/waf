@@ -140,6 +140,10 @@ class Dependency(object):
         # Audit log (tracking changes to the info attribute)
         object.__setattr__(self, 'audit', list())
 
+        # List to store error messages that might occur during the resolution
+        # of this dependency
+        self.error_messages = []
+
     def rewrite(self, attribute, value, reason):
         """ Rewrites an info attribute.
 

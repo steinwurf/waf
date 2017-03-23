@@ -15,7 +15,7 @@ def test_try_resolver(test_directory):
     resolver1 = mock.Mock()
     resolver1.resolve = mock.Mock(return_value=test_directory.path())
 
-    resolver = TryResolver(resolver=resolver1, ctx=ctx)
+    resolver = TryResolver(resolver=resolver1, ctx=ctx, dependency=dependency)
 
     path = resolver.resolve()
 

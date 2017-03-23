@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-from .error import DependencyError
+from .error import TopLevelError
 
 class CheckOptionalResolver(object):
 
@@ -27,7 +27,7 @@ class CheckOptionalResolver(object):
         path = self.resolver.resolve()
 
         if not path and not self.dependency.optional:
-            raise DependencyError(msg="Non-optional dependency failed.",
+            raise TopLevelError(msg="Non-optional dependency failed.",
                 dependency=self.dependency)
 
         return path

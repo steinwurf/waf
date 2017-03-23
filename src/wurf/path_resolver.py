@@ -28,7 +28,7 @@ class PathResolver(object):
         self.path = os.path.abspath(os.path.expanduser(self.path))
 
         if not os.path.isdir(self.path):
-            raise DependencyError('Path "{}" not pointing to a valid '
+            raise DependencyError('Path error: "{}" is not a valid '
                 'directory'.format(self.path), dependency=self.dependency)
 
         return self.path
