@@ -4,6 +4,7 @@
 import hashlib
 import json
 import collections
+import pprint
 
 class Dependency(object):
 
@@ -221,8 +222,10 @@ class Dependency(object):
 
     def __str__(self):
         """ :return: String representation of the dependency. """
-        return "Dependency\ninfo: {}\nread write: {}\naudit: {}".format(
-            self.info, self.read_write, self.audit)
+        return "Dependency info:\n{}\nread_write: {}\naudit: {}".format(
+            pprint.pformat(self.info, indent=2),
+            pprint.pformat(self.read_write, indent=2),
+            pprint.pformat(self.audit, indent=2))
 
     def __hash__(self):
         """ :return: Integer hash value for the dependency. """

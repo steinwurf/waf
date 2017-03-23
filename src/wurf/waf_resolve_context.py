@@ -159,7 +159,6 @@ class WafResolveContext(Context.Context):
             return super(WafResolveContext, self).cmd_and_log(
                 cmd=cmd, **kwargs)
         except WafError as e:
-            tb = traceback.format_exc()
-            raise CmdAndLogError(error=e, traceback=tb)
+            raise CmdAndLogError(error=e)
         except:
             raise

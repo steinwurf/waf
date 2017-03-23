@@ -22,6 +22,7 @@ from .git_url_rewriter import GitUrlRewriter
 from .git import Git
 from .options import Options
 from .mandatory_options import MandatoryOptions
+from .mandatory_resolver import MandatoryResolver
 from .create_symlink_resolver import CreateSymlinkResolver
 from .configuration import Configuration
 from .store_lock_path_resolver import StoreLockPathResolver
@@ -485,6 +486,33 @@ def resolve_git_checkout(registry, dependency):
     return resolver
 
 
+@Registry.cache
+@Registry.provide
+def resolve_git_user_checkout(registry, dependency):
+    """ Builds resolver that uses a user specified checkout.
+
+    :param registry: A Registry instance.
+    :param dependency: A Dependency instance.
+    """
+    ctx = registry.require('ctx')
+
+    mandatory_options = registry.require('mandatory_options')
+    checkout = mandatory_options.checkout(dependency=dependency)
+
+    # Set the resolver method on the dependency
+    dependency.resolver_action = 'git user checkout'
+
+    # When the user specified the checkout one must succeed:
+    resolver = registry.require('git_checkout_list_resolver',
+        dependency=dependency, checkout=checkout)
+
+    resolver = MandatoryResolver(resolver=resolver,
+        msg="User checkout of {} failed.".format(checkout),
+        dependency=dependency)
+
+    return resolver
+
+
 @Registry.provide
 def resolve_git_semver(registry, dependency):
     """ Builds a GitSemverResolver instance.
@@ -513,33 +541,6 @@ def resolve_git_semver(registry, dependency):
 
     resolver = ListResolver(resolvers=resolvers)
     resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
-
-    return resolver
-
-
-@Registry.cache
-@Registry.provide
-def resolve_git_user_checkout(registry, dependency):
-    """ Builds resolver that uses a user specified checkout.
-
-    :param registry: A Registry instance.
-    :param dependency: A Dependency instance.
-    """
-    ctx = registry.require('ctx')
-
-    mandatory_options = registry.require('mandatory_options')
-    checkout = mandatory_options.checkout(dependency=dependency)
-
-    # Set the resolver method on the dependency
-    dependency.resolver_action = 'git user checkout'
-
-    # When the user specified the checkout one must succeed:
-    resolver = registry.require('git_checkout_list_resolver',
-        dependency=dependency, checkout=checkout)
-
-    resolver = MandatoryResolver(resolver=resolver,
-        msg="User checkout of {} failed.".format(checkout),
-        dependency=dependency)
 
     return resolver
 

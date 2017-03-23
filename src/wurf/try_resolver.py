@@ -31,7 +31,7 @@ class TryResolver(object):
             # Waf is using the standard Python Logger so you can check the
             # docs here (read about the exc_info kwargs):
             # https://docs.python.org/2/library/logging.html
-            self.ctx.logger.debug("Source {} resolve failed:".format(
+            self.ctx.logger.debug("Resolve failed in {}:".format(
                 self.resolver), exc_info=True)
 
             return None
@@ -43,6 +43,6 @@ class TryResolver(object):
         if path:
             assert os.path.isdir(path)
         else:
-            self.ctx.logger.debug("Source {} resolve failed (returned"
-                                  " None)".format(self.resolver))
+            self.ctx.logger.debug(
+                "No path returned by {}".format(self.resolver))
         return path

@@ -85,7 +85,7 @@ class Configuration(object):
         config_log_path = os.path.join(self.project_path, 'build', 'config.log')
 
         if not os.path.isfile(config_log_path):
-            # Project not yet configure - we don't have a build/config.log
+            # Project not yet configured - we don't have a build/config.log
             # file
             return True
 
