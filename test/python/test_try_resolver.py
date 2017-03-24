@@ -10,6 +10,8 @@ def test_try_resolver(test_directory):
     ctx = mock.Mock()
     dependency = mock.Mock()
     dependency.name = 'foo'
+    dependency.__contains__ = mock.Mock()
+    dependency.__contains__.return_value = False
 
     # TryResolver needs a resolver that returns a valid path
     resolver1 = mock.Mock()
