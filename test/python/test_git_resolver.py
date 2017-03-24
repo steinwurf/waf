@@ -9,7 +9,8 @@ def test_git_resolver(test_directory):
 
     ctx = mock.Mock()
     git = mock.Mock()
-    cwd = test_directory.path()
+    parent_folder = mock.Mock()
+    parent_folder.parent_folder.return_value = test_directory.path()
 
     # GitResolver checks that the directory is created during git.clone,
     # so we create it within the test_directory as a side effect
@@ -23,16 +24,16 @@ def test_git_resolver(test_directory):
     repo_url = 'https://gitlab.com/steinwurf/links.git'
 
     resolver = GitResolver(git=git, ctx=ctx, dependency=dependency,
-        cwd=cwd, source=repo_url)
+        parent_folder=parent_folder, source=repo_url)
 
     path = resolver.resolve()
 
     repo_name = os.path.basename(os.path.normpath(path))
-    assert repo_name.startswith('master-')
+    assert repo_name == 'master'
     repo_folder = os.path.dirname(os.path.normpath(path))
 
     git.clone.assert_called_once_with(
-        repository=repo_url, directory=repo_name, cwd=repo_folder)
+        repository=repo_url, directory='master', cwd=repo_folder)
 
     git.pull_submodules.assert_called_once_with(cwd=path)
 

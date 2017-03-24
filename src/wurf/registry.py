@@ -210,14 +210,11 @@ def symlinks_path(registry):
 
 @Registry.cache
 @Registry.provide
-def dependency_path(registry, dependency):
+def parent_folder(registry):
     resolve_path = registry.require('resolve_path')
 
-    dependency_path = os.path.join(resolve_path, dependency.name)
-    waf_utils = registry.require('waf_utils')
-    waf_utils.check_dir(dependency_path)
+    return ParentFolder(resolve_path=resolve_path)
 
-    return dependency_path
 
 @Registry.cache
 @Registry.provide
@@ -424,15 +421,14 @@ def git_resolvers(registry, dependency):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
-    dependency_path = registry.require('dependency_path',
-        dependency=dependency)
+    parent_folder = registry.require('parent_folder')
 
     name = dependency.name
     sources = registry.require('git_sources', dependency=dependency)
 
     def wrap(source):
-        return GitResolver(git=git, ctx=ctx, dependency=dependency,
-            source=source, cwd=dependency_path)
+        return GitResolver(git=git, ctx=ctx, parent_folder=parent_folder,
+                           dependency=dependency, source=source)
 
     resolvers = [wrap(source) for source in sources]
     return resolvers
@@ -450,15 +446,13 @@ def git_checkout_list_resolver(registry, dependency, checkout):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
-    dependency_path = registry.require('dependency_path',
-        dependency=dependency)
 
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
 
     def wrap(resolver):
 
         resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
-            dependency=dependency, checkout=checkout, cwd=dependency_path)
+            dependency=dependency, checkout=checkout)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx,
             dependency=dependency)
@@ -533,15 +527,13 @@ def resolve_git_semver(registry, dependency):
     ctx = registry.require('ctx')
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
     options = registry.require('options')
-    dependency_path = registry.require('dependency_path', dependency=dependency)
 
     # Set the resolver method on the dependency
     dependency.resolver_action = 'git semver'
 
     def wrap(resolver):
         resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
-            semver_selector=semver_selector, dependency=dependency,
-            cwd=dependency_path)
+            semver_selector=semver_selector, dependency=dependency)
 
         resolver = TryResolver(resolver=resolver, ctx=ctx,
             dependency=dependency)
@@ -594,12 +586,14 @@ def resolve_git(registry, dependency):
         sources = registry.require('git_sources', dependency=dependency)
         semver_selector = registry.require('semver_selector')
         tag_database = registry.require('tag_database')
-        dependency_path = registry.require('dependency_path',
-            dependency=dependency)
+        parent_folder = registry.require('parent_folder')
 
-        return ExistingTagResolver(ctx=ctx, dependency=dependency,
-            semver_selector=semver_selector, tag_database=tag_database,
-            resolver=git_resolver, cwd=dependency_path)
+        existing_tag_resolver = ExistingTagResolver(ctx=ctx,
+            dependency=dependency, semver_selector=semver_selector,
+            tag_database=tag_database, parent_folder=parent_folder,
+            sources=sources)
+
+        return ListResolver(resolvers=[existing_tag_resolver, git_resolver])
 
     else:
 
