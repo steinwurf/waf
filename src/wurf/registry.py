@@ -590,16 +590,12 @@ def resolve_git(registry, dependency):
         sources = registry.require('git_sources', dependency=dependency)
         semver_selector = registry.require('semver_selector')
         tag_database = registry.require('tag_database')
-        #parent_folder = registry.require('parent_folder')
+        dependency_path = registry.require('dependency_path',
+            dependency=dependency)
 
-        # @todo re-enable
-        # existing_tag_resolver = ExistingTagResolver(ctx=ctx,
-        #     dependency=dependency, semver_selector=semver_selector,
-        #     tag_database=tag_database, parent_folder=parent_folder,
-        #     sources=sources)
-
-        # return ListResolver(resolvers=[existing_tag_resolver, git_resolver])
-        return ListResolver(resolvers=[git_resolver])
+        return ExistingTagResolver(ctx=ctx, dependency=dependency,
+            semver_selector=semver_selector, tag_database=tag_database,
+            resolver=git_resolver, cwd=dependency_path)
 
     else:
 
