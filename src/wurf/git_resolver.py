@@ -9,20 +9,21 @@ class GitResolver(object):
     Base Git Resolver functionality. Clones/pulls a git repository.
     """
 
-    def __init__(self, git, ctx, name, source, cwd):
+    def __init__(self, git, ctx, dependency, source, cwd):
+
         """ Construct a new WurfGitResolver instance.
 
         :param git: A WurfGit instance
         :param url_resolver: A WurfGitUrlResolver instance.
         :param ctx: A Waf Context instance.
-        :param name: The name of the dependency as a string
+        :param dependency: The dependency instance.
         :param source: The URL of the dependency as a string
         :param cwd: Current working directory as a string. This is the place
             where we should create new folders etc.
         """
         self.git = git
         self.ctx = ctx
-        self.name = name
+        self.dependency = dependency
         self.source = source
         self.cwd = cwd
 
@@ -33,6 +34,8 @@ class GitResolver(object):
         :return: The path to the resolved dependency as a string.
         """
         repo_url = self.source
+        # Store the current source in the dependency object
+        self.dependency.current_source = repo_url
 
         # Use the first 6 characters of the SHA1 hash of the repository url
         # to uniquely identify the repository

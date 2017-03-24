@@ -14,7 +14,7 @@ class GitSemverResolver(object):
     Read more about Semantic Versioning here: semver.org
     """
 
-    def __init__(self, git, git_resolver, ctx, semver_selector, 
+    def __init__(self, git, git_resolver, ctx, semver_selector,
         dependency, cwd):
         """ Construct an instance.
 
@@ -32,7 +32,7 @@ class GitSemverResolver(object):
         self.semver_selector = semver_selector
         self.dependency = dependency
         self.cwd = cwd
-        
+
     def resolve(self):
         """ Fetches the dependency if necessary.
         :return: The path to the resolved dependency as a string.
@@ -48,7 +48,8 @@ class GitSemverResolver(object):
 
         if not tag:
             raise DependencyError(
-                msg="No major tag found, candiates were {}".format(tags),
+                msg="No tag found for major version {}, candidates "
+                    "were {}".format(self.dependency.major, tags),
                 dependency=self.dependency)
 
         # Use the path retuned to create a unique location for this checkout

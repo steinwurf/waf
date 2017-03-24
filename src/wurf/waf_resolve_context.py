@@ -99,8 +99,8 @@ class WafResolveContext(Context.Context):
             super(WafResolveContext, self).execute()
 
         except Error as e:
-            self.logger.debug("Error in resolve:".format(e), exc_info=True)
-            self.fatal("Error: {}".format(e))
+            self.logger.debug("Error in resolve:\n", exc_info=True)
+            self.fatal(str(e))
         except:
             raise
 
@@ -159,7 +159,8 @@ class WafResolveContext(Context.Context):
             return super(WafResolveContext, self).cmd_and_log(
                 cmd=cmd, **kwargs)
         except WafError as e:
-            tb = traceback.format_exc()
-            raise CmdAndLogError(error=e, traceback=tb)
+            # @todo Do we need to include the traceback to the original
+            # exception here? See: http://bit.ly/2njVD5V
+            raise CmdAndLogError(error=e)
         except:
             raise

@@ -22,6 +22,7 @@ from .git_url_rewriter import GitUrlRewriter
 from .git import Git
 from .options import Options
 from .mandatory_options import MandatoryOptions
+from .mandatory_resolver import MandatoryResolver
 from .create_symlink_resolver import CreateSymlinkResolver
 from .configuration import Configuration
 from .store_lock_path_resolver import StoreLockPathResolver
@@ -430,8 +431,8 @@ def git_resolvers(registry, dependency):
     sources = registry.require('git_sources', dependency=dependency)
 
     def wrap(source):
-        return GitResolver(git=git, ctx=ctx, name=name, source=source,
-            cwd=dependency_path)
+        return GitResolver(git=git, ctx=ctx, dependency=dependency,
+            source=source, cwd=dependency_path)
 
     resolvers = [wrap(source) for source in sources]
     return resolvers
@@ -459,7 +460,8 @@ def git_checkout_list_resolver(registry, dependency, checkout):
         resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
             dependency=dependency, checkout=checkout, cwd=dependency_path)
 
-        resolver = TryResolver(resolver=resolver, ctx=ctx)
+        resolver = TryResolver(resolver=resolver, ctx=ctx,
+            dependency=dependency)
         return resolver
 
     resolvers = [wrap(git_resolver) for git_resolver in git_resolvers]
@@ -491,6 +493,33 @@ def resolve_git_checkout(registry, dependency):
     return resolver
 
 
+@Registry.cache
+@Registry.provide
+def resolve_git_user_checkout(registry, dependency):
+    """ Builds resolver that uses a user specified checkout.
+
+    :param registry: A Registry instance.
+    :param dependency: A Dependency instance.
+    """
+    ctx = registry.require('ctx')
+
+    mandatory_options = registry.require('mandatory_options')
+    checkout = mandatory_options.checkout(dependency=dependency)
+
+    # Set the resolver method on the dependency
+    dependency.resolver_action = 'git user checkout'
+
+    # When the user specified the checkout one must succeed:
+    resolver = registry.require('git_checkout_list_resolver',
+        dependency=dependency, checkout=checkout)
+
+    resolver = MandatoryResolver(resolver=resolver,
+        msg="User checkout of '{}' failed.".format(checkout),
+        dependency=dependency)
+
+    return resolver
+
+
 @Registry.provide
 def resolve_git_semver(registry, dependency):
     """ Builds a GitSemverResolver instance.
@@ -514,40 +543,14 @@ def resolve_git_semver(registry, dependency):
             semver_selector=semver_selector, dependency=dependency,
             cwd=dependency_path)
 
-        resolver = TryResolver(resolver=resolver, ctx=ctx)
+        resolver = TryResolver(resolver=resolver, ctx=ctx,
+            dependency=dependency)
         return resolver
 
     resolvers = [wrap(git_resolver) for git_resolver in git_resolvers]
 
     resolver = ListResolver(resolvers=resolvers)
     resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
-
-    return resolver
-
-
-@Registry.cache
-@Registry.provide
-def resolve_git_user_checkout(registry, dependency):
-    """ Builds resolver that uses a user specified checkout.
-
-    :param registry: A Registry instance.
-    :param dependency: A Dependency instance.
-    """
-    ctx = registry.require('ctx')
-
-    mandatory_options = registry.require('mandatory_options')
-    checkout = mandatory_options.checkout(dependency=dependency)
-
-    # Set the resolver method on the dependency
-    dependency.resolver_action = 'git user checkout'
-
-    # When the user specified the checkout one must succeed:
-    resolver = registry.require('git_checkout_list_resolver',
-        dependency=dependency, checkout=checkout)
-
-    resolver = MandatoryResolver(resolver=resolver,
-        msg="User checkout of {} failed.".format(checkout),
-        dependency=dependency)
 
     return resolver
 
@@ -581,7 +584,8 @@ def resolve_git(registry, dependency):
         fast_resolver = OnPassiveLoadPathResolver(dependency=dependency,
             resolve_config_path=resolve_config_path)
 
-        fast_resolver = TryResolver(resolver=fast_resolver, ctx=ctx)
+        fast_resolver = TryResolver(resolver=fast_resolver, ctx=ctx,
+            dependency=dependency)
 
         return ListResolver(resolvers=[fast_resolver, git_resolver])
 
@@ -681,7 +685,7 @@ def help_chain(registry, dependency):
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
         resolve_config_path=resolve_config_path)
 
-    resolver = TryResolver(resolver=resolver, ctx=ctx)
+    resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
 
     return resolver
 
@@ -698,7 +702,7 @@ def load_chain(registry, dependency):
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
         resolve_config_path=resolve_config_path)
 
-    resolver = TryResolver(resolver=resolver, ctx=ctx)
+    resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
 
     resolver = CheckOptionalResolver(resolver=resolver,
         dependency=dependency)
