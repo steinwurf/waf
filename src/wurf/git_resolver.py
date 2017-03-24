@@ -8,20 +8,20 @@ class GitResolver(object):
     Base Git Resolver functionality. Clones/pulls a git repository.
     """
 
-    def __init__(self, git, ctx, name, parent_folder, source):
+    def __init__(self, git, ctx, parent_folder, dependency, source):
         """ Construct a new WurfGitResolver instance.
 
         :param git: A WurfGit instance
         :param url_resolver: A WurfGitUrlResolver instance.
         :param ctx: A Waf Context instance.
         :param parent_folder: A ParentFolder instance.
-        :param name: The name of the dependency as a string
+        :param dependency: The dependency instance.
         :param source: The URL of the dependency as a string
         """
         self.git = git
         self.ctx = ctx
-        self.name = name
         self.parent_folder = parent_folder
+        self.dependency = dependency
         self.source = source
 
     def resolve(self):
@@ -31,9 +31,12 @@ class GitResolver(object):
         :return: The path to the resolved dependency as a string.
         """
         repo_url = self.source
+        # Store the current source in the dependency object
+        self.dependency.current_source = repo_url
 
         # The parent folder to store different versions of this repository
-        repo_folder = self.parent_folder.parent_folder(self.name, repo_url)
+        repo_folder = self.parent_folder.parent_folder(
+            self.dependency.name, repo_url)
 
         # Make sure that the repo_folder exists
         if not os.path.exists(repo_folder):
@@ -45,7 +48,7 @@ class GitResolver(object):
         master_path = os.path.join(repo_folder, 'master')
 
         self.ctx.to_log('wurf: GitResolver name {} -> {}'.format(
-            self.name, master_path))
+            self.dependency.name, master_path))
 
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(master_path):

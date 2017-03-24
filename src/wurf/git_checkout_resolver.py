@@ -52,8 +52,24 @@ class GitCheckoutResolver(object):
         # If the folder for the chosen version does not exist,
         # then copy the master and checkout that version
         if not os.path.isdir(checkout_path):
-            shutil.copytree(src=path, dst=checkout_path, symlinks=True)
-            self.git.checkout(branch=self.checkout, cwd=checkout_path)
+            try:
+                shutil.copytree(src=path, dst=checkout_path, symlinks=True)
+                self.git.checkout(branch=self.checkout, cwd=checkout_path)
+            except:
+                # The checkout_path must be removed if the checkout is not
+                # successful, as the folder would be considered a valid
+                # checkout when the user configures again
+                def onerror(func, path, exc_info):
+                    import stat
+                    if not os.access(path, os.W_OK):
+                        os.chmod(path, stat.S_IWUSR)
+                        func(path)
+                    else:
+                        raise
+
+                shutil.rmtree(checkout_path, onerror=onerror)
+                # The blank "raise" re-raises the last exception
+                raise
         else:
 
             if not self.git.is_detached_head(cwd=checkout_path):

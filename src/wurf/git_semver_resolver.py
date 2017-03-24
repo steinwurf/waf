@@ -43,7 +43,7 @@ class GitSemverResolver(object):
 
         if not tag:
             raise DependencyError(
-                msg="No tag found for major version {}, candiates "
+                msg="No tag found for major version {}, candidates "
                     "were {}".format(self.dependency.major, tags),
                 dependency=self.dependency)
 

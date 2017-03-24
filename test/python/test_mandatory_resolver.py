@@ -2,7 +2,7 @@ import pytest
 import mock
 
 from wurf.mandatory_resolver import MandatoryResolver
-from wurf.error import DependencyError
+from wurf.error import TopLevelError
 
 
 def test_mandatory_resolver():
@@ -24,6 +24,6 @@ def test_mandatory_resolver():
     # Make resolver1 return None
     resolver1.resolve = mock.Mock(return_value=None)
 
-    # A DependencyError should be raised for a missing path
-    with pytest.raises(DependencyError):
+    # A TopLevelError should be raised for a missing path
+    with pytest.raises(TopLevelError):
         resolver.resolve()
