@@ -18,10 +18,11 @@ def test_git_resolver(test_directory):
 
     git.clone = mock.Mock(side_effect=fake_git_clone)
 
-    name = 'links'
+    dependency = mock.Mock()
+    dependency.name = 'links'
     repo_url = 'https://gitlab.com/steinwurf/links.git'
 
-    resolver = GitResolver(git=git, ctx=ctx, name=name,
+    resolver = GitResolver(git=git, ctx=ctx, dependency=dependency,
         cwd=cwd, source=repo_url)
 
     path = resolver.resolve()

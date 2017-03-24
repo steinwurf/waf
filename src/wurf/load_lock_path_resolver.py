@@ -35,7 +35,7 @@ class LoadLockPathResolver(object):
         path = str(config['path'])
 
         if not os.path.isdir(path):
-            raise DependencyError('Not valid path {}'.format(path),
+            raise DependencyError('Invalid path: "{}"'.format(path),
                 self.dependency)
 
         return path
@@ -48,7 +48,8 @@ class LoadLockPathResolver(object):
             self.dependency.name + '.lock_path.json')
 
         if not os.path.isfile(config_path):
-            raise DependencyError('No lock_path - re-run configure with --lock_paths',
+            raise DependencyError(
+                'No lock_path - re-run configure with --lock_paths',
                 self.dependency)
 
         with open(config_path, 'r') as config_file:

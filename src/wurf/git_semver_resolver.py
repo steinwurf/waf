@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import hashlib
 import os
 import shutil
+import hashlib
 
 from .error import DependencyError
 
@@ -14,28 +14,27 @@ class GitSemverResolver(object):
     Read more about Semantic Versioning here: semver.org
     """
 
-    def __init__(self, git, git_resolver, ctx, semver_selector, cwd,
-        dependency):
+    def __init__(self, git, git_resolver, ctx, semver_selector,
+        dependency, cwd):
         """ Construct an instance.
 
         :param git: A WurfGit instance
         :param url_resolver: A WurfGitResolver instance.
         :param ctx: A Waf Context instance.
         :param semver_selector: A SemverSelector instance.
+        :param dependency: The dependency instance.
         :param cwd: Current working directory as a string. This is the place
             where we should create new folders etc.
-        :param dependency: The dependency instance.
         """
         self.git = git
         self.git_resolver = git_resolver
         self.ctx = ctx
         self.semver_selector = semver_selector
-        self.cwd = cwd
         self.dependency = dependency
+        self.cwd = cwd
 
     def resolve(self):
         """ Fetches the dependency if necessary.
-
         :return: The path to the resolved dependency as a string.
         """
 
@@ -49,7 +48,8 @@ class GitSemverResolver(object):
 
         if not tag:
             raise DependencyError(
-                msg="No major tag found, candiates were {}".format(tags),
+                msg="No tag found for major version {}, candidates "
+                    "were {}".format(self.dependency.major, tags),
                 dependency=self.dependency)
 
         # Use the path retuned to create a unique location for this checkout

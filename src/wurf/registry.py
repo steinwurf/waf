@@ -22,6 +22,7 @@ from .git_url_rewriter import GitUrlRewriter
 from .git import Git
 from .options import Options
 from .mandatory_options import MandatoryOptions
+from .mandatory_resolver import MandatoryResolver
 from .create_symlink_resolver import CreateSymlinkResolver
 from .configuration import Configuration
 from .store_lock_path_resolver import StoreLockPathResolver
@@ -196,18 +197,6 @@ def resolve_path(registry):
 
 @Registry.cache
 @Registry.provide
-def dependency_path(registry, dependency):
-    resolve_path = registry.require('resolve_path')
-
-    dependency_path = os.path.join(resolve_path, dependency.name)
-    waf_utils = registry.require('waf_utils')
-    waf_utils.check_dir(dependency_path)
-
-    return dependency_path
-
-
-@Registry.cache
-@Registry.provide
 def symlinks_path(registry):
     mandatory_options = registry.require('mandatory_options')
     symlinks_path = mandatory_options.symlinks_path()
@@ -221,11 +210,14 @@ def symlinks_path(registry):
 
 @Registry.cache
 @Registry.provide
-def parent_folder(registry):
+def dependency_path(registry, dependency):
     resolve_path = registry.require('resolve_path')
 
-    return ParentFolder(resolve_path=resolve_path)
+    dependency_path = os.path.join(resolve_path, dependency.name)
+    waf_utils = registry.require('waf_utils')
+    waf_utils.check_dir(dependency_path)
 
+    return dependency_path
 
 @Registry.cache
 @Registry.provide
@@ -255,14 +247,8 @@ def parser(registry):
     return argparse.ArgumentParser(description='Resolve Options',
         # add_help=False will remove the default handling of --help and -h
         # https://docs.python.org/3/library/argparse.html#add-help
-        #
         # This will be handled by waf's default options context.
-        add_help=False,
-        # Remove printing usage help, like:
-        #    usage: waf [--some-option]
-        # When printing help, this seems to be an undocumented feature of
-        # argparse: http://stackoverflow.com/a/14591302/1717320
-        usage=argparse.SUPPRESS)
+        add_help=False)
 
 
 @Registry.cache
@@ -438,14 +424,15 @@ def git_resolvers(registry, dependency):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
-    dependency_path = registry.require('dependency_path', dependency=dependency)
+    dependency_path = registry.require('dependency_path',
+        dependency=dependency)
 
     name = dependency.name
     sources = registry.require('git_sources', dependency=dependency)
 
     def wrap(source):
-        return GitResolver(git=git, ctx=ctx, cwd=dependency_path,
-                           name=name, source=source)
+        return GitResolver(git=git, ctx=ctx, dependency=dependency,
+            source=source, cwd=dependency_path)
 
     resolvers = [wrap(source) for source in sources]
     return resolvers
@@ -463,17 +450,18 @@ def git_checkout_list_resolver(registry, dependency, checkout):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
-    dependency_path = registry.require('dependency_path', dependency=dependency)
+    dependency_path = registry.require('dependency_path',
+        dependency=dependency)
 
     git_resolvers = registry.require('git_resolvers', dependency=dependency)
 
     def wrap(resolver):
 
         resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
-            dependency=dependency, cwd=dependency_path,
-            checkout=checkout)
+            dependency=dependency, checkout=checkout, cwd=dependency_path)
 
-        resolver = TryResolver(resolver=resolver, ctx=ctx)
+        resolver = TryResolver(resolver=resolver, ctx=ctx,
+            dependency=dependency)
         return resolver
 
     resolvers = [wrap(git_resolver) for git_resolver in git_resolvers]
@@ -505,40 +493,6 @@ def resolve_git_checkout(registry, dependency):
     return resolver
 
 
-@Registry.provide
-def resolve_git_semver(registry, dependency):
-    """ Builds a GitSemverResolver instance.
-
-    :param registry: A Registry instance.
-    :param dependency: A WurfDependency instance.
-    """
-
-    git = registry.require('git')
-    semver_selector = registry.require('semver_selector')
-    ctx = registry.require('ctx')
-    git_resolvers = registry.require('git_resolvers', dependency=dependency)
-    options = registry.require('options')
-    dependency_path = registry.require('dependency_path', dependency=dependency)
-
-    # Set the resolver method on the dependency
-    dependency.resolver_action = 'git semver'
-
-    def wrap(resolver):
-        resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
-            semver_selector=semver_selector, cwd=dependency_path,
-            dependency=dependency)
-
-        resolver = TryResolver(resolver=resolver, ctx=ctx)
-        return resolver
-
-    resolvers = [wrap(git_resolver) for git_resolver in git_resolvers]
-
-    resolver = ListResolver(resolvers=resolvers)
-    resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
-
-    return resolver
-
-
 @Registry.cache
 @Registry.provide
 def resolve_git_user_checkout(registry, dependency):
@@ -560,8 +514,43 @@ def resolve_git_user_checkout(registry, dependency):
         dependency=dependency, checkout=checkout)
 
     resolver = MandatoryResolver(resolver=resolver,
-        msg="User checkout of {} failed.".format(checkout),
+        msg="User checkout of '{}' failed.".format(checkout),
         dependency=dependency)
+
+    return resolver
+
+
+@Registry.provide
+def resolve_git_semver(registry, dependency):
+    """ Builds a GitSemverResolver instance.
+
+    :param registry: A Registry instance.
+    :param dependency: A WurfDependency instance.
+    """
+
+    git = registry.require('git')
+    semver_selector = registry.require('semver_selector')
+    ctx = registry.require('ctx')
+    git_resolvers = registry.require('git_resolvers', dependency=dependency)
+    options = registry.require('options')
+    dependency_path = registry.require('dependency_path', dependency=dependency)
+
+    # Set the resolver method on the dependency
+    dependency.resolver_action = 'git semver'
+
+    def wrap(resolver):
+        resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
+            semver_selector=semver_selector, dependency=dependency,
+            cwd=dependency_path)
+
+        resolver = TryResolver(resolver=resolver, ctx=ctx,
+            dependency=dependency)
+        return resolver
+
+    resolvers = [wrap(git_resolver) for git_resolver in git_resolvers]
+
+    resolver = ListResolver(resolvers=resolvers)
+    resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
 
     return resolver
 
@@ -595,7 +584,8 @@ def resolve_git(registry, dependency):
         fast_resolver = OnPassiveLoadPathResolver(dependency=dependency,
             resolve_config_path=resolve_config_path)
 
-        fast_resolver = TryResolver(resolver=fast_resolver, ctx=ctx)
+        fast_resolver = TryResolver(resolver=fast_resolver, ctx=ctx,
+            dependency=dependency)
 
         return ListResolver(resolvers=[fast_resolver, git_resolver])
 
@@ -604,14 +594,12 @@ def resolve_git(registry, dependency):
         sources = registry.require('git_sources', dependency=dependency)
         semver_selector = registry.require('semver_selector')
         tag_database = registry.require('tag_database')
-        parent_folder = registry.require('parent_folder')
+        dependency_path = registry.require('dependency_path',
+            dependency=dependency)
 
-        existing_tag_resolver = ExistingTagResolver(ctx=ctx,
-            dependency=dependency, semver_selector=semver_selector,
-            tag_database=tag_database, parent_folder=parent_folder,
-            sources=sources)
-
-        return ListResolver(resolvers=[existing_tag_resolver, git_resolver])
+        return ExistingTagResolver(ctx=ctx, dependency=dependency,
+            semver_selector=semver_selector, tag_database=tag_database,
+            resolver=git_resolver, cwd=dependency_path)
 
     else:
 
@@ -697,7 +685,7 @@ def help_chain(registry, dependency):
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
         resolve_config_path=resolve_config_path)
 
-    resolver = TryResolver(resolver=resolver, ctx=ctx)
+    resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
 
     return resolver
 
@@ -714,7 +702,7 @@ def load_chain(registry, dependency):
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
         resolve_config_path=resolve_config_path)
 
-    resolver = TryResolver(resolver=resolver, ctx=ctx)
+    resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
 
     resolver = CheckOptionalResolver(resolver=resolver,
         dependency=dependency)

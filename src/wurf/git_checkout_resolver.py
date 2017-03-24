@@ -10,24 +10,23 @@ class GitCheckoutResolver(object):
     Git Commit Resolver functionality. Checks out a specific commit.
     """
 
-    def __init__(self, git, git_resolver, ctx, dependency, cwd,
-        checkout):
+    def __init__(self, git, git_resolver, ctx, dependency, checkout, cwd):
         """ Construct an instance.
 
         :param git: A WurfGit instance
         :param url_resolver: A WurfGitResolver instance.
         :param ctx: A Waf Context instance.
         :param dependency: Dependency instance.
+        :param checkout: The branch, tag, or sha1 as a string.
         :param cwd: Current working directory as a string. This is the place
             where we should create new folders etc.
-        :param checkout: The branch, tag, or sha1 as a string.
         """
         self.git = git
         self.git_resolver = git_resolver
         self.ctx = ctx
         self.dependency = dependency
-        self.cwd = cwd
         self.checkout = checkout
+        self.cwd = cwd
 
     def resolve(self):
         """ Fetches the dependency if necessary.
@@ -56,10 +55,26 @@ class GitCheckoutResolver(object):
             self.dependency.name, repo_path))
 
         # If the folder for the chosen version does not exist,
-        # then copy the current repo and checkout that version
+        # then copy the master and checkout that version
         if not os.path.isdir(repo_path):
-            shutil.copytree(src=path, dst=repo_path, symlinks=True)
-            self.git.checkout(branch=self.checkout, cwd=repo_path)
+            try:
+                shutil.copytree(src=path, dst=repo_path, symlinks=True)
+                self.git.checkout(branch=self.checkout, cwd=repo_path)
+            except:
+                # The checkout_path must be removed if the checkout is not
+                # successful, as the folder would be considered a valid
+                # checkout when the user configures again
+                def onerror(func, path, exc_info):
+                    import stat
+                    if not os.access(path, os.W_OK):
+                        os.chmod(path, stat.S_IWUSR)
+                        func(path)
+                    else:
+                        raise
+
+                shutil.rmtree(repo_path, onerror=onerror)
+                # The blank "raise" re-raises the last exception
+                raise
         else:
 
             if not self.git.is_detached_head(cwd=repo_path):

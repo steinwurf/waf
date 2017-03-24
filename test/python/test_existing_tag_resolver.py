@@ -4,24 +4,21 @@ import mock
 import shutil
 
 from wurf.existing_tag_resolver import ExistingTagResolver
-
+from wurf.git_semver_resolver import GitSemverResolver
 
 def test_existing_tag_resolver(test_directory):
-
     ctx = mock.Mock()
 
     dependency = mock.Mock()
     dependency.name = 'foo'
     dependency.major = 5
+    dependency.git_tag = '5.1.0'
+    dependency.__contains__ = mock.Mock()
+    dependency.__contains__.return_value = True
     latest_tag = '5.1.0'
-    # The sources should contain the 'steinwurf' string, otherwise the
-    # ExistingTagResolver will ignore them
-    sources = ['steinwurf-url1', 'steinwurf-url2']
 
-    # ExistingTagResolver will enumerate the parent folder for each source,
-    # so we create these parent folders
-    repo_folder1 = test_directory.mkdir('foo-steinwurf-url1')
-    repo_folder2 = test_directory.mkdir('foo-steinwurf-url2')
+    cwd = test_directory.mkdir('cwd')
+    resolve_path = test_directory.mkdir('resolve_path')
 
     semver_selector = mock.Mock()
     semver_selector.select_tag.return_value = latest_tag
@@ -29,35 +26,41 @@ def test_existing_tag_resolver(test_directory):
     tag_database = mock.Mock()
     tag_database.project_tags.return_value = ['5.1.0', '5.0.0']
 
-    def repo_folder(name, source):
-        folder_name = '{}-{}'.format(name, source)
-        return os.path.join(test_directory.path(), folder_name)
+    semver_resolver = mock.Mock()
+    semver_resolver.resolve.return_value = resolve_path.path()
 
-    parent_folder = mock.Mock()
-    parent_folder.parent_folder.side_effect = repo_folder
+    # Run without any tags file
 
     resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
         semver_selector=semver_selector, tag_database=tag_database,
-        parent_folder=parent_folder, sources=sources)
+        resolver=semver_resolver, cwd=cwd.path())
 
-    # The parent folders are empty, so the resolver should return None
     path = resolver.resolve()
-    assert path == None
 
-    older_tag_folder = repo_folder1.mkdir('5.0.0')
-    # The latest tag is still not present, the resolver should return None
+    assert path == resolve_path.path()
+
+    assert cwd.contains_file('foo.tags.json')
+
+    # Run with a tags file, we will not use the resolver
+
+    resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
+        semver_selector=semver_selector, tag_database=tag_database,
+        resolver=None, cwd=cwd.path())
+
     path = resolver.resolve()
-    assert path == None
 
-    latest_tag_folder = repo_folder1.mkdir('5.1.0')
-    # Now the latest tag is present in repo_folder1
+    assert path == resolve_path.path()
+
+    # Remove the resolve path and check we fallback to resolver
+
+    resolve_path.rmdir()
+    resolve_path = test_directory.mkdir('resolve_path2')
+    semver_resolver.resolve.return_value = resolve_path.path()
+
+    resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
+        semver_selector=semver_selector, tag_database=tag_database,
+        resolver=semver_resolver, cwd=cwd.path())
+
     path = resolver.resolve()
-    assert path == latest_tag_folder.path()
 
-    # Remove the latest tag from repo_folder1, and create it in repo_folder2
-    shutil.rmtree(latest_tag_folder.path())
-    latest_tag_folder2 = repo_folder2.mkdir('5.1.0')
-
-    # Now the latest tag is only present in repo_folder2
-    path = resolver.resolve()
-    assert path == latest_tag_folder2.path()
+    assert path == resolve_path.path()

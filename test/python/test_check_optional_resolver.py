@@ -2,7 +2,7 @@ import pytest
 import mock
 
 from wurf.check_optional_resolver import CheckOptionalResolver
-from wurf.error import DependencyError
+from wurf.error import TopLevelError
 
 
 def test_check_optional_resolver():
@@ -25,7 +25,7 @@ def test_check_optional_resolver():
     # Make resolver1 return None
     resolver1.resolve = mock.Mock(return_value=None)
 
-    # The dependency is optional, so this should not raise a DependencyError
+    # The dependency is optional, so this should not raise a TopLevelError
     ret = resolver.resolve()
 
     assert ret == None
@@ -33,7 +33,7 @@ def test_check_optional_resolver():
     # Make the dependency non-optional
     dependency.optional = False
 
-    # A DependencyError should be raised for a missing path and a non-optional
+    # A TopLevelError should be raised for a missing path and a non-optional
     # dependency
-    with pytest.raises(DependencyError):
+    with pytest.raises(TopLevelError):
         resolver.resolve()

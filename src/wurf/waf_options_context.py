@@ -111,6 +111,9 @@ class WafOptionsContext(Options.OptionsContext):
         # second value retuned by parse_known_args(...)
         self.waf_options = self.wurf_options.unknown_args
 
+        # Load any extra tools that define regular options for waf
+        self.load('wurf.waf_standalone_context')
+
         # Call options() in all dependencies: all options must be defined
         # before running OptionsContext.execute() where parse_args is called
         waf_conf.recurse_dependencies(self)
@@ -129,28 +132,30 @@ class WafOptionsContext(Options.OptionsContext):
         Here we inject the arguments which were not consumed in the resolve
         step.
         """
-
         # We expect _args to be None here, if it isn't we should probably
         # figure out why and see if we should combine it with the
         # self.waf_options list
         assert(_args is None)
 
         try:
-            super(WafOptionsContext, self).parse_args(_args=self.waf_options)
-
-        except SystemExit:
-
-            # If optparse (which is the options parser use by waf) sees
-            # -h or --help it will call sys.exit(0) to stop the program and
-            # print the help message for the user.
-            #
-            # sys.exit() will raise the SytemExit exception so an easy way for
-            # us to add our help message here is to catch that and print our
-            # help and then re-raise.
-
+            # We may not have a wurf_options instance if running in a folder
+            # without a wscript (see class documentation)
+            # If the instance is present, we copy all the resolve options
+            # from the argparse.ArgumentParser to optparse.OptionParser that
+            # was created by waf. This way, optparse can print out a unified
+            # help text and option errors will be printed as the last line.
             if self.wurf_options:
-                # We may not have a wurf_parser if running in a folder
-                # without a wscript (see class documentation)
-                self.wurf_options.parser.print_help()
+                # Get the underlying optparse instance from OptionsContext
+                waf_parser = self.parser
+                # We will add the resolve options to this target group
+                target_group = waf_parser.add_option_group('Resolve options')
+                # argparse.ArgumentParser groups all optional arguments to
+                # the "_optionals" groups by default
+                source_group = self.wurf_options.parser._optionals
 
-            raise
+                for action in source_group._group_actions:
+                    target_group.add_option(action.option_strings[0],
+                        action='store_true' if action.nargs==0 else 'store',
+                        help=action.help)
+        finally:
+            super(WafOptionsContext, self).parse_args(_args=self.waf_options)

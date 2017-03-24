@@ -200,21 +200,21 @@ This file will describe the exact information about the project's dependencies.
 
 In general this is done the following way for different resolvers:
 
- - `git` resolvers, will store the SHA1 commit id of the dependency.
- - `http` resolvers, will store the SHA1 sum of the downloaded dependency.
+- `git` resolvers, will store the SHA1 commit id of the dependency.
+- `http` resolvers, will store the SHA1 sum of the downloaded dependency.
 
- If the `lock_resolve.json` is present it will take precedence over all
- resolvers besides the user options such as manually specifying checkout or
- path.
+If the `lock_resolve.json` is present it will take precedence over all
+resolvers besides the user options such as manually specifying checkout or
+path.
 
- You can commit the `lock_resolve.json` file to the project e.g. when creating
- a LTS (Long Term Support) release or similar. Where you want to pin the exact
- commit id, etc. of the project.
+You can commit the `lock_resolve.json` file to the project e.g. when creating
+a LTS (Long Term Support) release or similar. Where you want to pin the exact
+commit id, etc. of the project.
 
- As an example::
+As an example::
 
-     # Writes / overwrites an existing lock_resolve.json
-     python waf configure --lock_versions
+    # Writes / overwrites an existing lock_resolve.json
+    python waf configure --lock_versions
 
 Add `--lock_paths` option
 --------------------------
