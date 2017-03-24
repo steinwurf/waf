@@ -241,7 +241,10 @@ def git_url_rewriter(registry):
 @Registry.cache
 @Registry.provide
 def parser(registry):
-    return argparse.ArgumentParser(description='Resolve Options',
+    return argparse.ArgumentParser(
+        description='Resolve Options',
+        # Allow the double definition of the same option
+        conflict_handler='resolve',
         # add_help=False will remove the default handling of --help and -h
         # https://docs.python.org/3/library/argparse.html#add-help
         # This will be handled by waf's default options context.

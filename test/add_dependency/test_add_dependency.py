@@ -29,7 +29,7 @@ We are setting up the following dependency graph:
 
 The arrows indicate dependencies, so:
 
-- 'app' depends on 'libfoo' and 'libbaz'(internal)
+- 'app' depends on 'libfoo' and 'libbaz'(internal & optional)
 - 'libfoo' depends on 'libbar'
 - 'libbar' depends on 'libbaz'
 

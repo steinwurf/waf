@@ -100,7 +100,7 @@ class Dependency(object):
         # computation, since these are not required to unique identify the
         # dependency and different values can lead to mismatch issues
         hash_attributes = kwargs.copy()
-        #hash_attributes.pop('optional', None)
+        hash_attributes.pop('optional', None)
         hash_attributes.pop('internal', None)
 
         s = json.dumps(hash_attributes, sort_keys=True)
