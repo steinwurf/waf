@@ -53,9 +53,9 @@ Tests
 To ensure that the tools work as intended way we provide a set of
 tests. To run the tests invoke::
 
-      tox
+      python waf --run_tests
 
-See tox documentation here: https://tox.readthedocs.org/en/latest/
+
 
 Specifying a dependency
 ========================
@@ -155,10 +155,7 @@ To support both these ways of configuring we define the following "rules":
 Resolve symlinks
 ----------------
 The purpose of this feature is to provide stable locations in the file system
-for the downloaded dependencies. This is very similar to how pytest (under
-Linux) maintains a symlink to the latest unit-test invocation as
-`/tmp/pytest-of-user/pytest-current` (this does seem to only happen when using
-`tox`, needs investigation).
+for the downloaded dependencies.
 
 As a default several folders will be created during the process of resolving
 dependencies. Several projects can share the same folder for resolved
@@ -348,54 +345,17 @@ The default zone printed by `waf` when adding the verbose flag `-v` is
 Fixing unit tests
 =================
 
-If some of the unit tests fail, it may sometimes be helpful to be able to
-go the test folder and e.g. invoke the waf commands manually. We are using
-Tox to ensure that our tests run in a specific environment, so if we want
-to use the same environment e.g. with a specific version of the Python
-interpreter you need to activate it.
+We use `pytest` to run the unit tests and integration tests. If some unit tests
+fail, it may be helpful to go to the test folder and invoke the failing waf
+commands manually.
 
-Example
--------
+Using our default configuration, pytest will create a local temporary folder
+called `pytest`  when running the tests. This can be overridden with the
+``--pytest_basetemp`` option.
 
-Say we run the test and see the following::
+If a test uses the `test_directory` fixture, then pytest will create a
+subfolder matching the test function name. For example, if you have a test
+function called `test_empty_wscript(test_directory)`, then the first invocation
+of that test will happen inside `py_test/test_empty_wscript0`.
 
-  ______________________________ summary _______________________________
-  py27: commands succeeded
-  ERROR:   py31: commands failed
-  ERROR:   py34: commands failed
 
-Seems we have a problem related to Python 3.x support. The names `py31` and
-`py34` refers to the environment where the failed tests ran. Lets say we
-want to try to manually run the failing commands in the
-`py31`environment. Tox uses virtualenv and stores these in `.tox` in the
-project root folder, to activate it we run::
-
-  $ source .tox/py31/bin/activate
-
-You should now use the right version of the Python interpreter and have
-access to all the test dependencies (if any). So you can navigate to the
-directory where the tests failed and play around. Typically you can use the
-pytest symlink::
-
-    /tmp/pytest-of-user/pytest-current/some_folder_containing_failed_test
-
-Once you are done exit the virtualenv by running::
-
-  $ deactivate
-
-Note, the above does not work anymore since we now invoke Tox from within waf
-and pass needed paths to it.
-
-Finding the log output etc.
----------------------------
-
-We use pytest to run the waf commands (integration tests). pytest will create
-temporary folders etc. when running the tests. These are created on the fly and
-numbered.
-
-One great feature of pytest is that is will maintain a symbolic link to the most
-current test invocation. On Linux this is found under::
-
-    /tmp/pytest-of-user/pytest-current/
-
-Where the `user` will be replace with the your user's name.

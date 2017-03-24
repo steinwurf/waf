@@ -9,7 +9,7 @@ class Point(object):
         self.x = x
         self.y = y
 
-def test_wurf_registry():
+def test_registry():
 
     registry = Registry()
 

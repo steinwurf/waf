@@ -1,61 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-"""
-WurfOptions overrides waf's default OptionsContext if it is imported in the
-top-level wscript of a project like this:
-
-    import waflib.extras.wurf_options
-
-This step can be done automatically by building a custom waf binary and
-using the --prelude statement (see more here http://bit.ly/1Te4mRz).
-
-The tool overrides the 'parse_args' function to allow the definition of
-options in dependencies. The passed options are parsed twice. The first time
-all options are allowed as it is not possible to validate options that are not
-yet defined. The second parsing will happen after the dependencies are fully
-resolved, and therefore all options are known.
-
-The dependencies are resolved with the "resolve" context, which is created
-and executed in parse_args. This is a simplified version of the configuration
-context, and it follows the standard control flow. First, it will call the
-"resolve" function in the top-level wscript of the project. In that function,
-we load "wurf_common_tools" which in turn loads "wurf_dependency_bundle",
-"wurf_dependency_resolve" and "wurf_git". These tools are used to download
-the dependencies.
-
-The project's top-level dependencies are defined in the wscript's "resolve"
-function like this (after loading "wurf_common_tools"):
-
-def resolve(ctx):
-    import waflib.extras.wurf_dependency_resolve as resolve
-
-    ctx.load('wurf_common_tools')
-
-    ctx.add_dependency(resolve.ResolveVersion(
-        name='waf-tools',
-        git_repository='github.com/steinwurf/waf-tools.git',
-        major=2))
-
-When a dependency is added, wurf_dependency_bundle tries to resolve the
-project. This only happens if this is an active resolve step, i.e. if
-"configure" is given in the waf commands. In a passive resolve step, the
-tool only enumerates the  previously resolved dependencies to fetch the
-options from these.
-
-After downloading/resolving a dependency, we also recurse into the wscript
-of that dependency where the "resolve" function adds the dependencies of
-that project. These dependencies are resolved immediately in a recursive way.
-A dependency can also define options in the "resolve" function by accessing
-the original option parser using "ctx.opt":
-
-def resolve(ctx):
-    opts = ctx.opt.add_option_group('Makespec options')
-    opts.add_option('--cxx_mkspec', default=None, dest='cxx_mkspec',
-                    help="C++ make specification")
-"""
-
-
 import os
 import sys
 import copy

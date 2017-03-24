@@ -4,7 +4,7 @@ import mock
 from wurf.git import Git
 
 
-def test_wurf_git_version():
+def test_git_version():
 
     ctx = mock.Mock()
     ctx.cmd_and_log.return_value = 'git version 1.8.1.msysgit.1'
@@ -18,7 +18,7 @@ def test_wurf_git_version():
 
     assert(git.version() == (2,7,4))
 
-def test_wurf_git_current_commit():
+def test_git_current_commit():
 
     ctx = mock.Mock()
     ctx.cmd_and_log.return_value ="""044d59505f3b63645c7fb7dec145154b8e518086"""
@@ -30,7 +30,7 @@ def test_wurf_git_current_commit():
     ctx.cmd_and_log.assert_called_once_with(
         ['/bin/git_binary', 'rev-parse', 'HEAD'], cwd='/tmp')
 
-def test_wurf_git_clone():
+def test_git_clone():
 
     ctx = mock.Mock()
     git = Git('/bin/git_binary', ctx)
@@ -43,7 +43,7 @@ def test_wurf_git_clone():
         ['/bin/git_binary','clone','https://github.com/repo.git','/tmp/repo2'],
         cwd='/tmp')
 
-def test_wurf_git_pull():
+def test_git_pull():
 
     ctx = mock.Mock()
     git = Git('/bin/git_binary', ctx)
@@ -53,7 +53,7 @@ def test_wurf_git_pull():
     ctx.cmd_and_log.assert_called_once_with(
         ['/bin/git_binary','pull'], cwd='/tmp')
 
-def test_wurf_git_has_submodules(test_directory):
+def test_git_has_submodules(test_directory):
 
     ctx = mock.Mock()
     git = Git('/bin/git_binary', ctx)
@@ -66,7 +66,7 @@ def test_wurf_git_has_submodules(test_directory):
 
     assert(git.has_submodules(cwd=cwd) == True)
 
-def test_wurf_git_sync_submodules():
+def test_git_sync_submodules():
 
     ctx = mock.Mock()
     git = Git('/bin/git_binary', ctx)
@@ -76,7 +76,7 @@ def test_wurf_git_sync_submodules():
     ctx.cmd_and_log.assert_called_once_with(
         ['/bin/git_binary','submodule','sync'], cwd='/tmp')
 
-def test_wurf_git_init_submodules():
+def test_git_init_submodules():
 
     ctx = mock.Mock()
     git = Git('/bin/git_binary', ctx)
@@ -86,7 +86,7 @@ def test_wurf_git_init_submodules():
     ctx.cmd_and_log.assert_called_once_with(
         ['/bin/git_binary','submodule','init'], cwd='/tmp')
 
-def test_wurf_git_update_submodules():
+def test_git_update_submodules():
 
     ctx = mock.Mock()
     git = Git('/bin/git_binary', ctx)
@@ -96,7 +96,7 @@ def test_wurf_git_update_submodules():
     ctx.cmd_and_log.assert_called_once_with(
         ['/bin/git_binary','submodule','update'], cwd='/tmp')
 
-def test_wurf_git_pull_submodules(test_directory):
+def test_git_pull_submodules(test_directory):
 
     ctx = mock.Mock()
     git = Git('/bin/git_binary', ctx)
