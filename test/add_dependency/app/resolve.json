@@ -8,6 +8,7 @@
     },
     {
         "name": "baz",
+        "internal": true,
         "resolver": "git",
         "method": "semver",
         "major": 3,

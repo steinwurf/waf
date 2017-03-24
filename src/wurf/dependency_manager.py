@@ -120,8 +120,9 @@ class DependencyManager(object):
 
             if seen_dependency.sha1 != dependency.sha1:
 
-                self.ctx.fatal(
-                    "SHA1 mismatch adding dependency {} was {}".format(
+                raise Error(
+                    "SHA1 mismatch when adding:\n{}\n"
+                    "the previous definition was:\n{}".format(
                     dependency, seen_dependency))
 
             # This dependency is already in the seen_dependencies
