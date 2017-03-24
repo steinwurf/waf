@@ -40,7 +40,7 @@ class TryResolver(object):
             # This will be displayed later if a TopLevelError is triggered,
             # e.g. when a non-optional dependency fails.
             error_message = ''
-            if hasattr(self.dependency, 'current_source'):
+            if 'current_source' in self.dependency:
                 error_message = "Current source: {}\n".format(
                     self.dependency.current_source)
             # The first argument of the error contains the error message

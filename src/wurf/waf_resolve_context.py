@@ -159,6 +159,8 @@ class WafResolveContext(Context.Context):
             return super(WafResolveContext, self).cmd_and_log(
                 cmd=cmd, **kwargs)
         except WafError as e:
+            # @todo Do we need to include the traceback to the original
+            # exception here? See: http://bit.ly/2njVD5V
             raise CmdAndLogError(error=e)
         except:
             raise
