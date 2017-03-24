@@ -47,6 +47,8 @@ class ExistingTagResolver(object):
         # Fallback to the resolver
         path = self.resolver.resolve()
 
+        assert os.path.isdir(path)
+
         if 'git_tag' in self.dependency:
             tags[self.dependency.git_tag] = path
         else:
