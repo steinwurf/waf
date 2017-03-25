@@ -42,20 +42,19 @@ tests. To run the tests invoke::
 Passing ``--skip_network_tests`` will skip any unit tests which rely on network
 connectivity.
 
-To test the freshly built Waf binary some unit test use network connectivity
-to resolve dependencies. This makes the tests slow. It would therefore be
-beneficial to remove these tests when running e.g. on a build system.
+To test the freshly built Waf binary, some unit test use network connectivity
+to resolve dependencies. This makes the tests slow.
 
-An example of such a test is the ``self_build`` test. The ``self_build`` test will
-invoke a freshly built ``waf`` binary with the wscript used to build it -
+An example of such a test is the ``self_build`` test. The ``self_build`` test
+will invoke a freshly built ``waf`` binary with the wscript used to build it -
 yes very meta :)
 
 Fixing unit tests
 -----------------
 
-We use ``pytest`` to run the unit tests and integration tests. If some unit tests
-fail, it may be helpful to go to the test folder and invoke the failing waf
-commands manually.
+We use ``pytest`` to run the unit tests and integration tests. If some unit
+tests fail, it may be helpful to go to the test folder and invoke the failing
+waf commands manually.
 
 Using our default configuration, pytest will create a local temporary folder
 called ``pytest``  when running the tests. This can be overridden with the
@@ -141,18 +140,18 @@ dependency::
 If needed it is still possible to define the ``resolve(...)`` function
 in the ``wscript``. This should only be used in situations where some information
 about a dependency is not known until runtime or when some computations are
-needed to determine some information regarding a dependency. In that case an
+needed to determine some information regarding a dependency. In that case, the
 user can define the ``resolve(...)`` function in the ``wscript`` and write the
 needed Python code.
 
-To support both these ways of configuring we define the following "rules":
+To support both these configuration methods, we define the following "rules":
 
-1. The user defined ``resolve(...)`` function will always be called before looking
-   for a ``resolve.json`` file.
+1. The user defined ``resolve(...)`` function will always be called before
+   loading a ``resolve.json`` file (if present).
 2. It is valid to mix both methods to define dependencies.
 
-``recurse`` attribute
----------------------
+The ``recurse`` attribute
+-------------------------
 This option specifies whether waf should recurse into the dependency folder.
 The default value of ``recurse`` is ``True``.
 
@@ -223,13 +222,15 @@ The ExistingTagResolver and the ``--fast_resolve`` option
 ---------------------------------------------------------
 
 Running ``python waf configure`` can take a very long time if the project
-has a lot of dependencies. We also had to endure a long delay when
-re-configuring and the dependencies have not changed at all, or if we just
+has a lot of dependencies. In the past, we had to endure a long delay when
+re-configuring even if the dependencies have not changed at all, or if we just
 wanted to change the compiler,
 
 To solve that problem, we implemented the ExistingTagResolver that checks
 if a newer, compatible version of a Steinwurf dependency project has been
-released using the tag database here: http://files.steinwurf.com/registry/tags.json
+released using the tag database here:
+http://files.steinwurf.com/registry/tags.json
+
 If the latest compatible tag is already available in our
 ``resolved_dependencies`` folder, then the resolver will use that tag without
 running any git operations, so the configure operation can be extremely fast.
@@ -259,7 +260,8 @@ project's dependencies.
 
 The version information can be different for different resolvers:
 
-- ``git`` resolvers will store the SHA1 commit id or the semver tag of the dependency.
+- ``git`` resolvers will store the SHA1 commit id or the semver tag of the
+  dependency.
 - ``http`` resolvers will store the SHA1 sum of the downloaded dependency.
 
 If the ``lock_resolve.json`` is present, it will take precedence over all
