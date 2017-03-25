@@ -75,10 +75,6 @@ def options(opt):
         '--skip_network_tests', default=False, action='store_true',
         help='Skip the unit tests that use network resources')
 
-    opt.add_option(
-        '--use_tox', default=False, action='store_true',
-        help='Run unit tests using tox')
-
 
 def configure(conf):
 
@@ -86,9 +82,6 @@ def configure(conf):
     # waf folder. This is used to build the waf binary.
     conf.find_program('waf-light', exts='',
         path_list=[conf.dependency_path('waf')])
-
-    # Make sure we tox used for running unit tests
-    conf.find_program('tox', mandatory=False)
 
 
 def build_waf_binary(tsk):
@@ -149,11 +142,7 @@ def build(bld):
     bld.add_group()
 
     if bld.options.run_tests:
-
-        if bld.options.use_tox:
-            _tox(bld=bld)
-        else:
-            _pytest(bld=bld)
+        _pytest(bld=bld)
 
 
 def _pytest(bld):
@@ -219,29 +208,3 @@ def _pytest(bld):
         cwd=bld.path,
         env=bld_env,
         always=True)
-
-
-def _tox(bld):
-
-    # Invoke tox to run all the pure Python unit tests. Tox creates
-    # virtualenvs for different setups and runs unit tests in them. See the
-    # tox.ini to see the configuration used and see
-    # https://tox.readthedocs.org/ for more information about tox.
-    #
-    # We run tox at the end since we will use the freshly built waf binary
-    # in some of the tests.
-    #
-    if not bld.env.TOX:
-        bld.fatal("tox not found - re-run configure.")
-
-    semver_path = bld.dependency_path('python-semver')
-    wurf_path = os.path.join(os.getcwd(), 'src')
-    python_path = [semver_path, wurf_path]
-
-    bld_env = bld.env.derive()
-    bld_env.env = dict(os.environ)
-
-    separator = ';' if sys.platform == 'win32' else ':'
-    bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
-
-    bld(rule='tox', env=bld_env, always=True)
