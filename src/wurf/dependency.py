@@ -97,8 +97,11 @@ class Dependency(object):
             kwargs['internal'] = False
 
         # Some user-defined attributes will not be included in the hash
-        # computation, since these are not required to unique identify the
-        # dependency and different values can lead to mismatch issues
+        # computation, since these are not required to uniquely identify the
+        # dependency. In practical scenarios, it can easily happen that
+        # two dependency definitions only differ in the values for
+        # the "internal" and "optional" attributes, which should not lead
+        # to a SHA1 mismatch.
         hash_attributes = kwargs.copy()
         hash_attributes.pop('optional', None)
         hash_attributes.pop('internal', None)
