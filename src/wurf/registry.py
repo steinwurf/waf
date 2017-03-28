@@ -470,8 +470,8 @@ def resolve_git_checkout(registry, dependency):
     ctx = registry.require('ctx')
     dependency_path = registry.require('dependency_path', dependency=dependency)
 
-    if 'with_checkout' in registry:
-        checkout = registry.require('with_checkout')
+    if 'checkout' in registry:
+        checkout = registry.require('checkout')
     else:
         checkout = dependency.checkout
 
@@ -498,7 +498,7 @@ def resolve_git_user_checkout(registry, dependency):
     mandatory_options = registry.require('mandatory_options')
     checkout = mandatory_options.checkout(dependency=dependency)
 
-    with registry.provide_value('with_checkout', checkout):
+    with registry.provide_value('checkout', checkout):
 
         # When the user specified the checkout one must succeed:
         resolver = registry.require('resolve_git_checkout',
@@ -557,7 +557,8 @@ def resolve_git(registry, dependency):
     # If the user specified a checkout we should use that
     checkout = options.checkout(dependency=dependency)
     if checkout:
-        return registry.require('resolve_git_user_checkout')
+        return registry.require('resolve_git_user_checkout',
+            dependency=dependency)
 
     # Otherwise we use the method specified
     if 'method' in registry:
@@ -600,24 +601,11 @@ def resolve_from_lock_git(registry, dependency):
     lock_cache = registry.require('lock_cache')
     checkout = lock_cache.checkout(dependency=dependency)
 
-    if dependency.method == 'semver':
-        dependency.rewrite(attribute='method', value='checkout',
-            reason="Using lock file.")
-        dependency.rewrite(attribute='checkout', value=checkout,
-            reason="Using lock file.")
-        dependency.rewrite(attribute='major', value=None,
-            reason="Using lock file.")
+    with registry.provide_value('checkout', checkout), \
+        registry.provide_value('method', 'checkout'):
 
-    elif dependency.method == 'checkout':
-        dependency.rewrite(attribute='checkout', value=checkout,
-            reason="Using lock file.")
-
-    else:
-        raise Error("Unknown git dependency method {}".format(
-            dependency.method))
-
-    resolver = registry.require('resolve_chain',
-        dependency=dependency)
+        resolver = registry.require('resolve_chain',
+            dependency=dependency)
 
     resolver = CheckLockCacheResolver(resolver=resolver, lock_cache=lock_cache,
         dependency=dependency)

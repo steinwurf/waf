@@ -186,6 +186,10 @@ def run_commands(app_dir, git_dir):
     assert r.stdout.match('* resolve recurse baz *')
     assert r.stdout.match('* resolve recurse bar *')
 
+    # Try the use checkout
+    app_dir.run('python', 'waf', 'configure', '-v', '--baz_checkout=4.0.0')
+    app_dir.run('python', 'waf', 'build', '-v')
+
     # Lets remove the resolved dependencies
     resolve_dir = app_dir.join('resolved_dependencies')
     resolve_dir.rmdir()
