@@ -5,7 +5,7 @@ import os
 import json
 
 from .dependency import Dependency
-from .error import Error
+from .error import Error, DependencyError
 
 class DependencyManager(object):
 
@@ -120,9 +120,23 @@ class DependencyManager(object):
 
             if seen_dependency.sha1 != dependency.sha1:
 
-                self.ctx.fatal(
-                    "SHA1 mismatch adding dependency {} was {}".format(
+                raise Error(
+                    "SHA1 mismatch when adding:\n{}\n"
+                    "the previous definition was:\n{}".format(
                     dependency, seen_dependency))
+
+            # If the current dependency is non-optional and we have already
+            # seen the same dependency as optional
+            if not dependency.optional and seen_dependency.optional:
+               # Store the non-optional version in seen_dependencies to
+               # avoid future checks
+               self.seen_dependencies[dependency.name] = dependency
+
+               # It is not safe to skip this dependency, if there is no
+               # valid path for it in the dependency_cache. In this case,
+               # we should try to resolve it again as non-optional.
+               if dependency.name not in self.dependency_cache:
+                   return False
 
             # This dependency is already in the seen_dependencies
             return True

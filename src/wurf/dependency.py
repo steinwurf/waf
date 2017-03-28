@@ -96,7 +96,17 @@ class Dependency(object):
         if 'internal' not in kwargs:
             kwargs['internal'] = False
 
-        s = json.dumps(kwargs, sort_keys=True)
+        # Some user-defined attributes will not be included in the hash
+        # computation, since these are not required to uniquely identify the
+        # dependency. In practical scenarios, it can easily happen that
+        # two dependency definitions only differ in the values for
+        # the "internal" and "optional" attributes, which should not lead
+        # to a SHA1 mismatch.
+        hash_attributes = kwargs.copy()
+        hash_attributes.pop('optional', None)
+        hash_attributes.pop('internal', None)
+
+        s = json.dumps(hash_attributes, sort_keys=True)
         sha1 = hashlib.sha1(s.encode('utf-8')).hexdigest()
 
         # kwargs is a dict, we add it as an instance attribute.
