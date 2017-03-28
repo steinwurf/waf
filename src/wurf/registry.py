@@ -4,6 +4,7 @@
 import argparse
 import os
 import json
+import hashlib
 from collections import OrderedDict
 
 from .git_resolver import GitResolver
@@ -33,23 +34,40 @@ from .lock_cache import LockCache
 from .semver_selector import SemverSelector
 from .tag_database import TagDatabase
 from .existing_tag_resolver import ExistingTagResolver
-from .parent_folder import ParentFolder
 
 from .error import Error
 from .error import DependencyError
 
 
-class WurfProvideRegistryError(Error):
-    """Generic exception for wurf"""
+class RegistryProviderError(Error):
+    """Exception used by the Registry"""
     def __init__(self, name):
-
         self.name = name
-
-        super(WurfProvideRegistryError, self).__init__(
-            "Fatal error {} already added to registry".format(self.name))
+        super(RegistryProviderError, self).__init__(
+            "Registry error: {} already added to registry".format(self.name))
 
 
 class Registry(object):
+
+    # The MortalValue is used to provide temporary values though the registry.
+    # Example:
+    #
+    #    with registry.provide_value('temperature', 'hot!'):
+    #        assert registry.require('temperature') == 'hot!'
+    #    assert 'temperature' not in registry
+    #
+    # The MortalValue is retuned by the provide_value function and ensures that
+    # the value is removed from the registry after the "with" block is finished.
+    class MortalValue:
+        def __init__(self, registry, provider_name):
+            self.registry = registry
+            self.provider_name = provider_name
+
+        def __enter__(self):
+            pass
+
+        def __exit__(self, type, value, traceback):
+            self.registry.remove(provider_name=self.provider_name)
 
     # Dictionary containing the provider functions registered
     # using the @Registry.provide decorator
@@ -64,7 +82,6 @@ class Registry(object):
         :param use_providers: True if the class providers should be added. False
             will create a new Registry instance without any added providers.
         """
-
         # Dictionary which will contain the feature as a key and a
         # provider function as value
         self.registry = {}
@@ -99,7 +116,8 @@ class Registry(object):
         for provider_name in self.cache:
             self.cache[provider_name] = {}
 
-    def provide_function(self, provider_name, provider_function, override=False):
+    def provide_function(self, provider_name, provider_function,
+        override=False):
         """
         :param provider_name: The name of the provider as a string
         :param provider_function: Function to call which will provide the value
@@ -110,9 +128,8 @@ class Registry(object):
             an existing provider. If True we will override an existing provider
             with the same name.
         """
-
         if not override and provider_name in self.registry:
-            raise WurfProvideRegistryError(provider_name)
+            raise RegistryProviderError(provider_name)
 
         def call(**kwargs):
             return provider_function(registry=self, **kwargs)
@@ -123,18 +140,18 @@ class Registry(object):
             # Clean the cache
             self.cache[provider_name] = {}
 
-
     def provide_value(self, provider_name, value):
         """
         :param provider_name: The name of the provider as a string
         :param value: The value with should be returned on require(...)
         """
-
-        # @todo add override parameter / check
+        if provider_name in self.registry:
+            raise RegistryProviderError(provider_name)
 
         def call(): return value
         self.registry[provider_name] = call
 
+        return Registry.MortalValue(registry=self, provider_name=provider_name)
 
     def require(self, provider_name, **kwargs):
         """
@@ -142,7 +159,6 @@ class Registry(object):
         :param kwargs: Keyword arguments that should be passed to the provider
             function.
         """
-
         if provider_name in self.cache:
             # Did we already cache?
             key = frozenset(kwargs.items())
@@ -159,6 +175,16 @@ class Registry(object):
             result = call(**kwargs)
             return result
 
+    def remove(self, provider_name):
+        """
+        :param provider_name: The name of the provider as a string
+        """
+        if provider_name in self.cache:
+            del self.cache[provider_name]
+
+        # The provider must exist in the registry
+        del self.registry[provider_name]
+
     def __contains__(self, provider_name):
         """
         :param provider_name: The name of the provider as a string
@@ -169,14 +195,12 @@ class Registry(object):
     @staticmethod
     def cache(func):
         Registry.cache_providers.add(func.__name__)
-
         return func
 
     @staticmethod
     def provide(func):
-
         if func.__name__ in Registry.providers:
-            raise WurfProvideRegistryError(func.__name__)
+            raise RegistryProviderError(func.__name__)
         Registry.providers[func.__name__] = func
 
         return func
@@ -211,13 +235,25 @@ def symlinks_path(registry):
 @Registry.cache
 @Registry.provide
 def dependency_path(registry, dependency):
-    resolve_path = registry.require('resolve_path')
 
-    dependency_path = os.path.join(resolve_path, dependency.name)
+    resolve_path = registry.require('resolve_path')
+    source = registry.require('source')
+
+    if dependency.resolver == 'git':
+        git_url_rewriter = registry.require('git_url_rewriter')
+        repo_url = git_url_rewriter.rewrite_url(url=source)
+        repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
+        name = dependency.name + '-' + repo_hash
+    else:
+        source_hash = hashlib.sha1(source.encode('utf-8')).hexdigest()[:6]
+        name = dependency.name + '-' + source_hash
+
+    dependency_path = os.path.join(resolve_path, name)
     waf_utils = registry.require('waf_utils')
     waf_utils.check_dir(dependency_path)
 
     return dependency_path
+
 
 @Registry.cache
 @Registry.provide
@@ -274,12 +310,11 @@ def lock_cache(registry):
         raise Error("Lock cache not available for {} chain".format(
             configuration.resolver_chain()))
 
+
 @Registry.cache
 @Registry.provide
 def options(registry):
-    """ Return the Options provider.
-
-    """
+    """ Return the Options provider."""
     parser = registry.require('parser')
     args = registry.require('args')
     default_resolve_path = registry.require('default_resolve_path')
@@ -297,7 +332,7 @@ def options(registry):
 @Registry.cache
 @Registry.provide
 def mandatory_options(registry):
-    """ Return the Options provider. """
+    """ Return the MandatoryOptions provider. """
     options = registry.require('options')
 
     return MandatoryOptions(options=options)
@@ -394,81 +429,21 @@ def user_path_resolver(registry, dependency):
     return resolver
 
 
-@Registry.cache
 @Registry.provide
-def git_sources(registry, dependency):
-    """ Takes the dependency sources and re-writes the with the desired
-    git protocol.
-
-    If needed this is also the place where "addition" sources could be added.
-    E.g. one could add additional mirrors or alternative protocols to try.
+def git_resolver(registry, dependency):
+    """ Builds a GitResolver instance.
 
     :param registry: A Registry instance.
-    :param dependency: A WurfDependency instance.
     """
-    rewriter = registry.require('git_url_rewriter')
-
-    sources = [rewriter.rewrite_url(s) for s in dependency.sources]
-
-    return sources
-
-
-@Registry.provide
-def git_resolvers(registry, dependency):
-    """ Builds a list of WurfGitResolver instances, one for each source.
-
-    :param registry: A Registry instance.
-    :param dependency: A WurfDependency instance.
-    """
-
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
-    dependency_path = registry.require('dependency_path',
-        dependency=dependency)
+    dependency_path = registry.require('dependency_path', dependency=dependency)
+    git_url_rewriter = registry.require('git_url_rewriter')
+    source = registry.require('source')
 
-    name = dependency.name
-    sources = registry.require('git_sources', dependency=dependency)
-
-    def wrap(source):
-        return GitResolver(git=git, ctx=ctx, dependency=dependency,
-            source=source, cwd=dependency_path)
-
-    resolvers = [wrap(source) for source in sources]
-    return resolvers
-
-
-@Registry.provide
-def git_checkout_list_resolver(registry, dependency, checkout):
-    """ Builds a WurfGitCheckoutResolver instance.
-
-    :param registry: A Registry instance.
-    :param dependency: A Dependency instance.
-    :param checkout: The checkout to use.
-    """
-
-    git = registry.require('git')
-    ctx = registry.require('ctx')
-    options = registry.require('options')
-    dependency_path = registry.require('dependency_path',
-        dependency=dependency)
-
-    git_resolvers = registry.require('git_resolvers', dependency=dependency)
-
-    def wrap(resolver):
-
-        resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
-            dependency=dependency, checkout=checkout, cwd=dependency_path)
-
-        resolver = TryResolver(resolver=resolver, ctx=ctx,
-            dependency=dependency)
-        return resolver
-
-    resolvers = [wrap(git_resolver) for git_resolver in git_resolvers]
-
-    resolver = ListResolver(resolvers=resolvers)
-
-    return resolver
+    return GitResolver(git=git, ctx=ctx, dependency=dependency,
+        source=source, git_url_rewriter=git_url_rewriter, cwd=dependency_path)
 
 
 @Registry.provide
@@ -477,18 +452,23 @@ def resolve_git_checkout(registry, dependency):
 
     :param registry: A Registry instance.
     :param dependency: A Dependency instance.
-    :param checkout: The checkout to use. If None we use the checkout
-        specified in the Dependency.
     """
+    git = registry.require('git')
     ctx = registry.require('ctx')
+    dependency_path = registry.require('dependency_path', dependency=dependency)
+
+    if 'checkout' in registry:
+        checkout = registry.require('checkout')
+    else:
+        checkout = dependency.checkout
+
+    resolver = registry.require('git_resolver', dependency=dependency)
+
+    resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
+        dependency=dependency, checkout=checkout, cwd=dependency_path)
 
     # Set the resolver method on the dependency
     dependency.resolver_action = 'git checkout'
-
-    resolver = registry.require('git_checkout_list_resolver',
-        dependency=dependency, checkout=dependency.checkout)
-
-    resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
 
     return resolver
 
@@ -502,20 +482,21 @@ def resolve_git_user_checkout(registry, dependency):
     :param dependency: A Dependency instance.
     """
     ctx = registry.require('ctx')
-
     mandatory_options = registry.require('mandatory_options')
     checkout = mandatory_options.checkout(dependency=dependency)
 
-    # Set the resolver method on the dependency
+    with registry.provide_value('checkout', checkout):
+
+        # When the user specified the checkout one must succeed:
+        resolver = registry.require('resolve_git_checkout',
+            dependency=dependency)
+
+        resolver = MandatoryResolver(resolver=resolver,
+            msg="User checkout of '{}' failed.".format(checkout),
+            dependency=dependency)
+
+    # Set the resolver action on the dependency
     dependency.resolver_action = 'git user checkout'
-
-    # When the user specified the checkout one must succeed:
-    resolver = registry.require('git_checkout_list_resolver',
-        dependency=dependency, checkout=checkout)
-
-    resolver = MandatoryResolver(resolver=resolver,
-        msg="User checkout of '{}' failed.".format(checkout),
-        dependency=dependency)
 
     return resolver
 
@@ -527,30 +508,28 @@ def resolve_git_semver(registry, dependency):
     :param registry: A Registry instance.
     :param dependency: A WurfDependency instance.
     """
-
     git = registry.require('git')
-    semver_selector = registry.require('semver_selector')
     ctx = registry.require('ctx')
-    git_resolvers = registry.require('git_resolvers', dependency=dependency)
-    options = registry.require('options')
+    semver_selector = registry.require('semver_selector')
+    tag_database = registry.require('tag_database')
+    source = registry.require('source')
     dependency_path = registry.require('dependency_path', dependency=dependency)
 
-    # Set the resolver method on the dependency
+    resolver = registry.require('git_resolver', dependency=dependency)
+
+    resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
+        semver_selector=semver_selector, dependency=dependency,
+        cwd=dependency_path)
+
+    # The ExistingTagResolver should only be used for Steinwurf projects,
+    # since the tag database only contains information about those projects
+    if 'steinwurf' in source:
+        resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
+            semver_selector=semver_selector, tag_database=tag_database,
+            resolver=resolver, cwd=dependency_path)
+
+    # Set the resolver action on the dependency
     dependency.resolver_action = 'git semver'
-
-    def wrap(resolver):
-        resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
-            semver_selector=semver_selector, dependency=dependency,
-            cwd=dependency_path)
-
-        resolver = TryResolver(resolver=resolver, ctx=ctx,
-            dependency=dependency)
-        return resolver
-
-    resolvers = [wrap(git_resolver) for git_resolver in git_resolvers]
-
-    resolver = ListResolver(resolvers=resolvers)
-    resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
 
     return resolver
 
@@ -564,14 +543,20 @@ def resolve_git(registry, dependency):
     """
     ctx = registry.require('ctx')
     options = registry.require('options')
-    checkout = options.checkout(dependency=dependency)
 
     # If the user specified a checkout we should use that
+    checkout = options.checkout(dependency=dependency)
     if checkout:
         return registry.require('resolve_git_user_checkout',
             dependency=dependency)
 
-    method_key = "resolve_git_{}".format(dependency.method)
+    # Otherwise we use the method specified
+    if 'method' in registry:
+        method = registry.require('method')
+    else:
+        method = dependency.method
+
+    method_key = "resolve_git_{}".format(method)
     git_resolver = registry.require(method_key, dependency=dependency)
 
     if options.fast_resolve():
@@ -589,18 +574,6 @@ def resolve_git(registry, dependency):
 
         return ListResolver(resolvers=[fast_resolver, git_resolver])
 
-    elif dependency.method == 'semver':
-
-        sources = registry.require('git_sources', dependency=dependency)
-        semver_selector = registry.require('semver_selector')
-        tag_database = registry.require('tag_database')
-        dependency_path = registry.require('dependency_path',
-            dependency=dependency)
-
-        return ExistingTagResolver(ctx=ctx, dependency=dependency,
-            semver_selector=semver_selector, tag_database=tag_database,
-            resolver=git_resolver, cwd=dependency_path)
-
     else:
 
         return git_resolver
@@ -614,28 +587,14 @@ def resolve_from_lock_git(registry, dependency):
     :param registry: A Registry instance.
     :param dependency: A Dependency instance.
     """
-
     lock_cache = registry.require('lock_cache')
     checkout = lock_cache.checkout(dependency=dependency)
 
-    if dependency.method == 'semver':
-        dependency.rewrite(attribute='method', value='checkout',
-            reason="Using lock file.")
-        dependency.rewrite(attribute='checkout', value=checkout,
-            reason="Using lock file.")
-        dependency.rewrite(attribute='major', value=None,
-            reason="Using lock file.")
+    with registry.provide_value('checkout', checkout), \
+        registry.provide_value('method', 'checkout'):
 
-    elif dependency.method == 'checkout':
-        dependency.rewrite(attribute='checkout', value=checkout,
-            reason="Using lock file.")
-
-    else:
-        raise Error("Unknown git dependency method {}".format(
-            dependency.method))
-
-    resolver = registry.require('resolve_chain',
-        dependency=dependency)
+        resolver = registry.require('resolve_chain',
+            dependency=dependency)
 
     resolver = CheckLockCacheResolver(resolver=resolver, lock_cache=lock_cache,
         dependency=dependency)
@@ -666,7 +625,7 @@ def resolve_lock_path(registry, dependency):
     lock_cache = registry.require('lock_cache')
     path = lock_cache.path(dependency=dependency)
 
-    # Set the resolver method on the dependency
+    # Set the resolver action on the dependency
     dependency.resolver_action = 'lock path'
 
     return PathResolver(dependency=dependency, path=path)
@@ -696,7 +655,7 @@ def load_chain(registry, dependency):
     ctx = registry.require('ctx')
     resolve_config_path = registry.require('resolve_config_path')
 
-    # Set the resolver action on the dependency
+    # Set the resolver chain on the dependency
     dependency.resolver_chain = 'Load'
 
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
@@ -704,6 +663,31 @@ def load_chain(registry, dependency):
 
     resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
 
+    resolver = CheckOptionalResolver(resolver=resolver,
+        dependency=dependency)
+
+    return resolver
+
+
+@Registry.provide
+def sources_resolver(registry, dependency):
+
+    ctx = registry.require('ctx')
+
+    resolvers = []
+
+    for source in dependency.sources:
+        with registry.provide_value('source', source):
+
+            resolver_key = "resolve_{}".format(dependency.resolver)
+            resolver = registry.require(resolver_key, dependency=dependency)
+
+            resolver = TryResolver(resolver=resolver, ctx=ctx,
+                dependency=dependency)
+
+            resolvers.append(resolver)
+
+    resolver = ListResolver(resolvers=resolvers)
     resolver = CheckOptionalResolver(resolver=resolver,
         dependency=dependency)
 
@@ -720,14 +704,13 @@ def resolve_chain(registry, dependency):
     configuration = registry.require('configuration')
     project_path = registry.require('project_path')
 
-    # Set the resolver action on the dependency
+    # Set the resolver chain on the dependency
     dependency.resolver_chain = 'Resolve'
 
     if options.path(dependency=dependency):
         resolver = registry.require('user_path_resolver', dependency=dependency)
     else:
-        resolver_key = "resolve_{}".format(dependency.resolver)
-        resolver = registry.require(resolver_key, dependency=dependency)
+        resolver = registry.require('sources_resolver', dependency=dependency)
 
     resolver = CreateSymlinkResolver(
         resolver=resolver, dependency=dependency, symlinks_path=symlinks_path,
@@ -787,12 +770,10 @@ def resolve_from_lock_chain(registry, dependency):
 @Registry.provide
 def dependency_resolver(registry, dependency):
     """ Builds a WurfSourceResolver instance."""
-
     ctx = registry.require('ctx')
 
-    # This is where we "wire" together the resolvers. Which actually do the
-    # work of via some method obtaining a path to a dependency.
-    #
+    # This is where we "wire" together the resolvers which will actually
+    # obtain a path to a dependency.
     configuration = registry.require('configuration')
     resolver_key = "{}_chain".format(configuration.resolver_chain())
 
@@ -813,7 +794,6 @@ def configuration(registry):
 
 @Registry.provide
 def dependency_manager(registry):
-
     # Clean the cache such that we get "fresh" objects
     registry.purge_cache()
 
@@ -853,8 +833,7 @@ def post_resolver_actions(registry):
 
 
 def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
-                   default_symlinks_path, semver,
-                   waf_utils, args, project_path):
+    default_symlinks_path, semver, waf_utils, args, project_path):
     """ Builds a registry.
 
     :param ctx: A Waf Context instance.
