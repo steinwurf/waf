@@ -4,6 +4,7 @@
 import argparse
 import os
 import json
+import hashlib
 from collections import OrderedDict
 
 from .git_resolver import GitResolver
@@ -244,9 +245,21 @@ def symlinks_path(registry):
 @Registry.cache
 @Registry.provide
 def dependency_path(registry, dependency):
-    resolve_path = registry.require('resolve_path')
 
-    dependency_path = os.path.join(resolve_path, dependency.name)
+    resolve_path = registry.require('resolve_path')
+    source = registry.require('source')
+
+    if dependency.resolver == 'git':
+        git_url_rewriter = registry.require('git_url_rewriter')
+        repo_url = git_url_rewriter.rewrite_url(url=source)
+        repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
+
+        name = dependency.name + '-' + repo_hash
+    else:
+        source_hash = hashlib.sha1(source.encode('utf-8')).hexdigest()[:6]
+        name = dependency.name + '-' + source_hash
+
+    dependency_path = os.path.join(resolve_path, name)
     waf_utils = registry.require('waf_utils')
     waf_utils.check_dir(dependency_path)
 
@@ -426,6 +439,7 @@ def user_path_resolver(registry, dependency):
 
     return resolver
 
+
 @Registry.provide
 def git_resolver(registry, dependency):
     """ Builds a GitResolver instance.
@@ -436,16 +450,16 @@ def git_resolver(registry, dependency):
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
-    dependency_path = registry.require('dependency_path')
+    dependency_path = registry.require('dependency_path', dependency=dependency)
     git_url_rewriter = registry.require('git_url_rewriter')
-    source = registry.require('with_source')
+    source = registry.require('source')
 
     return GitResolver(git=git, ctx=ctx, dependency=dependency,
         source=source, git_url_rewriter=git_url_rewriter, cwd=dependency_path)
 
 
 @Registry.provide
-def git_checkout_resolver(registry, dependency):
+def resolve_git_checkout(registry, dependency):
     """ Builds a WurfGitCheckoutResolver instance.
 
     :param registry: A Registry instance.
@@ -454,17 +468,20 @@ def git_checkout_resolver(registry, dependency):
 
     git = registry.require('git')
     ctx = registry.require('ctx')
-    dependency_path = registry.require('dependency_path')
+    dependency_path = registry.require('dependency_path', dependency=dependency)
 
     if 'with_checkout' in registry:
         checkout = registry.require('with_checkout')
     else:
         checkout = dependency.checkout
 
-    resolver = registry.require('git_resolver')
+    resolver = registry.require('git_resolver', dependency=dependency)
 
     resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
         dependency=dependency, checkout=checkout, cwd=dependency_path)
+
+    # Set the resolver method on the dependency
+    dependency.resolver_action = 'git checkout'
 
     return resolver
 
@@ -478,28 +495,27 @@ def resolve_git_user_checkout(registry, dependency):
     :param dependency: A Dependency instance.
     """
     ctx = registry.require('ctx')
-    dependency = registry.require('with_dependency')
     mandatory_options = registry.require('mandatory_options')
     checkout = mandatory_options.checkout(dependency=dependency)
 
     with registry.provide_value('with_checkout', checkout):
 
-        # Set the resolver method on the dependency
-        dependency.resolver_action = 'git user checkout'
-
         # When the user specified the checkout one must succeed:
-        resolver = registry.require('git_checkout_resolver',
-            dependency=dependency, checkout=checkout)
+        resolver = registry.require('resolve_git_checkout',
+            dependency=dependency)
 
         resolver = MandatoryResolver(resolver=resolver,
             msg="User checkout of '{}' failed.".format(checkout),
             dependency=dependency)
 
+    # Set the resolver method on the dependency
+    dependency.resolver_action = 'git user checkout'
+
     return resolver
 
 
 @Registry.provide
-def resolve_git_semver(registry):
+def resolve_git_semver(registry, dependency):
     """ Builds a GitSemverResolver instance.
 
     :param registry: A Registry instance.
@@ -510,24 +526,22 @@ def resolve_git_semver(registry):
     ctx = registry.require('ctx')
     semver_selector = registry.require('semver_selector')
     tag_database = registry.require('tag_database')
-    dependency_path = registry.require('dependency_path')
-    dependency = registry.require('dependency')
-    source = registry.require('git_source')
+    dependency_path = registry.require('dependency_path', dependency=dependency)
 
-    # Set the resolver method on the dependency
-    dependency.resolver_action = 'git semver'
-
-    resolver = GitResolver(git=git, ctx=ctx, dependency=dependency,
-        source=source, cwd=dependency_path)
+    resolver = registry.require('git_resolver', dependency=dependency)
 
     resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
         semver_selector=semver_selector, dependency=dependency,
         cwd=dependency_path)
 
-    return ExistingTagResolver(ctx=ctx, dependency=dependency,
+    resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
         semver_selector=semver_selector, tag_database=tag_database,
         resolver=resolver, cwd=dependency_path)
 
+    # Set the resolver method on the dependency
+    dependency.resolver_action = 'git semver'
+
+    return resolver
 
 
 @Registry.provide
@@ -539,20 +553,20 @@ def resolve_git(registry, dependency):
     """
     ctx = registry.require('ctx')
     options = registry.require('options')
-    dependency = registry.require('dependency')
 
     # If the user specified a checkout we should use that
     checkout = options.checkout(dependency=dependency)
     if checkout:
         return registry.require('resolve_git_user_checkout')
 
-    if 'use_method' in registry:
-        method = registry.require('use_method')
+    # Otherwise we use the method specified
+    if 'method' in registry:
+        method = registry.require('method')
     else:
         method = dependency.method
 
     method_key = "resolve_git_{}".format(method)
-    git_resolver = registry.require(method_key)
+    git_resolver = registry.require(method_key, dependency=dependency)
 
     if options.fast_resolve():
 
@@ -679,6 +693,31 @@ def load_chain(registry, dependency):
 
 
 @Registry.provide
+def sources_resolver(registry, dependency):
+
+    ctx = registry.require('ctx')
+
+    resolvers = []
+
+    for source in dependency.sources:
+        with registry.provide_value('source', source):
+
+            resolver_key = "resolve_{}".format(dependency.resolver)
+            resolver = registry.require(resolver_key, dependency=dependency)
+
+            resolver = TryResolver(resolver=resolver, ctx=ctx,
+                dependency=dependency)
+
+            resolvers.append(resolver)
+
+    resolver = ListResolver(resolvers=resolvers)
+    resolver = CheckOptionalResolver(resolver=resolver,
+        dependency=dependency)
+
+    return resolver
+
+
+@Registry.provide
 def resolve_chain(registry, dependency):
 
     ctx = registry.require('ctx')
@@ -694,23 +733,7 @@ def resolve_chain(registry, dependency):
     if options.path(dependency=dependency):
         resolver = registry.require('user_path_resolver', dependency=dependency)
     else:
-
-        resolvers = []
-
-        for source in dependency.sources:
-            with registry.provide_value('current_source', source):
-
-                resolver_key = "resolve_{}".format(dependency.resolver)
-                resolver = registry.require(resolver_key, dependency=dependency)
-
-                resolver = TryResolver(resolver=resolver, ctx=ctx,
-                    dependency=dependency)
-
-                resolvers.append(resolver)
-
-        resolver = ListResolver(resolvers=resolvers)
-        resolver = CheckOptionalResolver(resolver=resolver,
-            dependency=dependency)
+        resolver = registry.require('sources_resolver', dependency=dependency)
 
     resolver = CreateSymlinkResolver(
         resolver=resolver, dependency=dependency, symlinks_path=symlinks_path,
