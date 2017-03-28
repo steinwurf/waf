@@ -34,25 +34,22 @@ from .lock_cache import LockCache
 from .semver_selector import SemverSelector
 from .tag_database import TagDatabase
 from .existing_tag_resolver import ExistingTagResolver
-from .parent_folder import ParentFolder
 
 from .error import Error
 from .error import DependencyError
 
 
-class WurfProvideRegistryError(Error):
-    """Generic exception for wurf"""
+class RegistryProviderError(Error):
+    """Exception used by the Registry"""
     def __init__(self, name):
-
         self.name = name
-
-        super(WurfProvideRegistryError, self).__init__(
-            "Fatal error {} already added to registry".format(self.name))
+        super(RegistryProviderError, self).__init__(
+            "Registry error: {} already added to registry".format(self.name))
 
 
 class Registry(object):
 
-    # The MortalValue is use to provide temporary values though the registry.
+    # The MortalValue is used to provide temporary values though the registry.
     # Example:
     #
     #    with registry.provide_value('temperature', 'hot!'):
@@ -60,7 +57,7 @@ class Registry(object):
     #    assert 'temperature' not in registry
     #
     # The MortalValue is retuned by the provide_value function and ensures that
-    # the value is removed from the registry if used in a with statement.
+    # the value is removed from the registry after the "with" block is finished.
     class MortalValue:
         def __init__(self, registry, provider_name):
             self.registry = registry
@@ -85,7 +82,6 @@ class Registry(object):
         :param use_providers: True if the class providers should be added. False
             will create a new Registry instance without any added providers.
         """
-
         # Dictionary which will contain the feature as a key and a
         # provider function as value
         self.registry = {}
@@ -120,7 +116,8 @@ class Registry(object):
         for provider_name in self.cache:
             self.cache[provider_name] = {}
 
-    def provide_function(self, provider_name, provider_function, override=False):
+    def provide_function(self, provider_name, provider_function,
+        override=False):
         """
         :param provider_name: The name of the provider as a string
         :param provider_function: Function to call which will provide the value
@@ -131,9 +128,8 @@ class Registry(object):
             an existing provider. If True we will override an existing provider
             with the same name.
         """
-
         if not override and provider_name in self.registry:
-            raise WurfProvideRegistryError(provider_name)
+            raise RegistryProviderError(provider_name)
 
         def call(**kwargs):
             return provider_function(registry=self, **kwargs)
@@ -144,15 +140,13 @@ class Registry(object):
             # Clean the cache
             self.cache[provider_name] = {}
 
-
     def provide_value(self, provider_name, value):
         """
         :param provider_name: The name of the provider as a string
         :param value: The value with should be returned on require(...)
         """
-
         if provider_name in self.registry:
-            raise WurfProvideRegistryError(provider_name)
+            raise RegistryProviderError(provider_name)
 
         def call(): return value
         self.registry[provider_name] = call
@@ -165,7 +159,6 @@ class Registry(object):
         :param kwargs: Keyword arguments that should be passed to the provider
             function.
         """
-
         if provider_name in self.cache:
             # Did we already cache?
             key = frozenset(kwargs.items())
@@ -186,7 +179,6 @@ class Registry(object):
         """
         :param provider_name: The name of the provider as a string
         """
-
         if provider_name in self.cache:
             del self.cache[provider_name]
 
@@ -203,14 +195,12 @@ class Registry(object):
     @staticmethod
     def cache(func):
         Registry.cache_providers.add(func.__name__)
-
         return func
 
     @staticmethod
     def provide(func):
-
         if func.__name__ in Registry.providers:
-            raise WurfProvideRegistryError(func.__name__)
+            raise RegistryProviderError(func.__name__)
         Registry.providers[func.__name__] = func
 
         return func
@@ -253,7 +243,6 @@ def dependency_path(registry, dependency):
         git_url_rewriter = registry.require('git_url_rewriter')
         repo_url = git_url_rewriter.rewrite_url(url=source)
         repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
-
         name = dependency.name + '-' + repo_hash
     else:
         source_hash = hashlib.sha1(source.encode('utf-8')).hexdigest()[:6]
@@ -264,6 +253,7 @@ def dependency_path(registry, dependency):
     waf_utils.check_dir(dependency_path)
 
     return dependency_path
+
 
 @Registry.cache
 @Registry.provide
@@ -320,12 +310,11 @@ def lock_cache(registry):
         raise Error("Lock cache not available for {} chain".format(
             configuration.resolver_chain()))
 
+
 @Registry.cache
 @Registry.provide
 def options(registry):
-    """ Return the Options provider.
-
-    """
+    """ Return the Options provider."""
     parser = registry.require('parser')
     args = registry.require('args')
     default_resolve_path = registry.require('default_resolve_path')
@@ -343,7 +332,7 @@ def options(registry):
 @Registry.cache
 @Registry.provide
 def mandatory_options(registry):
-    """ Return the Options provider. """
+    """ Return the MandatoryOptions provider. """
     options = registry.require('options')
 
     return MandatoryOptions(options=options)
@@ -446,7 +435,6 @@ def git_resolver(registry, dependency):
 
     :param registry: A Registry instance.
     """
-
     git = registry.require('git')
     ctx = registry.require('ctx')
     options = registry.require('options')
@@ -465,7 +453,6 @@ def resolve_git_checkout(registry, dependency):
     :param registry: A Registry instance.
     :param dependency: A Dependency instance.
     """
-
     git = registry.require('git')
     ctx = registry.require('ctx')
     dependency_path = registry.require('dependency_path', dependency=dependency)
@@ -508,7 +495,7 @@ def resolve_git_user_checkout(registry, dependency):
             msg="User checkout of '{}' failed.".format(checkout),
             dependency=dependency)
 
-    # Set the resolver method on the dependency
+    # Set the resolver action on the dependency
     dependency.resolver_action = 'git user checkout'
 
     return resolver
@@ -521,11 +508,11 @@ def resolve_git_semver(registry, dependency):
     :param registry: A Registry instance.
     :param dependency: A WurfDependency instance.
     """
-
     git = registry.require('git')
     ctx = registry.require('ctx')
     semver_selector = registry.require('semver_selector')
     tag_database = registry.require('tag_database')
+    source = registry.require('source')
     dependency_path = registry.require('dependency_path', dependency=dependency)
 
     resolver = registry.require('git_resolver', dependency=dependency)
@@ -534,11 +521,14 @@ def resolve_git_semver(registry, dependency):
         semver_selector=semver_selector, dependency=dependency,
         cwd=dependency_path)
 
-    resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
-        semver_selector=semver_selector, tag_database=tag_database,
-        resolver=resolver, cwd=dependency_path)
+    # The ExistingTagResolver should only be used for Steinwurf projects,
+    # since the tag database only contains information about those projects
+    if 'steinwurf' in source:
+        resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
+            semver_selector=semver_selector, tag_database=tag_database,
+            resolver=resolver, cwd=dependency_path)
 
-    # Set the resolver method on the dependency
+    # Set the resolver action on the dependency
     dependency.resolver_action = 'git semver'
 
     return resolver
@@ -597,7 +587,6 @@ def resolve_from_lock_git(registry, dependency):
     :param registry: A Registry instance.
     :param dependency: A Dependency instance.
     """
-
     lock_cache = registry.require('lock_cache')
     checkout = lock_cache.checkout(dependency=dependency)
 
@@ -636,7 +625,7 @@ def resolve_lock_path(registry, dependency):
     lock_cache = registry.require('lock_cache')
     path = lock_cache.path(dependency=dependency)
 
-    # Set the resolver method on the dependency
+    # Set the resolver action on the dependency
     dependency.resolver_action = 'lock path'
 
     return PathResolver(dependency=dependency, path=path)
@@ -666,7 +655,7 @@ def load_chain(registry, dependency):
     ctx = registry.require('ctx')
     resolve_config_path = registry.require('resolve_config_path')
 
-    # Set the resolver action on the dependency
+    # Set the resolver chain on the dependency
     dependency.resolver_chain = 'Load'
 
     resolver = OnPassiveLoadPathResolver(dependency=dependency,
@@ -715,7 +704,7 @@ def resolve_chain(registry, dependency):
     configuration = registry.require('configuration')
     project_path = registry.require('project_path')
 
-    # Set the resolver action on the dependency
+    # Set the resolver chain on the dependency
     dependency.resolver_chain = 'Resolve'
 
     if options.path(dependency=dependency):
@@ -781,12 +770,10 @@ def resolve_from_lock_chain(registry, dependency):
 @Registry.provide
 def dependency_resolver(registry, dependency):
     """ Builds a WurfSourceResolver instance."""
-
     ctx = registry.require('ctx')
 
-    # This is where we "wire" together the resolvers. Which actually do the
-    # work of via some method obtaining a path to a dependency.
-    #
+    # This is where we "wire" together the resolvers which will actually
+    # obtain a path to a dependency.
     configuration = registry.require('configuration')
     resolver_key = "{}_chain".format(configuration.resolver_chain())
 
@@ -807,7 +794,6 @@ def configuration(registry):
 
 @Registry.provide
 def dependency_manager(registry):
-
     # Clean the cache such that we get "fresh" objects
     registry.purge_cache()
 
@@ -847,8 +833,7 @@ def post_resolver_actions(registry):
 
 
 def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
-                   default_symlinks_path, semver,
-                   waf_utils, args, project_path):
+    default_symlinks_path, semver, waf_utils, args, project_path):
     """ Builds a registry.
 
     :param ctx: A Waf Context instance.
