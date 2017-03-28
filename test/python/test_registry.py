@@ -19,7 +19,8 @@ def test_registry():
     registry.provide_function('point', build_point)
 
     # Use the default build
-    p = registry.require('point')
+    with registry.provide_value('x', 0):
+        p = registry.require('point')
 
     assert p.x == 0
     assert p.y == 0
@@ -31,7 +32,8 @@ def test_registry():
     # Bind an argument in the require
     registry.provide_function('point', build_point, override=True)
 
-    p = registry.require('point', x=1)
+    with registry.provide_value('x', 1):
+        p = registry.require('point')
 
     assert p.x == 1
     assert p.y == 0
@@ -39,7 +41,8 @@ def test_registry():
     # Cache the feature
     registry.cache_provider('point')
 
-    p = registry.require('point', x=1)
+    with registry.provide_value('x', 1):
+        p = registry.require('point')
 
     assert p.x == 1
     assert p.y == 0
@@ -47,13 +50,15 @@ def test_registry():
     # Change the value
     p.y = 1
 
-    p = registry.require('point', x=1)
+    with registry.provide_value('x', 1):
+        p = registry.require('point')
 
     assert p.x == 1
     assert p.y == 1
 
     # Ask for a point with a different value, this will bypass the cache
-    p = registry.require('point', x=4)
+    with registry.provide_value('x', 4):
+        p = registry.require('point', x=4)
 
     assert p.x == 4
     assert p.y == 0
@@ -67,7 +72,8 @@ def test_registry():
     registry.provide_function('point', build_point)
 
     # Use the default build
-    p = registry.require('point')
+    with registry.provide_value('x', 0):
+        p = registry.require('point')
 
     assert p.x == 0
     assert p.y == 0
