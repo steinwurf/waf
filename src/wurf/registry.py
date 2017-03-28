@@ -100,17 +100,18 @@ class Registry(object):
         # provider function as value
         self.registry = {}
 
+        # The providers to be cached by this instance of the registry
+        self.should_cache = set()
+
         # Dictionary which contains cached values produced for the different
         # providers. The layout of the dictionary will be:
-        # { 'provider1': { argument_hash1: value1
-        #                  arguemnt_hash2, value2},
-        #   'provider2': { argument_hash1: value1 },
+        # { 'provider1': value,
+        #   'provider2': value,
         #   ....
         # }
         #
         # Where the provider name is the key to a dictionary where cached values
-        # are stored. The nested dict uses a hash of the arguments passed to
-        # require(...) to find the right cached response.
+        # are stored.
         self.cache = {}
 
         # Set which contains the name of features that should be cached
@@ -123,12 +124,11 @@ class Registry(object):
                 self.provide_function(k,v)
 
     def cache_provider(self, provider_name):
-        assert provider_name not in self.cache
-        self.cache[provider_name] = {}
+        assert provider_name not in self.should_cache
+        self.should_cache.add(provider_name)
 
     def purge_cache(self):
-        for provider_name in self.cache:
-            self.cache[provider_name] = {}
+        self.cache = {}
 
     def provide_function(self, provider_name, provider_function, override=False):
         """
@@ -166,9 +166,9 @@ class Registry(object):
 
         self.registry[provider_name] = call
 
-        if provider_name in self.cache:
+        if provider_name in self.should_cache:
             # Clean the cache
-            self.cache[provider_name] = {}
+            self.cache.pop(provider_name, None)
 
 
     def provide_value(self, provider_name, value):
@@ -192,8 +192,14 @@ class Registry(object):
             function.
         """
 
-        if provider_name in self.cache:
-            return self.cache[provider_name]
+        if provider_name in self.should_cache:
+            try:
+                return self.cache[provider_name]
+            except KeyError:
+                call = self.registry[provider_name]
+                result = call()
+                self.cache[provider_name] = result
+                return result
         else:
             call = self.registry[provider_name]
             result = call()
