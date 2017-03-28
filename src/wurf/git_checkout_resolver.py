@@ -33,7 +33,6 @@ class GitCheckoutResolver(object):
 
         :return: The path to the resolved dependency as a string.
         """
-
         path = self.git_resolver.resolve()
 
         assert os.path.isdir(path)
@@ -47,19 +46,19 @@ class GitCheckoutResolver(object):
         # Use the path retuned to create a unique location for this checkout
         repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
 
-        # The folder for storing different versions of this repository
-        repo_name = self.checkout + '-' + repo_hash
-        repo_path = os.path.join(self.cwd, repo_name)
+        # The folder for storing the requested checkout
+        folder_name = self.checkout + '-' + repo_hash
+        checkout_path = os.path.join(self.cwd, folder_name)
 
         self.ctx.to_log('wurf: GitCheckoutResolver name {} -> {}'.format(
-            self.dependency.name, repo_path))
+            self.dependency.name, checkout_path))
 
         # If the folder for the chosen version does not exist,
         # then copy the master and checkout that version
-        if not os.path.isdir(repo_path):
+        if not os.path.isdir(checkout_path):
             try:
-                shutil.copytree(src=path, dst=repo_path, symlinks=True)
-                self.git.checkout(branch=self.checkout, cwd=repo_path)
+                shutil.copytree(src=path, dst=checkout_path, symlinks=True)
+                self.git.checkout(branch=self.checkout, cwd=checkout_path)
             except:
                 # The checkout_path must be removed if the checkout is not
                 # successful, as the folder would be considered a valid
@@ -72,24 +71,25 @@ class GitCheckoutResolver(object):
                     else:
                         raise
 
-                shutil.rmtree(repo_path, onerror=onerror)
+                shutil.rmtree(checkout_path, onerror=onerror)
                 # The blank "raise" re-raises the last exception
                 raise
         else:
 
-            if not self.git.is_detached_head(cwd=repo_path):
+            if not self.git.is_detached_head(cwd=checkout_path):
                 # If the checkout is a tag or a commit (we will be in detached
                 # HEAD state), then we cannot pull. On the other hand,
                 # the pull operation should be executed to update a branch.
-                self.git.pull(cwd=repo_path)
+                self.git.pull(cwd=checkout_path)
 
         # If the project contains submodules, we also get those
-        self.git.pull_submodules(cwd=repo_path)
+        self.git.pull_submodules(cwd=checkout_path)
 
         # Record the commmit id of the current working copy
-        self.dependency.git_commit = self.git.current_commit(cwd=repo_path)
+        self.dependency.git_commit = \
+            self.git.current_commit(cwd=checkout_path)
 
-        return repo_path
+        return checkout_path
 
     def __repr__(self):
         """

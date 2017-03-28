@@ -71,3 +71,11 @@ def test_registry():
 
     assert p.x == 0
     assert p.y == 0
+
+    source = 'www.steinwurf.com'
+
+    with registry.provide_value('current_source', source):
+        assert 'current_source' in registry
+        assert registry.require('current_source') == 'www.steinwurf.com'
+
+    assert 'current_source' not in registry

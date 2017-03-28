@@ -9,6 +9,12 @@ def test_git_resolver(test_directory):
 
     ctx = mock.Mock()
     git = mock.Mock()
+    source = 'gitlab.com/steinwurf/links.git'
+    url = 'https://gitlab.com/steinwurf/links.git'
+
+    git_url_rewriter = mock.Mock()
+    git_url_rewriter.rewrite_url.return_value = url
+
     cwd = test_directory.path()
 
     # GitResolver checks that the directory is created during git.clone,
@@ -20,10 +26,9 @@ def test_git_resolver(test_directory):
 
     dependency = mock.Mock()
     dependency.name = 'links'
-    repo_url = 'https://gitlab.com/steinwurf/links.git'
 
     resolver = GitResolver(git=git, ctx=ctx, dependency=dependency,
-        cwd=cwd, source=repo_url)
+        git_url_rewriter=git_url_rewriter, source=source, cwd=cwd)
 
     path = resolver.resolve()
 
@@ -32,7 +37,7 @@ def test_git_resolver(test_directory):
     repo_folder = os.path.dirname(os.path.normpath(path))
 
     git.clone.assert_called_once_with(
-        repository=repo_url, directory=repo_name, cwd=repo_folder)
+        repository=url, directory=repo_name, cwd=repo_folder)
 
     git.pull_submodules.assert_called_once_with(cwd=path)
 

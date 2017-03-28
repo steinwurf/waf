@@ -37,7 +37,6 @@ class GitSemverResolver(object):
         """ Fetches the dependency if necessary.
         :return: The path to the resolved dependency as a string.
         """
-
         path = self.git_resolver.resolve()
 
         assert os.path.isdir(path)
@@ -55,27 +54,27 @@ class GitSemverResolver(object):
         # Use the path retuned to create a unique location for this checkout
         repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
 
-        # The folder for storing different versions of this repository
-        repo_name = tag + '-' + repo_hash
-        repo_path = os.path.join(self.cwd, repo_name)
+        # The folder for storing the requested tag
+        folder_name = tag + '-' + repo_hash
+        tag_path = os.path.join(self.cwd, folder_name)
 
         self.ctx.to_log('wurf: GitSemverResolver name {} -> {}'.format(
-            self.dependency.name, repo_path))
+            self.dependency.name, tag_path))
 
         # If the folder for the chosen tag does not exist,
         # then copy the master and checkout the tag
-        if not os.path.isdir(repo_path):
-            shutil.copytree(src=path, dst=repo_path, symlinks=True)
-            self.git.checkout(branch=tag, cwd=repo_path)
+        if not os.path.isdir(tag_path):
+            shutil.copytree(src=path, dst=tag_path, symlinks=True)
+            self.git.checkout(branch=tag, cwd=tag_path)
 
         # If the project contains submodules, we also get those
-        self.git.pull_submodules(cwd=repo_path)
+        self.git.pull_submodules(cwd=tag_path)
 
         # Record the commmit id of the current working copy
-        self.dependency.git_commit = self.git.current_commit(cwd=repo_path)
+        self.dependency.git_commit = self.git.current_commit(cwd=tag_path)
         self.dependency.git_tag = tag
 
-        return repo_path
+        return tag_path
 
     def __repr__(self):
         """
