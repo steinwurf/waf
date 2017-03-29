@@ -788,8 +788,10 @@ def configuration(registry):
     options = registry.require('options')
     args = registry.require('args')
     project_path = registry.require('project_path')
+    waf_lock_file = registry.require('waf_lock_file')
 
-    return Configuration(options=options, args=args, project_path=project_path)
+    return Configuration(options=options, args=args,
+        project_path=project_path, waf_lock_file=waf_lock_file)
 
 
 @Registry.provide
@@ -833,7 +835,8 @@ def post_resolver_actions(registry):
 
 
 def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
-    default_symlinks_path, semver, waf_utils, args, project_path):
+    default_symlinks_path, semver, waf_utils, args, project_path,
+    waf_lock_file):
     """ Builds a registry.
 
     :param ctx: A Waf Context instance.
@@ -849,6 +852,8 @@ def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
     :param args: Argument strings as a list, typically this will come
         from sys.argv
     :param project_path: The path to the project as a string
+    :param waf_lock_file: The lock file created by waf after a successful
+        configure.
 
     :returns:
         A new Registery instance.
@@ -864,5 +869,6 @@ def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
     registry.provide_value('waf_utils', waf_utils)
     registry.provide_value('args', args)
     registry.provide_value('project_path', project_path)
+    registry.provide_value('waf_lock_file', waf_lock_file)
 
     return registry

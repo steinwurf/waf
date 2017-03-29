@@ -29,22 +29,24 @@ class Configuration(object):
     # verions or path
     LOCK_FILE = 'lock_resolve.json'
 
-    def __init__(self, project_path, args, options):
+    def __init__(self, project_path, args, options, waf_lock_file):
         """ Construct an instance.
 
         The Configuration instance is responsible for implementing the logic
         determining which actions / strategy should be executed for the
         dependency resolution.
 
-        :param project_path: The path to the project whoms dependencies we are
-           resolving as a string.
+        :param project_path: The path to the project whose dependencies we are
+            resolving as a string.
         :param args: The command-line arguments passed as a list.
         :param options: Options instance for collecing / parsing options
+        :param waf_lock_file: The lock file created by waf after a successful
+            configure.
         """
-
         self.project_path = project_path
         self.args = args
         self.options = options
+        self.waf_lock_file = waf_lock_file
 
     def resolver_chain(self):
 
@@ -78,15 +80,12 @@ class Configuration(object):
         if 'configure' in self.args:
             return False
 
-        # We need some way to know if configure has been run. Since we create
-        # the build folder as one of the first steps in the WafResolveContext
-        # instead we check for the config.log file created by waf during
-        # configuration
-        config_log_path = os.path.join(self.project_path, 'build', 'config.log')
+        # We use the lock file created by waf to check if the project
+        # has been already configured
+        waf_lock_path = os.path.join(self.project_path, self.waf_lock_file)
 
-        if not os.path.isfile(config_log_path):
-            # Project not yet configured - we don't have a build/config.log
-            # file
+        if not os.path.isfile(waf_lock_path):
+            # Project not yet configured
             return True
 
         return False
@@ -125,7 +124,7 @@ class Configuration(object):
     def choose_resolve(self):
 
         if 'configure' in self.args:
-            # We are not configuring
+            # This is the configure step
             return True
 
         return False
