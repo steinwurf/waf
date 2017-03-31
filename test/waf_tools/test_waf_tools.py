@@ -65,9 +65,10 @@ def test_waf_tools(test_directory):
     assert r.stdout.match('*finished successfully*')
 
     # The executable should be found at the same location on all platforms
-    program_path = os.path.join(output_path, 'waf-tools-tester')
+    program_name = 'waf-tools-tester'
     if sys.platform == 'win32':
-        program_path += '.exe'
+        program_name += '.exe'
+    program_path = os.path.join(output_path, program_name)
 
     assert os.path.isfile(program_path)
 
@@ -76,3 +77,15 @@ def test_waf_tools(test_directory):
     assert r.stdout.match('*finished successfully*')
     assert r.stdout.match('*REACHED END OF TEST PROGRAM*')
     assert r.stdout.match('*successful runs 1/1*')
+
+    # Now we install the executable using install_path and install_relative
+    r = root.run('python', 'waf', 'install', '--install_path=inst',
+                 '--install_relative')
+
+    assert r.returncode == 0
+    assert r.stdout.match("*'install' finished successfully*")
+    # Make sure that the file was copied to the expected location
+    output_path = os.path.join(root.path(), 'inst', 'build', 'cxx_default')
+    program_path = os.path.join(output_path, program_name)
+
+    assert os.path.isfile(program_path)
