@@ -13,7 +13,7 @@ def test_registry():
 
     registry = Registry()
 
-    def build_point(registry, x=0):
+    def build_point(registry, x):
         return Point(x,0)
 
     registry.provide_function('point', build_point)
@@ -50,8 +50,6 @@ def test_registry():
     # Change the value
     p.y = 1
 
-    print(registry.cache)
-
     with registry.provide_value('x', 1):
         p = registry.require('point')
 
@@ -68,7 +66,7 @@ def test_registry():
     # Create a new registry
     registry = Registry()
 
-    def build_point(registry, x=0):
+    def build_point(registry, x):
         return Point(x,0)
 
     registry.provide_function('point', build_point)
@@ -87,3 +85,15 @@ def test_registry():
         assert registry.require('current_source') == 'www.steinwurf.com'
 
     assert 'current_source' not in registry
+
+    # Create a new registry
+    registry = Registry()
+
+    registry.provide_object('point', Point)
+
+    # Use the default build
+    with registry.provide_value('x', 0), registry.provide_value('y', 0):
+        p = registry.require('point')
+
+    assert p.x == 0
+    assert p.y == 0

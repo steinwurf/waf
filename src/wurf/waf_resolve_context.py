@@ -73,7 +73,8 @@ class WafResolveContext(Context.Context):
             resolve_config_path=self.resolve_config_path(),
             default_symlinks_path=default_symlinks_path,
             waf_utils=Utils, args=sys.argv[1:],
-            project_path=self.path.abspath())
+            project_path=self.path.abspath(),
+            waf_lock_file=Options.lockfile)
 
         # Enable/disable colors based on the currently used terminal.
         # Note: this prevents jumbled output if waf is invoked from an IDE

@@ -29,7 +29,7 @@ We are setting up the following dependency graph:
 
 The arrows indicate dependencies, so:
 
-- 'app' depends on 'libfoo' and 'libbaz'
+- 'app' depends on 'libfoo' and 'libbaz'(internal & optional)
 - 'libfoo' depends on 'libbar'
 - 'libbar' depends on 'libbaz'
 
@@ -66,8 +66,8 @@ def mkdir_app_json(directory):
 
     return app_dir
 
-def commit_file(directory, filename, content):
 
+def commit_file(directory, filename, content):
     directory.write_file(filename, content)
     directory.run('git', 'add', '.')
     directory.run('git', '-c', 'user.name=John', '-c',
@@ -75,7 +75,6 @@ def commit_file(directory, filename, content):
 
 
 def mkdir_libfoo(directory):
-
     # Add foo dir
     foo_dir = directory.mkdir('libfoo')
     foo_dir.copy_file('test/add_dependency/libfoo/wscript')
@@ -95,8 +94,8 @@ def mkdir_libfoo(directory):
 
     return foo_dir
 
-def mkdir_libfoo_json(directory):
 
+def mkdir_libfoo_json(directory):
     # Add foo dir
     foo_dir = directory.mkdir('libfoo')
     foo_dir.copy_file('test/add_dependency/libfoo/wscript_json',
@@ -116,12 +115,10 @@ def mkdir_libfoo_json(directory):
 
     commit_file(directory=foo_dir, filename='ok.txt', content='hello world')
 
-
     return foo_dir
 
 
 def mkdir_libbar(directory):
-
     # Add bar dir
     bar_dir = directory.copy_dir(directory='test/add_dependency/libbar')
     bar_dir.run('git', 'init')
@@ -134,7 +131,6 @@ def mkdir_libbar(directory):
 
 
 def mkdir_libbaz(directory):
-
     # Add baz dir
     baz_dir = directory.copy_dir(directory='test/add_dependency/libbaz')
     baz_dir.run('git', 'init')
@@ -151,6 +147,7 @@ def mkdir_libbaz(directory):
     baz_dir.run('git', 'tag', '4.0.0')
 
     return baz_dir
+
 
 def run_commands(app_dir, git_dir):
 
@@ -368,6 +365,7 @@ def test_add_dependency_path(test_directory):
 
     app_dir.run('python', 'waf', 'build', '-v')
     app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
+
 
 def test_create_standalone_archive(test_directory):
 

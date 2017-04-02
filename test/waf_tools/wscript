@@ -4,10 +4,6 @@
 APPNAME = 'waf-tools-tester'
 VERSION = '0.1.0'
 
-# @todo This test is currently using the 'use-new-waf' branch of waf-tools.
-# This should be changed to a semver resolver in resolve.json when waf-tools 4
-# is released.
-
 def build(bld):
 
     if bld.is_toplevel():
