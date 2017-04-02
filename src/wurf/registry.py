@@ -69,15 +69,16 @@ class Registry(object):
     # The MortalValue is retuned by the provide_value function and ensures that
     # the value is removed from the registry after the "with" block is finished.
     class MortalValue:
-        def __init__(self, registry, provider_name):
+        def __init__(self, registry, provider_names):
             self.registry = registry
-            self.provider_name = provider_name
+            self.provider_names = provider_names
 
         def __enter__(self):
             pass
 
         def __exit__(self, type, value, traceback):
-            self.registry.remove(provider_name=self.provider_name)
+            for provider_name in self.provider_names:
+                self.registry.remove(provider_name=provider_name)
 
     # Dictionary containing the provider functions registered
     # using the @Registry.provide decorator
@@ -152,7 +153,11 @@ class Registry(object):
 
         return inject_as
 
-    def provide_object(self, provider_name, provider_class):
+    def provide_object(self, provider_class, provider_name=None):
+
+        if not provider_name:
+            provider_name = provider_class.__name__
+
         if provider_name in self.registry:
             raise RegistryProviderError(provider_name)
 
@@ -226,18 +231,25 @@ class Registry(object):
             # Clean the cache
             self.cache[provider_name] = {}
 
-    def provide_value(self, provider_name, value):
+    def provide_value(self, provider_value, value):
+        return self.provide_values(**{provider_value:value})
+
+    def provide_values(self, **kwargs):
         """
         :param provider_name: The name of the provider as a string
         :param value: The value with should be returned on require(...)
         """
-        if provider_name in self.registry:
-            raise RegistryProviderError(provider_name)
 
-        def call(): return value
-        self.registry[provider_name] = call
+        for provider_name, value in kwargs.items():
 
-        return Registry.MortalValue(registry=self, provider_name=provider_name)
+            if provider_name in self.registry:
+                raise RegistryProviderError(provider_name)
+
+            def call(): return value
+            self.registry[provider_name] = call
+
+        return Registry.MortalValue(registry=self,
+            provider_names=kwargs.keys())
 
     def require(self, provider_name):
         """
@@ -245,6 +257,8 @@ class Registry(object):
         :param kwargs: Keyword arguments that should be passed to the provider
             function.
         """
+        if inspect.isclass(provider_name):
+            provider_name = provider_name.__name__
 
         call = self.registry[provider_name]
         result = call()
@@ -494,25 +508,23 @@ def user_path_resolver(registry, dependency):
     mandatory_options = registry.require('mandatory_options')
     path = mandatory_options.path(dependency=dependency)
 
-    ctx = registry.require('ctx')
-
     # Set the resolver method on the dependency
     dependency.resolver_action = 'user path'
 
-    resolver = PathResolver(dependency=dependency, path=path)
+    with registry.provide_value('path', path):
+        return registry.require(PathResolver)
 
-    return resolver
 
 
-@Registry.provide
-def git_resolver(git, ctx, dependency, source, git_url_rewriter,
-    dependency_path):
-    """ Builds a GitResolver instance.
-
-    :param registry: A Registry instance.
-    """
-    return GitResolver(git=git, ctx=ctx, dependency=dependency,
-        source=source, git_url_rewriter=git_url_rewriter, cwd=dependency_path)
+# @Registry.provide
+# def git_resolver(git, ctx, dependency, source, git_url_rewriter,
+#     dependency_path):
+#     """ Builds a GitResolver instance.
+#
+#     :param registry: A Registry instance.
+#     """
+#     return GitResolver(git=git, ctx=ctx, dependency=dependency,
+#         source=source, git_url_rewriter=git_url_rewriter, cwd=dependency_path)
 
 
 @Registry.provide
@@ -526,15 +538,16 @@ def resolve_git_checkout(registry, dependency):
     ctx = registry.require('ctx')
     dependency_path = registry.require('dependency_path')
 
-    if 'checkout' in registry:
-        checkout = registry.require('checkout')
-    else:
-        checkout = dependency.checkout
+    with registry.provide_values(cwd=dependency_path):
+        resolver = registry.require(GitResolver)
 
-    resolver = registry.require('git_resolver')
+    with registry.provide_values(resolver=resolver,cwd=dependency_path):
 
-    resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
-        dependency=dependency, checkout=checkout, cwd=dependency_path)
+        if 'checkout' in registry:
+            resolver = registry.require(GitCheckoutResolver)
+        else:
+            with registry.provide_values(checkout=dependency.checkout):
+                resolver = registry.require(GitCheckoutResolver)
 
     # Set the resolver method on the dependency
     dependency.resolver_action = 'git checkout'
@@ -902,5 +915,11 @@ def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
     registry.provide_value('args', args)
     registry.provide_value('project_path', project_path)
     registry.provide_value('waf_lock_file', waf_lock_file)
+
+    # Add the used classes
+    registry.provide_object(GitCheckoutResolver)
+    registry.provide_object(GitResolver)
+    registry.provide_object(PathResolver)
+
 
     return registry

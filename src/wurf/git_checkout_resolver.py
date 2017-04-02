@@ -10,7 +10,7 @@ class GitCheckoutResolver(object):
     Git Commit Resolver functionality. Checks out a specific commit.
     """
 
-    def __init__(self, git, git_resolver, ctx, dependency, checkout, cwd):
+    def __init__(self, git, resolver, ctx, dependency, checkout, cwd):
         """ Construct an instance.
 
         :param git: A WurfGit instance
@@ -22,7 +22,7 @@ class GitCheckoutResolver(object):
             where we should create new folders etc.
         """
         self.git = git
-        self.git_resolver = git_resolver
+        self.resolver = resolver
         self.ctx = ctx
         self.dependency = dependency
         self.checkout = checkout
@@ -33,7 +33,7 @@ class GitCheckoutResolver(object):
 
         :return: The path to the resolved dependency as a string.
         """
-        path = self.git_resolver.resolve()
+        path = self.resolver.resolve()
 
         assert os.path.isdir(path)
 
