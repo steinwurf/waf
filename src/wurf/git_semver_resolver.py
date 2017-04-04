@@ -14,7 +14,7 @@ class GitSemverResolver(object):
     Read more about Semantic Versioning here: semver.org
     """
 
-    def __init__(self, git, git_resolver, ctx, semver_selector,
+    def __init__(self, git, resolver, ctx, semver_selector,
         dependency, cwd):
         """ Construct an instance.
 
@@ -27,7 +27,7 @@ class GitSemverResolver(object):
             where we should create new folders etc.
         """
         self.git = git
-        self.git_resolver = git_resolver
+        self.git_resolver = resolver
         self.ctx = ctx
         self.semver_selector = semver_selector
         self.dependency = dependency

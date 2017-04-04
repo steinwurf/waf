@@ -68,13 +68,19 @@ class Registry(object):
     #
     # The MortalValue is retuned by the provide_value function and ensures that
     # the value is removed from the registry after the "with" block is finished.
-    class MortalValue:
-        def __init__(self, registry, provider_names):
+    class TemporaryValue:
+        def __init__(self, registry):
             self.registry = registry
-            self.provider_names = provider_names
+            self.provider_names = []
 
         def __enter__(self):
-            pass
+            return self
+
+        def provide_values(self, **kwargs):
+            for provider_name in kwargs.keys():
+                self.provider_names.append(provider_name)
+
+            self.registry.provide_values(**kwargs)
 
         def __exit__(self, type, value, traceback):
             for provider_name in self.provider_names:
@@ -163,8 +169,13 @@ class Registry(object):
 
         def call(**kwargs):
 
-            inject_as = self.__collect_arguments(
-                provider_function=provider_class.__init__)
+            try:
+                inject_as = self.__collect_arguments(
+                    provider_function=provider_class.__init__)
+            except RegistryInjectError as error:
+                raise RegistryInjectError(
+                    provider_function=provider_class,
+                    missing_provider=error.missing_provider)
 
             if provider_name in self.cache:
                 # Did we already cache?
@@ -231,8 +242,8 @@ class Registry(object):
             # Clean the cache
             self.cache[provider_name] = {}
 
-    def provide_value(self, provider_value, value):
-        return self.provide_values(**{provider_value:value})
+    def provide_temporary(self):
+        return Registry.TemporaryValue(registry=self)
 
     def provide_values(self, **kwargs):
         """
@@ -245,11 +256,13 @@ class Registry(object):
             if provider_name in self.registry:
                 raise RegistryProviderError(provider_name)
 
-            def call(): return value
+            # Force early binding:
+            # http://docs.python-guide.org/en/latest/writing/gotchas/#late-binding-closures
+            def call(value=value): return value
+
             self.registry[provider_name] = call
 
-        return Registry.MortalValue(registry=self,
-            provider_names=kwargs.keys())
+
 
     def require(self, provider_name):
         """
@@ -261,8 +274,7 @@ class Registry(object):
             provider_name = provider_name.__name__
 
         call = self.registry[provider_name]
-        result = call()
-        return result
+        return call()
 
     def remove(self, provider_name):
         """
@@ -511,20 +523,21 @@ def user_path_resolver(registry, dependency):
     # Set the resolver method on the dependency
     dependency.resolver_action = 'user path'
 
-    with registry.provide_value('path', path):
+    with registry.provide_temporary() as tmp:
+        tmp.provide_values(path=path)
         return registry.require(PathResolver)
 
 
 
-# @Registry.provide
-# def git_resolver(git, ctx, dependency, source, git_url_rewriter,
-#     dependency_path):
-#     """ Builds a GitResolver instance.
-#
-#     :param registry: A Registry instance.
-#     """
-#     return GitResolver(git=git, ctx=ctx, dependency=dependency,
-#         source=source, git_url_rewriter=git_url_rewriter, cwd=dependency_path)
+@Registry.provide
+def git_resolver(git, ctx, dependency, source, git_url_rewriter,
+    dependency_path):
+    """ Builds a GitResolver instance.
+
+    :param registry: A Registry instance.
+    """
+    return GitResolver(git=git, ctx=ctx, dependency=dependency,
+        source=source, git_url_rewriter=git_url_rewriter, cwd=dependency_path)
 
 
 @Registry.provide
@@ -538,16 +551,15 @@ def resolve_git_checkout(registry, dependency):
     ctx = registry.require('ctx')
     dependency_path = registry.require('dependency_path')
 
-    with registry.provide_values(cwd=dependency_path):
-        resolver = registry.require(GitResolver)
+    if 'checkout2' in registry:
+        checkout = registry.require('checkout2')
+    else:
+        checkout = dependency.checkout
 
-    with registry.provide_values(resolver=resolver,cwd=dependency_path):
+    resolver = registry.require('git_resolver')
 
-        if 'checkout' in registry:
-            resolver = registry.require(GitCheckoutResolver)
-        else:
-            with registry.provide_values(checkout=dependency.checkout):
-                resolver = registry.require(GitCheckoutResolver)
+    resolver = GitCheckoutResolver(git=git, resolver=resolver, ctx=ctx,
+        dependency=dependency, checkout=checkout, cwd=dependency_path)
 
     # Set the resolver method on the dependency
     dependency.resolver_action = 'git checkout'
@@ -566,7 +578,8 @@ def resolve_git_user_checkout(registry, dependency):
     mandatory_options = registry.require('mandatory_options')
     checkout = mandatory_options.checkout(dependency=dependency)
 
-    with registry.provide_value('checkout', checkout):
+    with registry.provide_temporary() as temporary:
+        temporary.provide_values(checkout2=checkout)
 
         # When the user specified the checkout one must succeed:
         resolver = registry.require('resolve_git_checkout')
@@ -582,31 +595,26 @@ def resolve_git_user_checkout(registry, dependency):
 
 
 @Registry.provide
-def resolve_git_semver(registry, git, ctx, dependency, source):
+def resolve_git_semver(registry, dependency, dependency_path, source):
     """ Builds a GitSemverResolver instance.
 
     :param registry: A Registry instance.
     :param dependency: A WurfDependency instance.
     """
-    git = registry.require('git')
-    ctx = registry.require('ctx')
-    semver_selector = registry.require('semver_selector')
-    tag_database = registry.require('tag_database')
-    dependency_path = registry.require('dependency_path')
 
+    with registry.provide_temporary() as temporary:
+        temporary.provide_values(cwd=dependency_path)
+        resolver = registry.require(GitResolver)
 
-    resolver = registry.require('git_resolver')
-
-    resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
-        semver_selector=semver_selector, dependency=dependency,
-        cwd=dependency_path)
+    with registry.provide_temporary() as temporary:
+        temporary.provide_values(cwd=dependency_path, resolver=resolver)
+        resolver = registry.require(GitSemverResolver)
 
     # The ExistingTagResolver should only be used for Steinwurf projects,
     # since the tag database only contains information about those projects
     if 'steinwurf' in source:
-        resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
-            semver_selector=semver_selector, tag_database=tag_database,
-            resolver=resolver, cwd=dependency_path)
+        temporary.provide_values(cwd=dependency_path, resolver=resolver)
+        resolver = registry.require(ExistingTagResolver)
 
     # Set the resolver action on the dependency
     dependency.resolver_action = 'git semver'
@@ -667,8 +675,10 @@ def resolve_from_lock_git(registry, lock_cache, dependency):
 
     checkout = lock_cache.checkout(dependency=dependency)
 
-    with registry.provide_value('checkout', checkout), \
-        registry.provide_value('method', 'checkout'):
+    with registry.provide_temporary() as temporary:
+
+        temporary.provide_values(checkout2=checkout)
+        temporary.provide_values(method='checkout')
 
         resolver = registry.require('resolve_chain')
 
@@ -681,7 +691,8 @@ def resolve_from_lock_git(registry, lock_cache, dependency):
 @Registry.provide
 def resolve_from_lock_path(lock_cache, registry, dependency):
 
-    with registry.provide_value('resolver', 'lock_path'):
+    with registry.provide_temporary() as temporary:
+        temporary.provide_values(resolver='lock_path')
         resolver = registry.require('resolve_chain')
 
     resolver = CheckLockCacheResolver(resolver=resolver,
@@ -739,7 +750,8 @@ def sources_resolver(ctx, registry, dependency):
     resolvers = []
 
     for source in dependency.sources:
-        with registry.provide_value('source', source):
+        with registry.provide_temporary() as temporary:
+            temporary.provide_values(source=source)
 
             if 'resolver' in registry:
                 resolver = registry.require('resolver')
@@ -905,21 +917,23 @@ def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
     """
     registry = Registry()
 
-    registry.provide_value('ctx', ctx)
-    registry.provide_value('git_binary', git_binary)
-    registry.provide_value('default_resolve_path', default_resolve_path)
-    registry.provide_value('resolve_config_path', resolve_config_path)
-    registry.provide_value('default_symlinks_path', default_symlinks_path)
-    registry.provide_value('semver', semver)
-    registry.provide_value('waf_utils', waf_utils)
-    registry.provide_value('args', args)
-    registry.provide_value('project_path', project_path)
-    registry.provide_value('waf_lock_file', waf_lock_file)
+    registry.provide_values(
+        ctx=ctx,
+        git_binary=git_binary,
+        default_resolve_path=default_resolve_path,
+        resolve_config_path=resolve_config_path,
+        default_symlinks_path=default_symlinks_path,
+        semver=semver,
+        waf_utils=waf_utils,
+        args=args,
+        project_path=project_path,
+        waf_lock_file=waf_lock_file)
 
     # Add the used classes
-    registry.provide_object(GitCheckoutResolver)
+    #registry.provide_object(GitCheckoutResolver)
     registry.provide_object(GitResolver)
     registry.provide_object(PathResolver)
-
+    registry.provide_object(GitSemverResolver)
+    registry.provide_object(ExistingTagResolver)
 
     return registry
