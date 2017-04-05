@@ -20,7 +20,7 @@ def test_registry():
 
     # Use the default build
     with registry.provide_temporary() as tmp:
-        tmp.provide_values(x=0)
+        tmp.provide_value('x', 0)
         p = registry.require('point')
 
     assert p.x == 0
@@ -34,7 +34,7 @@ def test_registry():
     registry.provide_function('point', build_point, override=True)
 
     with registry.provide_temporary() as tmp:
-        tmp.provide_values(x=1)
+        tmp.provide_value('x', 1)
         p = registry.require('point')
 
     assert p.x == 1
@@ -44,7 +44,7 @@ def test_registry():
     registry.cache_provider('point')
 
     with registry.provide_temporary() as tmp:
-        tmp.provide_values(x=1)
+        tmp.provide_value('x', 1)
         p = registry.require('point')
 
     assert p.x == 1
@@ -54,7 +54,7 @@ def test_registry():
     p.y = 1
 
     with registry.provide_temporary() as tmp:
-        tmp.provide_values(x=1)
+        tmp.provide_value('x', 1)
         p = registry.require('point')
 
     assert p.x == 1
@@ -62,7 +62,7 @@ def test_registry():
 
     # Ask for a point with a different value, this will bypass the cache
     with registry.provide_temporary() as tmp:
-        tmp.provide_values(x=4)
+        tmp.provide_value('x', 4)
         p = registry.require('point')
 
     assert p.x == 4
@@ -78,7 +78,7 @@ def test_registry():
 
     # Use the default build
     with registry.provide_temporary() as tmp:
-        tmp.provide_values(x=0)
+        tmp.provide_value('x', 0)
         p = registry.require('point')
 
     assert p.x == 0
@@ -87,35 +87,8 @@ def test_registry():
     source = 'www.steinwurf.com'
 
     with registry.provide_temporary() as tmp:
-        tmp.provide_values(current_source=source)
+        tmp.provide_value('current_source', source)
         assert 'current_source' in registry
         assert registry.require('current_source') == 'www.steinwurf.com'
 
     assert 'current_source' not in registry
-
-    # Create a new registry
-    registry = Registry()
-
-    registry.provide_object(Point)
-
-    # Use the default build
-    with registry.provide_temporary() as tmp:
-        tmp.provide_values(x=0, y=0)
-        p = registry.require(Point)
-
-    assert p.x == 0
-    assert p.y == 0
-
-    # Use the default build
-    with registry.provide_temporary() as tmp:
-        tmp.provide_values(x=2, y=5)
-        p = registry.require(Point)
-
-        assert 'x' in registry
-        assert 'y' in registry
-
-        assert registry.require('x') == 2
-        assert registry.require('y') == 5
-
-    assert p.x == 2
-    assert p.y == 5

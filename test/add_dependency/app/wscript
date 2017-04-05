@@ -15,7 +15,7 @@ def resolve(ctx):
     with open('clone_path.json') as json_file:
         clone_path = json.load(json_file)
 
-    ctx.registry.provide_values(clone_path=clone_path)
+    ctx.registry.provide_value('clone_path', clone_path)
 
     # Get the registry and replace the git builder
     ctx.registry.provide_function('git', FakeGitClone.build, override=True)

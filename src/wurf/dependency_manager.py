@@ -85,7 +85,7 @@ class DependencyManager(object):
         self.options.add_dependency(dependency)
 
         with self.registry.provide_temporary() as tmp:
-            tmp.provide_values(dependency=dependency)
+            tmp.provide_value('dependency', dependency)
             resolver = self.registry.require('dependency_resolver')
 
         path = resolver.resolve()
