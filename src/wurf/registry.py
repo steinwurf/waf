@@ -166,8 +166,10 @@ class Registry(object):
             inject_as[argument] = self.require(argument)
 
         if sorted(require_arguments) != sorted(inject_as.keys()):
-            raise RuntimeError("Args {} should have been {}".format(
-                require_arguments, inject_as.keys()))
+            raise RegistryInjectMismatchError(
+                provider_function=provider_function,
+                require_arguments=require_arguments,
+                inject_arguments=inject_as.keys())
 
         return inject_as
 
@@ -187,7 +189,7 @@ class Registry(object):
         if not override and provider_name in self.registry:
             raise RegistryProviderError(provider_name)
 
-        def call(**kwargs):
+        def call():
 
             inject_as = self.__collect_arguments(
                 provider_function=provider_function)
@@ -512,6 +514,18 @@ def git_semver_resolver(git, git_resolver, ctx, semver_selector,
 
 
 @Registry.provide
+def existing_tag_resolver(ctx, dependency, semver_selector, tag_database,
+    git_semver_resolver, dependency_path):
+    """ Builds a GitResolver instance.
+
+    :param registry: A Registry instance.
+    """
+    return ExistingTagResolver(ctx=ctx, dependency=dependency,
+        semver_selector=semver_selector, tag_database=tag_database,
+        resolver=git_semver_resolver, cwd=dependency_path)
+
+
+@Registry.provide
 def resolve_git_checkout(git_checkout_resolver, dependency):
     """ Builds a WurfGitCheckoutResolver instance.
 
@@ -551,18 +565,20 @@ def resolve_git_user_checkout(registry, ctx, mandatory_options, dependency):
 
 
 @Registry.provide
-def resolve_git_semver(registry, git_semver_resolver, source, dependency):
+def resolve_git_semver(registry, source, dependency):
     """ Builds a GitSemverResolver instance.
     :param registry: A Registry instance.
     :param dependency: A WurfDependency instance.
     """
 
+    # @todo There is no integration test covering this case
+    #
     # The ExistingTagResolver should only be used for Steinwurf projects,
     # since the tag database only contains information about those projects
     if 'steinwurf' in source:
-        resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
-            semver_selector=semver_selector, tag_database=tag_database,
-            resolver=git_semver_resolver, cwd=dependency_path)
+        resolver = registry.require('existing_tag_resolver')
+    else:
+        resolver = registry.require('git_semver_resolver')
 
     # Set the resolver action on the dependency
     dependency.resolver_action = 'git semver'
