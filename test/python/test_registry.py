@@ -92,3 +92,66 @@ def test_registry():
         assert registry.require('current_source') == 'www.steinwurf.com'
 
     assert 'current_source' not in registry
+
+
+def test_registry_inject():
+
+    registry = Registry()
+
+    # No arguments
+    def build_point():
+        return Point(x=0, y=2)
+
+    registry.provide_function('point', build_point)
+
+    p = registry.require('point')
+    assert p.x == 0
+    assert p.y == 2
+
+    registry = Registry()
+
+    # One argument
+    def build_point(y):
+        return Point(x=0, y=y)
+
+    registry.provide_function('point', build_point)
+
+    with pytest.raises(Exception):
+        p = registry.require('point')
+
+    with registry.provide_temporary() as tmp:
+        tmp.provide_value('y', 5)
+
+        p = registry.require('point')
+
+    assert p.x == 0
+    assert p.y == 5
+
+    registry = Registry()
+
+    def build_point(y, registry):
+        return Point(x=0, y=y)
+
+    registry.provide_function('point', build_point)
+
+    with pytest.raises(Exception):
+        p = registry.require('point')
+
+    with registry.provide_temporary() as tmp:
+        tmp.provide_value('y', 5)
+
+        p = registry.require('point')
+
+    assert p.x == 0
+    assert p.y == 5
+
+    registry = Registry()
+
+    # No arguments
+    def build_point(somevalue, othervalue):
+        return Point(x=0, y=2)
+
+    registry.provide_function('point', build_point)
+
+    with pytest.raises(Exception):
+        p = registry.require('point')

@@ -57,29 +57,22 @@ class RegistryInjectError(Error):
             'Fatal error provider "{}" requires "{}"'.format(
                 self.provider_function.__name__, self.missing_provider))
 
-class RegistryInjectMismatchError(Error):
-    def __init__(self, provider_function, require_arguments, inject_arguments):
-
-        self.provider_function = provider_function
-        self.require_arguments = sorted(require_arguments)
-        self.inject_arguments = sorted(inject_arguments)
-
-        super(RegistryInjectMismatchError, self).__init__(
-            'Fatal error provider "{}" requires "{}" got "{}"'.format(
-                self.provider_function.__name__, self.missing_provider,
-                self.inject_arguments))
-
 class Registry(object):
 
-    # The MortalValue is used to provide temporary values though the registry.
+    # The TemporaryValue is used to provide temporary values though the
+    # registry.
+    #
     # Example:
     #
-    #    with registry.provide_value('temperature', 'hot!'):
+    #    with registry.provide_temporary as tmp:
+    #        tmp.provide_value('temperature', 'hot!'):
     #        assert registry.require('temperature') == 'hot!'
+    #
     #    assert 'temperature' not in registry
     #
-    # The MortalValue is retuned by the provide_value function and ensures that
-    # the value is removed from the registry after the "with" block is finished.
+    # The TemporaryValue is retuned by the provide_temporary function and
+    # ensures that the value is removed from the registry after the "with"
+    # block is finished.
     class TemporaryValue:
         def __init__(self, registry):
             self.registry = registry
@@ -138,40 +131,48 @@ class Registry(object):
                 self.provide_function(k,v)
 
     def cache_provider(self, provider_name):
+        """ Specify that objects / values produced by the provider should be
+            cached.
+
+        :param provider_name: The provider's name as a string
+        """
         assert provider_name not in self.cache
         self.cache[provider_name] = {}
 
     def purge_cache(self):
+        """ Empty the registry cache. """
         for provider_name in self.cache:
             self.cache[provider_name] = {}
 
-    def __collect_arguments(self, provider_function):
+    def __inject_arguments(self, provider_function):
+        """ Based on function signature prepare arguments.
 
-        inject_as = { }
+        This function takes as input a function object, based on the
+        arguments it builds a dictionary object which can be used
+        to call the function. The arguments values are found in the
+        registry.
+
+        :param provider_function: The function object which we would
+           like to call
+        :return: Dictionary containing the arguments and corresponding values.
+        """
+
+        inject_arguments = { }
         require_arguments = inspect.getargspec(provider_function)[0]
-
-        if 'self' in require_arguments:
-            require_arguments.remove('self')
 
         for argument in require_arguments:
 
             if argument == 'registry':
-                inject_as[argument] = self
+                inject_arguments[argument] = self
                 continue
 
             if argument not in self:
                 raise RegistryInjectError(provider_function=provider_function,
                     missing_provider=argument)
 
-            inject_as[argument] = self.require(argument)
+            inject_arguments[argument] = self.require(argument)
 
-        if sorted(require_arguments) != sorted(inject_as.keys()):
-            raise RegistryInjectMismatchError(
-                provider_function=provider_function,
-                require_arguments=require_arguments,
-                inject_arguments=inject_as.keys())
-
-        return inject_as
+        return inject_arguments
 
 
     def provide_function(self, provider_name, provider_function,
@@ -191,23 +192,23 @@ class Registry(object):
 
         def call():
 
-            inject_as = self.__collect_arguments(
+            inject_arguments = self.__inject_arguments(
                 provider_function=provider_function)
 
             if provider_name in self.cache:
                 # Did we already cache?
-                key = frozenset(inject_as.items())
+                key = frozenset(inject_arguments.items())
 
                 try:
                     return self.cache[provider_name][key]
                 except KeyError:
                     call = self.registry[provider_name]
-                    result = provider_function(**inject_as)
+                    result = provider_function(**inject_arguments)
                     self.cache[provider_name][key] = result
                     return result
             else:
                 call = self.registry[provider_name]
-                result = provider_function(**inject_as)
+                result = provider_function(**inject_arguments)
                 return result
 
         self.registry[provider_name] = call
@@ -217,6 +218,9 @@ class Registry(object):
             self.cache[provider_name] = {}
 
     def provide_temporary(self):
+        """ :return: Temporary context which allows can be used to provide
+           temporary values.
+        """
         return Registry.TemporaryValue(registry=self)
 
     def provide_value(self, provider_name, value):
