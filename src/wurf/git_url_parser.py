@@ -41,8 +41,8 @@ class GitUrlParser(object):
           )?              # End of group, which is optional
 
           (?P<path>       # Group and match the following (group named "path")
-              [\w/-]+      #   Match all alphanumeric characters, including '/'
-                           #   and '-'
+              [\w\./-]+   #   Match all alphanumeric characters, including '/'
+                          #   and '-'and '.'
           )               # End of group
 
           (               # Group and match the following
