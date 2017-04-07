@@ -41,7 +41,7 @@ def test_registry():
     assert p.y == 0
 
     # Cache the feature
-    registry.cache_provider('point')
+    registry.cache_provider(provider_name='point', once=False)
 
     with registry.provide_temporary() as tmp:
         tmp.provide_value('x', 1)
@@ -175,8 +175,8 @@ def test_registry_cache():
 
     registry.provide_function('foo', build_foo)
     registry.provide_function('bar', build_bar)
-    registry.cache_provider('foo')
-    registry.cache_provider('bar')
+    registry.cache_provider(provider_name='foo',once=False)
+    registry.cache_provider(provider_name='bar',once=False)
 
 
 

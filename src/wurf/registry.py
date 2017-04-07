@@ -7,7 +7,7 @@ import json
 import hashlib
 import inspect
 import copy
-from collections import OrderedDict
+import collections
 
 from .git_resolver import GitResolver
 from .path_resolver import PathResolver
@@ -92,6 +92,14 @@ class Registry(object):
             for provider_name in self.provider_names:
                 self.registry.remove(provider_name=provider_name)
 
+
+    ShouldCache = collections.namedtuple('ShouldCache', 'name once')
+
+    class CacheEntry(object):
+        def __init__(self, once):
+            self.once = once
+            self.data = {}
+
     # Dictionary containing the provider functions registered
     # using the @Registry.provide decorator
     providers = {}
@@ -125,25 +133,25 @@ class Registry(object):
         # Set which contains the name of features that should be cached
         if use_cache_providers:
             for s in Registry.cache_providers:
-                self.cache_provider(s)
+                self.cache_provider(provider_name=s.name, once=s.once)
 
         if use_providers:
             for k,v in Registry.providers.items():
                 self.provide_function(k,v)
 
-    def cache_provider(self, provider_name):
+    def cache_provider(self, provider_name, once):
         """ Specify that objects / values produced by the provider should be
             cached.
 
         :param provider_name: The provider's name as a string
         """
         assert provider_name not in self.cache
-        self.cache[provider_name] = {}
+        self.cache[provider_name] = Registry.CacheEntry(once=once)
 
     def purge_cache(self):
         """ Empty the registry cache. """
         for provider_name in self.cache:
-            self.cache[provider_name] = {}
+            self.cache[provider_name].data = {}
 
     def __inject_arguments(self, provider_function):
         """ Based on function signature prepare arguments.
@@ -228,11 +236,15 @@ class Registry(object):
                 key = self.__hash_arguments(inject_arguments)
 
                 try:
-                    return self.cache[provider_name][key]
+                    return self.cache[provider_name].data[key]
                 except KeyError:
+
+                    if self.cache[provider_name].once:
+                        assert(len(self.cache[provider_name].data) == 0)
+
                     call = self.registry[provider_name]
                     result = provider_function(**inject_arguments)
-                    self.cache[provider_name][key] = result
+                    self.cache[provider_name].data[key] = result
                     return result
             else:
                 call = self.registry[provider_name]
@@ -244,7 +256,7 @@ class Registry(object):
 
         if provider_name in self.cache:
             # Clean the cache
-            self.cache[provider_name] = {}
+            self.cache[provider_name].data = {}
 
     def provide_temporary(self):
         """ :return: Temporary context which allows can be used to provide
@@ -296,7 +308,14 @@ class Registry(object):
 
     @staticmethod
     def cache(func):
-        Registry.cache_providers.add(func.__name__)
+        Registry.cache_providers.add(
+            Registry.ShouldCache(name=func.__name__,once=False))
+        return func
+
+    @staticmethod
+    def cache_once(func):
+        Registry.cache_providers.add(
+            Registry.ShouldCache(name=func.__name__,once=True))
         return func
 
     @staticmethod
@@ -349,7 +368,7 @@ def dependency_path(git_url_rewriter, resolve_path, source, dependency,
     return dependency_path
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def git_url_parser():
     """ Parser for Git URLs. """
@@ -377,10 +396,10 @@ def parser():
         add_help=False)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def dependency_cache():
-    return OrderedDict()
+    return collections.OrderedDict()
 
 
 @Registry.cache
@@ -401,7 +420,7 @@ def lock_cache(registry):
             configuration.resolver_chain()))
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def options(registry):
     """ Return the Options provider."""
@@ -419,7 +438,7 @@ def options(registry):
         supported_git_protocols=supported_git_protocols)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def mandatory_options(options):
     """ Return the MandatoryOptions provider. """
