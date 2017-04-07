@@ -155,3 +155,30 @@ def test_registry_inject():
 
     with pytest.raises(Exception):
         p = registry.require('point')
+
+
+def test_registry_cache():
+
+    registry = Registry()
+
+    class Foo(object):
+        def __init__(self): pass
+
+    class Bar(object):
+        def __init__(self): pass
+
+    def build_foo():
+        return Foo()
+
+    def build_bar(foo):
+        return Bar()
+
+    registry.provide_function('foo', build_foo)
+    registry.provide_function('bar', build_bar)
+    registry.cache_provider('foo')
+    registry.cache_provider('bar')
+
+
+
+    f = registry.require('foo')
+    b = registry.require('bar')

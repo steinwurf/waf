@@ -6,6 +6,7 @@ import os
 import json
 import hashlib
 import inspect
+import copy
 from collections import OrderedDict
 
 from .git_resolver import GitResolver
@@ -174,6 +175,32 @@ class Registry(object):
 
         return inject_arguments
 
+    def __hash_arguments(self, arguments):
+        """
+        Provides a hash of the arguments to be passed to a provider function.
+
+        The hash is used to make sure the registry provides stable cached
+        results.
+
+        We used this
+        """
+
+        hash_dict = {}
+        for k,v in arguments.items():
+
+            if k == 'registry':
+                continue
+
+            if self.registry[k].is_value:
+                if isinstance(v, (list, tuple, dict, set)):
+                    hash_dict[k] = hash(json.dumps(v, sort_keys=True))
+                else:
+                    hash_dict[k] = hash(v)
+            else:
+                assert(k in self.cache)
+                hash_dict[k] = hash(v)
+
+        return hash(json.dumps(hash_dict, sort_keys=True))
 
     def provide_function(self, provider_name, provider_function,
         override=False):
@@ -197,7 +224,8 @@ class Registry(object):
 
             if provider_name in self.cache:
                 # Did we already cache?
-                key = frozenset(inject_arguments.items())
+                #key = frozenset(inject_arguments.items())
+                key = self.__hash_arguments(inject_arguments)
 
                 try:
                     return self.cache[provider_name][key]
@@ -211,6 +239,7 @@ class Registry(object):
                 result = provider_function(**inject_arguments)
                 return result
 
+        call.is_value = False
         self.registry[provider_name] = call
 
         if provider_name in self.cache:
@@ -232,6 +261,8 @@ class Registry(object):
             raise RegistryProviderError(provider_name)
 
         def call(): return value
+        call.is_value = True
+
         self.registry[provider_name] = call
 
     def require(self, provider_name):
@@ -279,12 +310,10 @@ class Registry(object):
 
 @Registry.cache
 @Registry.provide
-def resolve_path(registry):
-    mandatory_options = registry.require('mandatory_options')
+def resolve_path(mandatory_options, waf_utils):
     resolve_path = mandatory_options.resolve_path()
     resolve_path = os.path.abspath(os.path.expanduser(resolve_path))
 
-    waf_utils = registry.require('waf_utils')
     waf_utils.check_dir(resolve_path)
 
     return resolve_path
@@ -292,12 +321,10 @@ def resolve_path(registry):
 
 @Registry.cache
 @Registry.provide
-def symlinks_path(registry):
-    mandatory_options = registry.require('mandatory_options')
+def symlinks_path(mandatory_options, waf_utils):
     symlinks_path = mandatory_options.symlinks_path()
     symlinks_path = os.path.abspath(os.path.expanduser(symlinks_path))
 
-    waf_utils = registry.require('waf_utils')
     waf_utils.check_dir(symlinks_path)
 
     return symlinks_path
@@ -305,13 +332,10 @@ def symlinks_path(registry):
 
 @Registry.cache
 @Registry.provide
-def dependency_path(registry, dependency):
-
-    resolve_path = registry.require('resolve_path')
-    source = registry.require('source')
+def dependency_path(git_url_rewriter, resolve_path, source, dependency,
+    waf_utils):
 
     if dependency.resolver == 'git':
-        git_url_rewriter = registry.require('git_url_rewriter')
         repo_url = git_url_rewriter.rewrite_url(url=source)
         repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
         name = dependency.name + '-' + repo_hash
@@ -320,7 +344,6 @@ def dependency_path(registry, dependency):
         name = dependency.name + '-' + source_hash
 
     dependency_path = os.path.join(resolve_path, name)
-    waf_utils = registry.require('waf_utils')
     waf_utils.check_dir(dependency_path)
 
     return dependency_path
@@ -328,29 +351,25 @@ def dependency_path(registry, dependency):
 
 @Registry.cache
 @Registry.provide
-def git_url_parser(registry):
+def git_url_parser():
     """ Parser for Git URLs. """
-
     return GitUrlParser()
 
 
 @Registry.cache
 @Registry.provide
-def git_url_rewriter(registry):
+def git_url_rewriter(git_url_parser, git_protocol):
     """ Rewriter for Git URLs.
 
     Supports various transformations such as changing/adding the git
     protocol.
     """
-    parser = registry.require('git_url_parser')
-    git_protocol = registry.require('git_protocol')
-
-    return GitUrlRewriter(parser=parser, rewrite_protocol=git_protocol)
+    return GitUrlRewriter(parser=git_url_parser, rewrite_protocol=git_protocol)
 
 
 @Registry.cache
 @Registry.provide
-def parser(registry):
+def parser():
     return argparse.ArgumentParser(description='Resolve Options',
         # add_help=False will remove the default handling of --help and -h
         # https://docs.python.org/3/library/argparse.html#add-help
@@ -360,7 +379,7 @@ def parser(registry):
 
 @Registry.cache
 @Registry.provide
-def dependency_cache(registry):
+def dependency_cache():
     return OrderedDict()
 
 
@@ -823,6 +842,7 @@ def dependency_resolver(registry, ctx, configuration, dependency):
 def configuration(options, args, project_path, waf_lock_file):
     return Configuration(options=options, args=args, project_path=project_path,
         waf_lock_file=waf_lock_file)
+
 
 @Registry.provide
 def dependency_manager(registry):
