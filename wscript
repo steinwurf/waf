@@ -159,13 +159,13 @@ def _pytest(bld):
         env=bld_env,
         always=True)
 
-    if not os.path.isfile(python_binary):
-        bld.fatal("No virtualenv python binary found at {}".format(
-            python_binary))
-
-    if not os.path.isfile(pip_binary):
-        bld.fatal("No virtualenv pip binary found at {}".format(
-            pip_binary))
+    # if not os.path.isfile(python_binary):
+    #     bld.fatal("No virtualenv python binary found at {}".format(
+    #         python_binary))
+    #
+    # if not os.path.isfile(pip_binary):
+    #     bld.fatal("No virtualenv pip binary found at {}".format(
+    #         pip_binary))
 
     bld.add_group()
 
