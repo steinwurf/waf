@@ -154,6 +154,11 @@ def _pytest(bld):
     python_binary = os.path.join(virtualenv, folder, 'python' + ext)
     pip_binary = os.path.join(virtualenv, folder, 'pip' + ext)
 
+    bld(rule='python -m virtualenv ' + virtualenv,
+        cwd=bld.path,
+        env=bld_env,
+        always=True)
+
     if not os.path.isfile(python_binary):
         bld.fatal("No virtualenv python binary found at {}".format(
             python_binary))
@@ -161,11 +166,6 @@ def _pytest(bld):
     if not os.path.isfile(pip_binary):
         bld.fatal("No virtualenv pip binary found at {}".format(
             pip_binary))
-
-    bld(rule='python -m virtualenv ' + virtualenv,
-        cwd=bld.path,
-        env=bld_env,
-        always=True)
 
     bld.add_group()
 

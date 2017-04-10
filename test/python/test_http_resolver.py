@@ -1,6 +1,7 @@
 import pytest
 import mock
 import vcr
+
 try:
     from urllib.request import urlopen, Request
 except ImportError:
