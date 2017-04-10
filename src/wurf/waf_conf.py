@@ -21,6 +21,14 @@ def dependency_path(ctx, name):
 
 
 @conf
+def has_dependency_path(ctx, name):
+    """
+    Returns true if a path is available for the dependency
+    """
+    return name in waf_resolve_context.dependency_cache
+
+
+@conf
 def is_toplevel(self):
     """
     Returns true if the current script is the top-level wscript
