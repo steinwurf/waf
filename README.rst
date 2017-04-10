@@ -117,25 +117,43 @@ of the `ResolveContext`. At a high-level this looks as follows::
 
     ./waf ....
 
-           +
-           |
-        1. |
-           |
+             +
+             |
+          1. |
+             |
     +--------v--------+      2.      +----------------+
     |                 +------------> |                |
     | OptionsContext  |              | ResolveContext |
     |                 | <----------+ |                |
     +-----------------+      3.      +----------------+
-           |
-        4. |
-           |
+             |
+          4. |
+             |
     +--------v--------+
     | ConfigureContext|
     | BuildContext    |
     | ....            |
     +-----------------+
 
-The user
+Lets outline the different steps:
+
+1. The user invokes the waf binary in the project folder, internally Waf will
+   create the `OptionsContext` to recurse out in user's `wscript` files and collect
+   the project options.
+2. However, before that happens we will create the `ResolveContext` which is
+   responsible for *making sure declared dependencies are available*. The resolve
+   step has two main modes of operation "resolve" and "load". In the "resolve"
+   mode we will try to fetch the needed dependencies e.g. via `git clone` or
+   other ways. In the "load" mode we expect dependencies to have already been
+   resolved and made available on our local file system.
+3. In both cases the `ResolveContext` makes a dependency available by producing
+   a path to that dependency. That can later be used on other contexts etc. E.g.
+   If the dependency declares that it is recursable, we will automatically
+   recurse it for options, configure and build.
+4. After having executed the `OptionsContext` and collected all options etc.
+   control is passed to the next Waf / user-defined context. At this point
+   path to dependencies are still available in the global
+   `dependency_cache` dictionary in `waf_resolve_context.py`.
 
 
 Resolver features
