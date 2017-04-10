@@ -5,7 +5,9 @@ import argparse
 import os
 import json
 import hashlib
-from collections import OrderedDict
+import inspect
+import copy
+import collections
 
 from .git_resolver import GitResolver
 from .path_resolver import PathResolver
@@ -46,28 +48,69 @@ class RegistryProviderError(Error):
         super(RegistryProviderError, self).__init__(
             "Registry error: {} already added to registry".format(self.name))
 
+class RegistryInjectError(Error):
+    def __init__(self, provider_function, missing_provider):
+
+        self.provider_function = provider_function
+        self.missing_provider = missing_provider
+
+        super(RegistryInjectError, self).__init__(
+            'Fatal error provider "{}" requires "{}"'.format(
+                self.provider_function.__name__, self.missing_provider))
+
+class RegistryCacheOnceError(Error):
+    def __init__(self, provider_name, provider_function):
+
+        self.provider_name = provider_name
+        self.provider_function = provider_function
+
+        super(RegistryCacheOnceError, self).__init__(
+            'Fatal error provider "{}" should only be cached once. The '
+            'provided values passed to "{}" have changed since the object was '
+            'initially cached.'.format(self.provider_name,
+                self.provider_function.__name__))
 
 class Registry(object):
 
-    # The MortalValue is used to provide temporary values though the registry.
+    # The TemporaryValue is used to provide temporary values though the
+    # registry.
+    #
     # Example:
     #
-    #    with registry.provide_value('temperature', 'hot!'):
+    #    with registry.provide_temporary as tmp:
+    #        tmp.provide_value('temperature', 'hot!'):
     #        assert registry.require('temperature') == 'hot!'
+    #
     #    assert 'temperature' not in registry
     #
-    # The MortalValue is retuned by the provide_value function and ensures that
-    # the value is removed from the registry after the "with" block is finished.
-    class MortalValue:
-        def __init__(self, registry, provider_name):
+    # The TemporaryValue is retuned by the provide_temporary function and
+    # ensures that the value is removed from the registry after the "with"
+    # block is finished.
+    class TemporaryValue:
+        def __init__(self, registry):
             self.registry = registry
-            self.provider_name = provider_name
+            self.provider_names = []
 
         def __enter__(self):
-            pass
+            return self
+
+        def provide_value(self, provider_name, value):
+            self.provider_names.append(provider_name)
+
+            self.registry.provide_value(provider_name=provider_name,
+                value=value)
 
         def __exit__(self, type, value, traceback):
-            self.registry.remove(provider_name=self.provider_name)
+            for provider_name in self.provider_names:
+                self.registry.remove(provider_name=provider_name)
+
+
+    ShouldCache = collections.namedtuple('ShouldCache', 'name once')
+
+    class CacheEntry(object):
+        def __init__(self, once):
+            self.once = once
+            self.data = {}
 
     # Dictionary containing the provider functions registered
     # using the @Registry.provide decorator
@@ -102,19 +145,73 @@ class Registry(object):
         # Set which contains the name of features that should be cached
         if use_cache_providers:
             for s in Registry.cache_providers:
-                self.cache_provider(s)
+                self.cache_provider(provider_name=s.name, once=s.once)
 
         if use_providers:
             for k,v in Registry.providers.items():
                 self.provide_function(k,v)
 
-    def cache_provider(self, provider_name):
+    def cache_provider(self, provider_name, once):
+        """ Specify that objects / values produced by the provider should be
+            cached.
+
+        :param provider_name: The provider's name as a string
+        """
         assert provider_name not in self.cache
-        self.cache[provider_name] = {}
+        self.cache[provider_name] = Registry.CacheEntry(once=once)
 
     def purge_cache(self):
+        """ Empty the registry cache. """
         for provider_name in self.cache:
-            self.cache[provider_name] = {}
+            self.cache[provider_name].data = {}
+
+    def __inject_arguments(self, provider_function):
+        """ Based on function signature prepare arguments.
+
+        This function takes as input a function object, based on the
+        arguments it builds a dictionary object which can be used
+        to call the function. The arguments values are found in the
+        registry.
+
+        :param provider_function: The function object which we would
+           like to call
+        :return: Dictionary containing the arguments and corresponding values.
+        """
+
+        inject_arguments = { }
+        require_arguments = inspect.getargspec(provider_function)[0]
+
+        for argument in require_arguments:
+
+            if argument == 'registry':
+                inject_arguments[argument] = self
+                continue
+
+            if argument not in self:
+                raise RegistryInjectError(provider_function=provider_function,
+                    missing_provider=argument)
+
+            inject_arguments[argument] = self.require(argument)
+
+        return inject_arguments
+
+    def __hash_arguments(self, arguments):
+        """
+        Provides a hash of the arguments to be passed to a provider function.
+
+        The hash is used to make sure the registry provides stable cached
+        results.
+        """
+
+        hash_dict = {}
+        for k,v in arguments.items():
+
+            if isinstance(v, (list, tuple, dict, set)):
+                hash_dict[k] = hash(json.dumps(v, sort_keys=True))
+            else:
+                hash_dict[k] = hash(v)
+
+        return hash(json.dumps(hash_dict, sort_keys=True))
 
     def provide_function(self, provider_name, provider_function,
         override=False):
@@ -131,14 +228,46 @@ class Registry(object):
         if not override and provider_name in self.registry:
             raise RegistryProviderError(provider_name)
 
-        def call(**kwargs):
-            return provider_function(registry=self, **kwargs)
+        def call():
+
+            inject_arguments = self.__inject_arguments(
+                provider_function=provider_function)
+
+            if provider_name in self.cache:
+                # Did we already cache?
+                #key = frozenset(inject_arguments.items())
+                key = self.__hash_arguments(inject_arguments)
+
+                provider = self.cache[provider_name]
+
+                try:
+                    return provider.data[key]
+                except KeyError:
+
+                    if provider.once and len(provider.data) > 0:
+                        raise RegistryCacheOnceError(provider_name,
+                            provider_function)
+
+                    call = self.registry[provider_name]
+                    result = provider_function(**inject_arguments)
+                    provider.data[key] = result
+                    return result
+            else:
+                call = self.registry[provider_name]
+                result = provider_function(**inject_arguments)
+                return result
 
         self.registry[provider_name] = call
 
         if provider_name in self.cache:
             # Clean the cache
-            self.cache[provider_name] = {}
+            self.cache[provider_name].data = {}
+
+    def provide_temporary(self):
+        """ :return: Temporary context which allows can be used to provide
+           temporary values.
+        """
+        return Registry.TemporaryValue(registry=self)
 
     def provide_value(self, provider_name, value):
         """
@@ -149,31 +278,20 @@ class Registry(object):
             raise RegistryProviderError(provider_name)
 
         def call(): return value
+
         self.registry[provider_name] = call
 
-        return Registry.MortalValue(registry=self, provider_name=provider_name)
-
-    def require(self, provider_name, **kwargs):
+    def require(self, provider_name):
         """
         :param provider_name: The name of the provider as a string
         :param kwargs: Keyword arguments that should be passed to the provider
             function.
         """
-        if provider_name in self.cache:
-            # Did we already cache?
-            key = frozenset(kwargs.items())
+        if inspect.isclass(provider_name):
+            provider_name = provider_name.__name__
 
-            try:
-                return self.cache[provider_name][key]
-            except KeyError:
-                call = self.registry[provider_name]
-                result = call(**kwargs)
-                self.cache[provider_name][key] = result
-                return result
-        else:
-            call = self.registry[provider_name]
-            result = call(**kwargs)
-            return result
+        call = self.registry[provider_name]
+        return call()
 
     def remove(self, provider_name):
         """
@@ -194,7 +312,14 @@ class Registry(object):
 
     @staticmethod
     def cache(func):
-        Registry.cache_providers.add(func.__name__)
+        Registry.cache_providers.add(
+            Registry.ShouldCache(name=func.__name__,once=False))
+        return func
+
+    @staticmethod
+    def cache_once(func):
+        Registry.cache_providers.add(
+            Registry.ShouldCache(name=func.__name__,once=True))
         return func
 
     @staticmethod
@@ -206,41 +331,33 @@ class Registry(object):
         return func
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def resolve_path(registry):
-    mandatory_options = registry.require('mandatory_options')
+def resolve_path(mandatory_options, waf_utils):
     resolve_path = mandatory_options.resolve_path()
     resolve_path = os.path.abspath(os.path.expanduser(resolve_path))
 
-    waf_utils = registry.require('waf_utils')
     waf_utils.check_dir(resolve_path)
 
     return resolve_path
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def symlinks_path(registry):
-    mandatory_options = registry.require('mandatory_options')
+def symlinks_path(mandatory_options, waf_utils):
     symlinks_path = mandatory_options.symlinks_path()
     symlinks_path = os.path.abspath(os.path.expanduser(symlinks_path))
 
-    waf_utils = registry.require('waf_utils')
     waf_utils.check_dir(symlinks_path)
 
     return symlinks_path
 
-
 @Registry.cache
 @Registry.provide
-def dependency_path(registry, dependency):
-
-    resolve_path = registry.require('resolve_path')
-    source = registry.require('source')
+def dependency_path(git_url_rewriter, resolve_path, source, dependency,
+    waf_utils):
 
     if dependency.resolver == 'git':
-        git_url_rewriter = registry.require('git_url_rewriter')
         repo_url = git_url_rewriter.rewrite_url(url=source)
         repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
         name = dependency.name + '-' + repo_hash
@@ -249,37 +366,32 @@ def dependency_path(registry, dependency):
         name = dependency.name + '-' + source_hash
 
     dependency_path = os.path.join(resolve_path, name)
-    waf_utils = registry.require('waf_utils')
     waf_utils.check_dir(dependency_path)
 
     return dependency_path
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def git_url_parser(registry):
+def git_url_parser():
     """ Parser for Git URLs. """
-
     return GitUrlParser()
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def git_url_rewriter(registry):
+def git_url_rewriter(git_url_parser, git_protocol):
     """ Rewriter for Git URLs.
 
     Supports various transformations such as changing/adding the git
     protocol.
     """
-    parser = registry.require('git_url_parser')
-    git_protocol = registry.require('git_protocol')
-
-    return GitUrlRewriter(parser=parser, rewrite_protocol=git_protocol)
+    return GitUrlRewriter(parser=git_url_parser, rewrite_protocol=git_protocol)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def parser(registry):
+def parser():
     return argparse.ArgumentParser(description='Resolve Options',
         # add_help=False will remove the default handling of --help and -h
         # https://docs.python.org/3/library/argparse.html#add-help
@@ -287,23 +399,19 @@ def parser(registry):
         add_help=False)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def dependency_cache(registry):
-    return OrderedDict()
+def dependency_cache():
+    return collections.OrderedDict()
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def lock_cache(registry):
-
-    configuration = registry.require('configuration')
+def lock_cache(configuration, options, project_path):
 
     if configuration.resolver_chain() == Configuration.RESOLVE_AND_LOCK:
-        options = registry.require('options')
         return LockCache.create_empty(options=options)
     elif configuration.resolver_chain() == Configuration.RESOLVE_FROM_LOCK:
-        project_path = registry.require('project_path')
         lock_path = os.path.join(project_path, Configuration.LOCK_FILE)
         return LockCache.create_from_file(lock_path=lock_path)
     else:
@@ -311,14 +419,10 @@ def lock_cache(registry):
             configuration.resolver_chain()))
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def options(registry):
+def options(parser, args, default_resolve_path, default_symlinks_path):
     """ Return the Options provider."""
-    parser = registry.require('parser')
-    args = registry.require('args')
-    default_resolve_path = registry.require('default_resolve_path')
-    default_symlinks_path = registry.require('default_symlinks_path')
 
     # We support the protocols we know how to rewrite
     supported_git_protocols = GitUrlRewriter.git_protocols.keys()
@@ -329,43 +433,34 @@ def options(registry):
         supported_git_protocols=supported_git_protocols)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def mandatory_options(registry):
+def mandatory_options(options):
     """ Return the MandatoryOptions provider. """
-    options = registry.require('options')
-
     return MandatoryOptions(options=options)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def semver_selector(registry):
+def semver_selector(semver):
     """ Return the SemverSelector provider. """
-    semver = registry.require('semver')
-
     return SemverSelector(semver=semver)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def tag_database(registry):
+def tag_database(ctx):
     """ Return the TagDatabase provider. """
-    ctx = registry.require('ctx')
     return TagDatabase(ctx=ctx)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def project_git_protocol(registry):
+def project_git_protocol(git, ctx, git_url_parser):
     """ Return the Git protocol used by the parent project.
 
     If parent project not under git version control return None.
     """
-    git = registry.require('git')
-    ctx = registry.require('ctx')
-    parser = registry.require('git_url_parser')
-
     try:
         parent_url = git.remote_origin_url(cwd=os.getcwd())
 
@@ -375,36 +470,28 @@ def project_git_protocol(registry):
         return None
 
     else:
-        url = parser.parse(parent_url)
+        url = git_url_parser.parse(parent_url)
         return url.protocol
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def git(registry):
-    """ The Git object, which is used to run git commands.
-
-    :param registry: A Registry instance.
-    """
-    git_binary = registry.require('git_binary')
-    ctx = registry.require('ctx')
-
+def git(git_binary, ctx):
+    """ The Git object, which is used to run git commands. """
     return Git(git_binary=git_binary, ctx=ctx)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def git_protocol(registry):
+def git_protocol(options, project_git_protocol):
     """ Return the Git protocol to use. """
-
-    options = registry.require('options')
 
     # Check if the user specified a git protocol to use:
     protocol = options.git_protocol()
 
     # Check what the parent project uses
     if not protocol:
-        protocol = registry.require('project_git_protocol')
+        protocol = project_git_protocol
 
     # Finally just use https
     if not protocol:
@@ -414,82 +501,95 @@ def git_protocol(registry):
 
 
 @Registry.provide
-def user_path_resolver(registry, dependency):
+def user_path_resolver(mandatory_options, dependency):
 
-    mandatory_options = registry.require('mandatory_options')
     path = mandatory_options.path(dependency=dependency)
-
-    ctx = registry.require('ctx')
 
     # Set the resolver method on the dependency
     dependency.resolver_action = 'user path'
 
-    resolver = PathResolver(dependency=dependency, path=path)
-
-    return resolver
+    return PathResolver(dependency=dependency, path=path)
 
 
 @Registry.provide
-def git_resolver(registry, dependency):
+def git_resolver(git, ctx, dependency, source, git_url_rewriter,
+    dependency_path):
     """ Builds a GitResolver instance.
 
     :param registry: A Registry instance.
     """
-    git = registry.require('git')
-    ctx = registry.require('ctx')
-    options = registry.require('options')
-    dependency_path = registry.require('dependency_path', dependency=dependency)
-    git_url_rewriter = registry.require('git_url_rewriter')
-    source = registry.require('source')
-
     return GitResolver(git=git, ctx=ctx, dependency=dependency,
         source=source, git_url_rewriter=git_url_rewriter, cwd=dependency_path)
 
 
 @Registry.provide
-def resolve_git_checkout(registry, dependency):
-    """ Builds a WurfGitCheckoutResolver instance.
+def git_checkout_resolver(registry, git, git_resolver, ctx, dependency,
+    dependency_path):
+    """ Builds a GitResolver instance.
 
     :param registry: A Registry instance.
-    :param dependency: A Dependency instance.
     """
-    git = registry.require('git')
-    ctx = registry.require('ctx')
-    dependency_path = registry.require('dependency_path', dependency=dependency)
-
     if 'checkout' in registry:
         checkout = registry.require('checkout')
     else:
         checkout = dependency.checkout
 
-    resolver = registry.require('git_resolver', dependency=dependency)
-
-    resolver = GitCheckoutResolver(git=git, git_resolver=resolver, ctx=ctx,
+    return GitCheckoutResolver(git=git, resolver=git_resolver, ctx=ctx,
         dependency=dependency, checkout=checkout, cwd=dependency_path)
+
+
+@Registry.provide
+def git_semver_resolver(git, git_resolver, ctx, semver_selector,
+    dependency, dependency_path):
+    """ Builds a GitResolver instance.
+
+    :param registry: A Registry instance.
+    """
+    return GitSemverResolver(git=git, resolver=git_resolver, ctx=ctx,
+        semver_selector=semver_selector, dependency=dependency,
+        cwd=dependency_path)
+
+
+@Registry.provide
+def existing_tag_resolver(ctx, dependency, semver_selector, tag_database,
+    git_semver_resolver, dependency_path):
+    """ Builds a GitResolver instance.
+
+    :param registry: A Registry instance.
+    """
+    return ExistingTagResolver(ctx=ctx, dependency=dependency,
+        semver_selector=semver_selector, tag_database=tag_database,
+        resolver=git_semver_resolver, cwd=dependency_path)
+
+
+@Registry.provide
+def resolve_git_checkout(git_checkout_resolver, dependency):
+    """ Builds a WurfGitCheckoutResolver instance.
+
+    :param registry: A Registry instance.
+    :param dependency: A Dependency instance.
+    """
 
     # Set the resolver method on the dependency
     dependency.resolver_action = 'git checkout'
 
-    return resolver
+    return git_checkout_resolver
 
 
-@Registry.cache
 @Registry.provide
-def resolve_git_user_checkout(registry, dependency):
+def resolve_git_user_checkout(registry, ctx, mandatory_options, dependency):
     """ Builds resolver that uses a user specified checkout.
 
     :param registry: A Registry instance.
     :param dependency: A Dependency instance.
     """
-    ctx = registry.require('ctx')
-    mandatory_options = registry.require('mandatory_options')
     checkout = mandatory_options.checkout(dependency=dependency)
 
-    with registry.provide_value('checkout', checkout):
+    with registry.provide_temporary() as temporary:
+        temporary.provide_value('checkout', checkout)
 
         # When the user specified the checkout one must succeed:
-        resolver = registry.require('resolve_git_checkout',
-            dependency=dependency)
+        resolver = registry.require('resolve_git_checkout')
 
         resolver = MandatoryResolver(resolver=resolver,
             msg="User checkout of '{}' failed.".format(checkout),
@@ -502,31 +602,18 @@ def resolve_git_user_checkout(registry, dependency):
 
 
 @Registry.provide
-def resolve_git_semver(registry, dependency):
+def resolve_git_semver(registry, source, dependency):
     """ Builds a GitSemverResolver instance.
-
     :param registry: A Registry instance.
     :param dependency: A WurfDependency instance.
     """
-    git = registry.require('git')
-    ctx = registry.require('ctx')
-    semver_selector = registry.require('semver_selector')
-    tag_database = registry.require('tag_database')
-    source = registry.require('source')
-    dependency_path = registry.require('dependency_path', dependency=dependency)
-
-    resolver = registry.require('git_resolver', dependency=dependency)
-
-    resolver = GitSemverResolver(git=git, git_resolver=resolver, ctx=ctx,
-        semver_selector=semver_selector, dependency=dependency,
-        cwd=dependency_path)
 
     # The ExistingTagResolver should only be used for Steinwurf projects,
     # since the tag database only contains information about those projects
     if 'steinwurf' in source:
-        resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
-            semver_selector=semver_selector, tag_database=tag_database,
-            resolver=resolver, cwd=dependency_path)
+        resolver = registry.require('existing_tag_resolver')
+    else:
+        resolver = registry.require('git_semver_resolver')
 
     # Set the resolver action on the dependency
     dependency.resolver_action = 'git semver'
@@ -535,20 +622,17 @@ def resolve_git_semver(registry, dependency):
 
 
 @Registry.provide
-def resolve_git(registry, dependency):
+def resolve_git(registry, ctx, options, dependency):
     """ Builds git resolvers
 
     :param registry: A Registry instance.
     :param dependency: A WurfDependency instance.
     """
-    ctx = registry.require('ctx')
-    options = registry.require('options')
 
     # If the user specified a checkout we should use that
     checkout = options.checkout(dependency=dependency)
     if checkout:
-        return registry.require('resolve_git_user_checkout',
-            dependency=dependency)
+        return registry.require('resolve_git_user_checkout')
 
     # Otherwise we use the method specified
     if 'method' in registry:
@@ -557,7 +641,7 @@ def resolve_git(registry, dependency):
         method = dependency.method
 
     method_key = "resolve_git_{}".format(method)
-    git_resolver = registry.require(method_key, dependency=dependency)
+    git_resolver = registry.require(method_key)
 
     if options.fast_resolve():
 
@@ -581,20 +665,21 @@ def resolve_git(registry, dependency):
 
 @Registry.cache
 @Registry.provide
-def resolve_from_lock_git(registry, dependency):
+def resolve_from_lock_git(registry, lock_cache, dependency):
     """ Builds resolver that uses a specific checkout provided by the lock file.
 
     :param registry: A Registry instance.
     :param dependency: A Dependency instance.
     """
-    lock_cache = registry.require('lock_cache')
+
     checkout = lock_cache.checkout(dependency=dependency)
 
-    with registry.provide_value('checkout', checkout), \
-        registry.provide_value('method', 'checkout'):
+    with registry.provide_temporary() as temporary:
 
-        resolver = registry.require('resolve_chain',
-            dependency=dependency)
+        temporary.provide_value('checkout', checkout)
+        temporary.provide_value('method', 'checkout')
+
+        resolver = registry.require('resolve_chain')
 
     resolver = CheckLockCacheResolver(resolver=resolver, lock_cache=lock_cache,
         dependency=dependency)
@@ -603,15 +688,11 @@ def resolve_from_lock_git(registry, dependency):
 
 
 @Registry.provide
-def resolve_from_lock_path(registry, dependency):
+def resolve_from_lock_path(lock_cache, registry, dependency):
 
-    lock_cache = registry.require('lock_cache')
-
-    dependency.rewrite(attribute='resolver', value='lock_path',
-        reason="Using lock file.")
-
-    resolver = registry.require('resolve_chain',
-        dependency=dependency)
+    with registry.provide_temporary() as temporary:
+        temporary.provide_value('resolver', 'lock_path')
+        resolver = registry.require('resolve_chain')
 
     resolver = CheckLockCacheResolver(resolver=resolver,
         lock_cache=lock_cache, dependency=dependency)
@@ -620,9 +701,8 @@ def resolve_from_lock_path(registry, dependency):
 
 
 @Registry.provide
-def resolve_lock_path(registry, dependency):
+def resolve_lock_path(lock_cache, dependency):
 
-    lock_cache = registry.require('lock_cache')
     path = lock_cache.path(dependency=dependency)
 
     # Set the resolver action on the dependency
@@ -632,10 +712,7 @@ def resolve_lock_path(registry, dependency):
 
 
 @Registry.provide
-def help_chain(registry, dependency):
-
-    ctx = registry.require('ctx')
-    resolve_config_path = registry.require('resolve_config_path')
+def help_chain(ctx, resolve_config_path, dependency):
 
     # Set the resolver action on the dependency
     dependency.resolver_chain = 'Load'
@@ -650,10 +727,7 @@ def help_chain(registry, dependency):
 
 
 @Registry.provide
-def load_chain(registry, dependency):
-
-    ctx = registry.require('ctx')
-    resolve_config_path = registry.require('resolve_config_path')
+def load_chain(ctx, resolve_config_path, dependency):
 
     # Set the resolver chain on the dependency
     dependency.resolver_chain = 'Load'
@@ -670,17 +744,21 @@ def load_chain(registry, dependency):
 
 
 @Registry.provide
-def sources_resolver(registry, dependency):
-
-    ctx = registry.require('ctx')
+def sources_resolver(ctx, registry, dependency):
 
     resolvers = []
 
     for source in dependency.sources:
-        with registry.provide_value('source', source):
+        with registry.provide_temporary() as temporary:
+            temporary.provide_value('source', source)
 
-            resolver_key = "resolve_{}".format(dependency.resolver)
-            resolver = registry.require(resolver_key, dependency=dependency)
+            if 'resolver' in registry:
+                resolver = registry.require('resolver')
+            else:
+                resolver = dependency.resolver
+
+            resolver_key = "resolve_{}".format(resolver)
+            resolver = registry.require(resolver_key)
 
             resolver = TryResolver(resolver=resolver, ctx=ctx,
                 dependency=dependency)
@@ -695,22 +773,16 @@ def sources_resolver(registry, dependency):
 
 
 @Registry.provide
-def resolve_chain(registry, dependency):
-
-    ctx = registry.require('ctx')
-    options = registry.require('options')
-    resolve_config_path = registry.require('resolve_config_path')
-    symlinks_path = registry.require('symlinks_path')
-    configuration = registry.require('configuration')
-    project_path = registry.require('project_path')
+def resolve_chain(ctx, options, registry, dependency, resolve_config_path,
+    symlinks_path):
 
     # Set the resolver chain on the dependency
     dependency.resolver_chain = 'Resolve'
 
     if options.path(dependency=dependency):
-        resolver = registry.require('user_path_resolver', dependency=dependency)
+        resolver = registry.require('user_path_resolver')
     else:
-        resolver = registry.require('sources_resolver', dependency=dependency)
+        resolver = registry.require('sources_resolver')
 
     resolver = CreateSymlinkResolver(
         resolver=resolver, dependency=dependency, symlinks_path=symlinks_path,
@@ -724,13 +796,10 @@ def resolve_chain(registry, dependency):
 
 
 @Registry.provide
-def resolve_and_lock_chain(registry, dependency):
+def resolve_and_lock_chain(registry, dependency, project_path, lock_cache):
 
-    resolver = registry.require('resolve_chain',
-        dependency=dependency)
+    resolver = registry.require('resolve_chain')
 
-    project_path = registry.require('project_path')
-    lock_cache = registry.require('lock_cache')
     lock_type = lock_cache.type()
 
     if lock_type == 'versions':
@@ -747,19 +816,17 @@ def resolve_and_lock_chain(registry, dependency):
 
 
 @Registry.provide
-def resolve_from_lock_chain(registry, dependency):
+def resolve_from_lock_chain(registry, dependency, lock_cache):
 
-    lock_cache = registry.require('lock_cache')
     lock_type = lock_cache.type()
 
     if lock_type == 'versions':
         resolver_key = "resolve_from_lock_{}".format(
             dependency.resolver)
-        resolver = registry.require(resolver_key, dependency=dependency)
+        resolver = registry.require(resolver_key)
 
     elif lock_type == 'paths':
-        resolver = registry.require('resolve_from_lock_path',
-            dependency=dependency)
+        resolver = registry.require('resolve_from_lock_path')
 
     else:
         raise Error("Unknown lock type {}".format(lock_type))
@@ -768,30 +835,25 @@ def resolve_from_lock_chain(registry, dependency):
 
 
 @Registry.provide
-def dependency_resolver(registry, dependency):
+def dependency_resolver(registry, ctx, configuration, dependency):
     """ Builds a WurfSourceResolver instance."""
-    ctx = registry.require('ctx')
 
-    # This is where we "wire" together the resolvers which will actually
-    # obtain a path to a dependency.
-    configuration = registry.require('configuration')
+    # This is where we "wire" together the resolvers. Which actually do the
+    # work of via some method obtaining a path to a dependency.
+    #
+
     resolver_key = "{}_chain".format(configuration.resolver_chain())
 
-    resolver = registry.require(resolver_key, dependency=dependency)
+    resolver = registry.require(resolver_key)
 
     return ContextMsgResolver(resolver=resolver, ctx=ctx,
         dependency=dependency)
 
-
+@Registry.cache_once
 @Registry.provide
-def configuration(registry):
-    options = registry.require('options')
-    args = registry.require('args')
-    project_path = registry.require('project_path')
-    waf_lock_file = registry.require('waf_lock_file')
-
-    return Configuration(options=options, args=args,
-        project_path=project_path, waf_lock_file=waf_lock_file)
+def configuration(options, args, project_path, waf_lock_file):
+    return Configuration(options=options, args=args, project_path=project_path,
+        waf_lock_file=waf_lock_file)
 
 
 @Registry.provide
@@ -808,10 +870,7 @@ def dependency_manager(registry):
 
 
 @Registry.provide
-def resolve_lock_action(registry):
-
-    lock_cache = registry.require('lock_cache')
-    project_path = registry.require('project_path')
+def resolve_lock_action(lock_cache, project_path):
 
     def action():
 
@@ -822,9 +881,7 @@ def resolve_lock_action(registry):
 
 
 @Registry.provide
-def post_resolver_actions(registry):
-
-    configuration = registry.require('configuration')
+def post_resolver_actions(registry, configuration):
 
     actions = []
 

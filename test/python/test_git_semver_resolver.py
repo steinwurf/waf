@@ -28,8 +28,8 @@ def test_git_semver_resolver(test_directory):
     semver_selector = mock.Mock()
     semver_selector.select_tag.return_value = selected_tag
 
-    resolver = GitSemverResolver(git=git, git_resolver=git_resolver,
-        ctx=ctx, semver_selector=semver_selector, dependency=dependency, 
+    resolver = GitSemverResolver(git=git, resolver=git_resolver,
+        ctx=ctx, semver_selector=semver_selector, dependency=dependency,
         cwd=cwd)
 
     path = resolver.resolve()
