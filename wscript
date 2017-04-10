@@ -202,10 +202,24 @@ def _pytest(bld):
     separator = ';' if sys.platform == 'win32' else ':'
     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
 
+    # We use the binaries in the virtualenv
+    if sys.platform == 'win32':
+        folder = 'Scripts'
+    else:
+        folder = 'bin'
+
+    if sys.platform == 'win32':
+        ext = '.exe'
+    else:
+        ext = ''
+
+    pyexe = os.path.join('pytestenv', folder, 'python' + ext)
+    pipexe = os.path.join('pytestenv', folder, 'pip' + ext)
+
     # Make python not write any .pyc files. These may linger around
     # in the file system and make some tests pass although their .py
     # counter-part has been e.g. deleted
-    test_command = 'pytestenv/bin/python -B -m pytest test'
+    test_command = pyexe + ' -B -m pytest test'
 
     # We override the pytest temp folder with the basetemp option,
     # so the test folders will be available at the specified location
@@ -249,16 +263,16 @@ def _pytest(bld):
         env=bld_env,
         always=True)
 
-    # bld.add_group()
-    #
-    # bld(rule='testenv/bin/pip install pytest mock vcrpy',
-    #     cwd=bld.path,
-    #     env=bld_env,
-    #     always=True)
-    #
-    # bld.add_group()
-    #
-    # bld(rule=test_command,
-    #     cwd=bld.path,
-    #     env=bld_env,
-    #     always=True)
+    bld.add_group()
+
+    bld(rule=pipexe +' install pytest mock vcrpy',
+        cwd=bld.path,
+        env=bld_env,
+        always=True)
+
+    bld.add_group()
+
+    bld(rule=test_command,
+        cwd=bld.path,
+        env=bld_env,
+        always=True)
