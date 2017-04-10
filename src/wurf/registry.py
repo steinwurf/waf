@@ -58,6 +58,18 @@ class RegistryInjectError(Error):
             'Fatal error provider "{}" requires "{}"'.format(
                 self.provider_function.__name__, self.missing_provider))
 
+class RegistryCacheOnceError(Error):
+    def __init__(self, provider_name, provider_function):
+
+        self.provider_name = provider_name
+        self.provider_function = provider_function
+
+        super(RegistryCacheOnceError, self).__init__(
+            'Fatal error provider "{}" should only be cached once. The '
+            'provided values passed to "{}" have changed since the object was '
+            'initially cached.'.format(self.provider_name,
+                self.provider_function.__name__))
+
 class Registry(object):
 
     # The TemporaryValue is used to provide temporary values though the
@@ -189,23 +201,14 @@ class Registry(object):
 
         The hash is used to make sure the registry provides stable cached
         results.
-
-        We used this
         """
 
         hash_dict = {}
         for k,v in arguments.items():
 
-            if k == 'registry':
-                continue
-
-            if self.registry[k].is_value:
-                if isinstance(v, (list, tuple, dict, set)):
-                    hash_dict[k] = hash(json.dumps(v, sort_keys=True))
-                else:
-                    hash_dict[k] = hash(v)
+            if isinstance(v, (list, tuple, dict, set)):
+                hash_dict[k] = hash(json.dumps(v, sort_keys=True))
             else:
-                assert(k in self.cache)
                 hash_dict[k] = hash(v)
 
         return hash(json.dumps(hash_dict, sort_keys=True))
@@ -235,23 +238,25 @@ class Registry(object):
                 #key = frozenset(inject_arguments.items())
                 key = self.__hash_arguments(inject_arguments)
 
+                provider = self.cache[provider_name]
+
                 try:
-                    return self.cache[provider_name].data[key]
+                    return provider.data[key]
                 except KeyError:
 
-                    if self.cache[provider_name].once:
-                        assert(len(self.cache[provider_name].data) == 0)
+                    if provider.once and len(provider.data) > 0:
+                        raise RegistryCacheOnceError(provider_name,
+                            provider_function)
 
                     call = self.registry[provider_name]
                     result = provider_function(**inject_arguments)
-                    self.cache[provider_name].data[key] = result
+                    provider.data[key] = result
                     return result
             else:
                 call = self.registry[provider_name]
                 result = provider_function(**inject_arguments)
                 return result
 
-        call.is_value = False
         self.registry[provider_name] = call
 
         if provider_name in self.cache:
@@ -273,7 +278,6 @@ class Registry(object):
             raise RegistryProviderError(provider_name)
 
         def call(): return value
-        call.is_value = True
 
         self.registry[provider_name] = call
 
@@ -327,7 +331,7 @@ class Registry(object):
         return func
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def resolve_path(mandatory_options, waf_utils):
     resolve_path = mandatory_options.resolve_path()
@@ -338,7 +342,7 @@ def resolve_path(mandatory_options, waf_utils):
     return resolve_path
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def symlinks_path(mandatory_options, waf_utils):
     symlinks_path = mandatory_options.symlinks_path()
@@ -347,7 +351,6 @@ def symlinks_path(mandatory_options, waf_utils):
     waf_utils.check_dir(symlinks_path)
 
     return symlinks_path
-
 
 @Registry.cache
 @Registry.provide
@@ -375,7 +378,7 @@ def git_url_parser():
     return GitUrlParser()
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def git_url_rewriter(git_url_parser, git_protocol):
     """ Rewriter for Git URLs.
@@ -386,7 +389,7 @@ def git_url_rewriter(git_url_parser, git_protocol):
     return GitUrlRewriter(parser=git_url_parser, rewrite_protocol=git_protocol)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def parser():
     return argparse.ArgumentParser(description='Resolve Options',
@@ -402,17 +405,13 @@ def dependency_cache():
     return collections.OrderedDict()
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
-def lock_cache(registry):
-
-    configuration = registry.require('configuration')
+def lock_cache(configuration, options, project_path):
 
     if configuration.resolver_chain() == Configuration.RESOLVE_AND_LOCK:
-        options = registry.require('options')
         return LockCache.create_empty(options=options)
     elif configuration.resolver_chain() == Configuration.RESOLVE_FROM_LOCK:
-        project_path = registry.require('project_path')
         lock_path = os.path.join(project_path, Configuration.LOCK_FILE)
         return LockCache.create_from_file(lock_path=lock_path)
     else:
@@ -422,12 +421,8 @@ def lock_cache(registry):
 
 @Registry.cache_once
 @Registry.provide
-def options(registry):
+def options(parser, args, default_resolve_path, default_symlinks_path):
     """ Return the Options provider."""
-    parser = registry.require('parser')
-    args = registry.require('args')
-    default_resolve_path = registry.require('default_resolve_path')
-    default_symlinks_path = registry.require('default_symlinks_path')
 
     # We support the protocols we know how to rewrite
     supported_git_protocols = GitUrlRewriter.git_protocols.keys()
@@ -445,21 +440,21 @@ def mandatory_options(options):
     return MandatoryOptions(options=options)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def semver_selector(semver):
     """ Return the SemverSelector provider. """
     return SemverSelector(semver=semver)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def tag_database(ctx):
     """ Return the TagDatabase provider. """
     return TagDatabase(ctx=ctx)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def project_git_protocol(git, ctx, git_url_parser):
     """ Return the Git protocol used by the parent project.
@@ -479,14 +474,14 @@ def project_git_protocol(git, ctx, git_url_parser):
         return url.protocol
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def git(git_binary, ctx):
     """ The Git object, which is used to run git commands. """
     return Git(git_binary=git_binary, ctx=ctx)
 
 
-@Registry.cache
+@Registry.cache_once
 @Registry.provide
 def git_protocol(options, project_git_protocol):
     """ Return the Git protocol to use. """
@@ -613,8 +608,6 @@ def resolve_git_semver(registry, source, dependency):
     :param dependency: A WurfDependency instance.
     """
 
-    # @todo There is no integration test covering this case
-    #
     # The ExistingTagResolver should only be used for Steinwurf projects,
     # since the tag database only contains information about those projects
     if 'steinwurf' in source:
@@ -856,7 +849,7 @@ def dependency_resolver(registry, ctx, configuration, dependency):
     return ContextMsgResolver(resolver=resolver, ctx=ctx,
         dependency=dependency)
 
-
+@Registry.cache_once
 @Registry.provide
 def configuration(options, args, project_path, waf_lock_file):
     return Configuration(options=options, args=args, project_path=project_path,
