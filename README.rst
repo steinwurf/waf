@@ -145,7 +145,8 @@ Lets outline the different steps:
    step has two main modes of operation "resolve" and "load". In the "resolve"
    mode we will try to fetch the needed dependencies e.g. via `git clone` or
    other ways. In the "load" mode we expect dependencies to have already been
-   resolved and made available on our local file system. Roughly speaking we
+   resolved and made available on our local file system (and we just load
+   information about where they are located). Roughly speaking we
    will be in "resolve" mode when the users uses the "configure" command i.e.
    ``python waf configure ...`` and otherwise in the "load" mode.
 3. In both cases the ``ResolveContext`` makes a dependency available by producing
