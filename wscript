@@ -60,6 +60,43 @@ def resolve(ctx):
         checkout='1.0.1',
         sources=['github.com/testing-cabal/mock.git'])
 
+    # ctx.add_dependency(
+    #     name='vcrpy',
+    #     recurse=False,
+    #     optional=False,
+    #     resolver='git',
+    #     method='checkout',
+    #     checkout='v1.10.5',
+    #     sources=['github.com/kevin1024/vcrpy.git'])
+    #
+    # ctx.add_dependency(
+    #     name='contextlib2',
+    #     recurse=False,
+    #     optional=False,
+    #     resolver='git',
+    #     method='checkout',
+    #     checkout='v0.5.4',
+    #     sources=['github.com/jazzband/contextlib2.git'])
+    #
+    # ctx.add_dependency(
+    #     name='wrapt',
+    #     recurse=False,
+    #     optional=False,
+    #     resolver='git',
+    #     method='checkout',
+    #     checkout='1.10.10',
+    #     sources=['github.com/GrahamDumpleton/wrapt.git'])
+    #
+    #
+    ctx.add_dependency(
+        name='virtualenv',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='15.1.0',
+        sources=['github.com/pypa/virtualenv.git'])
+
 
 def options(opt):
 
@@ -147,11 +184,14 @@ def build(bld):
 
 def _pytest(bld):
 
+
+
     python_path = \
     [
-        bld.dependency_path('pytest'),
-        bld.dependency_path('py'),
-        bld.dependency_path('mock'),
+        #bld.dependency_path('pytest'),
+        #bld.dependency_path('py'),
+        #bld.dependency_path('mock'),
+        bld.dependency_path('virtualenv'),
         bld.dependency_path('python-semver'),
         os.path.join(os.getcwd(), 'src')
     ]
@@ -165,7 +205,7 @@ def _pytest(bld):
     # Make python not write any .pyc files. These may linger around
     # in the file system and make some tests pass although their .py
     # counter-part has been e.g. deleted
-    test_command = 'python -B -m pytest test'
+    test_command = 'pytestenv/bin/python -B -m pytest test'
 
     # We override the pytest temp folder with the basetemp option,
     # so the test folders will be available at the specified location
@@ -204,7 +244,21 @@ def _pytest(bld):
     if bld.options.skip_network_tests:
         test_command += ' -m "not networktest"'
 
-    bld(rule=test_command,
+    bld(rule='python -m virtualenv pytestenv',
         cwd=bld.path,
         env=bld_env,
         always=True)
+
+    # bld.add_group()
+    #
+    # bld(rule='testenv/bin/pip install pytest mock vcrpy',
+    #     cwd=bld.path,
+    #     env=bld_env,
+    #     always=True)
+    #
+    # bld.add_group()
+    #
+    # bld(rule=test_command,
+    #     cwd=bld.path,
+    #     env=bld_env,
+    #     always=True)
