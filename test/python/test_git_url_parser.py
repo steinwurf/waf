@@ -20,6 +20,16 @@ def test_git_url_parser_https():
     assert url.host == 'github.com'
     assert url.path == 'steinwurf/waf'
 
+def test_git_url_parser_https_no_dot_git():
+
+    # This also works with git version 1.7.9, and probably also later
+    # so we also support it.
+    parser = GitUrlParser()
+    url = parser.parse('https://github.com/steinwurf/waf')
+
+    assert url.protocol == 'https://'
+    assert url.host == 'github.com'
+    assert url.path == 'steinwurf/waf'
 
 def test_git_url_parser_git_at():
 

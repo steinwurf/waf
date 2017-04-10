@@ -47,7 +47,7 @@ class GitUrlParser(object):
 
           (               # Group and match the following
             \.git         #   Match '.git'
-          )               # End of group
+          )?              # End of group, which is optional
 
           (               # Group and match the following
             /             #   Match '/'
