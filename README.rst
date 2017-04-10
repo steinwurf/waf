@@ -109,6 +109,34 @@ makes it easy to see which files are pure Python and which provide the
 integration points with Waf.
 
 
+High-level overview
+-------------------
+
+The main modification added to the standard Waf flow of control, is the addition
+of the `ResolveContext`. At a high-level this looks as follows::
+
+    ./waf ....
+
+           +
+           |
+        1. |
+           |
+    +--------v--------+      2.      +----------------+
+    |                 +------------> |                |
+    | OptionsContext  |              | ResolveContext |
+    |                 | <----------+ |                |
+    +-----------------+      3.      +----------------+
+           |
+        4. |
+           |
+    +--------v--------+
+    | ConfigureContext|
+    | BuildContext    |
+    | ....            |
+    +-----------------+
+
+The user
+
 
 Resolver features
 =================
@@ -325,22 +353,3 @@ resolved dependency we implement the ``--dump-resolved-dependencies`` option.
 
 This will write out information about resolved dependencies such as semver tag
 chosen etc.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
