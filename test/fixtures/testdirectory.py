@@ -167,7 +167,16 @@ class TestDirectory:
         :param filename: The filename to check for.
         :return: True if the file is contained within the test directory.
         """
-        return os.path.isfile(os.path.join(self.path(), filename))
+        files = glob.glob(os.path.join(self.path(), filename))
+
+        if len(files) == 0:
+            return False
+
+        assert(len(files) == 1)
+
+        filename = files[0]
+
+        return os.path.isfile(filename)
 
     def contains_dir(self, *directories):
         """ Checks for the existance of a directory.
