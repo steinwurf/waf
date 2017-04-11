@@ -46,7 +46,7 @@ def _test_http_resolver(test_directory):
 def test_http_resolver_vcr(test_directory):
 
     dependency = mock.Mock()
-    source = 'http://httpbin.org/image/svg'
+    source = 'http://github.com/louisdx/cxx-prettyprint/zipball/master'
     cwd = test_directory.path()
 
     resolver = HttpResolver(urlopen=urlopen, dependency=dependency,
@@ -54,17 +54,18 @@ def test_http_resolver_vcr(test_directory):
 
     path = resolver.resolve()
 
-    files = glob.glob(os.path.join(test_directory.path(), 'http-*/svg'))
+    files = glob.glob(os.path.join(test_directory.path(),
+        'http-*/louisdx-cxx-prettyprint-*.zip'))
 
     assert len(files) == 1
     assert path == files[0]
 
 
 @vcr.use_cassette('test/vcr_cassettes/https_resolver.yaml')
-def test_https_resolver_vcr(test_directory):
+def _test_https_resolver_vcr(test_directory):
 
     dependency = mock.Mock()
-    source = 'https://httpbin.org/image/svg'
+    source = 'https://github.com/louisdx/cxx-prettyprint/zipball/master'
     cwd = test_directory.path()
 
     resolver = HttpResolver(urlopen=urlopen, dependency=dependency,
