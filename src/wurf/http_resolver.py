@@ -45,14 +45,19 @@ class HttpResolver(object):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
+        # Get the filename
+        response = self.urlopen(url=self.source)
+        header = response.headers.get('Content-Disposition', '')
+
         file_name = os.path.basename(self.source)
         file_path = os.path.join(folder_path, file_name)
 
         # If the download file does not exist download it
         if not os.path.isfile(file_path):
 
+
+
             # From http://stackoverflow.com/a/1517728
-            response = self.urlopen(url=self.source)
             CHUNK = 16 * 1024
             with open(file_path, 'wb') as f:
                 while True:
