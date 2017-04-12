@@ -10,17 +10,17 @@ class HttpResolver(object):
     Http Resolver functionality. Downloads a file.
     """
 
-    def __init__(self, urlopen, dependency, source, cwd):
+    def __init__(self, urldownload, dependency, source, cwd):
 
         """ Construct a new instance.
 
-        :param urlopen: The Python URL open function
+        :param urldownload: An UrlDownload instance
         :param dependency: The dependency instance.
         :param source: The URL of the dependency as a string
         :param cwd: Current working directory as a string. This is the place
             where we should create new folders etc.
         """
-        self.urlopen = urlopen
+        self.urldownload = urldownload
         self.dependency = dependency
         self.source = source
         self.cwd = cwd
@@ -45,31 +45,13 @@ class HttpResolver(object):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
-        # Get the filename
-        response = self.urlopen(url=self.source)
-        header = response.headers.get('Content-Disposition', '')
-
-        file_name = os.path.basename(self.source)
-        file_path = os.path.join(folder_path, file_name)
-
-        # If the download file does not exist download it
-        if not os.path.isfile(file_path):
-
-
-
-            # From http://stackoverflow.com/a/1517728
-            CHUNK = 16 * 1024
-            with open(file_path, 'wb') as f:
-                while True:
-                    chunk = response.read(CHUNK)
-                    if not chunk:
-                        break
-                    f.write(chunk)
-
+        if dependency.filename:
+            filename = dependency.filename
         else:
-            # We only want to download if a newer file exists on the server
-            # can we check that here?
-            pass
+            filename = None
+
+        file_path = self.urldownload.download(cwd=folder_path, url=self.source,
+            filename=filename)
 
         assert os.path.isfile(file_path), "We should have a valid path here!"
 

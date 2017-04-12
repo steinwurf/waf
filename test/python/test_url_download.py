@@ -11,6 +11,9 @@ def test_url_download_url_filename():
     assert download._url_filename('http://example.com') == None
     assert download._url_filename('http://example.com/data') == None
     assert download._url_filename('http://example.com/data.txt') == 'data.txt'
+    assert download._url_filename(
+        'https://github.com/steinwurf/stub/archive/6.0.0.tar.gz') == \
+        '6.0.0.tar.gz'
 
 
 @vcr.use_cassette('test/vcr_cassettes/https_cxx_prettyprint_resolver.yaml')

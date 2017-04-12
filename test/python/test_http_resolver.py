@@ -57,11 +57,11 @@ def _test_http_resolver_vcr(test_directory):
     assert path == files[0]
 
 
-@vcr.use_cassette('test/vcr_cassettes/https_resolver.yaml')
-def _test_https_resolver_vcr(test_directory):
+@vcr.use_cassette('test/vcr_cassettes/https_stub_resolver.yaml')
+def _test_https_resolver_stub(test_directory):
 
     dependency = mock.Mock()
-    source = 'https://github.com/louisdx/cxx-prettyprint/zipball/master'
+    source = 'https://github.com/steinwurf/stub/archive/6.0.0.zip'
     cwd = test_directory.path()
 
     resolver = HttpResolver(urlopen=urlopen, dependency=dependency,
@@ -69,7 +69,7 @@ def _test_https_resolver_vcr(test_directory):
 
     path = resolver.resolve()
 
-    files = glob.glob(os.path.join(test_directory.path(), 'http-*/svg'))
+    files = glob.glob(os.path.join(test_directory.path(), 'http-*/6.0.0.zip'))
 
     assert len(files) == 1
     assert path == files[0]
