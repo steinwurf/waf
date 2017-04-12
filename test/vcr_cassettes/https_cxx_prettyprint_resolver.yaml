@@ -6,21 +6,6 @@ interactions:
       Host: [github.com]
       User-Agent: [Python-urllib/2.7]
     method: GET
-    uri: http://github.com/louisdx/cxx-prettyprint/zipball/master
-  response:
-    body: {string: !!python/unicode ''}
-    headers:
-      connection: [close]
-      content-length: ['0']
-      location: ['https://github.com/louisdx/cxx-prettyprint/zipball/master']
-    status: {code: 301, message: Moved Permanently}
-- request:
-    body: null
-    headers:
-      Connection: [close]
-      Host: [github.com]
-      User-Agent: [Python-urllib/2.7]
-    method: GET
     uri: https://github.com/louisdx/cxx-prettyprint/zipball/master
   response:
     body: {string: !!python/unicode '<html><body>You are being <a href="https://codeload.github.com/louisdx/cxx-prettyprint/legacy.zip/master">redirected</a>.</body></html>'}
@@ -36,7 +21,7 @@ interactions:
           github-cloud.s3.amazonaws.com *.githubusercontent.com; media-src ''none'';
           script-src assets-cdn.github.com; style-src ''unsafe-inline'' assets-cdn.github.com']
       content-type: [text/html; charset=utf-8]
-      date: ['Tue, 11 Apr 2017 05:33:53 GMT']
+      date: ['Wed, 12 Apr 2017 13:43:08 GMT']
       location: ['https://codeload.github.com/louisdx/cxx-prettyprint/legacy.zip/master']
       public-key-pins: [max-age=5184000; pin-sha256="WoiWRyIOVNa9ihaBciRSC7XHjliYS9VwUGOIud4PB18=";
           pin-sha256="RRM1dGqnDFsCJXBTHky16vi1obOlCgFFn/yOhI/y+ho="; pin-sha256="k2v657xBsOVe1PQRwOsHsw3bsGT2VzIqz5K+59sNQws=";
@@ -44,18 +29,18 @@ interactions:
           pin-sha256="iie1VXtL7HzAMF+/PVPR9xzT80kQxdZeJ+zduCB3uj0="; pin-sha256="LvRiGEjRqfzurezaWuj8Wie2gyHMrW5Q06LspMnox7A=";
           includeSubDomains]
       server: [GitHub.com]
-      set-cookie: ['logged_in=no; domain=.github.com; path=/; expires=Sat, 11 Apr
-          2037 05:33:53 -0000; secure; HttpOnly', _gh_sess=eyJzZXNzaW9uX2lkIjoiNmNjNDA2ODBlY2Y5NmY1ZjBhMGY1ZWIxODUwNzkxNzQiLCJzcHlfcmVwbyI6ImxvdWlzZHgvY3h4LXByZXR0eXByaW50Iiwic3B5X3JlcG9fYXQiOjE0OTE4ODg4MzN9--da7a6805625adbaa144362f30e950bfcb28c3f75;
+      set-cookie: ['logged_in=no; domain=.github.com; path=/; expires=Sun, 12 Apr
+          2037 13:43:08 -0000; secure; HttpOnly', _gh_sess=eyJzZXNzaW9uX2lkIjoiYjM3ODMzODIzZGQ1NTNmZWE2MjcwNjM4Y2U0OGYyZDQiLCJzcHlfcmVwbyI6ImxvdWlzZHgvY3h4LXByZXR0eXByaW50Iiwic3B5X3JlcG9fYXQiOjE0OTIwMDQ1ODh9--07245b906ca444a84214dc4f63dd21c1fbdc031f;
           path=/; secure; HttpOnly]
       status: [302 Found]
       strict-transport-security: [max-age=31536000; includeSubdomains; preload]
       vary: [X-PJAX, Accept-Encoding]
       x-content-type-options: [nosniff]
       x-frame-options: [deny]
-      x-github-request-id: ['D424:6998:64057C:9EF6B2:58EC6AC1']
-      x-request-id: [367d48b58e634ee7bda6c4ca14e35302]
-      x-runtime: ['0.021860']
-      x-served-by: [50fe232ee1c34f5b8606f84716e20baa]
+      x-github-request-id: ['C5EE:7811:D9FF36:145DE6D:58EE2EEC']
+      x-request-id: [82890a96f5a2920a3f5fbaf85ecc6096]
+      x-runtime: ['0.041587']
+      x-served-by: [b437fa0c9608399c74bf50b5c3f52799]
       x-ua-compatible: ['IE=Edge,chrome=1']
       x-xss-protection: [1; mode=block]
     status: {code: 302, message: Found}
@@ -345,17 +330,16 @@ interactions:
       access-control-allow-origin: ['https://render.githubusercontent.com']
       connection: [close]
       content-disposition: [attachment; filename=louisdx-cxx-prettyprint-9ab26d2.zip]
-      content-length: ['15400']
       content-security-policy: [default-src 'none'; style-src 'unsafe-inline']
       content-type: [application/zip]
-      date: ['Tue, 11 Apr 2017 05:33:54 GMT']
+      date: ['Wed, 12 Apr 2017 13:43:08 GMT']
       etag: ['"9ab26d228f2960f50b38ad37fe0159b7381f7533"']
       strict-transport-security: [max-age=31536000]
       vary: ['Authorization,Accept-Encoding']
       x-content-type-options: [nosniff]
       x-frame-options: [deny]
       x-geo-block-list: ['']
-      x-github-request-id: ['E562:6356:2BC2F2:3A66EA:58EC6AC1']
+      x-github-request-id: ['A814:2B96:15918F:1DBFE3:58EE2EEC']
       x-xss-protection: [1; mode=block]
     status: {code: 200, message: OK}
 version: 1

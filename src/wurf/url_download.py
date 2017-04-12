@@ -5,13 +5,18 @@ import cgi
 import os
 
 try:
-    from urllib.request import urlopen # Python 3
+    # Python 3
+    from urllib.request import urlopen
+    from urllib.parse import urlparse
+
 except ImportError:
-    from urllib2 import urlopen # Python 2
+    # Python 2
+    from urllib2 import urlopen
+    from urlparse import urlparse
 
 class UrlDownload(object):
 
-    def url_filename(self, url):
+    def _url_filename(self, url):
         """ Based on the url return the filename it contains or None if no
         filename is specified.
 
@@ -24,7 +29,12 @@ class UrlDownload(object):
         :return: The filename or None if no filename is in the URL.
         """
 
-        filename = os.path.basename(url)
+        parsed = urlparse(url)
+
+        if not parsed.path:
+            return None
+
+        filename = os.path.basename(parsed.path)
 
         _, extension = os.path.splitext(filename)
 
@@ -33,7 +43,7 @@ class UrlDownload(object):
         else:
             return filename
 
-    def __response_filename(self, response):
+    def _response_filename(self, response):
         """ Returns the filename contained in the HTTP Content-Disposition
         header.
         """
@@ -47,14 +57,20 @@ class UrlDownload(object):
         return params.get('filename', None)
 
     def download(self, cwd, source, filename=None):
+        """ Download the file specified by the source.
+
+        :param cwd: The directory where to download the file.
+        :param source: The URL of the file to download.
+        :param filename: The filename to store the file under.
+        """
 
         response = urlopen(url=source)
 
         if not filename:
-            filename = self.url_filename(source)
+            filename = self._url_filename(source)
 
         if not filename:
-            filename = self.__response_filename(response)
+            filename = self._response_filename(response)
 
         assert filename
         assert os.path.isdir(cwd)
