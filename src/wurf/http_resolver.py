@@ -45,8 +45,8 @@ class HttpResolver(object):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
-        if dependency.filename:
-            filename = dependency.filename
+        if self.dependency.filename:
+            filename = self.dependency.filename
         else:
             filename = None
 

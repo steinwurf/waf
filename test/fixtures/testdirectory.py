@@ -39,7 +39,14 @@ class TestDirectory:
     inspiration: http://search.cpan.org/~sanbeg/Test-Directory-0.041/lib/Test/Directory.pm
     """
     def __init__(self, tmpdir):
-        self.tmpdir = tmpdir
+
+        if isinstance(tmpdir, py.path.local):
+            self.tmpdir = tmpdir
+        else:
+            self.tmpdir = py.path.local(path=tmpdir)
+
+    def fool(path):
+        return TestDirectory(py.path.local(path))
 
     def mkdir(self, directory):
         """Create a sub-directory in the temporary / test dir.
