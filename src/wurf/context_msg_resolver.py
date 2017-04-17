@@ -52,7 +52,11 @@ class ContextMsgResolver(object):
                 # We print the symlink path as a relative path if it is
                 # inside the project folder
                 symlink_path = path
-                symlink_node = self.ctx.root.find_dir(str(path))
+                symlink_node = self.ctx.root.find_node(str(path))
+
+                #if not symlink_node:
+                #    symlink_node = self.cxt.root.find_file(str(path))
+
                 if symlink_node.is_child_of(self.ctx.srcnode):
                     symlink_path = symlink_node.path_from(self.ctx.srcnode)
                 real_path = self.dependency.real_path

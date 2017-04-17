@@ -56,7 +56,7 @@ class TryResolver(object):
         # The resolver did not raise an error, we check if it actually
         # produced a valid path for us.
         if path:
-            assert os.path.isdir(path)
+            assert os.path.isdir(path) or os.path.isfile(path)
         else:
             self.ctx.logger.debug(
                 "No path returned by {}".format(self.resolver))
