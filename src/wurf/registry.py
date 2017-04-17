@@ -36,6 +36,8 @@ from .lock_cache import LockCache
 from .semver_selector import SemverSelector
 from .tag_database import TagDatabase
 from .existing_tag_resolver import ExistingTagResolver
+from .url_download import UrlDownload
+from .http_resolver import HttpResolver
 
 from .error import Error
 from .error import DependencyError
@@ -456,6 +458,13 @@ def tag_database(ctx):
 
 @Registry.cache_once
 @Registry.provide
+def url_download():
+    """ Return the UrlDownload provider. """
+    return UrlDownload()
+
+
+@Registry.cache_once
+@Registry.provide
 def project_git_protocol(git, ctx, git_url_parser):
     """ Return the Git protocol used by the parent project.
 
@@ -685,6 +694,15 @@ def resolve_from_lock_git(registry, lock_cache, dependency):
         dependency=dependency)
 
     return resolver
+
+
+@Registry.cache
+@Registry.provide
+def resolve_http(url_download, dependency, source, dependency_path):
+    """
+    """
+    return HttpResolver(url_download=url_download, dependency=dependency,
+        source=source, cwd=dependency_path)
 
 
 @Registry.provide

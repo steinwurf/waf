@@ -8,7 +8,7 @@ import os
 from . import runresult
 from . import runresulterror
 
-class TestDirectory:
+class TestDirectory(object):
     """Testing code by invoking executable which potentially creates and deletes
     files and directories can be hard and error prone.
 
@@ -45,7 +45,13 @@ class TestDirectory:
         else:
             self.tmpdir = py.path.local(path=tmpdir)
 
-    def fool(path):
+    @staticmethod
+    def from_path(path):
+        """Create a new TestDirectory instance from a path.
+
+        :param path: The path as a string.
+        """
+        assert os.path.isdir(path)
         return TestDirectory(py.path.local(path))
 
     def mkdir(self, directory):

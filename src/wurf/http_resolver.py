@@ -10,17 +10,17 @@ class HttpResolver(object):
     Http Resolver functionality. Downloads a file.
     """
 
-    def __init__(self, urldownload, dependency, source, cwd):
+    def __init__(self, url_download, dependency, source, cwd):
 
         """ Construct a new instance.
 
-        :param urldownload: An UrlDownload instance
+        :param url_download: An UrlDownload instance
         :param dependency: The dependency instance.
         :param source: The URL of the dependency as a string
         :param cwd: Current working directory as a string. This is the place
             where we should create new folders etc.
         """
-        self.urldownload = urldownload
+        self.url_download = url_download
         self.dependency = dependency
         self.source = source
         self.cwd = cwd
@@ -50,8 +50,8 @@ class HttpResolver(object):
         else:
             filename = None
 
-        file_path = self.urldownload.download(cwd=folder_path, url=self.source,
-            filename=filename)
+        file_path = self.url_download.download(cwd=folder_path,
+            source=self.source, filename=filename)
 
         assert os.path.isfile(file_path), "We should have a valid path here!"
 
