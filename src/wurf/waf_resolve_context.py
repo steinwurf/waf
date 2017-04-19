@@ -22,6 +22,7 @@ from .error import CmdAndLogError
 from .error import Error
 
 from waflib.extras import semver
+from waflib.extras import archive
 
 
 # To create the tree. https://gist.github.com/hrldcpr/2012250
@@ -69,7 +70,9 @@ class WafResolveContext(Context.Context):
 
         self.registry = registry.build_registry(
             ctx=self, git_binary='git',
-            semver=semver, default_resolve_path=default_resolve_path,
+            semver=semver,
+            archive_extractor=archive.extract,
+            default_resolve_path=default_resolve_path,
             resolve_config_path=self.resolve_config_path(),
             default_symlinks_path=default_symlinks_path,
             waf_utils=Utils, args=sys.argv[1:],

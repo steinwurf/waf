@@ -910,8 +910,8 @@ def post_resolver_actions(registry, configuration):
 
 
 def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
-    default_symlinks_path, semver, waf_utils, args, project_path,
-    waf_lock_file):
+    default_symlinks_path, semver, archive_extractor, waf_utils, args,
+    project_path, waf_lock_file):
     """ Builds a registry.
 
     :param ctx: A Waf Context instance.
@@ -923,6 +923,7 @@ def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
     :param default_symlinks_path: A string containing the path where the
         dependency symlinks should be created per default.
     :param semver: The semver module
+    :param archive_extractor: An archive (zip, tar, etc.) extractor function.
     :param waf_utils: The waflib.Utils module
     :param args: Argument strings as a list, typically this will come
         from sys.argv
@@ -941,6 +942,7 @@ def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
     registry.provide_value('resolve_config_path', resolve_config_path)
     registry.provide_value('default_symlinks_path', default_symlinks_path)
     registry.provide_value('semver', semver)
+    registry.provide_value('archive_extractor', archive_extractor)
     registry.provide_value('waf_utils', waf_utils)
     registry.provide_value('args', args)
     registry.provide_value('project_path', project_path)

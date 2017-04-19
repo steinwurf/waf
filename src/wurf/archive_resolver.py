@@ -9,7 +9,7 @@ class ArchiveResolver(object):
     Extracts an archive
     """
 
-    def __init__(self, archive_extract, resolver, cwd):
+    def __init__(self, archive_extractor, resolver, cwd):
 
         """ Construct a new instance.
 
@@ -21,7 +21,7 @@ class ArchiveResolver(object):
         :param cwd: Current working directory as a string. This is the place
             where we should create new folders etc.
         """
-        self.archive_extract = archive_extract
+        self.archive_extractor = archive_extractor
         self.resolver = resolver
         self.cwd = cwd
 
@@ -41,6 +41,6 @@ class ArchiveResolver(object):
 
         extract_path = os.path.join(self.cwd, extract_folder)
 
-        self.archive_extract(path=path, to_path=extract_path)
+        self.archive_extractor(path=path, to_path=extract_path)
 
         return extract_path

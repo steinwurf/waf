@@ -13,11 +13,11 @@ def test_archive_resolver(test_directory):
     parent_resolver = mock.Mock()
     parent_resolver.resolve = mock.Mock(return_value=resolve_file)
 
-    archive_extract = mock.Mock()
+    archive_extractor = mock.Mock()
 
-    resolver = ArchiveResolver(archive_extract=archive_extract,
+    resolver = ArchiveResolver(archive_extractor=archive_extractor,
         resolver=parent_resolver, cwd=test_directory.path())
 
     path = resolver.resolve()
 
-    archive_extract.assert_called_once_with(resolve_file, path)
+    archive_extractor.assert_called_once_with(path=resolve_file, to_path=path)
