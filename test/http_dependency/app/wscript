@@ -21,6 +21,14 @@ def configure(conf):
     conf.load('compiler_cxx')
 
 def build(bld):
+
+    # cxx-prettyprint is a header-only library so we just need to
+    # export its include
+    bld(export_includes=bld.dependency_path('cxx-prettyprint'),
+        name='cxx_prettyprint')
+
+    print("WOOOTH {}".format(bld.dependency_path('cxx-prettyprint')))
+
     bld.program(features='cxx',
                 source='main.cpp',
                 target='app')

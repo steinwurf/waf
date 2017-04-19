@@ -31,6 +31,15 @@ def resolve(ctx):
         checkout='2.4.1',
         sources=['github.com/k-bx/python-semver.git'])
 
+    ctx.add_dependency(
+        name='python-archive',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='61b9afd',
+        sources=['github.com/gdub/python-archive.git'])
+
     # Testing dependencies
 
     ctx.add_dependency(
@@ -110,6 +119,7 @@ def build(bld):
     tools_dir = \
     [
         os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
+        os.path.join(bld.dependency_path('python-archive'), 'archive'),
         'src/wurf'
     ]
 
