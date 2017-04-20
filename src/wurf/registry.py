@@ -38,6 +38,7 @@ from .tag_database import TagDatabase
 from .existing_tag_resolver import ExistingTagResolver
 from .url_download import UrlDownload
 from .http_resolver import HttpResolver
+from .archive_resolver import ArchiveResolver
 
 from .error import Error
 from .error import DependencyError
@@ -698,11 +699,18 @@ def resolve_from_lock_git(registry, lock_cache, dependency):
 
 @Registry.cache
 @Registry.provide
-def resolve_http(url_download, dependency, source, dependency_path):
+def resolve_http(archive_extractor, url_download, dependency, source,
+    dependency_path):
     """
     """
-    return HttpResolver(url_download=url_download, dependency=dependency,
+    resolver = HttpResolver(url_download=url_download, dependency=dependency,
         source=source, cwd=dependency_path)
+
+    if dependency.extract:
+        resolver = ArchiveResolver(archive_extractor=archive_extractor,
+            resolver=resolver, cwd=dependency_path)
+
+    return resolver
 
 
 @Registry.provide

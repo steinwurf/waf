@@ -37,8 +37,8 @@ def resolve(ctx):
         optional=False,
         resolver='git',
         method='checkout',
-        checkout='61b9afd',
-        sources=['github.com/gdub/python-archive.git'])
+        checkout='toolify',
+        sources=['github.com/steinwurf/python-archive.git'])
 
     # Testing dependencies
 

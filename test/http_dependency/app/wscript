@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+import os
+
 APPNAME = 'test_http_dependency'
 VERSION = '1.0.0'
 
@@ -11,7 +13,8 @@ def resolve(ctx):
         internal=False,
         optional=False,
         resolver='http',
-        method='extract',
+        extract=True,
+        filename='prettyprint.zip',
         sources=['https://github.com/louisdx/cxx-prettyprint/zipball/master'])
 
 def options(opt):
@@ -23,12 +26,22 @@ def configure(conf):
 def build(bld):
 
     # cxx-prettyprint is a header-only library so we just need to
-    # export its include
-    bld(export_includes=bld.dependency_path('cxx-prettyprint'),
-        name='cxx_prettyprint')
+    # export its include. The zip archive cotains one folder so we
+    # need to use that one.
 
-    print("WOOOTH {}".format(bld.dependency_path('cxx-prettyprint')))
+    cxx_prettyprint_dirs = os.listdir(bld.dependency_path('cxx-prettyprint'))
+
+    if len(cxx_prettyprint_dirs) != 1:
+        # There should be only one directory
+        bld.fatal('There should be only one contained dir in the zip {}'.format(
+            cxx_prettyprint_dirs))
+
+    cxx_prettyprint_path = os.path.join(bld.dependency_path('cxx-prettyprint'),
+        cxx_prettyprint_dirs[0])
+
+    bld(export_includes=cxx_prettyprint_path, name='cxx_prettyprint')
 
     bld.program(features='cxx',
                 source='main.cpp',
-                target='app')
+                target='app',
+                use=['cxx_prettyprint'])
