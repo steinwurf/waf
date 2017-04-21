@@ -180,7 +180,12 @@ def _pytest(bld):
 
     bld.add_group()
 
-    bld(rule=pip_binary +' install pytest mock vcrpy',
+    # bld(rule=pip_binary +' install pytest mock vcrpy',
+    #     cwd=bld.path,
+    #     env=bld_env,
+    #     always=True)
+
+    bld(rule=python_binary+' -m pip install pytest mock vcrpy',
         cwd=bld.path,
         env=bld_env,
         always=True)
