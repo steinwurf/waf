@@ -4,4 +4,5 @@
 import shutil
 
 def copy_directory(path, to_path):
-    shutil.copytree(src=path, dst=to_path, symlinks=True)
+    shutil.copytree(src=unicode(path), dst=unicode(to_path),
+        symlinks=True)
