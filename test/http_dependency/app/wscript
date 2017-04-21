@@ -44,4 +44,5 @@ def build(bld):
     bld.program(features='cxx',
                 source='main.cpp',
                 target='app',
+                cxxflags='-std=c++11',
                 use=['endian'])
