@@ -7,7 +7,7 @@ waf3-*
 build
 resolve_symlinks
 resolved_dependencies
-pytestenv
+pytest_environment_*
 
 # Emacs temp / auto save
 \#*#

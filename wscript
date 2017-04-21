@@ -4,6 +4,7 @@
 import os
 import sys
 import shutil
+import hashlib
 
 import waflib
 
@@ -161,11 +162,17 @@ def _pytest(bld):
         folder = 'bin'
         ext = ''
 
-    virtualenv = 'pytestenv'
+    host_python_binary = sys.executable
+
+    # Make a new virtual env for different host executables
+    virtualenv_hash = hashlib.sha1(
+        host_python_binary.encode('utf-8')).hexdigest()[:6]
+
+    virtualenv = 'pytest_environment_'+virtualenv_hash
     python_binary = os.path.join(virtualenv, folder, 'python' + ext)
     pip_binary = os.path.join(virtualenv, folder, 'pip' + ext)
 
-    host_python_binary = sys.executable
+
     bld(rule=host_python_binary+' -m virtualenv ' + virtualenv + ' --no-site-packages',
         cwd=bld.path,
         env=bld_env,
