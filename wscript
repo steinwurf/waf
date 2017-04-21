@@ -188,7 +188,7 @@ def _pytest(bld):
                 for name in files:
                     filename = os.path.join(root, name)
                     if not os.path.islink(filename):
-                        os.chmod(filename, stat.S_IWUSR)
+                        os.chmod(unicode(filename), stat.S_IWUSR)
                     os.remove(filename)
                 for name in dirs:
                     dir = os.path.join(root, name)
