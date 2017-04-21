@@ -4,15 +4,19 @@
 import cgi
 import os
 
-try:
+from .compat import IS_PY2
+
+if IS_PY2:
+
+    # Python 2
+    from urllib2 import urlopen
+    from urlparse import urlparse
+else:
+
     # Python 3
     from urllib.request import urlopen
     from urllib.parse import urlparse
 
-except ImportError:
-    # Python 2
-    from urllib2 import urlopen
-    from urlparse import urlparse
 
 class UrlDownload(object):
 
@@ -48,7 +52,7 @@ class UrlDownload(object):
         header.
         """
         # Try to get the file name from the headers
-        header = response.info().getheader('Content-Disposition', '')
+        header = response.info().get('Content-Disposition', '')
 
         if not header:
             return None

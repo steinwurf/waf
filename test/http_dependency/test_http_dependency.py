@@ -3,6 +3,7 @@
 
 import os
 import json
+import pytest
 
 def mkdir_app(directory):
     app_dir = directory.mkdir('app')
@@ -13,6 +14,7 @@ def mkdir_app(directory):
 
     return app_dir
 
+@pytest.mark.networktest
 def test_http_dependency(test_directory):
 
     app_dir = mkdir_app(directory=test_directory)

@@ -101,7 +101,8 @@ def build_waf_binary(tsk):
     prelude = '\timport waflib.extras.wurf.waf_entry_point'
 
     # Build the command to execute
-    command = 'python waf-light configure build --make-waf '\
+    host_python_binary = sys.executable
+    command = host_python_binary + ' waf-light configure build --make-waf '\
               '--prelude="{}" --tools={}'.format(prelude, tool_paths)
 
     # Get the waf BuildContext
@@ -164,7 +165,8 @@ def _pytest(bld):
     python_binary = os.path.join(virtualenv, folder, 'python' + ext)
     pip_binary = os.path.join(virtualenv, folder, 'pip' + ext)
 
-    bld(rule='python -m virtualenv ' + virtualenv,
+    host_python_binary = sys.executable
+    bld(rule=host_python_binary+' -m virtualenv ' + virtualenv,
         cwd=bld.path,
         env=bld_env,
         always=True)

@@ -25,7 +25,7 @@ def configure(conf):
 
 def build(bld):
 
-    # cxx-prettyprint is a header-only library so we just need to
+    # endian is a header-only library so we just need to
     # export its include. The zip archive cotains one folder so we
     # need to use that one.
 
