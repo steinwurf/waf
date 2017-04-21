@@ -184,11 +184,11 @@ def _pytest(bld):
 
         def rmtree(top):
             import stat
-            for root, dirs, files in os.walk(top, topdown=False):
+            for root, dirs, files in os.walk(unicode(top), topdown=False):
                 for name in files:
                     filename = os.path.join(root, name)
                     if not os.path.islink(filename):
-                        os.chmod(filename.decode('utf-8'), stat.S_IWUSR)
+                        os.chmod(filename, stat.S_IWUSR)
                     os.remove(filename)
                 for name in dirs:
                     dir = os.path.join(root, name)
