@@ -166,7 +166,7 @@ def _pytest(bld):
     pip_binary = os.path.join(virtualenv, folder, 'pip' + ext)
 
     host_python_binary = sys.executable
-    bld(rule=host_python_binary+' -m virtualenv ' + virtualenv,
+    bld(rule=host_python_binary+' -m virtualenv ' + virtualenv + ' --no-site-packages',
         cwd=bld.path,
         env=bld_env,
         always=True)
