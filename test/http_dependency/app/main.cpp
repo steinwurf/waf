@@ -7,14 +7,16 @@
 #include <vector>
 #include <cstdint>
 
-#include <prettyprint.hpp>
+#include <endian/is_big_endian.hpp>
 
 int main()
 {
-    std::vector<uint32_t> data;
-    data.push_back(1);
-    data.push_back(2);
-    data.push_back(3);
-
-    std::cout << "vector: " << data << std::endl;
+    if (endian::is_big_endian())
+    {
+       std::cout << "This machine is big endian." << std::endl;
+    }
+    else
+    {
+       std::cout << "This machine is little endian." << std::endl;
+    }
 }
