@@ -166,7 +166,7 @@ class TestDirectory:
         """
 
         f = self.tmpdir.join(filename)
-        f.write_binary(data=bytes(data))
+        f.write_binary(data=data)
 
     def contains_file(self, filename):
         """ Checks for the existance of a file.

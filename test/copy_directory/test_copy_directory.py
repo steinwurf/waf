@@ -20,7 +20,7 @@ def test_copy_directory(test_directory):
 def test_copy_directory(test_directory):
 
     foo_dir = test_directory.mkdir(u'foo')
-    foo_dir.write_binary(u'圧縮.zip', data='ok')
+    foo_dir.write_binary(u'圧縮.zip', data=b'ok')
 
     copy_directory(path=foo_dir.path(),
         to_path=os.path.join(test_directory.path(), u'bar'))
