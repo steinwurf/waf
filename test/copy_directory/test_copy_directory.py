@@ -19,12 +19,12 @@ def test_copy_directory(test_directory):
 
 def test_copy_directory(test_directory):
 
-    foo_dir = test_directory.mkdir('foo')
+    foo_dir = test_directory.mkdir(u'foo')
     foo_dir.write_file(u'圧縮.zip', 'ok')
 
     copy_directory(path=foo_dir.path(),
-        to_path=os.path.join(test_directory.path(), 'bar'))
+        to_path=os.path.join(test_directory.path(), u'bar'))
 
-    bar_dir = test_directory.join('bar')
+    bar_dir = test_directory.join(u'bar')
 
     assert bar_dir.contains_file(u'圧縮.zip')
