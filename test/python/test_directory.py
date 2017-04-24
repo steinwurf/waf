@@ -3,9 +3,10 @@
 
 import os
 
-from wurf.copy_directory import copy_directory
+from wurf.directory import copy_directory
+from wurf.directory import remove_directory
 
-def test_copy_directory(test_directory):
+def test_directory(test_directory):
 
     foo_dir = test_directory.mkdir('foo')
     foo_dir.write_text('test.txt', data='ok', encoding='utf-8')
@@ -17,7 +18,7 @@ def test_copy_directory(test_directory):
 
     assert bar_dir.contains_file('test.txt')
 
-def test_copy_directory(test_directory):
+def test_directory_unicode(test_directory):
 
     foo_dir = test_directory.mkdir(u'foo')
     foo_dir.write_binary(u'圧縮.zip', data=b'ok')
