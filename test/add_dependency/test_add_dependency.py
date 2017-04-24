@@ -68,7 +68,7 @@ def mkdir_app_json(directory):
 
 
 def commit_file(directory, filename, content):
-    directory.write_file(filename, content)
+    directory.write_text(filename, content, encoding='utf-8')
     directory.run('git', 'add', '.')
     directory.run('git', '-c', 'user.name=John', '-c',
                   'user.email=doe@email.org', 'commit', '-m', 'oki')
@@ -90,7 +90,7 @@ def mkdir_libfoo(directory):
                 'user.email=doe@email.org', 'commit', '-m', 'oki')
     foo_dir.run('git', 'tag', '1.3.3.7')
 
-    commit_file(directory=foo_dir, filename='ok.txt', content='hello world')
+    commit_file(directory=foo_dir, filename='ok.txt', content=u'hello world')
 
     return foo_dir
 
@@ -113,7 +113,7 @@ def mkdir_libfoo_json(directory):
                 'user.email=doe@email.org', 'commit', '-m', 'oki')
     foo_dir.run('git', 'tag', '1.3.3.7')
 
-    commit_file(directory=foo_dir, filename='ok.txt', content='hello world')
+    commit_file(directory=foo_dir, filename='ok.txt', content=u'hello world')
 
     return foo_dir
 
@@ -142,7 +142,7 @@ def mkdir_libbaz(directory):
     baz_dir.run('git', 'tag', '3.3.0')
     baz_dir.run('git', 'tag', '3.3.1')
 
-    commit_file(directory=baz_dir, filename='ok.txt', content='hello world')
+    commit_file(directory=baz_dir, filename='ok.txt', content=u'hello world')
 
     baz_dir.run('git', 'tag', '4.0.0')
 

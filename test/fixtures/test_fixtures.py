@@ -8,7 +8,7 @@ def test_fixtures(test_directory):
     sub1 = test_directory.mkdir('sub1')
     assert os.path.exists(sub1.path())
 
-    sub1.write_file('ok.txt', 'hello_world')
+    sub1.write_binary('ok.txt', 'hello_world')
 
     ok_path = os.path.join(sub1.path(), 'ok.txt')
 
@@ -16,7 +16,7 @@ def test_fixtures(test_directory):
     sub1.rmfile('ok.txt')
     assert not os.path.isfile(ok_path)
 
-    sub1.write_file('ok2.txt', 'hello_world2')
+    sub1.write_text('ok2.txt', u'hello_world2', encoding='utf-8')
 
     ok_path = os.path.join(sub1.path(), 'ok2.txt')
 

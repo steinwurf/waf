@@ -8,7 +8,7 @@ from wurf.copy_directory import copy_directory
 def test_copy_directory(test_directory):
 
     foo_dir = test_directory.mkdir('foo')
-    foo_dir.write_file('test.txt', 'ok')
+    foo_dir.write_text('test.txt', data='ok', encoding='utf-8')
 
     copy_directory(path=foo_dir.path(),
         to_path=os.path.join(test_directory.path(), 'bar'))
@@ -20,7 +20,7 @@ def test_copy_directory(test_directory):
 def test_copy_directory(test_directory):
 
     foo_dir = test_directory.mkdir(u'foo')
-    foo_dir.write_file(u'圧縮.zip', 'ok')
+    foo_dir.write_binary(u'圧縮.zip', data='ok')
 
     copy_directory(path=foo_dir.path(),
         to_path=os.path.join(test_directory.path(), u'bar'))

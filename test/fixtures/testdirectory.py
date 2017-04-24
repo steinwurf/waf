@@ -152,14 +152,21 @@ class TestDirectory:
 
         return TestDirectory(target_dir)
 
-
-    def write_file(self, filename, content):
+    def write_text(self, filename, data, encoding):
         """Writes a file in the temporary directory.
 
         """
 
         f = self.tmpdir.join(filename)
-        f.write(content)
+        f.write_text(data=data, encoding=encoding)
+
+    def write_binary(self, filename, data):
+        """Writes a file in the temporary directory.
+
+        """
+
+        f = self.tmpdir.join(filename)
+        f.write_binary(data=data)
 
     def contains_file(self, filename):
         """ Checks for the existance of a file.
