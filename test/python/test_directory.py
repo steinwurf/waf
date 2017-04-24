@@ -18,6 +18,15 @@ def test_directory(test_directory):
 
     assert bar_dir.contains_file('test.txt')
 
+    assert test_directory.contains_dir(foo_dir.path())
+    assert test_directory.contains_dir(bar_dir.path())
+
+    remove_directory(foo_dir.path())
+    remove_directory(bar_dir.path())
+
+    assert not test_directory.contains_dir(foo_dir.path())
+    assert not test_directory.contains_dir(bar_dir.path())
+
 def test_directory_unicode(test_directory):
 
     foo_dir = test_directory.mkdir(u'foo')
@@ -29,3 +38,12 @@ def test_directory_unicode(test_directory):
     bar_dir = test_directory.join(u'bar')
 
     assert bar_dir.contains_file(u'圧縮.zip')
+
+    assert test_directory.contains_dir(foo_dir.path())
+    assert test_directory.contains_dir(bar_dir.path())
+
+    remove_directory(foo_dir.path())
+    remove_directory(bar_dir.path())
+
+    assert not test_directory.contains_dir(foo_dir.path())
+    assert not test_directory.contains_dir(bar_dir.path())
