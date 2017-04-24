@@ -184,7 +184,14 @@ def _pytest(bld):
 
         def rmtree(top):
             import stat
-            for root, dirs, files in os.walk(unicode(top), topdown=False):
+
+            # In Python2 convert to unicode
+            try:
+                top = unicode(top)
+            except NameError:
+                pass
+
+            for root, dirs, files in os.walk(top, topdown=False):
                 for name in files:
                     filename = os.path.join(root, name)
                     if not os.path.islink(filename):
