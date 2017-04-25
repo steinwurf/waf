@@ -9,7 +9,7 @@ from wurf.directory import remove_directory
 def test_directory(test_directory):
 
     foo_dir = test_directory.mkdir('foo')
-    foo_dir.write_text('test.txt', data=u'ok', encoding='utf-8')
+    foo_dir.write_text('test.txt', data='ok', encoding='utf-8')
 
     copy_directory(path=foo_dir.path(),
         to_path=os.path.join(test_directory.path(), 'bar'))
