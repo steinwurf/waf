@@ -3,7 +3,8 @@
 
 import hashlib
 import os
-import shutil
+
+from .directory import copy_directory
 
 class GitCheckoutResolver(object):
     """
@@ -57,7 +58,7 @@ class GitCheckoutResolver(object):
         # then copy the master and checkout that version
         if not os.path.isdir(checkout_path):
             try:
-                shutil.copytree(src=path, dst=checkout_path, symlinks=True)
+                copy_directory(path=path, to_path=checkout_path)
                 self.git.checkout(branch=self.checkout, cwd=checkout_path)
             except:
                 # The checkout_path must be removed if the checkout is not
