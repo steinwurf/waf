@@ -166,6 +166,9 @@ class TestDirectory:
         """
 
         f = self.tmpdir.join(filename)
+
+        print(type(f.strpath))
+
         f.write_binary(data=data)
 
     def contains_file(self, filename):
