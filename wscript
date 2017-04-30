@@ -181,31 +181,7 @@ def _pytest(bld):
     # to traverse the directory tree from the bottom up as recommended here:
     # http://stackoverflow.com/a/2656408
     if os.path.exists(basetemp):
-
-        def rmtree(top):
-            import stat
-
-            # In Python2 convert to unicode
-            try:
-                top = unicode(top)
-            except NameError:
-                pass
-
-            for root, dirs, files in os.walk(top, topdown=False):
-                for name in files:
-                    filename = os.path.join(root, name)
-                    if not os.path.islink(filename):
-                        os.chmod(filename, stat.S_IWUSR)
-                    os.remove(filename)
-                for name in dirs:
-                    dir = os.path.join(root, name)
-                    if os.path.islink(dir):
-                        os.unlink(dir)
-                    else:
-                        os.rmdir(dir)
-            os.rmdir(top)
-
-        rmtree(basetemp)
+        waflib.extras.wurf.directory.remove_directory(path=basetemp)
 
     # Conditionally disable the tests that have the "networktest" marker
     if bld.options.skip_network_tests:
