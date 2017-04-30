@@ -38,7 +38,7 @@ def check_locale_python3():
         raise RuntimeError(
             'We will abort further execution because Python 3 '
             'was configured to use ASCII as encoding for the '
-            'environment.  Consult e.g. http://click.pocoo.org/python3/'
+            'environment. Consult e.g. http://click.pocoo.org/python3/'
             'for mitigation steps.')
     else:
         return
