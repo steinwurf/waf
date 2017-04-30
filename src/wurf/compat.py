@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import sys
-#import codecs
+import codecs
 
 IS_PY2 = sys.version_info[0] == 2
 
