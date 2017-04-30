@@ -200,28 +200,8 @@ def _pytest(bld):
     # We need to manually remove the previously created basetemp folder,
     # because pytest uses os.listdir in the removal process, and that fails
     # if there are any broken symlinks in that folder.
-    # Note that shutil.rmtree fails with the same error, so we use os.walk
-    # to traverse the directory tree from the bottom up as recommended here:
-    # http://stackoverflow.com/a/2656408
     if os.path.exists(basetemp):
-
-        def rmtree(top):
-            import stat
-            for root, dirs, files in os.walk(top, topdown=False):
-                for name in files:
-                    filename = os.path.join(root, name)
-                    if not os.path.islink(filename):
-                        os.chmod(filename, stat.S_IWUSR)
-                    os.remove(filename)
-                for name in dirs:
-                    dir = os.path.join(root, name)
-                    if os.path.islink(dir):
-                        os.unlink(dir)
-                    else:
-                        os.rmdir(dir)
-            os.rmdir(top)
-
-        rmtree(basetemp)
+        waflib.extras.wurf.directory.remove_directory(path=basetemp)
 
     # Make python not write any .pyc files. These may linger around
     # in the file system and make some tests pass although their .py

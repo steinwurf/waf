@@ -18,7 +18,7 @@ def test_http_resolver(test_directory):
         assert filename == None
 
         httpdir = test_directory.from_path(cwd)
-        httpdir.write_file('file.zip', 'hello_world')
+        httpdir.write_binary('file.zip', 'hello_world')
 
         return os.path.join(httpdir.path(), 'file.zip')
 
@@ -46,7 +46,7 @@ def test_http_resolver_filename(test_directory):
         assert filename == 'foo.zip'
 
         httpdir = test_directory.from_path(cwd)
-        httpdir.write_file('foo.zip', 'hello_world')
+        httpdir.write_binary('foo.zip', 'hello_world')
 
         return os.path.join(httpdir.path(), 'foo.zip')
 

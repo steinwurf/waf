@@ -7,7 +7,7 @@ from wurf.archive_resolver import ArchiveResolver
 def test_archive_resolver(test_directory):
 
     resolve_path = test_directory.mkdir('resolved')
-    resolve_path.write_file('ok.zip', 'foobarbaz')
+    resolve_path.write_binary('ok.zip', 'foobarbaz')
     resolve_file = os.path.join(resolve_path.path(), 'ok.zip')
 
     parent_resolver = mock.Mock()

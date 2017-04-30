@@ -25,6 +25,11 @@ def _check_minimum_python_version(major, minor):
 # therefore it is a good entry point to check the minimum Python version
 _check_minimum_python_version(2, 7)
 
+# Check we can handle Unicode properly
+from . import compat
+
+compat.check_locale_python3()
+
 # A general note on the Context. Waf uses a meta-classes registration
 # system for the Context classes. This means that to register e.g. a new
 # ConfigurationContext it is enough to simply import the module where the
