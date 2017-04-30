@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import sys
+#import codecs
 
 IS_PY2 = sys.version_info[0] == 2
 
@@ -31,7 +32,7 @@ def check_locale_python3():
     try:
         import locale
         fs_enc = codecs.lookup(locale.getpreferredencoding()).name
-    except Exception:
+    except LookupError:
         fs_enc = 'ascii'
 
     if fs_enc == 'ascii':
