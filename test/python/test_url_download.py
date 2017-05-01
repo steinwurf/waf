@@ -2,6 +2,7 @@ import pytest
 import mock
 import vcr
 import os
+import sys
 
 from wurf.url_download import UrlDownload
 
@@ -16,6 +17,10 @@ def test_url_download_url_filename():
         '6.0.0.tar.gz'
 
 
+# @todo Re-enable when support merged:
+# https://github.com/kevin1024/vcrpy/pull/303
+@pytest.mark.skipif(sys.version_info == (3,6), reason="vcr.py issue for Python"
+    "3.6: https://github.com/kevin1024/vcrpy/pull/303")
 @vcr.use_cassette('test/vcr_cassettes/https_cxx_prettyprint_resolver.yaml')
 def test_url_download_cxx_prettyprint_rename(test_directory):
 
@@ -30,6 +35,10 @@ def test_url_download_cxx_prettyprint_rename(test_directory):
     assert os.path.join(cwd, 'test.zip') == path
 
 
+# @todo Re-enable when support merged:
+# https://github.com/kevin1024/vcrpy/pull/303
+@pytest.mark.skipif(sys.version_info == (3,6), reason="vcr.py issue for Python"
+    "3.6: https://github.com/kevin1024/vcrpy/pull/303")
 @vcr.use_cassette('test/vcr_cassettes/https_cxx_prettyprint_resolver.yaml')
 def test_url_download_cxx_prettyprin(test_directory):
 
@@ -50,6 +59,10 @@ def test_url_download_cxx_prettyprin(test_directory):
     assert os.path.join(cwd, 'louisdx-cxx-prettyprint-9ab26d2.zip') == path
 
 
+# @todo Re-enable when support merged:
+# https://github.com/kevin1024/vcrpy/pull/303
+@pytest.mark.skipif(sys.version_info == (3,6), reason="vcr.py issue for Python"
+    "3.6: https://github.com/kevin1024/vcrpy/pull/303")
 @vcr.use_cassette('test/vcr_cassettes/https_stub_resolver.yaml')
 def test_url_download_stub_rename(test_directory):
 
@@ -64,6 +77,10 @@ def test_url_download_stub_rename(test_directory):
     assert os.path.join(cwd, 'test.zip') == path
 
 
+# @todo Re-enable when support merged:
+# https://github.com/kevin1024/vcrpy/pull/303
+@pytest.mark.skipif(sys.version_info == (3,6), reason="vcr.py issue for Python"
+    "3.6: https://github.com/kevin1024/vcrpy/pull/303")
 @vcr.use_cassette('test/vcr_cassettes/https_stub_resolver.yaml')
 def test_url_download_stub(test_directory):
 
