@@ -4,6 +4,7 @@ import os
 
 from wurf.http_resolver import HttpResolver
 
+
 def test_http_resolver(test_directory):
 
     url_download = mock.Mock()
