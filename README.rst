@@ -200,7 +200,7 @@ download the dependency::
         ...
     }
 
-Valid resolver types are: ``git``, ``http``.
+Valid resolver types are: ``{"git" | "http"}``.
 
 
 Specifying a dependency(``resolve.json``)
