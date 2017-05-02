@@ -176,8 +176,8 @@ There are two overall ways of specifying a dependency.
 A dependency is described using a number of key-value attributes. The following
 defines the general dependency attributes:
 
-Attribute ``name``
-,,,,,,,,,,,,,,,,,,
+Attribute ``name`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 The name attribute is a string the assigns a human readable name to the
 dependency::
@@ -189,6 +189,18 @@ dependency::
 
 The name must be unique among all dependencies.
 
+Attribute ``resolver`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The resolver attribute is a string that specifies the resolver type used to
+download the dependency::
+
+    {
+        "resolver": "git",
+        ...
+    }
+
+Valid resolver types are: ``git``, ``http``.
 
 
 Specifying a dependency(``resolve.json``)
