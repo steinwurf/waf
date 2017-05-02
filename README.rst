@@ -13,12 +13,12 @@ automatically.
    :local:
 
 License
-=======
+-------
 This project is under the same BSD license as the Waf project. The license text
 can be found here: https://github.com/waf-project/waf/blob/master/waf-light#L6-L30
 
 Building our custom Waf binary
-==============================
+------------------------------
 
 Clone the repository::
 
@@ -33,7 +33,7 @@ This will produce a waf binary in the ``build`` folder which we may copy into
 our projects.
 
 Tests
-=====
+-----
 
 To ensure that the tools work as intended way we provide a set of
 tests. To run the tests invoke::
@@ -41,7 +41,8 @@ tests. To run the tests invoke::
       python waf --run_tests
 
 ``--skip_network_tests``
-------------------------
+........................
+
 Passing ``--skip_network_tests`` will skip any unit tests which rely on network
 connectivity.
 
@@ -53,7 +54,7 @@ will invoke a freshly built ``waf`` binary with the wscript used to build it -
 yes very meta :)
 
 Fixing unit tests
------------------
+.................
 
 We use ``pytest`` to run the unit tests and integration tests. If some unit
 tests fail, it may be helpful to go to the test folder and invoke the failing
@@ -69,7 +70,7 @@ function called ``test_empty_wscript(test_directory)``, then the first invocatio
 of that test will happen inside ``py_test/test_empty_wscript0``.
 
 Log output / debugging
-----------------------
+......................
 
 We use the logging system provided by waf. If you have an issue with the
 resolve functionality, you can add the ``-v`` verbose flag (or ``-vvv``
@@ -84,9 +85,8 @@ The default zone printed by ``waf`` when adding the verbose flag ``-v`` is
     python waf configure -v --zones=resolve,runner
 
 
-
 Source code
-===========
+-----------
 
 The modifications and additions to Waf are in the ``src/wurf`` folder. The
 main file included by Waf is the ``src/wurf/waf_entry_point.py``. This is a great
@@ -105,7 +105,7 @@ this::
     from wurf.xyz import Xyz
 
 Waf specific code
------------------
+.................
 
 Code that uses/imports code from core Waf are prefixed with ``waf_``. This
 makes it easy to see which files are pure Python and which provide the
@@ -113,7 +113,7 @@ integration points with Waf.
 
 
 High-level overview
--------------------
+...................
 
 The main modification added to the standard Waf flow of control, is the addition
 of the `ResolveContext`. At a high-level this looks as follows::
@@ -163,10 +163,10 @@ Lets outline the different steps:
 
 
 Resolver features
-=================
+-----------------
 
 Specifying a dependency(``resolve.json``)
------------------------------------------
+.........................................
 
 Providing third-party tooling to work with the dependencies, i.e. monitoring
 the dependencies and sending push notifications when new versions are available
@@ -203,7 +203,8 @@ To support both these configuration methods, we define the following "rules":
 2. It is valid to mix both methods to define dependencies.
 
 The ``recurse`` attribute
--------------------------
+.........................
+
 This option specifies whether waf should recurse into the dependency folder.
 The default value of ``recurse`` is ``True``.
 
@@ -228,7 +229,8 @@ waf command, say ``upload``, then add the following to your wscript's
         waf_resolve_context.recurse_dependencies(self)
 
 Resolve symlinks
-----------------
+................
+
 The purpose of this feature is to provide stable locations in the file system
 for the downloaded dependencies.
 
@@ -271,7 +273,7 @@ After re-running ``python waf configure ...``::
     lrwxrwxrwx 1 usr usr 29 Feb 20 20:57 gtest -> /path/to/gtest-1.6.8-someh4sh
 
 The ExistingTagResolver and the ``--fast_resolve`` option
----------------------------------------------------------
+.........................................................
 
 Running ``python waf configure`` can take a very long time if the project
 has a lot of dependencies. In the past, we had to endure a long delay when
@@ -304,7 +306,7 @@ For example, we can manually set the path of the ``foo`` dependency and use
 
 
 The ``--lock_versions`` option
-------------------------------
+..............................
 
 The ``--lock_versions`` option will write ``lock_resolve.json`` to the project
 folder. This file will describe the exact version information about the
@@ -330,7 +332,7 @@ As an example::
     python waf configure --lock_versions
 
 The ``--lock_paths`` option
----------------------------
+...........................
 
 The ``--lock_paths`` will write a ``lock_resolve.json`` file in the project
 folder. It behaves differently from the ``--lock_versions`` option in that it
@@ -350,20 +352,22 @@ This makes it possible to easily create a standalone archive::
 
 
 Future features
-===============
+---------------
 
 The following list contains the work items that we have identified as "cool"
 features for the Waf dependency resolve extension.
 
 Add ``--force-resolve`` option
-----------------------------
+..............................
+
 Certain resolvers utilize "shortcuts" such as using cached information about
 dependencies to speed the resolve step. Providing this option should by-pass
 such optimizations and do a full resolve - not relying on any form of cached
 data.
 
 Print full log file on failure
-------------------------------
+..............................
+
 To make error messages user-friendly the default is to redirect full tracebacks
 (showing where an error originated), to the log files. However, if running on
 a build system it is convenient to have the full traceback printed to the
@@ -371,7 +375,8 @@ terminal, this avoid us having to log into the machine an manually retrieve the
 log file.
 
 Dump resolved dependencies information to json.
------------------------------------------------
+...............................................
+
 To support third party tooling working with information about an already
 resolved dependency we implement the ``--dump-resolved-dependencies`` option.
 
