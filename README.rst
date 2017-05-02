@@ -196,6 +196,7 @@ The ``resolver`` attribute is a string that specifies the resolver type used to
 download the dependency::
 
     {
+        "name": "my-pet-library",
         "resolver": "git",
         ...
     }
@@ -209,6 +210,8 @@ The ``optional`` attribute is a boolean which specifies that a dependency
 is allowed to fail during the resolve step.::
 
     {
+        "name": "my-pet-library",
+        "resolver": "git",
         "optional": true,
         ...
     }
@@ -218,12 +221,34 @@ If ``optional`` is not specified, it will default to ``false``.
 Attribute ``recurse`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
-The ``recurse`` attribute is a boolean which specifies whether Waf will
-recurse into the resolved dependency path. This is useful e.g. if that
-dependency specifies its own dependencies allowing all dependencies to be
-recursively resolved.::
+This attribute specifies whether waf should recurse into the dependency folder.
+
+This is useful if the dependency is itself a waf probject. When recursing into
+a folder waf will look for a wscript in the folder and execute its commands.
+
+Currently we will automatically (if recurse is True), recurse into and execute
+following waf commands: (resolve, options, configure, build)
+
+If you have a wscript where you would like to recurse dependencies for a custom
+waf command, say ``upload``, then add the following to your wscript's
+``upload`` function::
+
+    def upload(ctx):
+        ... your code
+        # Now lets recurse and execute the upload functions in dependencies
+        # wscripts.
+
+        import waflib.extras.wurf.waf_resolve_context
+
+        # Call upload in all dependencies (if it exists)
+        waf_resolve_context.recurse_dependencies(self)
+
+Example of attributes::
 
     {
+        "name": "my-pet-library",
+        "resolver": "git",
+        "optional": true,
         "recurse": true,
         ...
     }
@@ -250,14 +275,35 @@ As illustrated by the small figure::
     |libbar | +---------> | gtest  |
     +-------+             +--------+
 
-Example of attribute::
+Example of attributes::
 
     {
+        "name": "my-pet-library",
+        "resolver": "git",
+        "optional": true,
+        "recurse": true,
         "internal": true,
         ...
     }
 
 If ``internal`` is not specified, it will default to ``false``.
+
+Attribute ``sources`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``sources`` attribute is a list containing URLs for the dependency. The URL
+format depends on the resolver.
+
+Example of attributes::
+
+    {
+        "name": "my-pet-library",
+        "resolver": "git",
+        "optional": true,
+        "recurse": true,
+        "internal": true,
+        "sources": ["github.com/myorg/mylib.git"]
+    }
 
 Specifying a ``git`` dependency
 ...............................
@@ -274,10 +320,11 @@ The simplest to use is the ``checkout`` method, which combined with the
 commit.::
 
     {
-        ...
+        "name": "somelib"
         "resolver": "git",
         "method": "checkout",
         "checkout": "my-branch"
+        "sources": ["github.com/myorg/somelib.git"]
         ...
     }
 
@@ -306,11 +353,11 @@ versions of our dependency has been released and the newest is now ``4.2.0``.
 Attributes::
 
     {
-        ...
+        "name": "someotherlib"
         "resolver": "git",
         "method": "semver",
         "major": 4,
-        ...
+        "sources": ["github.com/myorg/someotherlib.git"]
     }
 
 
@@ -325,10 +372,10 @@ Attribute ``filename`` (``http`` resolver)
 Specify a filename of the downloaded dependency::
 
     {
-        ...
+        "name": "myfile"
         "resolver": "http",
         "filename": "somefile.zip",
-        ...
+        "sources": ["http://mydomain.com/myfile.zip"]
     }
 
 The attribute is optional. If not specified the resolver will try to derive the
@@ -341,15 +388,15 @@ If the dependency is an archive (e.g. ``zip``, ``tar.gz``, etc.) the ``extract``
 boolean specifies whether the archive should be extracted::
 
     {
-        ...
+        "name": "myfile"
         "resolver": "http",
         "extract": true,
-        ...
+        "sources": ["http://mydomain.com/myfile.zip"]
     }
 
 If the ``extract`` attribute is not specified it defaults to ``false``.
 
-Specifying a dependency(``resolve.json``)
+Specifying dependencies (``resolve.json``)
 .........................................
 
 Providing third-party tooling to work with the dependencies, i.e. monitoring
@@ -385,32 +432,6 @@ To support both these configuration methods, we define the following "rules":
 1. The user defined ``resolve(...)`` function will always be called before
    loading a ``resolve.json`` file (if present).
 2. It is valid to mix both methods to define dependencies.
-
-The ``recurse`` attribute
-.........................
-
-This option specifies whether waf should recurse into the dependency folder.
-The default value of ``recurse`` is ``True``.
-
-This is useful if the dependency is itself a waf probject. When recursing into
-a folder waf will look for a wscript in the folder and execute its commands.
-
-Currently we will automatically (if recurse is True), recurse into and execute
-following waf commands: (resolve, options, configure, build)
-
-If you have a wscript where you would like to recurse dependencies for a custom
-waf command, say ``upload``, then add the following to your wscript's
-``upload`` function::
-
-    def upload(ctx):
-        ... your code
-        # Now lets recurse and execute the upload functions in dependencies
-        # wscripts.
-
-        import waflib.extras.wurf.waf_resolve_context
-
-        # Call upload in all dependencies
-        waf_resolve_context.recurse_dependencies(self)
 
 Resolve symlinks
 ................
