@@ -165,6 +165,32 @@ Lets outline the different steps:
 Resolver features
 -----------------
 
+Specifying a dependency
+.......................
+
+There are two overall ways of specifying a dependency.
+
+1. Using a ``resolve.json`` file.
+2. Defining a `resolve(...)` function in the project's ``wscript``
+
+A dependency is described using a number of key-value attributes. The following
+defines the general dependency attributes:
+
+Attribute ``name``
+,,,,,,,,,,,,,,,,,,
+
+The name attribute is a string the assigns a human readable name to the
+dependency::
+
+    {
+        "name": "my-pet-library",
+        ...
+    }
+
+The name must be unique among all dependencies.
+
+
+
 Specifying a dependency(``resolve.json``)
 .........................................
 
