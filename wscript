@@ -4,6 +4,7 @@
 import os
 import sys
 import shutil
+import hashlib
 
 import waflib
 
@@ -31,34 +32,25 @@ def resolve(ctx):
         checkout='2.4.1',
         sources=['github.com/k-bx/python-semver.git'])
 
+    ctx.add_dependency(
+        name='python-archive',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='toolify',
+        sources=['github.com/steinwurf/python-archive.git'])
+
     # Testing dependencies
 
     ctx.add_dependency(
-        name='pytest',
+        name='virtualenv',
         recurse=False,
         optional=False,
         resolver='git',
         method='checkout',
-        checkout='3.0.6',
-        sources=['github.com/pytest-dev/pytest.git'])
-
-    ctx.add_dependency(
-        name='py',
-        recurse=False,
-        optional=False,
-        resolver='git',
-        method='checkout',
-        checkout='1.4.32',
-        sources=['github.com/pytest-dev/py.git'])
-
-    ctx.add_dependency(
-        name='mock',
-        recurse=False,
-        optional=False,
-        resolver='git',
-        method='checkout',
-        checkout='1.0.1',
-        sources=['github.com/testing-cabal/mock.git'])
+        checkout='15.1.0',
+        sources=['github.com/pypa/virtualenv.git'])
 
 
 def options(opt):
@@ -110,8 +102,9 @@ def build_waf_binary(tsk):
     prelude = '\timport waflib.extras.wurf.waf_entry_point'
 
     # Build the command to execute
-    command = 'python waf-light configure build --make-waf --prelude="{}" '\
-              '--tools={}'.format(prelude, tool_paths)
+    host_python_binary = sys.executable
+    command = host_python_binary + ' waf-light configure build --make-waf '\
+              '--prelude="{}" --tools={}'.format(prelude, tool_paths)
 
     # Get the waf BuildContext
     bld = tsk.generator.bld
@@ -128,6 +121,7 @@ def build(bld):
     tools_dir = \
     [
         os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
+        os.path.join(bld.dependency_path('python-archive'), 'archive'),
         'src/wurf'
     ]
 
@@ -149,9 +143,7 @@ def _pytest(bld):
 
     python_path = \
     [
-        bld.dependency_path('pytest'),
-        bld.dependency_path('py'),
-        bld.dependency_path('mock'),
+        bld.dependency_path('virtualenv'),
         bld.dependency_path('python-semver'),
         os.path.join(os.getcwd(), 'src')
     ]
@@ -162,17 +154,48 @@ def _pytest(bld):
     separator = ';' if sys.platform == 'win32' else ':'
     bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
 
-    # Make python not write any .pyc files. These may linger around
-    # in the file system and make some tests pass although their .py
-    # counter-part has been e.g. deleted
-    test_command = 'python -B -m pytest test'
+    # We use the binaries in the virtualenv
+    if sys.platform == 'win32':
+        folder = 'Scripts'
+        ext = '.exe'
+    else:
+        folder = 'bin'
+        ext = ''
+
+    host_python_binary = sys.executable
+
+    # Make a new virtual env for different host executables
+    virtualenv_hash = hashlib.sha1(
+        host_python_binary.encode('utf-8')).hexdigest()[:6]
+
+    virtualenv = 'pytest_environment_'+virtualenv_hash
+    python_binary = os.path.join(virtualenv, folder, 'python' + ext)
+    pip_binary = os.path.join(virtualenv, folder, 'pip' + ext)
+
+
+    bld(rule=host_python_binary+' -m virtualenv ' + virtualenv + ' --no-site-packages',
+        cwd=bld.path,
+        env=bld_env,
+        always=True)
+
+    bld.add_group()
+
+    # bld(rule=pip_binary +' install pytest mock vcrpy',
+    #     cwd=bld.path,
+    #     env=bld_env,
+    #     always=True)
+
+    bld(rule=python_binary+' -m pip install pytest mock vcrpy',
+        cwd=bld.path,
+        env=bld_env,
+        always=True)
+
+    bld.add_group()
 
     # We override the pytest temp folder with the basetemp option,
     # so the test folders will be available at the specified location
     # on all platforms. The default location is the "pytest" local folder.
-
     basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
-    test_command += ' --basetemp {}'.format(basetemp)
 
     # We need to manually remove the previously created basetemp folder,
     # because pytest uses os.listdir in the removal process, and that fails
@@ -180,11 +203,16 @@ def _pytest(bld):
     if os.path.exists(basetemp):
         waflib.extras.wurf.directory.remove_directory(path=basetemp)
 
+    # Make python not write any .pyc files. These may linger around
+    # in the file system and make some tests pass although their .py
+    # counter-part has been e.g. deleted
+    command = python_binary + ' -B -m pytest test --basetemp ' + basetemp
+
     # Conditionally disable the tests that have the "networktest" marker
     if bld.options.skip_network_tests:
-        test_command += ' -m "not networktest"'
+        command += ' -m "not networktest"'
 
-    bld(rule=test_command,
+    bld(rule=command,
         cwd=bld.path,
         env=bld_env,
         always=True)

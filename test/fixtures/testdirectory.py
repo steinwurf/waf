@@ -8,7 +8,7 @@ import os
 from . import runresult
 from . import runresulterror
 
-class TestDirectory:
+class TestDirectory(object):
     """Testing code by invoking executable which potentially creates and deletes
     files and directories can be hard and error prone.
 
@@ -39,7 +39,20 @@ class TestDirectory:
     inspiration: http://search.cpan.org/~sanbeg/Test-Directory-0.041/lib/Test/Directory.pm
     """
     def __init__(self, tmpdir):
-        self.tmpdir = tmpdir
+
+        if isinstance(tmpdir, py.path.local):
+            self.tmpdir = tmpdir
+        else:
+            self.tmpdir = py.path.local(path=tmpdir)
+
+    @staticmethod
+    def from_path(path):
+        """Create a new TestDirectory instance from a path.
+
+        :param path: The path as a string.
+        """
+        assert os.path.isdir(path)
+        return TestDirectory(py.path.local(path))
 
     def mkdir(self, directory):
         """Create a sub-directory in the temporary / test dir.
@@ -177,7 +190,16 @@ class TestDirectory:
         :param filename: The filename to check for.
         :return: True if the file is contained within the test directory.
         """
-        return os.path.isfile(os.path.join(self.path(), filename))
+        files = glob.glob(os.path.join(self.path(), filename))
+
+        if len(files) == 0:
+            return False
+
+        assert(len(files) == 1)
+
+        filename = files[0]
+
+        return os.path.isfile(filename)
 
     def contains_dir(self, *directories):
         """ Checks for the existance of a directory.

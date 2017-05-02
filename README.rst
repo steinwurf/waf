@@ -9,13 +9,16 @@ These help us to handle / resolve library dependencies. The goal is to
 add functionality to Waf such that it can clone and download needed dependencies
 automatically.
 
+.. contents:: Table of Contents:
+   :local:
+
 License
-=======
+-------
 This project is under the same BSD license as the Waf project. The license text
 can be found here: https://github.com/waf-project/waf/blob/master/waf-light#L6-L30
 
 Building our custom Waf binary
-==============================
+------------------------------
 
 Clone the repository::
 
@@ -30,7 +33,7 @@ This will produce a waf binary in the ``build`` folder which we may copy into
 our projects.
 
 Tests
-=====
+-----
 
 To ensure that the tools work as intended way we provide a set of
 tests. To run the tests invoke::
@@ -38,7 +41,8 @@ tests. To run the tests invoke::
       python waf --run_tests
 
 ``--skip_network_tests``
-------------------------
+........................
+
 Passing ``--skip_network_tests`` will skip any unit tests which rely on network
 connectivity.
 
@@ -50,7 +54,7 @@ will invoke a freshly built ``waf`` binary with the wscript used to build it -
 yes very meta :)
 
 Fixing unit tests
------------------
+.................
 
 We use ``pytest`` to run the unit tests and integration tests. If some unit
 tests fail, it may be helpful to go to the test folder and invoke the failing
@@ -63,10 +67,10 @@ called ``pytest``  when running the tests. This can be overridden with the
 If a test uses the ``test_directory`` fixture, then pytest will create a
 subfolder matching the test function name. For example, if you have a test
 function called ``test_empty_wscript(test_directory)``, then the first invocation
-of that test will happen inside ``py_test/test_empty_wscript0``.
+of that test will happen inside ``pytest/test_empty_wscript0``.
 
 Log output / debugging
-----------------------
+......................
 
 We use the logging system provided by waf. If you have an issue with the
 resolve functionality, you can add the ``-v`` verbose flag (or ``-vvv``
@@ -81,9 +85,8 @@ The default zone printed by ``waf`` when adding the verbose flag ``-v`` is
     python waf configure -v --zones=resolve,runner
 
 
-
 Source code
-===========
+-----------
 
 The modifications and additions to Waf are in the ``src/wurf`` folder. The
 main file included by Waf is the ``src/wurf/waf_entry_point.py``. This is a great
@@ -102,7 +105,7 @@ this::
     from wurf.xyz import Xyz
 
 Waf specific code
------------------
+.................
 
 Code that uses/imports code from core Waf are prefixed with ``waf_``. This
 makes it easy to see which files are pure Python and which provide the
@@ -110,7 +113,7 @@ integration points with Waf.
 
 
 High-level overview
--------------------
+...................
 
 The main modification added to the standard Waf flow of control, is the addition
 of the `ResolveContext`. At a high-level this looks as follows::
@@ -160,10 +163,241 @@ Lets outline the different steps:
 
 
 Resolver features
-=================
+-----------------
 
-Specifying a dependency(``resolve.json``)
------------------------------------------
+Specifying a dependency
+.......................
+
+There are two overall ways of specifying a dependency.
+
+1. Using a ``resolve.json`` file.
+2. Defining a ``resolve(...)`` function in the project's ``wscript``
+
+A dependency is described using a number of key-value attributes. The following
+defines the general dependency attributes:
+
+Attribute ``name`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``name`` attribute is a string the assigns a human readable name to the
+dependency::
+
+    {
+        "name": "my-pet-library",
+        ...
+    }
+
+The name must be unique among all dependencies.
+
+Attribute ``resolver`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``resolver`` attribute is a string that specifies the resolver type used to
+download the dependency::
+
+    {
+        "name": "my-pet-library",
+        "resolver": "git",
+        ...
+    }
+
+Valid resolver types are: ``{"git" | "http"}``.
+
+Attribute ``optional`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``optional`` attribute is a boolean which specifies that a dependency
+is allowed to fail during the resolve step::
+
+    {
+        "name": "my-pet-library",
+        "resolver": "git",
+        "optional": true,
+        ...
+    }
+
+If ``optional`` is not specified, it will default to ``false``.
+
+Attribute ``recurse`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+This attribute specifies whether Waf should recurse into the dependency folder.
+
+This is useful if the dependency is itself a Waf project. When recursing into
+a folder Waf will look for a wscript in the folder and execute its commands.
+
+Currently we will automatically (if recurse is ``true``), recurse into and execute
+following Waf commands: (``resolve``, ``options``, ``configure``, ``build``)
+
+If you have a wscript where you would like to recurse dependencies for a custom
+waf command, say ``upload``, then add the following to your wscript's
+``upload`` function::
+
+    def upload(ctx):
+        ... your code
+        # Now lets recurse and execute the upload functions in dependencies
+        # wscripts.
+
+        import waflib.extras.wurf.waf_resolve_context
+
+        # Call upload in all dependencies (if it exists)
+        waf_resolve_context.recurse_dependencies(self)
+
+Example of attributes::
+
+    {
+        "name": "my-pet-library",
+        "resolver": "git",
+        "optional": true,
+        "recurse": true,
+        ...
+    }
+
+If ``recurse`` is not specified, it will default to ``true``.
+
+Attribute ``internal`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``internal`` attribute is a boolean whether the dependency is internal to
+the specific project. Lets make a small example, say we have two libraries
+``libfoo`` which depends on ``libbar``. ``libbar`` has a dependency on ``gtest``
+for running unit-tests etc. However, when resolving dependencies of ``libfoo``
+we only get ``libbar`` because ``gtest`` is marked as ``internal`` to ``libbar``.
+As illustrated by the small figure::
+
+    +-------+
+    |libfoo |
+    +---+---+
+        |
+        |
+        v
+    +---+---+  internal   +--------+
+    |libbar | +---------> | gtest  |
+    +-------+             +--------+
+
+Example of attributes::
+
+    {
+        "name": "my-pet-library",
+        "resolver": "git",
+        "optional": true,
+        "recurse": true,
+        "internal": true,
+        ...
+    }
+
+If ``internal`` is not specified, it will default to ``false``.
+
+Attribute ``sources`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``sources`` attribute is a list containing URLs for the dependency. The URL
+format depends on the resolver.
+
+Example of attributes::
+
+    {
+        "name": "my-pet-library",
+        "resolver": "git",
+        "optional": true,
+        "recurse": true,
+        "internal": true,
+        "sources": ["github.com/myorg/mylib.git"]
+    }
+
+Specifying a ``git`` dependency
+...............................
+
+The ``method`` attribute on a resolver of type ``git`` allows us to select
+how the ``git`` resolver determines the correct version of the dependency to
+use.
+
+``checkout`` resolver
+,,,,,,,,,,,,,,,,,,,,,
+
+The simplest to use is the ``checkout`` method, which combined with the
+``checkout`` attribute will use git to clone a specific tag, branch or SHA1
+commit.::
+
+    {
+        "name": "somelib"
+        "resolver": "git",
+        "method": "checkout",
+        "checkout": "my-branch"
+        "sources": ["github.com/myorg/somelib.git"]
+        ...
+    }
+
+``semver`` resolver
+,,,,,,,,,,,,,,,,,,,
+
+The ``semver`` method will use Semantic Versioning (www.semver.org) to select
+the correct version (based on the available git tags). Using the ``major``
+attribute we specific which major version of a dependency to use.  Example::
+
+    On first resolve         Second resolve
+    +-----------------------+-----------------------+
+                            |
+                   4.0.0    |                 4.0.0
+                   4.0.1    |                 4.0.1
+    Selected +---> 4.1.1    |                 4.1.1
+                            |  Selected +---> 4.2.0
+                            |                 5.0.0
+                            |
+                            +
+
+On the initial resolve the newest available tag with major version 4 is
+``4.1.1``. At a later point in time a we re-run resolve, this time new
+versions of our dependency has been released and the newest is now ``4.2.0``.
+
+Attributes::
+
+    {
+        "name": "someotherlib"
+        "resolver": "git",
+        "method": "semver",
+        "major": 4,
+        "sources": ["github.com/myorg/someotherlib.git"]
+    }
+
+
+Specifying a ``http`` dependency
+...............................
+
+Using the ``http`` resolver we can specify download dependencies via HTTP.
+
+Attribute ``filename`` (``http`` resolver)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+Specify a filename of the downloaded dependency::
+
+    {
+        "name": "myfile"
+        "resolver": "http",
+        "filename": "somefile.zip",
+        "sources": ["http://mydomain.com/myfile.zip"]
+    }
+
+The attribute is optional. If not specified the resolver will try to derive the
+filename from the dependency URL, or the returned HTTP headers.
+
+Attribute ``extract`` (``http`` resolver)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+If the dependency is an archive (e.g. ``zip``, ``tar.gz``, etc.) the ``extract``
+boolean specifies whether the archive should be extracted::
+
+    {
+        "name": "myfile"
+        "resolver": "http",
+        "extract": true,
+        "sources": ["http://mydomain.com/myfile.zip"]
+    }
+
+If the ``extract`` attribute is not specified it defaults to ``false``.
+
+Specifying dependencies (``resolve.json``)
+.........................................
 
 Providing third-party tooling to work with the dependencies, i.e. monitoring
 the dependencies and sending push notifications when new versions are available
@@ -199,33 +433,21 @@ To support both these configuration methods, we define the following "rules":
    loading a ``resolve.json`` file (if present).
 2. It is valid to mix both methods to define dependencies.
 
-The ``recurse`` attribute
--------------------------
-This option specifies whether waf should recurse into the dependency folder.
-The default value of ``recurse`` is ``True``.
+Specifying the dependency from the example above in ``resolve(...)`` of the
+project's wscript::
 
-This is useful if the dependency is itself a waf probject. When recursing into
-a folder waf will look for a wscript in the folder and execute its commands.
+    def resolve(ctx):
 
-Currently we will automatically (if recurse is True), recurse into and execute
-following waf commands: (resolve, options, configure, build)
-
-If you have a wscript where you would like to recurse dependencies for a custom
-waf command, say ``upload``, then add the following to your wscript's
-``upload`` function::
-
-    def upload(ctx):
-        ... your code
-        # Now lets recurse and execute the upload functions in dependencies
-        # wscripts.
-
-        import waflib.extras.wurf.waf_resolve_context
-
-        # Call upload in all dependencies
-        waf_resolve_context.recurse_dependencies(self)
+        ctx.add_dependency(
+            name='waf-tools',
+            resolver='git',
+            method='semver',
+            major=4,
+            sources=['github.com/steinwurf/waf-tools.git'])
 
 Resolve symlinks
-----------------
+................
+
 The purpose of this feature is to provide stable locations in the file system
 for the downloaded dependencies.
 
@@ -268,7 +490,7 @@ After re-running ``python waf configure ...``::
     lrwxrwxrwx 1 usr usr 29 Feb 20 20:57 gtest -> /path/to/gtest-1.6.8-someh4sh
 
 The ExistingTagResolver and the ``--fast_resolve`` option
----------------------------------------------------------
+.........................................................
 
 Running ``python waf configure`` can take a very long time if the project
 has a lot of dependencies. In the past, we had to endure a long delay when
@@ -301,7 +523,7 @@ For example, we can manually set the path of the ``foo`` dependency and use
 
 
 The ``--lock_versions`` option
-------------------------------
+..............................
 
 The ``--lock_versions`` option will write ``lock_resolve.json`` to the project
 folder. This file will describe the exact version information about the
@@ -327,7 +549,7 @@ As an example::
     python waf configure --lock_versions
 
 The ``--lock_paths`` option
----------------------------
+...........................
 
 The ``--lock_paths`` will write a ``lock_resolve.json`` file in the project
 folder. It behaves differently from the ``--lock_versions`` option in that it
@@ -347,20 +569,22 @@ This makes it possible to easily create a standalone archive::
 
 
 Future features
-===============
+---------------
 
 The following list contains the work items that we have identified as "cool"
 features for the Waf dependency resolve extension.
 
 Add ``--force-resolve`` option
-----------------------------
+..............................
+
 Certain resolvers utilize "shortcuts" such as using cached information about
 dependencies to speed the resolve step. Providing this option should by-pass
 such optimizations and do a full resolve - not relying on any form of cached
 data.
 
 Print full log file on failure
-------------------------------
+..............................
+
 To make error messages user-friendly the default is to redirect full tracebacks
 (showing where an error originated), to the log files. However, if running on
 a build system it is convenient to have the full traceback printed to the
@@ -368,7 +592,8 @@ terminal, this avoid us having to log into the machine an manually retrieve the
 log file.
 
 Dump resolved dependencies information to json.
------------------------------------------------
+...............................................
+
 To support third party tooling working with information about an already
 resolved dependency we implement the ``--dump-resolved-dependencies`` option.
 

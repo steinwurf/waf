@@ -39,7 +39,7 @@ class OnPassiveLoadPathResolver(object):
 
         path = str(config['path'])
 
-        if not os.path.isdir(path):
+        if not (os.path.isdir(path) or os.path.isfile(path)):
             raise DependencyError('Invalid path: "{}"'.format(path),
                 self.dependency)
 

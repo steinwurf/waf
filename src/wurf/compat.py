@@ -24,7 +24,7 @@ def check_locale_python3():
 
     # Same approach as:
     # https://github.com/pallets/click/blob/8d9dd4/click/_unicodefun.py#L50
-    
+
     if IS_PY2:
         return
 
