@@ -331,11 +331,14 @@ Specify a filename of the downloaded dependency::
         ...
     }
 
+The attribute is optional. If not specified the resolver will try to derive the
+filename from the dependency URL, or the returned HTTP headers.
+
 Attribute ``extract`` (``http`` resolver)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 If the dependency is an archive (e.g. ``zip``, ``tar.gz``, etc.) the ``extract``
-boolean specifies whether the archive should be extracted.
+boolean specifies whether the archive should be extracted::
 
     {
         ...
@@ -344,7 +347,7 @@ boolean specifies whether the archive should be extracted.
         ...
     }
 
-
+If the ``extract`` attribute is not specified it defaults to ``false``.
 
 Specifying a dependency(``resolve.json``)
 .........................................
