@@ -179,7 +179,7 @@ defines the general dependency attributes:
 Attribute ``name`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
-The name attribute is a string the assigns a human readable name to the
+The ``name`` attribute is a string the assigns a human readable name to the
 dependency::
 
     {
@@ -190,9 +190,9 @@ dependency::
 The name must be unique among all dependencies.
 
 Attribute ``resolver`` (general)
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
-The resolver attribute is a string that specifies the resolver type used to
+The ``resolver`` attribute is a string that specifies the resolver type used to
 download the dependency::
 
     {
@@ -202,6 +202,62 @@ download the dependency::
 
 Valid resolver types are: ``{"git" | "http"}``.
 
+Attribute ``optional`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``optional`` attribute is a boolean which specifies that a dependency
+is allowed to fail during the resolve step.::
+
+    {
+        "optional": true,
+        ...
+    }
+
+If ``optional`` is not specified, it will default to ``false``.
+
+Attribute ``recurse`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``recurse`` attribute is a boolean which specifies whether Waf will
+recurse into the resolved dependency path. This is useful e.g. if that
+dependency specifies its own dependencies allowing all dependencies to be
+recursively resolved.::
+
+    {
+        "recurse": true,
+        ...
+    }
+
+If ``recurse`` is not specified, it will default to ``true``.
+
+Attribute ``internal`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``internal`` attribute is a boolean whether the dependency is internal to
+the specific project. Lets make a small example, say we have to libraries
+``libfoo`` which depends on ``libbar``. ``libbar`` has a dependency on ``gtest``
+for running unit-tests etc. However, when resolving dependencies of ``libfoo``
+we only get ``libbar`` because ``gtest is marked as ``internal`` to ``libbar``.
+As illustrated by the small figure::
+
+    +-------+
+    |libfoo |
+    +---+---+
+        |
+        |
+        v
+    +---+---+  internal   +--------+
+    | libbar| +---------> | gtest  |
+    +-------+             +--------+
+
+Example of attribute::
+
+    {
+        "internal": true,
+        ...
+    }
+
+If ``internal`` is not specified, it will default to ``false``.
 
 Specifying a dependency(``resolve.json``)
 .........................................
