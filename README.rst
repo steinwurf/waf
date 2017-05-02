@@ -67,7 +67,7 @@ called ``pytest``  when running the tests. This can be overridden with the
 If a test uses the ``test_directory`` fixture, then pytest will create a
 subfolder matching the test function name. For example, if you have a test
 function called ``test_empty_wscript(test_directory)``, then the first invocation
-of that test will happen inside ``py_test/test_empty_wscript0``.
+of that test will happen inside ``pytest/test_empty_wscript0``.
 
 Log output / debugging
 ......................
@@ -171,7 +171,7 @@ Specifying a dependency
 There are two overall ways of specifying a dependency.
 
 1. Using a ``resolve.json`` file.
-2. Defining a `resolve(...)` function in the project's ``wscript``
+2. Defining a ``resolve(...)`` function in the project's ``wscript``
 
 A dependency is described using a number of key-value attributes. The following
 defines the general dependency attributes:
@@ -207,7 +207,7 @@ Attribute ``optional`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 The ``optional`` attribute is a boolean which specifies that a dependency
-is allowed to fail during the resolve step.::
+is allowed to fail during the resolve step::
 
     {
         "name": "my-pet-library",
@@ -221,13 +221,13 @@ If ``optional`` is not specified, it will default to ``false``.
 Attribute ``recurse`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
-This attribute specifies whether waf should recurse into the dependency folder.
+This attribute specifies whether Waf should recurse into the dependency folder.
 
-This is useful if the dependency is itself a waf probject. When recursing into
-a folder waf will look for a wscript in the folder and execute its commands.
+This is useful if the dependency is itself a Waf project. When recursing into
+a folder Waf will look for a wscript in the folder and execute its commands.
 
-Currently we will automatically (if recurse is True), recurse into and execute
-following waf commands: (resolve, options, configure, build)
+Currently we will automatically (if recurse is ``true``), recurse into and execute
+following Waf commands: (``resolve``, ``options``, ``configure``, ``build``)
 
 If you have a wscript where you would like to recurse dependencies for a custom
 waf command, say ``upload``, then add the following to your wscript's
@@ -259,7 +259,7 @@ Attribute ``internal`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 The ``internal`` attribute is a boolean whether the dependency is internal to
-the specific project. Lets make a small example, say we have to libraries
+the specific project. Lets make a small example, say we have two libraries
 ``libfoo`` which depends on ``libbar``. ``libbar`` has a dependency on ``gtest``
 for running unit-tests etc. However, when resolving dependencies of ``libfoo``
 we only get ``libbar`` because ``gtest`` is marked as ``internal`` to ``libbar``.
@@ -347,7 +347,7 @@ attribute we specific which major version of a dependency to use.  Example::
                             +
 
 On the initial resolve the newest available tag with major version 4 is
-``4.1.1``. At a later point in time a we re-run resolve, in the mean time new
+``4.1.1``. At a later point in time a we re-run resolve, this time new
 versions of our dependency has been released and the newest is now ``4.2.0``.
 
 Attributes::
@@ -432,6 +432,18 @@ To support both these configuration methods, we define the following "rules":
 1. The user defined ``resolve(...)`` function will always be called before
    loading a ``resolve.json`` file (if present).
 2. It is valid to mix both methods to define dependencies.
+
+Specifying the dependency from the example above in ``resolve(...)`` of the
+project's wscript::
+
+    def resolve(ctx):
+
+        ctx.add_dependency(
+            name='waf-tools',
+            resolver='git',
+            method='semver',
+            major=4,
+            sources=['github.com/steinwurf/waf-tools.git'])
 
 Resolve symlinks
 ................
