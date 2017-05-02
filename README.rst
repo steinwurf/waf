@@ -9,6 +9,9 @@ These help us to handle / resolve library dependencies. The goal is to
 add functionality to Waf such that it can clone and download needed dependencies
 automatically.
 
+.. contents:: Table of Contents:
+   :local:
+
 License
 =======
 This project is under the same BSD license as the Waf project. The license text
