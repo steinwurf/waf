@@ -259,25 +259,59 @@ Example of attribute::
 
 If ``internal`` is not specified, it will default to ``false``.
 
-Attribute ``method`` (resolver ``git``)
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Specifying a ``git`` dependency
+...............................
 
 The ``method`` attribute on a resolver of type ``git`` allows us to select
 how the ``git`` resolver determines the correct version of the dependency to
 use.
 
-The simplest is to use the ``checkout`` method, which combined with the
+``checkout`` resolver
+,,,,,,,,,,,,,,,,,,,,,
+
+The simplest to use is the ``checkout`` method, which combined with the
 ``checkout`` attribute will use git to clone a specific tag, branch or SHA1
 commit.::
 
     {
+        ...
         "resolver": "git",
         "method": "checkout",
         "checkout": "my-branch"
         ...
     }
 
-A second
+``semver`` resolver
+,,,,,,,,,,,,,,,,,,,
+
+The ``semver`` method will use Semantic Versioning (www.semver.org) to select
+the correct version (based on the available git tags). Using the ``major``
+attribute we specific which major version of a dependency to use.  Example::
+
+    On first resolve         Second resolve
+    +-----------------------+-----------------------+
+                            |
+                   4.0.0    |                 4.0.0
+                   4.0.1    |                 4.0.1
+    Selected +---> 4.1.1    |                 4.1.1
+                            |  Selected +---> 4.2.0
+                            |                 5.0.0
+                            |
+                            +
+
+On the initial resolve the newest available tag with major version 4 is
+``4.1.1``. At a later point in time a we re-run resolve, in the mean time new
+versions of our dependency has been released and the newest is now ``4.2.0``.
+
+Attributes::
+
+    {
+        ...
+        "resolver": "git",
+        "method": "semver",
+        "major": 4,
+        ...
+    }
 
 
 Specifying a dependency(``resolve.json``)
