@@ -314,6 +314,38 @@ Attributes::
     }
 
 
+Specifying a ``http`` dependency
+...............................
+
+Using the ``http`` resolver we can specify download dependencies via HTTP.
+
+Attribute ``filename`` (``http`` resolver)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+Specify a filename of the downloaded dependency::
+
+    {
+        ...
+        "resolver": "http",
+        "filename": "somefile.zip",
+        ...
+    }
+
+Attribute ``extract`` (``http`` resolver)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+If the dependency is an archive (e.g. ``zip``, ``tar.gz``, etc.) the ``extract``
+boolean specifies whether the archive should be extracted.
+
+    {
+        ...
+        "resolver": "http",
+        "extract": true,
+        ...
+    }
+
+
+
 Specifying a dependency(``resolve.json``)
 .........................................
 
