@@ -237,7 +237,7 @@ The ``internal`` attribute is a boolean whether the dependency is internal to
 the specific project. Lets make a small example, say we have to libraries
 ``libfoo`` which depends on ``libbar``. ``libbar`` has a dependency on ``gtest``
 for running unit-tests etc. However, when resolving dependencies of ``libfoo``
-we only get ``libbar`` because ``gtest is marked as ``internal`` to ``libbar``.
+we only get ``libbar`` because ``gtest`` is marked as ``internal`` to ``libbar``.
 As illustrated by the small figure::
 
     +-------+
@@ -247,7 +247,7 @@ As illustrated by the small figure::
         |
         v
     +---+---+  internal   +--------+
-    | libbar| +---------> | gtest  |
+    |libbar | +---------> | gtest  |
     +-------+             +--------+
 
 Example of attribute::
@@ -258,6 +258,27 @@ Example of attribute::
     }
 
 If ``internal`` is not specified, it will default to ``false``.
+
+Attribute ``method`` (resolver ``git``)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``method`` attribute on a resolver of type ``git`` allows us to select
+how the ``git`` resolver determines the correct version of the dependency to
+use.
+
+The simplest is to use the ``checkout`` method, which combined with the
+``checkout`` attribute will use git to clone a specific tag, branch or SHA1
+commit.::
+
+    {
+        "resolver": "git",
+        "method": "checkout",
+        "checkout": "my-branch"
+        ...
+    }
+
+A second
+
 
 Specifying a dependency(``resolve.json``)
 .........................................
