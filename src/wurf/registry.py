@@ -699,16 +699,33 @@ def resolve_from_lock_git(registry, lock_cache, dependency):
 
 @Registry.cache
 @Registry.provide
-def resolve_http(archive_extractor, url_download, dependency, source,
-    dependency_path):
+def resolve_http(options, registry, archive_extractor, url_download, dependency,
+    source, ctx, dependency_path):
     """
     """
+
+    dependency.resolver_action = 'http'
+
     resolver = HttpResolver(url_download=url_download, dependency=dependency,
         source=source, cwd=dependency_path)
 
     if dependency.extract:
         resolver = ArchiveResolver(archive_extractor=archive_extractor,
             resolver=resolver, cwd=dependency_path)
+
+    if options.fast_resolve():
+        # Set the resolver action on the dependency
+        dependency.resolver_action = 'fast/'+dependency.resolver_action
+
+        resolve_config_path = registry.require('resolve_config_path')
+
+        fast_resolver = OnPassiveLoadPathResolver(dependency=dependency,
+            resolve_config_path=resolve_config_path)
+
+        fast_resolver = TryResolver(resolver=fast_resolver, ctx=ctx,
+            dependency=dependency)
+
+        resolver = ListResolver(resolvers=[fast_resolver, resolver])
 
     return resolver
 

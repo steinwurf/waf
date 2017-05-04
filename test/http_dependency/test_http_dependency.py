@@ -21,3 +21,6 @@ def test_http_dependency(test_directory):
 
     app_dir.run('python', 'waf', 'configure')
     app_dir.run('python', 'waf', 'build')
+
+    app_dir.run('python', 'waf', 'configure', '--fast_resolve')
+    app_dir.run('python', 'waf', 'build')
