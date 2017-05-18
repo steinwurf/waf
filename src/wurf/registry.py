@@ -479,10 +479,15 @@ def project_git_protocol(git, ctx, git_url_parser):
             'Exception when executing git.remote_origin_url: {}'.format(e))
         return None
 
-    else:
+    try:
         url = git_url_parser.parse(parent_url)
         return url.protocol
 
+    except Exception as e:
+        ctx.to_log(
+            'Exception could not parse git URL {} error: {}'.format(
+                parent_url, e))
+        return None
 
 @Registry.cache_once
 @Registry.provide
