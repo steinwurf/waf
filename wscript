@@ -169,8 +169,15 @@ def _pytest(bld):
         host_python_binary.encode('utf-8')).hexdigest()[:6]
 
     virtualenv = 'pytest_environment_'+virtualenv_hash
+
+    virtualenv_path = os.path.abspath(os.path.join(
+        bld.path.abspath(), virtualenv))
+
+    # Make sure the virtualenv is removed if it already exists
+    if os.path.exists(virtualenv_path):
+        waflib.extras.wurf.directory.remove_directory(path=virtualenv_path)
+
     python_binary = os.path.join(virtualenv, folder, 'python' + ext)
-    pip_binary = os.path.join(virtualenv, folder, 'pip' + ext)
 
 
     bld(rule=host_python_binary+' -m virtualenv ' + virtualenv + ' --no-site-packages',
@@ -179,11 +186,6 @@ def _pytest(bld):
         always=True)
 
     bld.add_group()
-
-    # bld(rule=pip_binary +' install pytest mock vcrpy',
-    #     cwd=bld.path,
-    #     env=bld_env,
-    #     always=True)
 
     bld(rule=python_binary+' -m pip install pytest mock vcrpy',
         cwd=bld.path,

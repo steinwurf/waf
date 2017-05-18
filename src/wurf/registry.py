@@ -489,6 +489,7 @@ def project_git_protocol(git, ctx, git_url_parser):
                 parent_url, e))
         return None
 
+
 @Registry.cache_once
 @Registry.provide
 def git(git_binary, ctx):
