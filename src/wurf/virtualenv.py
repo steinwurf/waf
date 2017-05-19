@@ -133,8 +133,9 @@ class VirtualEnv(object):
             remove_directory(path=path)
 
         # Create the new virtualenv
-        ctx.cmd_and_log(python+' -m virtualenv ' + name + ' --no-site-packages',
-            cwd=cwd, env=env)
+        args = [python, '-m', 'virtualenv', name, '--no-site-packages']
+
+        ctx.cmd_and_log(args, cwd=cwd, env=env)
 
         return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx,
             pip_packages_path=pip_packages_path)
