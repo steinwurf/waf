@@ -53,16 +53,16 @@ def test_git_pull():
     ctx.cmd_and_log.assert_called_once_with(
         ['/bin/git_binary','pull'], cwd='/tmp')
 
-def test_git_has_submodules(test_directory):
+def test_git_has_submodules(testdirectory):
 
     ctx = mock.Mock()
     git = Git('/bin/git_binary', ctx)
 
-    cwd = test_directory.path()
+    cwd = testdirectory.path()
 
     assert(git.has_submodules(cwd=cwd) == False)
 
-    test_directory.write_text('.gitmodules', u'not important', encoding='utf-8')
+    testdirectory.write_text('.gitmodules', u'not important', encoding='utf-8')
 
     assert(git.has_submodules(cwd=cwd) == True)
 
@@ -96,18 +96,18 @@ def test_git_update_submodules():
     ctx.cmd_and_log.assert_called_once_with(
         ['/bin/git_binary','submodule','update'], cwd='/tmp')
 
-def test_git_pull_submodules(test_directory):
+def test_git_pull_submodules(testdirectory):
 
     ctx = mock.Mock()
     git = Git('/bin/git_binary', ctx)
 
-    cwd = test_directory.path()
+    cwd = testdirectory.path()
 
     git.pull_submodules(cwd=cwd)
 
     ctx.cmd_and_log.assert_not_called()
 
-    test_directory.write_text('.gitmodules', u'not important', encoding='utf-8')
+    testdirectory.write_text('.gitmodules', u'not important', encoding='utf-8')
 
     def check_command(cmd, cwd):
         expected_cmd = check_command.commands.pop(0)

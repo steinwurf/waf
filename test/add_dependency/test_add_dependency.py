@@ -263,19 +263,19 @@ def run_commands(app_dir, git_dir):
     app_dir.run('python', 'waf', 'build', '-v')
 
 
-def test_resolve_json(test_directory):
+def test_resolve_json(testdirectory):
     """ Tests that dependencies declared in the wscript works. I.e. where we
         call add_dependency(...) in the resolve function of the wscript.
     """
 
-    app_dir = mkdir_app_json(directory=test_directory)
+    app_dir = mkdir_app_json(directory=testdirectory)
 
     # Make a directory where we place the libraries that we would have cloned
     # if we had use the full waf resolve functionality.
     #
     # To avoid relying on network connectivity we simply place the
     # libraries there and then fake the git clone step.
-    git_dir = test_directory.mkdir(directory='git_dir')
+    git_dir = testdirectory.mkdir(directory='git_dir')
 
     foo_dir = mkdir_libfoo_json(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)
@@ -296,19 +296,19 @@ def test_resolve_json(test_directory):
     run_commands(app_dir=app_dir, git_dir=git_dir)
 
 
-def test_add_dependency(test_directory):
+def test_add_dependency(testdirectory):
     """ Tests that dependencies declared in the wscript works. I.e. where we
         call add_dependency(...) in the resolve function of the wscript.
     """
 
-    app_dir = mkdir_app(directory=test_directory)
+    app_dir = mkdir_app(directory=testdirectory)
 
     # Make a directory where we place the libraries that we would have cloned
     # if we had use the full waf resolve functionality.
     #
     # To avoid relying on network connectivity we simply place the
     # libraries there and then fake the git clone step.
-    git_dir = test_directory.mkdir(directory='git_dir')
+    git_dir = testdirectory.mkdir(directory='git_dir')
 
     foo_dir = mkdir_libfoo(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)
@@ -329,11 +329,11 @@ def test_add_dependency(test_directory):
     run_commands(app_dir=app_dir, git_dir=git_dir)
 
 
-def test_add_dependency_path(test_directory):
+def test_add_dependency_path(testdirectory):
 
-    app_dir = mkdir_app(directory=test_directory)
+    app_dir = mkdir_app(directory=testdirectory)
 
-    git_dir = test_directory.mkdir(directory='git_dir')
+    git_dir = testdirectory.mkdir(directory='git_dir')
 
     foo_dir = mkdir_libfoo(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)
@@ -352,7 +352,7 @@ def test_add_dependency_path(test_directory):
     # Test the --baz-path option: by not putting this dependency in the
     # git_dir, we make sure that our fake git clone step in the wscript
     # cannot find it. Therefore the test will fail if it tries to clone baz.
-    path_test = test_directory.mkdir(directory='path_test')
+    path_test = testdirectory.mkdir(directory='path_test')
     baz_dir = mkdir_libbaz(directory=path_test)
 
     app_dir.run('python', 'waf', 'configure', '-v', '--baz_path={}'.format(
@@ -367,11 +367,11 @@ def test_add_dependency_path(test_directory):
     app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
 
 
-def test_create_standalone_archive(test_directory):
+def test_create_standalone_archive(testdirectory):
 
-    app_dir = mkdir_app(directory=test_directory)
+    app_dir = mkdir_app(directory=testdirectory)
 
-    git_dir = test_directory.mkdir(directory='git_dir')
+    git_dir = testdirectory.mkdir(directory='git_dir')
 
     foo_dir = mkdir_libfoo(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)

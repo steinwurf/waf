@@ -6,7 +6,7 @@ import shutil
 from wurf.existing_tag_resolver import ExistingTagResolver
 from wurf.git_semver_resolver import GitSemverResolver
 
-def test_existing_tag_resolver(test_directory):
+def test_existing_tag_resolver(testdirectory):
     ctx = mock.Mock()
 
     dependency = mock.Mock()
@@ -17,8 +17,8 @@ def test_existing_tag_resolver(test_directory):
     dependency.__contains__.return_value = True
     latest_tag = '5.1.0'
 
-    cwd = test_directory.mkdir('cwd')
-    resolve_path = test_directory.mkdir('resolve_path')
+    cwd = testdirectory.mkdir('cwd')
+    resolve_path = testdirectory.mkdir('resolve_path')
 
     semver_selector = mock.Mock()
     semver_selector.select_tag.return_value = latest_tag
@@ -53,7 +53,7 @@ def test_existing_tag_resolver(test_directory):
 
     # Remove the resolve path and check that we fallback to semver_resolver
     resolve_path.rmdir()
-    resolve_path = test_directory.mkdir('resolve_path2')
+    resolve_path = testdirectory.mkdir('resolve_path2')
     semver_resolver.resolve.return_value = resolve_path.path()
 
     resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,

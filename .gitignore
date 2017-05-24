@@ -19,6 +19,7 @@ pytest_environment_*
 .cache
 .tox
 pytest
+pip_packages
 
 # Visual Studio ignore
 *.bat

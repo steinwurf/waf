@@ -64,9 +64,9 @@ Using our default configuration, pytest will create a local temporary folder
 called ``pytest``  when running the tests. This can be overridden with the
 ``--pytest_basetemp`` option.
 
-If a test uses the ``test_directory`` fixture, then pytest will create a
+If a test uses the ``testdirectory`` fixture, then pytest will create a
 subfolder matching the test function name. For example, if you have a test
-function called ``test_empty_wscript(test_directory)``, then the first invocation
+function called ``test_empty_wscript(testdirectory)``, then the first invocation
 of that test will happen inside ``pytest/test_empty_wscript0``.
 
 Log output / debugging

@@ -19,12 +19,12 @@ def test_path_resolver_invalid_path():
         resolver.resolve()
 
 
-def test_path_resolver_valid_path(test_directory):
+def test_path_resolver_valid_path(testdirectory):
 
     dependency = mock.Mock()
     dependency.name = 'foo'
 
-    path = test_directory.path()
+    path = testdirectory.path()
 
     resolver = PathResolver(dependency=dependency, path=path)
 

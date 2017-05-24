@@ -5,8 +5,8 @@ import os
 import pytest
 
 @pytest.mark.networktest
-def test_self_build(test_directory):
-    root = test_directory
+def test_self_build(testdirectory):
+    root = testdirectory
 
     # Note: waf will call "git config --get remote.origin.url" in this folder,
     # so "git init" is required to test the default behavior (https resolver)
