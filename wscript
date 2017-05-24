@@ -8,6 +8,8 @@ import hashlib
 
 import waflib
 
+from waflib.extras.wurf.virtualenv import VirtualEnv
+
 top = '.'
 
 def resolve(ctx):
@@ -68,6 +70,17 @@ def options(opt):
         help='Skip the unit tests that use network resources')
 
 
+def _create_virtualenv(ctx, cwd):
+    # Make sure the virtualenv Python module is in path
+    venv_path = ctx.dependency_path('virtualenv')
+
+    env = dict(os.environ)
+    env.update({'PYTHONPATH': os.path.pathsep.join([venv_path])})
+
+    return VirtualEnv(cwd=cwd, env=env, name=None, ctx=ctx,
+        pip_packages=ctx.path)
+
+
 def configure(conf):
 
     # Ensure that the waf-light program is available in the in the
@@ -75,6 +88,11 @@ def configure(conf):
     conf.find_program('waf-light', exts='',
         path_list=[conf.dependency_path('waf')])
 
+    # Download the pip packages that we need
+    venv = _create_virtualenv(ctx=conf, cwd=conf.path)
+
+    with venv:
+        venv.pip_download('pytest', 'mock', 'vcrpy')
 
 def build_waf_binary(tsk):
     """

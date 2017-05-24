@@ -23,6 +23,11 @@ class VirtualEnv(object):
             venv.pip_local_install('pytest')
 
             venv.run('python -m pip --version')
+
+    It is important to be aware of the cwd parameter, e.g. if you access files
+    etc. it will be relative to cwd. So if cwd is the 'build' directory and you
+    access a file in the root of the repository it will need to be prefixed with
+    '../somefile.txt'.
     """
 
     def __init__(self, env, cwd, path, ctx, pip_packages_path):
