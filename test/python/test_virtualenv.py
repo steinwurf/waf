@@ -9,9 +9,9 @@ import fnmatch
 
 from wurf.virtualenv import VirtualEnv
 
-def test_virtualenv_noname(test_directory):
+def test_virtualenv_noname(testdirectory):
 
-    cwd = test_directory.path()
+    cwd = testdirectory.path()
     env = dict(os.environ)
     name = None
     ctx = mock.Mock()
@@ -23,24 +23,24 @@ def test_virtualenv_noname(test_directory):
     assert fnmatch.fnmatch(venv.path, os.path.join(cwd, 'virtualenv-*'))
 
 
-def test_virtualenv_name(test_directory):
+def test_virtualenv_name(testdirectory):
 
-    cwd = test_directory.path()
+    cwd = testdirectory.path()
     env = dict(os.environ)
     name = 'gogo'
     ctx = mock.Mock()
 
-    pip_packages_dir = test_directory.mkdir('pip_packages')
+    pip_packages_dir = testdirectory.mkdir('pip_packages')
 
     # Lets make the directory to make sure it is removed
-    test_directory.mkdir(name)
-    assert test_directory.contains_dir(name)
+    testdirectory.mkdir(name)
+    assert testdirectory.contains_dir(name)
 
     venv = VirtualEnv.create(cwd=cwd, env=env, name=name, ctx=ctx,
         pip_packages_path=pip_packages_dir.path())
 
     assert fnmatch.fnmatch(venv.path, os.path.join(cwd, name))
-    assert not test_directory.contains_dir(name)
+    assert not testdirectory.contains_dir(name)
 
     ctx.cmd_and_log.assert_called_once_with(
         [sys.executable,'-m', 'virtualenv', name, '--no-site-packages'],

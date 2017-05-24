@@ -15,9 +15,9 @@ def mkdir_app(directory):
     return app_dir
 
 @pytest.mark.networktest
-def test_http_dependency(test_directory):
+def test_http_dependency(testdirectory):
 
-    app_dir = mkdir_app(directory=test_directory)
+    app_dir = mkdir_app(directory=testdirectory)
 
     app_dir.run('python', 'waf', 'configure')
     app_dir.run('python', 'waf', 'build')

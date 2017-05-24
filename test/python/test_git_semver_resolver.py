@@ -5,15 +5,15 @@ import mock
 from wurf.git_semver_resolver import GitSemverResolver
 
 
-def test_git_semver_resolver(test_directory):
+def test_git_semver_resolver(testdirectory):
 
     ctx = mock.Mock()
     git = mock.Mock()
-    cwd = test_directory.path()
+    cwd = testdirectory.path()
 
     # Create a parent folder for the dependency and the corresponding
     # subfolder for the 'master' checkout
-    repo_folder = test_directory.mkdir('links-01234')
+    repo_folder = testdirectory.mkdir('links-01234')
     master_folder = repo_folder.mkdir('master')
 
     dependency = mock.Mock()

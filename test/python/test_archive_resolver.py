@@ -4,9 +4,9 @@ import os
 
 from wurf.archive_resolver import ArchiveResolver
 
-def test_archive_resolver(test_directory):
+def test_archive_resolver(testdirectory):
 
-    resolve_path = test_directory.mkdir('resolved')
+    resolve_path = testdirectory.mkdir('resolved')
     resolve_path.write_binary('ok.zip', b'foobarbaz')
     resolve_file = os.path.join(resolve_path.path(), 'ok.zip')
 
@@ -16,7 +16,7 @@ def test_archive_resolver(test_directory):
     archive_extractor = mock.Mock()
 
     resolver = ArchiveResolver(archive_extractor=archive_extractor,
-        resolver=parent_resolver, cwd=test_directory.path())
+        resolver=parent_resolver, cwd=testdirectory.path())
 
     path = resolver.resolve()
 

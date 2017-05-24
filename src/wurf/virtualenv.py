@@ -86,6 +86,16 @@ class VirtualEnv(object):
         self.run('python -m pip install --no-index --find-links={} {}'.format(
             self.pip_packages_path, packages))
 
+    def pip_install(self, *packages):
+        """ Installs a set of packages from pip
+
+        :param packages: Package names as string, which be installed in the
+            virtualenv
+        """
+        packages = " ".join(packages)
+
+        self.run('python -m pip install {}'.format(packages))
+
     def __enter__(self):
         """ When used in a with statement the virtualenv will be automatically
         revmoved.
@@ -113,14 +123,6 @@ class VirtualEnv(object):
         :param pip_packages_path: Path to pip packages (is used when
             downloading/installing pip packages)
         """
-
-        # @todo remove
-        #
-        # # Make sure the virtualenv Python module is in path
-        # venv_path = ctx.dependency_path('virtualenv')
-        #
-        # env = dict(os.environ)
-        # env.update({'PYTHONPATH': os.path.pathsep.join([venv_path])})
 
         # The Python executable
         python = sys.executable
