@@ -129,4 +129,3 @@ def test_git_pull_submodules(testdirectory):
     ctx.cmd_and_log.side_effect = check_command
 
     git.pull_submodules(cwd=cwd)
-wwwwwwwwwwwwwwww
