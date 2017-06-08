@@ -3,6 +3,7 @@
 
 from .error import DependencyError
 
+
 class CheckLockCacheResolver(object):
     """ Iterates through a list of resolvers until a path is resolved."""
 

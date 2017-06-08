@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+
 def test_empty_wscript(testdirectory):
     testdirectory.copy_file('test/empty_wscript/wscript')
     testdirectory.copy_file('build/waf')

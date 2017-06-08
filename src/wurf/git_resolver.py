@@ -4,6 +4,7 @@
 import os
 import hashlib
 
+
 class GitResolver(object):
     """
     Base Git Resolver functionality. Clones/pulls a git repository.
@@ -50,7 +51,7 @@ class GitResolver(object):
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(master_path):
             self.git.clone(repository=repo_url, directory=folder_name,
-                cwd=self.cwd)
+                           cwd=self.cwd)
         else:
             # We only want to pull if we haven't just cloned. This avoids
             # having to type in the username and password twice when using

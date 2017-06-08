@@ -6,6 +6,7 @@ import codecs
 
 IS_PY2 = sys.version_info[0] == 2
 
+
 def check_locale_python3():
     """ Python 3 depends on the locale to be specified to properly handle
     unicode characters.

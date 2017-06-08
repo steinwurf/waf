@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 
-
 class GitUrlRewriter(object):
 
     git_protocols = {

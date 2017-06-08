@@ -1,5 +1,4 @@
 import os
-import pytest
 import mock
 
 from wurf.git_semver_resolver import GitSemverResolver
@@ -20,7 +19,6 @@ def test_git_semver_resolver(testdirectory):
     dependency.name = 'links'
     dependency.major = 5
     selected_tag = '5.1.0'
-    repo_url = 'https://gitlab.com/steinwurf/links.git'
 
     git_resolver = mock.Mock()
     git_resolver.resolve.return_value = master_folder.path()
@@ -28,9 +26,9 @@ def test_git_semver_resolver(testdirectory):
     semver_selector = mock.Mock()
     semver_selector.select_tag.return_value = selected_tag
 
-    resolver = GitSemverResolver(git=git, resolver=git_resolver,
-        ctx=ctx, semver_selector=semver_selector, dependency=dependency,
-        cwd=cwd)
+    resolver = GitSemverResolver(
+        git=git, resolver=git_resolver, ctx=ctx,
+        semver_selector=semver_selector, dependency=dependency, cwd=cwd)
 
     path = resolver.resolve()
 

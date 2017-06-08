@@ -4,6 +4,7 @@
 APPNAME = 'libbar'
 VERSION = '1.0.0'
 
+
 def resolve(ctx):
     ctx.add_dependency(
         name='baz',
@@ -14,11 +15,14 @@ def resolve(ctx):
         major=3,
         sources=['gitlab.com/acme/baz.git'])
 
+
 def options(opt):
     opt.load('compiler_cxx')
 
+
 def configure(conf):
     conf.load('compiler_cxx')
+
 
 def build(bld):
     bld.stlib(features='cxx',

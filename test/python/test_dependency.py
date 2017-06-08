@@ -1,12 +1,11 @@
 import pytest
-import mock
 
 from wurf.dependency import Dependency
 
+
 def test_dependency():
 
-    dep = \
-    {
+    dep = {
         "name": "waf",
         "optional": True,
         "recurse": False,
@@ -19,8 +18,8 @@ def test_dependency():
     w = Dependency(**dep)
 
     assert w.name == "waf"
-    assert w.optional == True
-    assert w.recurse == False
+    assert w.optional is True
+    assert w.recurse is False
     assert w.resolver == "git"
     assert w.method == "checkout"
     assert w.checkout == "somebranch"
@@ -39,7 +38,7 @@ def test_dependency():
     assert w.name2 == "waf2"
 
     assert w.path is None
-    assert ('path' in w) == False
+    assert ('path' not in w)
 
     w.rewrite(attribute='method', value='semver', reason='testing it')
     w.rewrite(attribute='major', value=3, reason='testing it')
@@ -52,8 +51,7 @@ def test_dependency():
 
 def test_dependency_default_values():
 
-    dep = \
-    {
+    dep = {
         "name": "foo",
         "resolver": "git",
         "method": "checkout",
@@ -69,9 +67,9 @@ def test_dependency_default_values():
     assert w.sources == ["gitrepo1.git", "gitrepo2.git"]
 
     # Check the default values
-    assert w.recurse == True
-    assert w.optional == False
-    assert w.internal == False
+    assert w.recurse is True
+    assert w.optional is False
+    assert w.internal is False
 
     # Check there is a sha1 key
     assert "sha1" in w

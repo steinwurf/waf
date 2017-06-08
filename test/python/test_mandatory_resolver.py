@@ -14,8 +14,8 @@ def test_mandatory_resolver():
     resolver1 = mock.Mock()
     resolver1.resolve = mock.Mock(return_value='path1')
 
-    resolver = MandatoryResolver(resolver=resolver1,
-        msg="User message", dependency=dependency)
+    resolver = MandatoryResolver(
+        resolver=resolver1, msg="User message", dependency=dependency)
 
     ret = resolver.resolve()
 

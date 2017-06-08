@@ -4,6 +4,7 @@ import shutil
 from waflib.extras.wurf.git import Git
 from waflib.extras.wurf.error import Error
 
+
 class CloneError(Error):
     """Basic """
     def __init__(self, repository):
@@ -52,7 +53,7 @@ class FakeGitClone(Git):
             if repository.endswith(lib_repository):
 
                 shutil.copytree(src=lib_directory, dst=dst_directory,
-                    symlinks=True)
+                                symlinks=True)
 
                 assert os.path.isdir(dst_directory), "We should have a valid "\
                     "path here!"
@@ -68,4 +69,4 @@ class FakeGitClone(Git):
         clone_path = registry.require('clone_path')
 
         return FakeGitClone(git_binary=git_binary, ctx=ctx,
-            clone_path=clone_path)
+                            clone_path=clone_path)

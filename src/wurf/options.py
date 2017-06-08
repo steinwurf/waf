@@ -3,6 +3,7 @@
 
 from .error import Error
 
+
 class Options(object):
 
     def __init__(self, args, parser, default_resolve_path,
@@ -14,35 +15,44 @@ class Options(object):
         self.known_args = {}
         self.unknown_args = []
 
-        self.parser.add_argument('--resolve_path',
-            default=default_resolve_path,
+        self.parser.add_argument(
+            '--resolve_path',
             dest='--resolve_path',
+            default=default_resolve_path,
             help="The folder where the resolved dependencies are downloaded. "
                  "[default: '{}']".format(default_resolve_path))
 
-        self.parser.add_argument('--git_protocol',
+        self.parser.add_argument(
+            '--git_protocol',
             dest='--git_protocol',
             help='Use a specific git protocol to download dependencies. '
                  'Supported protocols: {}'.format(supported_git_protocols))
 
-        self.parser.add_argument('--symlinks_path',
-            default=default_symlinks_path,
+        self.parser.add_argument(
+            '--symlinks_path',
             dest='--symlinks_path',
+            default=default_symlinks_path,
             help="The folder where the dependency symlinks are placed. "
                  "[default: '{}']".format(default_symlinks_path))
 
-        self.parser.add_argument('--fast_resolve', dest='--fast_resolve',
+        self.parser.add_argument(
+            '--fast_resolve',
+            dest='--fast_resolve',
             action='store_true', default=False,
             help='Load already resolved dependencies from file system. '
-                  'Useful for running configure without resolving dependencies '
-                  'again.')
+                 'Useful for running configure without resolving dependencies '
+                 'again.')
 
-        self.parser.add_argument('--lock_paths', dest='--lock_paths',
+        self.parser.add_argument(
+            '--lock_paths',
+            dest='--lock_paths',
             action='store_true', default=False,
             help='Creates the resolve_lock_paths directory which contains the '
                  'paths to all resolved dependencies.')
 
-        self.parser.add_argument('--lock_versions', dest='--lock_versions',
+        self.parser.add_argument(
+            '--lock_versions',
+            dest='--lock_versions',
             action='store_true', default=False,
             help='Creates the resolve_lock_versions directory which contains '
                  'the specific versions of all resolved dependencies.')
@@ -87,17 +97,18 @@ class Options(object):
 
         option = '--%s_path' % dependency.name
 
-        self.parser.add_argument(option,
+        self.parser.add_argument(
+            option,
             nargs='?',
             dest=option,
-            help='Manually specify path for {}.'.format(
-                dependency.name))
+            help='Manually specify path for {}.'.format(dependency.name))
 
     def __add_checkout(self, dependency):
 
         option = '--%s_checkout' % dependency.name
 
-        self.parser.add_argument(option,
+        self.parser.add_argument(
+            option,
             nargs='?',
             dest=option,
             help='Manually specify Git checkout for {}.'.format(

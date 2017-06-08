@@ -3,7 +3,6 @@
 
 import hashlib
 import json
-import collections
 import pprint
 
 class Dependency(object):
@@ -47,8 +46,8 @@ class Dependency(object):
 
         So in the small example from before all the following attributes are
         not directly modifiable: name, recurse, optional, resolver, method,
-        checkout, sources and sha1. If these attributes needs to be modifid e.g.
-        to "customize" the way resolvers are constructed, this can be done
+        checkout, sources and sha1. If these attributes needs to be modifid
+        e.g. to "customize" the way resolvers are constructed, this can be done
         using the rewrite(...) function.
 
         Note on rewrite(...) and SHA1: One obvious question to raise is whether
@@ -114,7 +113,8 @@ class Dependency(object):
         self.info['sha1'] = sha1
 
         # For some operations like, storing a dependency in a dict as the key
-        # it is needed that the dependency is hashable (returned as an integer).
+        # it is needed that the dependency is hashable (returned as an
+        # integer).
         # This is implemented in the __hash__() member function, which will
         # compute the hash from the sha1 string. We will store this value to
         # avoid computing it over and over.
@@ -163,7 +163,7 @@ class Dependency(object):
         :param reason: The reason for the modification, as a string.
         """
 
-        if value == None:
+        if value is None:
             self.__delete(attribute=attribute, reason=reason)
         elif attribute not in self.info:
             self.__create(attribute=attribute, value=value, reason=reason)

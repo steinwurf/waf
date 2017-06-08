@@ -1,21 +1,21 @@
 import pytest
-import mock
-import argparse
 
 from wurf.registry import Registry
 from wurf.registry import RegistryCacheOnceError
+
 
 class Point(object):
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
+
 def test_registry():
 
     registry = Registry()
 
     def build_point(registry, x):
-        return Point(x,0)
+        return Point(x, 0)
 
     registry.provide_function('point', build_point)
 
@@ -73,7 +73,7 @@ def test_registry():
     registry = Registry()
 
     def build_point(registry, x):
-        return Point(x,0)
+        return Point(x, 0)
 
     registry.provide_function('point', build_point)
 
@@ -163,10 +163,12 @@ def test_registry_cache():
     registry = Registry()
 
     class Foo(object):
-        def __init__(self): self.seen = False
+        def __init__(self):
+            self.seen = False
 
     class Bar(object):
-        def __init__(self): self.seen = False
+        def __init__(self):
+            self.seen = False
 
     def build_foo(data):
         return Foo()
@@ -176,37 +178,37 @@ def test_registry_cache():
 
     registry.provide_function('foo', build_foo)
     registry.provide_function('bar', build_bar)
-    registry.cache_provider(provider_name='foo',once=True)
-    registry.cache_provider(provider_name='bar',once=False)
+    registry.cache_provider(provider_name='foo', once=True)
+    registry.cache_provider(provider_name='bar', once=False)
 
     with registry.provide_temporary() as tmp:
-        tmp.provide_value('data', [1,2,3])
+        tmp.provide_value('data', [1, 2, 3])
         tmp.provide_value('value', 2)
 
         f = registry.require('foo')
         b = registry.require('bar')
 
-        assert f.seen == False
-        assert b.seen == False
+        assert f.seen is False
+        assert b.seen is False
 
         f.seen = True
         b.seen = True
 
     # We cannot change data, since we have cache once = True
     with registry.provide_temporary() as tmp:
-        tmp.provide_value('data', [2,3,4])
+        tmp.provide_value('data', [2, 3, 4])
 
         with pytest.raises(RegistryCacheOnceError):
             f = registry.require('foo')
 
     with registry.provide_temporary() as tmp:
-        tmp.provide_value('data', [1,2,3])
+        tmp.provide_value('data', [1, 2, 3])
 
         f = registry.require('foo')
-        assert f.seen == True
+        assert f.seen is True
 
         # We can change the value as we want since bar is not cache once
         tmp.provide_value('value', 3)
         b = registry.require('bar')
-        assert b.seen == False
+        assert b.seen is False
         b.seen = True

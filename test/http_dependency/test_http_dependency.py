@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import os
-import json
 import pytest
+
 
 def mkdir_app(directory):
     app_dir = directory.mkdir('app')
@@ -13,6 +12,7 @@ def mkdir_app(directory):
     app_dir.copy_file('build/waf')
 
     return app_dir
+
 
 @pytest.mark.networktest
 def test_http_dependency(testdirectory):

@@ -3,6 +3,7 @@
 
 import json
 
+
 class TagDatabase(object):
 
     def __init__(self, ctx):
@@ -34,7 +35,7 @@ class TagDatabase(object):
             self.ctx.to_log(
                 "Tags downloaded. File size: {}\n".format(len(tags_json)))
             self.tags = json.loads(tags_json)
-        except Exception as e:
+        except Exception:
             self.tags = {}
             # Log the exception, including the traceback information
             self.ctx.logger.debug(

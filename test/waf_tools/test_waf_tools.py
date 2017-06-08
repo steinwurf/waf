@@ -5,6 +5,7 @@ import os
 import sys
 import pytest
 
+
 @pytest.mark.networktest
 def test_waf_tools(testdirectory):
     root = testdirectory

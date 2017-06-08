@@ -4,6 +4,7 @@
 import os
 import hashlib
 
+
 class ArchiveResolver(object):
     """
     Extracts an archive

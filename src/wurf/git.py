@@ -4,6 +4,7 @@
 import os
 import re
 
+
 class Git(object):
 
     def __init__(self, git_binary, ctx):
@@ -22,7 +23,7 @@ class Git(object):
         :param kwargs: Keyword arguments passed to ctx.cmd_and_log(...)
         """
         args = [self.git_binary] + list(args)
-        return cmd_and_log(args, **kwargs)
+        return self.ctx.cmd_and_log(args, **kwargs)
 
     def version(self):
         """
@@ -41,8 +42,8 @@ class Git(object):
 
     def current_commit(self, cwd):
         """
-        Runs 'git rev-parse HEAD' parse and return the commit id (SHA1) of the commit
-        currently checked out into the working copy.
+        Runs 'git rev-parse HEAD' parse and return the commit id (SHA1) of the
+        commit currently checked out into the working copy.
         """
         args = [self.git_binary, 'rev-parse', 'HEAD']
         output = self.ctx.cmd_and_log(args, cwd=cwd).strip()
@@ -121,8 +122,8 @@ class Git(object):
 
     def has_submodules(ctx, cwd):
         """
-        Returns true if the repository in directory cwd contains the .gitmodules
-        file.
+        Returns true if the repository in directory cwd contains the
+        .gitmodules file.
         """
         return os.path.isfile(os.path.join(cwd, '.gitmodules'))
 
