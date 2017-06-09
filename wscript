@@ -182,4 +182,4 @@ def _pytest(bld):
 
         venv.run(command)
 
-        venv.run('python -m pep8 src test')
+        venv.run('python -m pep8 --filename=*.py,wscript src test')
