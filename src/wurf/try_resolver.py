@@ -5,6 +5,7 @@ import os
 
 from .error import Error
 
+
 class TryResolver(object):
     """ Try to resolve."""
 
@@ -50,7 +51,7 @@ class TryResolver(object):
             self.dependency.error_messages.append(error_message)
 
             return None
-        except:
+        except Exception:
             raise
 
         # The resolver did not raise an error, we check if it actually

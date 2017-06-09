@@ -6,6 +6,7 @@ import os
 APPNAME = 'test_http_dependency'
 VERSION = '1.0.0'
 
+
 def resolve(ctx):
 
     ctx.add_dependency(
@@ -17,11 +18,14 @@ def resolve(ctx):
         filename='endian-4.0.0.zip',
         sources=['https://github.com/steinwurf/endian/archive/4.0.0.zip'])
 
+
 def options(opt):
     opt.load('compiler_cxx')
 
+
 def configure(conf):
     conf.load('compiler_cxx')
+
 
 def build(bld):
 
@@ -33,11 +37,11 @@ def build(bld):
 
     if len(endian_dirs) != 1:
         # There should be only one directory
-        bld.fatal('There should be only one contained dir in the zip {}'.format(
-            endian_dirs))
+        bld.fatal('There should be only one '
+                  'contained dir in the zip {}'.format(endian_dirs))
 
-    endian_path = os.path.join(bld.dependency_path('endian'), endian_dirs[0],
-        'src')
+    endian_path = os.path.join(
+        bld.dependency_path('endian'), endian_dirs[0], 'src')
 
     bld(export_includes=endian_path, name='endian')
 

@@ -6,13 +6,14 @@ import os
 from wurf.directory import copy_directory
 from wurf.directory import remove_directory
 
+
 def testdirectory(testdirectory):
 
     foo_dir = testdirectory.mkdir('foo')
     foo_dir.write_text('test.txt', data=u'ok', encoding='utf-8')
 
     copy_directory(path=foo_dir.path(),
-        to_path=os.path.join(testdirectory.path(), 'bar'))
+                   to_path=os.path.join(testdirectory.path(), 'bar'))
 
     bar_dir = testdirectory.join('bar')
 
@@ -27,13 +28,14 @@ def testdirectory(testdirectory):
     assert not testdirectory.contains_dir(foo_dir.path())
     assert not testdirectory.contains_dir(bar_dir.path())
 
+
 def testdirectory_unicode(testdirectory):
 
     foo_dir = testdirectory.mkdir(u'foo')
     foo_dir.write_binary(u'圧縮.zip', data=b'ok')
 
     copy_directory(path=foo_dir.path(),
-        to_path=os.path.join(testdirectory.path(), u'bar'))
+                   to_path=os.path.join(testdirectory.path(), u'bar'))
 
     bar_dir = testdirectory.join(u'bar')
 

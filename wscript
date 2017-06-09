@@ -3,12 +3,11 @@
 
 import os
 import sys
-import shutil
-import hashlib
 
 import waflib
 
 top = '.'
+
 
 def resolve(ctx):
 
@@ -77,7 +76,8 @@ def _create_virtualenv(ctx, cwd):
 
     from waflib.extras.wurf.virtualenv import VirtualEnv
     return VirtualEnv.create(cwd=cwd, env=env, name=None, ctx=ctx,
-        pip_packages_path=os.path.join(ctx.path.abspath(), 'pip_packages'))
+                             pip_packages_path=os.path.join(ctx.path.abspath(),
+                                                            'pip_packages'))
 
 
 def configure(conf):
@@ -85,14 +85,13 @@ def configure(conf):
     # Ensure that the waf-light program is available in the in the
     # waf folder. This is used to build the waf binary.
     conf.find_program('waf-light', exts='',
-        path_list=[conf.dependency_path('waf')])
+                      path_list=[conf.dependency_path('waf')])
 
 
 def _build_waf_binary(bld):
     """ Build the waf binary."""
 
-    tools_dir = \
-    [
+    tools_dir = [
         os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
         os.path.join(bld.dependency_path('python-archive'), 'archive'),
         'src/wurf'
@@ -109,7 +108,6 @@ def _build_waf_binary(bld):
     waflib.Logs.debug("wurf: tools_dir={}".format(tools_dir))
 
     # Get the absolute path to all the tools (passed as input to the task)
-    #tool_paths = [t.abspath() for t in tsk.inputs] + tools_dir
     tool_paths = ','.join(tools_dir)
 
     # The prelude option
@@ -118,7 +116,7 @@ def _build_waf_binary(bld):
     # Build the command to execute
     python = sys.executable
     command = python + ' waf-light configure build --make-waf '\
-              '--prelude="{}" --tools={}'.format(prelude, tool_paths)
+                       '--prelude="{}" --tools={}'.format(prelude, tool_paths)
 
     bld.cmd_and_log(command, cwd=cwd)
 
@@ -148,11 +146,11 @@ def _pytest(bld):
 
     with venv:
 
-        venv.pip_install('pytest', 'mock', 'vcrpy', 'pytest-testdirectory')
+        venv.pip_install('pytest', 'mock', 'vcrpy', 'pytest-testdirectory',
+                         'pep8')
 
         # Add our sources to the Python path
-        python_path = \
-        [
+        python_path = [
             bld.dependency_path('python-semver'),
             os.path.join(os.getcwd(), 'src')
         ]
@@ -164,7 +162,8 @@ def _pytest(bld):
         # We override the pytest temp folder with the basetemp option,
         # so the test folders will be available at the specified location
         # on all platforms. The default location is the "pytest" local folder.
-        basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
+        basetemp = os.path.abspath(os.path.expanduser(
+            bld.options.pytest_basetemp))
 
         # We need to manually remove the previously created basetemp folder,
         # because pytest uses os.listdir in the removal process, and that fails
@@ -182,3 +181,6 @@ def _pytest(bld):
             command += ' -m "not networktest"'
 
         venv.run(command)
+
+        venv.run('python -m pep8 --filename=*.py,wscript '
+                 'src test wscript buildbot.py')

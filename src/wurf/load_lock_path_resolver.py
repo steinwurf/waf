@@ -6,6 +6,7 @@ import json
 
 from .error import DependencyError
 
+
 class LoadLockPathResolver(object):
 
     def __init__(self, dependency, project_path):
@@ -15,7 +16,6 @@ class LoadLockPathResolver(object):
         """
         self.dependency = dependency
         self.project_path = project_path
-
 
     def resolve(self):
         """ Resolve a path to a dependency.
@@ -36,7 +36,7 @@ class LoadLockPathResolver(object):
 
         if not os.path.isdir(path):
             raise DependencyError('Invalid path: "{}"'.format(path),
-                self.dependency)
+                                  self.dependency)
 
         return path
 
@@ -45,7 +45,7 @@ class LoadLockPathResolver(object):
         """
 
         config_path = os.path.join(self.project_path, 'resolve_lock_paths',
-            self.dependency.name + '.lock_path.json')
+                                   self.dependency.name + '.lock_path.json')
 
         if not os.path.isfile(config_path):
             raise DependencyError(

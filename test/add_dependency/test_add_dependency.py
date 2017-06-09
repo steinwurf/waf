@@ -35,6 +35,7 @@ The arrows indicate dependencies, so:
 
 """
 
+
 def mkdir_app(directory):
     app_dir = directory.mkdir('app')
     app_dir.copy_file('test/add_dependency/app/main.cpp')
@@ -54,7 +55,7 @@ def mkdir_app_json(directory):
     app_dir = directory.mkdir('app')
     app_dir.copy_file('test/add_dependency/app/main.cpp')
     app_dir.copy_file('test/add_dependency/app/wscript_json',
-        rename_as='wscript')
+                      rename_as='wscript')
     app_dir.copy_file('test/add_dependency/app/resolve.json')
 
     app_dir.copy_file('test/add_dependency/fake_git_clone.py')
@@ -99,7 +100,7 @@ def mkdir_libfoo_json(directory):
     # Add foo dir
     foo_dir = directory.mkdir('libfoo')
     foo_dir.copy_file('test/add_dependency/libfoo/wscript_json',
-        rename_as='wscript')
+                      rename_as='wscript')
     foo_dir.copy_file('test/add_dependency/libfoo/some_repos_contain')
     foo_dir.copy_file('test/add_dependency/libfoo/resolve.json')
     foo_dir.copy_dir(directory='test/add_dependency/libfoo/src')
@@ -168,9 +169,12 @@ def run_commands(app_dir, git_dir):
     assert r.stdout.match('*Magic option for foo*')
 
     # The symlinks should be available to all dependencies
-    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'foo'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'baz'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'bar'))
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'foo'))
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'baz'))
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
     app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
@@ -196,16 +200,19 @@ def run_commands(app_dir, git_dir):
     assert app_dir.contains_file('lock_resolve.json')
 
     # The symlinks should be available to all dependencies
-    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'foo'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'baz'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'bar'))
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'foo'))
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'baz'))
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
 
     resolve_dir = app_dir.join('resolved_dependencies')
-    assert resolve_dir.contains_dir('foo-*','1.3.3.7-*')
-    assert resolve_dir.contains_dir('baz-*','3.3.1-*')
-    assert resolve_dir.contains_dir('bar-*','someh4sh-*')
+    assert resolve_dir.contains_dir('foo-*', '1.3.3.7-*')
+    assert resolve_dir.contains_dir('baz-*', '3.3.1-*')
+    assert resolve_dir.contains_dir('bar-*', 'someh4sh-*')
 
     resolve_dir.rmdir()
 
@@ -242,7 +249,7 @@ def run_commands(app_dir, git_dir):
 
     # Test the --lock_paths options
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths',
-        '--resolve_path', 'locked')
+                '--resolve_path', 'locked')
 
     assert app_dir.contains_dir('resolve_symlinks', 'foo')
     assert app_dir.contains_dir('resolve_symlinks', 'baz')
@@ -286,7 +293,7 @@ def test_resolve_json(testdirectory):
     clone_path = {
         'github.com/acme-corp/foo.git': foo_dir.path(),
         'gitlab.com/acme-corp/bar.git': bar_dir.path(),
-        'gitlab.com/acme/baz.git': baz_dir.path() }
+        'gitlab.com/acme/baz.git': baz_dir.path()}
 
     json_path = os.path.join(app_dir.path(), 'clone_path.json')
 
@@ -319,7 +326,7 @@ def test_add_dependency(testdirectory):
     clone_path = {
         'github.com/acme-corp/foo.git': foo_dir.path(),
         'gitlab.com/acme-corp/bar.git': bar_dir.path(),
-        'gitlab.com/acme/baz.git': baz_dir.path() }
+        'gitlab.com/acme/baz.git': baz_dir.path()}
 
     json_path = os.path.join(app_dir.path(), 'clone_path.json')
 
@@ -342,7 +349,7 @@ def test_add_dependency_path(testdirectory):
     # this mapping
     clone_path = {
         'github.com/acme-corp/foo.git': foo_dir.path(),
-        'gitlab.com/acme-corp/bar.git': bar_dir.path() }
+        'gitlab.com/acme-corp/bar.git': bar_dir.path()}
 
     json_path = os.path.join(app_dir.path(), 'clone_path.json')
 
@@ -359,9 +366,12 @@ def test_add_dependency_path(testdirectory):
                 baz_dir.path()))
 
     # The symlinks should be available to all dependencies
-    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'foo'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'baz'))
-    assert os.path.exists(os.path.join(app_dir.path(), 'resolve_symlinks', 'bar'))
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'foo'))
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'baz'))
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'bar'))
 
     app_dir.run('python', 'waf', 'build', '-v')
     app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
@@ -382,7 +392,7 @@ def test_create_standalone_archive(testdirectory):
     clone_path = {
         'github.com/acme-corp/foo.git': foo_dir.path(),
         'gitlab.com/acme-corp/bar.git': bar_dir.path(),
-        'gitlab.com/acme/baz.git': baz_dir.path() }
+        'gitlab.com/acme/baz.git': baz_dir.path()}
 
     json_path = os.path.join(app_dir.path(), 'clone_path.json')
 

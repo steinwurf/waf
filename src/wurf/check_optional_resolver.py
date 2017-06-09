@@ -3,6 +3,7 @@
 
 from .error import TopLevelError
 
+
 class CheckOptionalResolver(object):
 
     def __init__(self, resolver, dependency):
@@ -28,6 +29,6 @@ class CheckOptionalResolver(object):
 
         if not path and not self.dependency.optional:
             raise TopLevelError(msg="Non-optional dependency failed.",
-                dependency=self.dependency)
+                                dependency=self.dependency)
 
         return path

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+
 class MandatoryOptions(object):
     def __init__(self, options):
         self.options = options

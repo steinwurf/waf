@@ -3,7 +3,8 @@
 
 import json
 
-from .error import Error
+from .error import Error, DependencyError
+
 
 class LockCache(object):
 
@@ -34,11 +35,11 @@ class LockCache(object):
 
     def add_path(self, dependency, path):
         self.lock_cache['dependencies'][dependency.name] = {
-            'sha1': dependency.sha1, 'path': path }
+            'sha1': dependency.sha1, 'path': path}
 
     def add_checkout(self, dependency, checkout):
         self.lock_cache['dependencies'][dependency.name] = {
-            'sha1': dependency.sha1, 'checkout': checkout }
+            'sha1': dependency.sha1, 'checkout': checkout}
 
     def __contains__(self, dependency):
         """
@@ -50,12 +51,12 @@ class LockCache(object):
     @staticmethod
     def create_empty(options):
         if options.lock_versions():
-            lock_cache = {'type':'versions', 'dependencies': {}}
+            lock_cache = {'type': 'versions', 'dependencies': {}}
 
             return LockCache(lock_cache=lock_cache)
 
         elif options.lock_paths():
-            lock_cache =  {'type':'paths', 'dependencies': {}}
+            lock_cache = {'type': 'paths', 'dependencies': {}}
 
             return LockCache(lock_cache=lock_cache)
         else:

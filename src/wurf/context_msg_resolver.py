@@ -22,8 +22,8 @@ class ContextMsgResolver(object):
         "resolver_chain" and "resolver_action" attributes of the dependency
         object.
 
-        Finally the path will be printed different depending on the "is_symlink"
-        and "real_path" dependency object attributes.
+        Finally the path will be printed different depending on the
+        "is_symlink" and "real_path" dependency object attributes.
 
         See a description of these attributes in the Depencency object docs.
 
@@ -53,9 +53,6 @@ class ContextMsgResolver(object):
                 # inside the project folder
                 symlink_path = path
                 symlink_node = self.ctx.root.find_node(str(path))
-
-                #if not symlink_node:
-                #    symlink_node = self.cxt.root.find_file(str(path))
 
                 if symlink_node.is_child_of(self.ctx.srcnode):
                     symlink_path = symlink_node.path_from(self.ctx.srcnode)

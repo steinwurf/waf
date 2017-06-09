@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+
 class Error(Exception):
     """Basic exception for errors raised by wurf tools"""
     def __init__(self, *args):
@@ -44,7 +45,7 @@ def help_message(dependency):
         dependency.name)
     if dependency.resolver == 'git':
         steinwurf_sources = \
-            ['https://'+s for s in dependency.sources if 'steinwurf' in s]
+            ['https://' + s for s in dependency.sources if 'steinwurf' in s]
         if len(steinwurf_sources):
             text += '\nPlease check that you have a valid Steinwurf ' \
                     'license and you can access the repository at: '  \

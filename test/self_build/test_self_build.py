@@ -4,6 +4,7 @@
 import os
 import pytest
 
+
 @pytest.mark.networktest
 def test_self_build(testdirectory):
     root = testdirectory

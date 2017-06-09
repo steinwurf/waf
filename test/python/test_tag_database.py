@@ -3,6 +3,7 @@ import mock
 
 from wurf.tag_database import TagDatabase
 
+
 @pytest.mark.networktest
 def test_tag_database():
 

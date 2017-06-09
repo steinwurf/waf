@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+
 class SemverSelector(object):
     """
     Selects the most recent tag for a semver major version.

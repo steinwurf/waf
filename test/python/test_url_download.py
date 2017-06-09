@@ -1,16 +1,16 @@
 import pytest
-import mock
 import vcr
 import os
 import sys
 
 from wurf.url_download import UrlDownload
 
+
 def test_url_download_url_filename():
     download = UrlDownload()
 
-    assert download._url_filename('http://example.com') == None
-    assert download._url_filename('http://example.com/data') == None
+    assert download._url_filename('http://example.com') is None
+    assert download._url_filename('http://example.com/data') is None
     assert download._url_filename('http://example.com/data.txt') == 'data.txt'
     assert download._url_filename(
         'https://github.com/steinwurf/stub/archive/6.0.0.tar.gz') == \
@@ -19,12 +19,12 @@ def test_url_download_url_filename():
 
 # @todo Re-enable when support merged:
 # https://github.com/kevin1024/vcrpy/pull/303
-@pytest.mark.skipif(sys.version_info[:2] == (3,6), reason="vcr.py issue for "
-    "Python3.6: https://github.com/kevin1024/vcrpy/pull/303")
+@pytest.mark.skipif(
+    sys.version_info[:2] == (3, 6),
+    reason="vcr.py issue for Python3.6: "
+    "https://github.com/kevin1024/vcrpy/pull/303")
 @vcr.use_cassette('test/vcr_cassettes/https_cxx_prettyprint_resolver.yaml')
 def test_url_download_cxx_prettyprint_rename(testdirectory):
-
-    dependency = mock.Mock()
     source = 'https://github.com/louisdx/cxx-prettyprint/zipball/master'
     cwd = testdirectory.path()
 
@@ -37,12 +37,12 @@ def test_url_download_cxx_prettyprint_rename(testdirectory):
 
 # @todo Re-enable when support merged:
 # https://github.com/kevin1024/vcrpy/pull/303
-@pytest.mark.skipif(sys.version_info[:2] == (3,6), reason="vcr.py issue for "
-    "Python3.6: https://github.com/kevin1024/vcrpy/pull/303")
+@pytest.mark.skipif(
+    sys.version_info[:2] == (3, 6),
+    reason="vcr.py issue for Python3.6: "
+           "https://github.com/kevin1024/vcrpy/pull/303")
 @vcr.use_cassette('test/vcr_cassettes/https_cxx_prettyprint_resolver.yaml')
 def test_url_download_cxx_prettyprin(testdirectory):
-
-    dependency = mock.Mock()
     source = 'https://github.com/louisdx/cxx-prettyprint/zipball/master'
     cwd = testdirectory.path()
 
@@ -53,7 +53,8 @@ def test_url_download_cxx_prettyprin(testdirectory):
     # You can open the VCR cassette recording:
     #    test/vcr_cassettes/https_resolver.yaml
     # And you should find the following HTTP header:
-    # content-disposition: [attachment; filename=louisdx-cxx-prettyprint-9ab26d2.zip]
+    # content-disposition:
+    # [attachment; filename=louisdx-cxx-prettyprint-9ab26d2.zip]
     path = download.download(cwd=cwd, source=source)
 
     assert os.path.join(cwd, 'louisdx-cxx-prettyprint-9ab26d2.zip') == path
@@ -61,12 +62,12 @@ def test_url_download_cxx_prettyprin(testdirectory):
 
 # @todo Re-enable when support merged:
 # https://github.com/kevin1024/vcrpy/pull/303
-@pytest.mark.skipif(sys.version_info[:2] == (3,6), reason="vcr.py issue for "
-    "Python3.6: https://github.com/kevin1024/vcrpy/pull/303")
+@pytest.mark.skipif(
+    sys.version_info[:2] == (3, 6),
+    reason="vcr.py issue for Python3.6: "
+           "https://github.com/kevin1024/vcrpy/pull/303")
 @vcr.use_cassette('test/vcr_cassettes/https_stub_resolver.yaml')
 def test_url_download_stub_rename(testdirectory):
-
-    dependency = mock.Mock()
     source = 'https://github.com/steinwurf/stub/archive/6.0.0.zip'
     cwd = testdirectory.path()
 
@@ -79,12 +80,12 @@ def test_url_download_stub_rename(testdirectory):
 
 # @todo Re-enable when support merged:
 # https://github.com/kevin1024/vcrpy/pull/303
-@pytest.mark.skipif(sys.version_info[:2] == (3,6), reason="vcr.py issue for "
-    "Python3.6: https://github.com/kevin1024/vcrpy/pull/303")
+@pytest.mark.skipif(
+    sys.version_info[:2] == (3, 6),
+    reason="vcr.py issue for Python3.6: "
+           "https://github.com/kevin1024/vcrpy/pull/303")
 @vcr.use_cassette('test/vcr_cassettes/https_stub_resolver.yaml')
 def test_url_download_stub(testdirectory):
-
-    dependency = mock.Mock()
     source = 'https://github.com/steinwurf/stub/archive/6.0.0.zip'
     cwd = testdirectory.path()
 

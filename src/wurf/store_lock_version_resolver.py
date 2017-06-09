@@ -1,11 +1,8 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import os
-import json
-import shutil
-
 from .error import Error
+
 
 class StoreLockVersionResolver(object):
 
@@ -40,7 +37,7 @@ class StoreLockVersionResolver(object):
         else:
             raise Error('Not stable checkout information found.')
 
-        self.lock_cache.add_checkout(dependency=self.dependency,
-            checkout=checkout)
+        self.lock_cache.add_checkout(
+            dependency=self.dependency, checkout=checkout)
 
         return path

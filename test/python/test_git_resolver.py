@@ -1,5 +1,4 @@
 import os
-import pytest
 import mock
 
 from wurf.git_resolver import GitResolver
@@ -27,7 +26,8 @@ def test_git_resolver(testdirectory):
     dependency = mock.Mock()
     dependency.name = 'links'
 
-    resolver = GitResolver(git=git, ctx=ctx, dependency=dependency,
+    resolver = GitResolver(
+        git=git, ctx=ctx, dependency=dependency,
         git_url_rewriter=git_url_rewriter, source=source, cwd=cwd)
 
     path = resolver.resolve()
@@ -50,6 +50,6 @@ def test_git_resolver(testdirectory):
 
     assert path2 == path
 
-    assert git.clone.called == False
+    assert git.clone.called is False
     git.pull.assert_called_once_with(cwd=path)
     git.pull_submodules.assert_called_once_with(cwd=path)
