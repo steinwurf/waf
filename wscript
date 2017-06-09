@@ -146,7 +146,8 @@ def _pytest(bld):
 
     with venv:
 
-        venv.pip_install('pytest', 'mock', 'vcrpy', 'pytest-testdirectory')
+        venv.pip_install('pytest', 'mock', 'vcrpy', 'pytest-testdirectory',
+                         'pep8')
 
         # Add our sources to the Python path
         python_path = [
@@ -180,3 +181,5 @@ def _pytest(bld):
             command += ' -m "not networktest"'
 
         venv.run(command)
+
+        venv.run('python -m pep8 src test')
