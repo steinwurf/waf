@@ -5,6 +5,7 @@ import hashlib
 import json
 import pprint
 
+
 class Dependency(object):
 
     def __init__(self, **kwargs):
