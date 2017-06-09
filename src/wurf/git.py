@@ -16,15 +16,6 @@ class Git(object):
         self.git_binary = git_binary
         self.ctx = ctx
 
-    def cmd_and_log(self, *args, **kwargs):
-        """
-        Runs a git command
-        :param args: Program arguments as a list
-        :param kwargs: Keyword arguments passed to ctx.cmd_and_log(...)
-        """
-        args = [self.git_binary] + list(args)
-        return self.ctx.cmd_and_log(args, **kwargs)
-
     def version(self):
         """
         Runs 'git version' and return the version information as a tuple
