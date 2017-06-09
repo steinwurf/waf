@@ -50,9 +50,8 @@ class HttpResolver(object):
         else:
             filename = None
 
-        file_path = self.url_download.download(cwd=folder_path,
-                                               source=self.source,
-                                               filename=filename)
+        file_path = self.url_download.download(
+            cwd=folder_path, source=self.source, filename=filename)
 
         assert os.path.isfile(file_path), "We should have a valid path here!"
 
