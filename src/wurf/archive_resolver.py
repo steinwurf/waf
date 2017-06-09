@@ -14,11 +14,10 @@ class ArchiveResolver(object):
 
         """ Construct a new instance.
 
-        :param git: A Git instance
-        :param ctx: A Waf Context instance.
-        :param dependency: The dependency instance.
-        :param git_url_rewriter: A GitUrlRewriter instance
-        :param source: The URL of the dependency as a string
+        :param archive_extractor: An archive (zip, tar, etc.) extractor
+            function.
+        :param resolver: The parent resolver responsible for downloading the
+            archive.
         :param cwd: Current working directory as a string. This is the place
             where we should create new folders etc.
         """
