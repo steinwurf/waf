@@ -4,5 +4,6 @@
 APPNAME = 'minimal_wscript'
 VERSION = '1.0.0'
 
+
 def build(bld):
     pass

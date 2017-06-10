@@ -1,4 +1,3 @@
-import pytest
 import mock
 import argparse
 
@@ -13,17 +12,16 @@ def test_resolve_path():
     args = ['--foo', '-b']
 
     options = Options(args=args, parser=parser,
-        default_resolve_path=default_path,
-        default_symlinks_path="", supported_git_protocols="")
+                      default_resolve_path=default_path,
+                      default_symlinks_path="", supported_git_protocols="")
 
     assert options.resolve_path() == default_path
-
 
     parser = argparse.ArgumentParser()
     args = ['--foo', '--resolve_path', '/tmp/bundlehere', '-b']
 
     options = Options(args=args, parser=parser, default_resolve_path="",
-        default_symlinks_path="", supported_git_protocols="")
+                      default_symlinks_path="", supported_git_protocols="")
 
     assert options.resolve_path() == '/tmp/bundlehere'
 
@@ -32,7 +30,7 @@ def test_resolve_path():
 
     options.add_dependency(dependency)
 
-    assert options.path(dependency=dependency) == None
+    assert options.path(dependency=dependency) is None
 
 
 def test_symlinks_path():
@@ -43,7 +41,8 @@ def test_symlinks_path():
     args = ['--foo', '-b']
 
     options = Options(args=args, parser=parser, default_resolve_path="",
-        default_symlinks_path=default_path, supported_git_protocols="")
+                      default_symlinks_path=default_path,
+                      supported_git_protocols="")
 
     assert options.symlinks_path() == default_path
 
@@ -51,7 +50,8 @@ def test_symlinks_path():
     args = ['--foo', '--symlinks_path', '/tmp/symlinks', '-b']
 
     options = Options(args=args, parser=parser, default_resolve_path="",
-        default_symlinks_path=default_path, supported_git_protocols="")
+                      default_symlinks_path=default_path,
+                      supported_git_protocols="")
 
     assert options.symlinks_path() == '/tmp/symlinks'
 
@@ -67,7 +67,7 @@ def test_user_path_to_dependency():
             '--foo_path', '/home/stw/code', '-b']
 
     options = Options(args=args, parser=parser, default_resolve_path="",
-        default_symlinks_path="", supported_git_protocols="")
+                      default_symlinks_path="", supported_git_protocols="")
 
     options.add_dependency(dependency)
 
@@ -79,7 +79,7 @@ def test_user_path_to_dependency():
             '--foo_path', '/home/stw/code1', '-b']
 
     options = Options(args=args, parser=parser, default_resolve_path="",
-        default_symlinks_path="", supported_git_protocols="")
+                      default_symlinks_path="", supported_git_protocols="")
 
     options.add_dependency(dependency)
 
@@ -92,15 +92,15 @@ def test_git_protocol():
     args = ['--foo', '-b']
 
     options = Options(args=args, parser=parser, default_resolve_path="",
-        default_symlinks_path="", supported_git_protocols="")
+                      default_symlinks_path="", supported_git_protocols="")
 
-    assert options.git_protocol() == None
+    assert options.git_protocol() is None
 
     parser = argparse.ArgumentParser()
     args = ['--foo', '--git_protocol', 'myproto://', '-b']
 
     options = Options(args=args, parser=parser, default_resolve_path="",
-        default_symlinks_path="", supported_git_protocols="")
+                      default_symlinks_path="", supported_git_protocols="")
 
     assert options.git_protocol() == 'myproto://'
 
@@ -111,14 +111,14 @@ def test_fast_resolve():
     args = ['--foo', '-b']
 
     options = Options(args=args, parser=parser, default_resolve_path="",
-        default_symlinks_path="", supported_git_protocols="")
+                      default_symlinks_path="", supported_git_protocols="")
 
-    assert options.fast_resolve() == False
+    assert options.fast_resolve() is False
 
     parser = argparse.ArgumentParser()
     args = ['--foo', '--fast_resolve', '-b']
 
     options = Options(args=args, parser=parser, default_resolve_path="",
-        default_symlinks_path="", supported_git_protocols="")
+                      default_symlinks_path="", supported_git_protocols="")
 
-    assert options.fast_resolve() == True
+    assert options.fast_resolve() is True

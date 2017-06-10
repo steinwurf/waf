@@ -1,4 +1,3 @@
-import pytest
 import mock
 
 from wurf.try_resolver import TryResolver
@@ -32,4 +31,4 @@ def test_try_resolver(testdirectory):
     # TryResolver should just return with None
     path = resolver.resolve()
 
-    assert path == None
+    assert path is None

@@ -1,4 +1,3 @@
-import pytest
 import mock
 import os
 
@@ -16,7 +15,7 @@ def test_http_resolver(testdirectory):
 
     def create_file(cwd, source, filename):
         assert http_source == source
-        assert filename == None
+        assert filename is None
 
         httpdir = testdirectory.from_path(cwd)
         httpdir.write_binary('file.zip', b'hello_world')
@@ -25,10 +24,12 @@ def test_http_resolver(testdirectory):
 
     url_download.download.side_effect = create_file
 
-    resolver = HttpResolver(url_download=url_download, dependency=dependency,
-        source=http_source, cwd=cwd)
+    resolver = HttpResolver(
+        url_download=url_download, dependency=dependency, source=http_source,
+        cwd=cwd)
 
     path = resolver.resolve()
+    assert os.path.isfile(path)
 
     assert testdirectory.contains_file('http-*/file.zip')
 
@@ -53,9 +54,11 @@ def test_http_resolver_filename(testdirectory):
 
     url_download.download.side_effect = create_file
 
-    resolver = HttpResolver(url_download=url_download, dependency=dependency,
-        source=http_source, cwd=cwd)
+    resolver = HttpResolver(
+        url_download=url_download, dependency=dependency, source=http_source,
+        cwd=cwd)
 
     path = resolver.resolve()
+    assert os.path.isfile(path)
 
     assert testdirectory.contains_file('http-*/foo.zip')

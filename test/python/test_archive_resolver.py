@@ -1,8 +1,8 @@
-import pytest
 import mock
 import os
 
 from wurf.archive_resolver import ArchiveResolver
+
 
 def test_archive_resolver(testdirectory):
 
@@ -16,7 +16,8 @@ def test_archive_resolver(testdirectory):
     archive_extractor = mock.Mock()
 
     resolver = ArchiveResolver(archive_extractor=archive_extractor,
-        resolver=parent_resolver, cwd=testdirectory.path())
+                               resolver=parent_resolver,
+                               cwd=testdirectory.path())
 
     path = resolver.resolve()
 

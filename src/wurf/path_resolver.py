@@ -5,6 +5,7 @@ import os
 
 from .error import DependencyError
 
+
 class PathResolver(object):
     """
     User Path Resolver functionality. Allows the user to specify the path.
@@ -28,7 +29,8 @@ class PathResolver(object):
         self.path = os.path.abspath(os.path.expanduser(self.path))
 
         if not os.path.isdir(self.path):
-            raise DependencyError('Path error: "{}" is not a valid '
-                'directory'.format(self.path), dependency=self.dependency)
+            raise DependencyError(
+                'Path error: "{}" is not a valid directory'.format(
+                    self.path), dependency=self.dependency)
 
         return self.path

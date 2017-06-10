@@ -7,6 +7,7 @@ import hashlib
 
 from .error import DependencyError
 
+
 class GitSemverResolver(object):
     """
     Git Semver Resolver functionality. Checks out a specific semver version.
@@ -15,7 +16,7 @@ class GitSemverResolver(object):
     """
 
     def __init__(self, git, resolver, ctx, semver_selector,
-        dependency, cwd):
+                 dependency, cwd):
         """ Construct an instance.
 
         :param git: A WurfGit instance

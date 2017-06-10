@@ -7,6 +7,7 @@ import hashlib
 
 from .directory import remove_directory
 
+
 class VirtualEnv(object):
     """ Simple object which can be used to work within a virtualevn.
 
@@ -26,8 +27,8 @@ class VirtualEnv(object):
 
     It is important to be aware of the cwd parameter, e.g. if you access files
     etc. it will be relative to cwd. So if cwd is the 'build' directory and you
-    access a file in the root of the repository it will need to be prefixed with
-    '../somefile.txt'.
+    access a file in the root of the repository it will need to be prefixed
+    with '../somefile.txt'.
     """
 
     def __init__(self, env, cwd, path, ctx, pip_packages_path):
@@ -55,11 +56,11 @@ class VirtualEnv(object):
 
     def run(self, cmd):
         """ Runs a command in the virtualenv. """
-        ret = self.ctx.exec_command(cmd, cwd=self.cwd, env=self.env,
-            stdout=None, stderr=None)
+        ret = self.ctx.exec_command(
+            cmd, cwd=self.cwd, env=self.env, stdout=None, stderr=None)
 
         if ret != 0:
-            self.ctx.fatal('Exec command failed!')
+            self.ctx.fatal('Exec command "{}" failed!'.format(cmd))
 
     def pip_download(self, *packages):
         """ Downloads a set of packages from pip.
@@ -129,8 +130,8 @@ class VirtualEnv(object):
 
         if not name:
 
-            # Make a unique virtualenv for different Python executables (e.g. 2.x
-            # and 3.x)
+            # Make a unique virtualenv for different Python executables
+            # (e.g. 2.x and 3.x)
             unique = hashlib.sha1(python.encode('utf-8')).hexdigest()[:6]
             name = 'virtualenv-{}'.format(unique)
 
@@ -145,4 +146,4 @@ class VirtualEnv(object):
         ctx.cmd_and_log(args, cwd=cwd, env=env)
 
         return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx,
-            pip_packages_path=pip_packages_path)
+                          pip_packages_path=pip_packages_path)

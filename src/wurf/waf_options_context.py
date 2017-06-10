@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import os
-import sys
-import copy
-
 from waflib import Context
 from waflib import Options
 
 from . import waf_conf
+
 
 class WafOptionsContext(Options.OptionsContext):
     """ Custom options context which will initiate the dependency resolve step.
@@ -99,8 +96,9 @@ class WafOptionsContext(Options.OptionsContext):
                 source_group = self.wurf_options.parser._optionals
 
                 for action in source_group._group_actions:
-                    target_group.add_option(action.option_strings[0],
-                        action='store_true' if action.nargs==0 else 'store',
+                    target_group.add_option(
+                        action.option_strings[0],
+                        action='store_true' if action.nargs == 0 else 'store',
                         help=action.help)
         finally:
             super(WafOptionsContext, self).parse_args(_args=self.waf_options)
