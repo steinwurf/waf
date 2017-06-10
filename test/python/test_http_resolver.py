@@ -28,8 +28,8 @@ def test_http_resolver(testdirectory):
         url_download=url_download, dependency=dependency, source=http_source,
         cwd=cwd)
 
-    # TODO this path is never tested
     path = resolver.resolve()
+    assert os.path.isfile(path)
 
     assert testdirectory.contains_file('http-*/file.zip')
 
@@ -58,7 +58,7 @@ def test_http_resolver_filename(testdirectory):
         url_download=url_download, dependency=dependency, source=http_source,
         cwd=cwd)
 
-    # TODO this path is never tested
     path = resolver.resolve()
+    assert os.path.isfile(path)
 
     assert testdirectory.contains_file('http-*/foo.zip')

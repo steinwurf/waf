@@ -252,13 +252,10 @@ class Registry(object):
                         raise RegistryCacheOnceError(
                             provider_name, provider_function)
 
-                    call = self.registry[provider_name]
                     result = provider_function(**inject_arguments)
                     provider.data[key] = result
                     return result
             else:
-                # TODO: call is never used here, it may be a bug?
-                call = self.registry[provider_name]
                 result = provider_function(**inject_arguments)
                 return result
 
