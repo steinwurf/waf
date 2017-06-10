@@ -1,7 +1,5 @@
-import pytest
 import vcr
 import os
-import sys
 
 from wurf.url_download import UrlDownload
 
@@ -17,12 +15,6 @@ def test_url_download_url_filename():
         '6.0.0.tar.gz'
 
 
-# @todo Re-enable when support merged:
-# https://github.com/kevin1024/vcrpy/pull/303
-@pytest.mark.skipif(
-    sys.version_info[:2] == (3, 6),
-    reason="vcr.py issue for Python3.6: "
-    "https://github.com/kevin1024/vcrpy/pull/303")
 @vcr.use_cassette('test/vcr_cassettes/https_cxx_prettyprint_resolver.yaml')
 def test_url_download_cxx_prettyprint_rename(testdirectory):
     source = 'https://github.com/louisdx/cxx-prettyprint/zipball/master'
@@ -35,12 +27,6 @@ def test_url_download_cxx_prettyprint_rename(testdirectory):
     assert os.path.join(cwd, 'test.zip') == path
 
 
-# @todo Re-enable when support merged:
-# https://github.com/kevin1024/vcrpy/pull/303
-@pytest.mark.skipif(
-    sys.version_info[:2] == (3, 6),
-    reason="vcr.py issue for Python3.6: "
-           "https://github.com/kevin1024/vcrpy/pull/303")
 @vcr.use_cassette('test/vcr_cassettes/https_cxx_prettyprint_resolver.yaml')
 def test_url_download_cxx_prettyprin(testdirectory):
     source = 'https://github.com/louisdx/cxx-prettyprint/zipball/master'
@@ -60,12 +46,6 @@ def test_url_download_cxx_prettyprin(testdirectory):
     assert os.path.join(cwd, 'louisdx-cxx-prettyprint-9ab26d2.zip') == path
 
 
-# @todo Re-enable when support merged:
-# https://github.com/kevin1024/vcrpy/pull/303
-@pytest.mark.skipif(
-    sys.version_info[:2] == (3, 6),
-    reason="vcr.py issue for Python3.6: "
-           "https://github.com/kevin1024/vcrpy/pull/303")
 @vcr.use_cassette('test/vcr_cassettes/https_stub_resolver.yaml')
 def test_url_download_stub_rename(testdirectory):
     source = 'https://github.com/steinwurf/stub/archive/6.0.0.zip'
@@ -78,12 +58,6 @@ def test_url_download_stub_rename(testdirectory):
     assert os.path.join(cwd, 'test.zip') == path
 
 
-# @todo Re-enable when support merged:
-# https://github.com/kevin1024/vcrpy/pull/303
-@pytest.mark.skipif(
-    sys.version_info[:2] == (3, 6),
-    reason="vcr.py issue for Python3.6: "
-           "https://github.com/kevin1024/vcrpy/pull/303")
 @vcr.use_cassette('test/vcr_cassettes/https_stub_resolver.yaml')
 def test_url_download_stub(testdirectory):
     source = 'https://github.com/steinwurf/stub/archive/6.0.0.zip'
