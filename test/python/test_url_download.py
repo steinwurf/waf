@@ -1,7 +1,5 @@
-import pytest
 import vcr
 import os
-import sys
 
 from wurf.url_download import UrlDownload
 
