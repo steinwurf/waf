@@ -41,6 +41,16 @@ from . import waf_conf
 # Check Python support for system locale
 from . import compat
 
+# Silense pyflakes on unused imports
+# https://mail.python.org/pipermail/python-list/2013-May/646440.html
+assert waf_resolve_context
+assert waf_options_context
+assert waf_configuration_context
+assert waf_build_context
+assert waf_install_context
+assert waf_standalone_context
+assert waf_conf
+
 
 def _check_minimum_python_version(major, minor):
     """

@@ -60,7 +60,7 @@ class VirtualEnv(object):
             cmd, cwd=self.cwd, env=self.env, stdout=None, stderr=None)
 
         if ret != 0:
-            self.ctx.fatal('Exec command failed!')
+            self.ctx.fatal('Exec command "{}" failed!'.format(cmd))
 
     def pip_download(self, *packages):
         """ Downloads a set of packages from pip.

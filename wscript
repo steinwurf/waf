@@ -183,8 +183,10 @@ def _pytest(bld):
         venv.run(command)
 
         # Run PEP8 check
+        bld.msg("Running", "pep8")
         venv.run('python -m pep8 --filename=*.py,wscript '
                  'src test wscript buildbot.py')
 
         # Run pyflakes
-        venv.run('python -m pyflakes src')
+        bld.msg("Running", "pyflakes")
+        venv.run('python -m pyflakes src test')

@@ -1,5 +1,3 @@
-import os
-import mock
 import semver
 
 from wurf.semver_selector import SemverSelector
