@@ -7,6 +7,7 @@
 # wscripts.
 
 from waflib.Configure import conf
+from waflib.Errors import WafError
 from waflib import Logs
 
 from . import waf_resolve_context
@@ -59,5 +60,14 @@ def recurse_dependencies(ctx):
         Logs.debug('resolve: recurse {} cmd={}, path={}'.format(
             name, ctx.cmd, path))
 
-        # str() is needed as waf does not handle unicode in find_node
-        ctx.recurse([str(path)], once=False, mandatory=False)
+        try:
+            # str() is needed as waf does not handle unicode in find_node
+            ctx.recurse([str(path)], once=False, mandatory=False)
+        except WafError as e:
+            raise WafError(
+                msg='Recurse "{}" for "{}" failed with: {}'.format(
+                    name, ctx.cmd, e.msg), ex=e)
+        except Exception as e:
+            raise WafError(
+                msg='Recurse "{}" for "{}" failed.'.format(
+                    name, ctx.cmd), ex=e)
