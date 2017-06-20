@@ -49,17 +49,15 @@ def recurse_dependencies(ctx):
 
         if not dependency['recurse']:
 
-            if Logs.verbose:
-                Logs.debug('resolve: Skipped recurse {} cmd={}'.format(
-                    name, ctx.cmd))
+            Logs.debug('resolve: Skipped recurse {} cmd={}'.format(
+                name, ctx.cmd))
 
             continue
 
         path = dependency['path']
 
-        if Logs.verbose:
-            Logs.debug('resolve: recurse {} cmd={}, path={}'.format(
-                name, ctx.cmd, path))
+        Logs.debug('resolve: recurse {} cmd={}, path={}'.format(
+            name, ctx.cmd, path))
 
         # str() is needed as waf does not handle unicode in find_node
         ctx.recurse([str(path)], once=False, mandatory=False)
