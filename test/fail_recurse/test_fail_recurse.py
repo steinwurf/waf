@@ -105,3 +105,5 @@ def test_fail_recurse_build_waf_error(testdirectory):
 
     assert r.stderr.match('Recurse "foo" for "configure" failed *')
     assert r.stderr.match('(complete log in *)')
+
+    assert 0
