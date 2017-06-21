@@ -24,20 +24,84 @@ def test_fail_recurse(testdirectory):
     testdirectory.run('python', 'waf', 'build')
 
 
-def test_fail_recurse_fail_configure(testdirectory):
+def test_fail_recurse_configure_python_error(testdirectory):
 
     foo_dir = testdirectory.mkdir('foo')
-    foo_dir.copy_file('test/fail_recurse/wscript_fail_configure',
+    foo_dir.copy_file('test/fail_recurse/wscript_configure_python_error',
                       rename_as='wscript')
 
     testdirectory.copy_file('test/fail_recurse/wscript')
     testdirectory.copy_file('test/fail_recurse/resolve.json')
     testdirectory.copy_file('build/waf')
 
-    with pytest.raises(RunResultError):
-        r = testdirectory.run('python', 'waf', 'configure',
-                              '--foo_path={}'.format(foo_dir.path()))
+    with pytest.raises(RunResultError) as excinfo:
+        testdirectory.run('python', 'waf', 'configure',
+                          '--foo_path={}'.format(foo_dir.path()))
 
-    assert r.stderr.match('Recurse "foo" for "configure" failed.*')
+    r = excinfo.value.runresult
 
-    testdirectory.run('python', 'waf', 'build')
+    assert r.stdout.match('RuntimeError: Oh no!')
+
+
+def test_fail_recurse_build_python_error(testdirectory):
+
+    foo_dir = testdirectory.mkdir('foo')
+    foo_dir.copy_file('test/fail_recurse/wscript_build_python_error',
+                      rename_as='wscript')
+
+    testdirectory.copy_file('test/fail_recurse/wscript')
+    testdirectory.copy_file('test/fail_recurse/resolve.json')
+    testdirectory.copy_file('build/waf')
+
+    r = testdirectory.run('python', 'waf', 'configure',
+                          '--foo_path={}'.format(foo_dir.path()))
+
+    with pytest.raises(RunResultError) as excinfo:
+        testdirectory.run('python', 'waf', 'build')
+
+    r = excinfo.value.runresult
+
+    assert r.stdout.match('RuntimeError: Oh no!')
+
+
+def test_fail_recurse_configure_waf_error(testdirectory):
+
+    foo_dir = testdirectory.mkdir('foo')
+    foo_dir.copy_file('test/fail_recurse/wscript_configure_waf_error',
+                      rename_as='wscript')
+
+    testdirectory.copy_file('test/fail_recurse/wscript')
+    testdirectory.copy_file('test/fail_recurse/resolve.json')
+    testdirectory.copy_file('build/waf')
+
+    with pytest.raises(RunResultError) as excinfo:
+        testdirectory.run('python', 'waf', 'configure',
+                          '--foo_path={}'.format(foo_dir.path()))
+
+    r = excinfo.value.runresult
+
+    print('ERR: {}'.format(r))
+
+    assert r.stderr.match('Recurse "foo" for "configure" failed *')
+    assert r.stderr.match('(complete log in *)')
+
+def test_fail_recurse_build_waf_error(testdirectory):
+
+    foo_dir = testdirectory.mkdir('foo')
+    foo_dir.copy_file('test/fail_recurse/wscript_configure_waf_error',
+                      rename_as='wscript')
+
+    testdirectory.copy_file('test/fail_recurse/wscript')
+    testdirectory.copy_file('test/fail_recurse/resolve.json')
+    testdirectory.copy_file('build/waf')
+
+    with pytest.raises(RunResultError) as excinfo:
+        testdirectory.run('python', 'waf', 'configure',
+                          '--foo_path={}'.format(foo_dir.path()))
+
+    r = excinfo.value.runresult
+
+    print('ERR: {}'.format(r))
+
+    assert r.stderr.match('Recurse "foo" for "configure" failed *')
+    assert r.stderr.match('(complete log in *)')

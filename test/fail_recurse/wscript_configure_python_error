@@ -1,0 +1,8 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+APPNAME = 'foo'
+VERSION = '1.0.0'
+
+def configure(conf):
+    raise RuntimeError("Oh no!")

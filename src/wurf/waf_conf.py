@@ -43,6 +43,15 @@ def recurse_dependencies(ctx):
 
     :param ctx: A Waf Context instance.
     """
+
+    # See if we have a log file, we do this here to avoid raising
+    # excpetions and destroying traceback inside the excpetion
+    # handler below.
+    try:
+        logfile = ctx.logger.handlers[0].baseFilename
+    except:
+        logfile = None
+
     # Since dependency_cache is an OrderedDict, the dependencies will be
     # enumerated in the same order as they were defined in the wscripts
     # (waf-tools should be the first if it is defined)
@@ -64,10 +73,13 @@ def recurse_dependencies(ctx):
             # str() is needed as waf does not handle unicode in find_node
             ctx.recurse([str(path)], once=False, mandatory=False)
         except WafError as e:
-            raise WafError(
-                msg='Recurse "{}" for "{}" failed with: {}'.format(
-                    name, ctx.cmd, e.msg), ex=e)
-        except Exception as e:
-            raise WafError(
-                msg='Recurse "{}" for "{}" failed.'.format(
-                    name, ctx.cmd), ex=e)
+
+            msg = 'Recurse "{}" for "{}" failed with: {}'.format(
+                name, ctx.cmd, e.msg)
+
+            if logfile:
+                msg = '{}\n(complete log in {})'.format(msg, logfile)
+            else:
+                msg = '{}\n(run with -v for more information)'.format(msg)
+
+            raise WafError(msg=msg, ex=e)
