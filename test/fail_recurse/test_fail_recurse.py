@@ -80,30 +80,27 @@ def test_fail_recurse_configure_waf_error(testdirectory):
 
     r = excinfo.value.runresult
 
-    print('ERR: {}'.format(r))
-
     assert r.stderr.match('Recurse "foo" for "configure" failed *')
     assert r.stderr.match('(complete log in *)')
+
 
 def test_fail_recurse_build_waf_error(testdirectory):
 
     foo_dir = testdirectory.mkdir('foo')
-    foo_dir.copy_file('test/fail_recurse/wscript_configure_waf_error',
+    foo_dir.copy_file('test/fail_recurse/wscript_build_waf_error',
                       rename_as='wscript')
 
     testdirectory.copy_file('test/fail_recurse/wscript')
     testdirectory.copy_file('test/fail_recurse/resolve.json')
     testdirectory.copy_file('build/waf')
 
+    testdirectory.run('python', 'waf', 'configure',
+                      '--foo_path={}'.format(foo_dir.path()))
+
     with pytest.raises(RunResultError) as excinfo:
-        testdirectory.run('python', 'waf', 'configure',
-                          '--foo_path={}'.format(foo_dir.path()))
+        testdirectory.run('python', 'waf', 'build')
 
     r = excinfo.value.runresult
 
-    print('ERR: {}'.format(r))
-
-    assert r.stderr.match('Recurse "foo" for "configure" failed *')
-    assert r.stderr.match('(complete log in *)')
-
-    assert 0
+    assert r.stderr.match('Recurse "foo" for "build" failed *')
+    assert r.stderr.match('*(run with -v for more information)')

@@ -71,6 +71,15 @@ def recurse_dependencies(ctx):
 
         try:
             # str() is needed as waf does not handle unicode in find_node
+            # @todo mandatory is False here, which means that no wscript
+            # is required to exist. Not sure if this is really a good idea?
+            # As a minimum it should be described here why that is the
+            # case. Because it opens the door to errors where e.g. the
+            # user points the dependency to some empty folder. Which will
+            # not fail them - but probably should?
+            # There is a unit test in:
+            # test/fail_recurse/test_fail_recurse.py which should fail
+            # if mandatory is changed to True
             ctx.recurse([str(path)], once=False, mandatory=False)
         except WafError as e:
 
