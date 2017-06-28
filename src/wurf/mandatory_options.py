@@ -13,8 +13,9 @@ class MandatoryOptions(object):
         def require(*args, **kwargs):
             value = call(*args, **kwargs)
 
-            if not value:
-                raise RuntimeError("WTF Dude")
+            if value is None:
+                raise RuntimeError(
+                    'Mandatory option "{}" was set to "None"'.format(name))
             return value
 
         return require
