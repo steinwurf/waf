@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 from .error import Error
+import argparse
 
 
 class Options(object):
@@ -15,16 +16,24 @@ class Options(object):
         self.known_args = {}
         self.unknown_args = []
 
+        def non_empty_string(value):
+            if not value:
+                raise argparse.ArgumentTypeError(
+                    "Empty string is not allowed.")
+            return value
+
         self.parser.add_argument(
             '--resolve_path',
             dest='--resolve_path',
             default=default_resolve_path,
+            type=non_empty_string,
             help="The folder where the resolved dependencies are downloaded. "
                  "[default: '{}']".format(default_resolve_path))
 
         self.parser.add_argument(
             '--git_protocol',
             dest='--git_protocol',
+            type=non_empty_string,
             help='Use a specific git protocol to download dependencies. '
                  'Supported protocols: {}'.format(supported_git_protocols))
 
@@ -32,6 +41,7 @@ class Options(object):
             '--symlinks_path',
             dest='--symlinks_path',
             default=default_symlinks_path,
+            type=non_empty_string,
             help="The folder where the dependency symlinks are placed. "
                  "[default: '{}']".format(default_symlinks_path))
 

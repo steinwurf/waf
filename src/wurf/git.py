@@ -8,7 +8,7 @@ import re
 class Git(object):
 
     def __init__(self, git_binary, ctx):
-        """ Construct a new WurfGit instance.
+        """ Construct a new Git instance.
 
         :param git_binary: A string containing the path to a git executable.
         :param ctx: A Waf Context instance.
