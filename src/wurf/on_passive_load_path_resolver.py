@@ -6,6 +6,7 @@ import json
 
 from .error import DependencyError
 
+
 class OnPassiveLoadPathResolver(object):
 
     def __init__(self, dependency, resolve_config_path):
@@ -39,9 +40,9 @@ class OnPassiveLoadPathResolver(object):
 
         path = str(config['path'])
 
-        if not os.path.isdir(path):
+        if not (os.path.isdir(path) or os.path.isfile(path)):
             raise DependencyError('Invalid path: "{}"'.format(path),
-                self.dependency)
+                                  self.dependency)
 
         return path
 
@@ -54,7 +55,7 @@ class OnPassiveLoadPathResolver(object):
 
         if not os.path.isfile(config_path):
             raise DependencyError('No config - re-run configure',
-                self.dependency)
+                                  self.dependency)
 
         with open(config_path, 'r') as config_file:
             return json.load(config_file)

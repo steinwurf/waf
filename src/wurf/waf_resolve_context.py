@@ -3,18 +3,12 @@
 
 import os
 import sys
-import argparse
-import traceback
-
-from collections import OrderedDict
 
 from waflib import Utils
 from waflib import Context
 from waflib import Options
 from waflib import Logs
-from waflib import ConfigSet
-from waflib import Node
-from waflib.Configure import conf
+
 from waflib.Errors import WafError
 
 from . import registry
@@ -22,6 +16,7 @@ from .error import CmdAndLogError
 from .error import Error
 
 from waflib.extras import semver
+from waflib.extras import archive
 
 
 # To create the tree. https://gist.github.com/hrldcpr/2012250
@@ -34,6 +29,7 @@ used by all other contexts or tools that need to access the
 dependencies. The idea is that this will be the single place to look to
 figure out which dependencies exist.
 """
+
 
 class WafResolveContext(Context.Context):
     '''resolves the dependencies specified in the wscript's resolve function'''
@@ -52,7 +48,7 @@ class WafResolveContext(Context.Context):
         # as options by waf itself. See:
         # https://github.com/waf-project/waf/blob/master/waflib/Scripting.py#L201-L207
         #
-        if not 'resolve' in Context.g_module.__dict__:
+        if 'resolve' not in Context.g_module.__dict__:
             Context.g_module.resolve = Utils.nada
 
         # Create the nodes that will be used during the resolve step. The build
@@ -69,7 +65,9 @@ class WafResolveContext(Context.Context):
 
         self.registry = registry.build_registry(
             ctx=self, git_binary='git',
-            semver=semver, default_resolve_path=default_resolve_path,
+            semver=semver,
+            archive_extractor=archive.extract,
+            default_resolve_path=default_resolve_path,
             resolve_config_path=self.resolve_config_path(),
             default_symlinks_path=default_symlinks_path,
             waf_utils=Utils, args=sys.argv[1:],
@@ -85,7 +83,7 @@ class WafResolveContext(Context.Context):
         configuration = self.registry.require('configuration')
 
         path = os.path.join(self.bldnode.abspath(),
-            configuration.resolver_chain()+'.resolve.log')
+                            configuration.resolver_chain() + '.resolve.log')
 
         self.logger = Logs.make_logger(path, 'cfg')
         self.logger.debug('wurf: Resolve execute {}'.format(
@@ -102,7 +100,7 @@ class WafResolveContext(Context.Context):
         except Error as e:
             self.logger.debug("Error in resolve:\n", exc_info=True)
             self.fatal(str(e))
-        except:
+        except Exception:
             raise
 
         # Get the cache with the resolved dependencies
@@ -125,7 +123,7 @@ class WafResolveContext(Context.Context):
         # resolve() function, since we always want to allow the user to
         # run custom code before the actual resolving starts.
         self.dependency_manager.load_dependencies(self.path.abspath(),
-            mandatory=False)
+                                                  mandatory=False)
 
         super(WafResolveContext, self).post_recurse(node)
 
@@ -163,5 +161,5 @@ class WafResolveContext(Context.Context):
             # @todo Do we need to include the traceback to the original
             # exception here? See: http://bit.ly/2njVD5V
             raise CmdAndLogError(error=e)
-        except:
+        except Exception:
             raise

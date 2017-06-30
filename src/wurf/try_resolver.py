@@ -5,6 +5,7 @@ import os
 
 from .error import Error
 
+
 class TryResolver(object):
     """ Try to resolve."""
 
@@ -50,13 +51,13 @@ class TryResolver(object):
             self.dependency.error_messages.append(error_message)
 
             return None
-        except:
+        except Exception:
             raise
 
         # The resolver did not raise an error, we check if it actually
         # produced a valid path for us.
         if path:
-            assert os.path.isdir(path)
+            assert os.path.isdir(path) or os.path.isfile(path)
         else:
             self.ctx.logger.debug(
                 "No path returned by {}".format(self.resolver))

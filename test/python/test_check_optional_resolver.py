@@ -16,7 +16,7 @@ def test_check_optional_resolver():
     resolver1.resolve = mock.Mock(return_value='path1')
 
     resolver = CheckOptionalResolver(resolver=resolver1,
-        dependency=dependency)
+                                     dependency=dependency)
 
     ret = resolver.resolve()
 
@@ -28,7 +28,7 @@ def test_check_optional_resolver():
     # The dependency is optional, so this should not raise a TopLevelError
     ret = resolver.resolve()
 
-    assert ret == None
+    assert ret is None
 
     # Make the dependency non-optional
     dependency.optional = False

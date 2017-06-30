@@ -9,14 +9,13 @@ from waflib.Configure import ConfigurationContext
 
 class WafConfigurationContext(ConfigurationContext):
 
-
     def __init__(self, **kw):
         super(WafConfigurationContext, self).__init__(**kw)
 
     def execute(self):
         # If the main wscript has no "configure" function, bind it to an
         # empty function. This allows us to omit configure.
-        if not 'configure' in Context.g_module.__dict__:
+        if 'configure' not in Context.g_module.__dict__:
             Context.g_module.configure = Utils.nada
 
         super(WafConfigurationContext, self).execute()

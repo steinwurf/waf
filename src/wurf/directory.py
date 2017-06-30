@@ -5,6 +5,7 @@ import shutil
 import stat
 import os
 
+
 def copy_directory(path, to_path):
 
     # In Python2 convert to unicode
@@ -14,8 +15,8 @@ def copy_directory(path, to_path):
     except NameError:
         pass
 
-    shutil.copytree(src=path, dst=to_path,
-        symlinks=True)
+    shutil.copytree(src=path, dst=to_path, symlinks=True)
+
 
 def remove_directory(path):
 

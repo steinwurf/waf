@@ -3,11 +3,11 @@
 
 import os
 import sys
-import shutil
 
 import waflib
 
 top = '.'
+
 
 def resolve(ctx):
 
@@ -31,34 +31,25 @@ def resolve(ctx):
         checkout='2.4.1',
         sources=['github.com/k-bx/python-semver.git'])
 
+    ctx.add_dependency(
+        name='python-archive',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='toolify',
+        sources=['github.com/steinwurf/python-archive.git'])
+
     # Testing dependencies
 
     ctx.add_dependency(
-        name='pytest',
+        name='virtualenv',
         recurse=False,
         optional=False,
         resolver='git',
         method='checkout',
-        checkout='3.0.6',
-        sources=['github.com/pytest-dev/pytest.git'])
-
-    ctx.add_dependency(
-        name='py',
-        recurse=False,
-        optional=False,
-        resolver='git',
-        method='checkout',
-        checkout='1.4.32',
-        sources=['github.com/pytest-dev/py.git'])
-
-    ctx.add_dependency(
-        name='mock',
-        recurse=False,
-        optional=False,
-        resolver='git',
-        method='checkout',
-        checkout='1.0.1',
-        sources=['github.com/testing-cabal/mock.git'])
+        checkout='15.1.0',
+        sources=['github.com/pypa/virtualenv.git'])
 
 
 def options(opt):
@@ -76,70 +67,74 @@ def options(opt):
         help='Skip the unit tests that use network resources')
 
 
+def _create_virtualenv(ctx, cwd):
+    # Make sure the virtualenv Python module is in path
+    venv_path = ctx.dependency_path('virtualenv')
+
+    env = dict(os.environ)
+    env.update({'PYTHONPATH': os.path.pathsep.join([venv_path])})
+
+    from waflib.extras.wurf.virtualenv import VirtualEnv
+    return VirtualEnv.create(cwd=cwd, env=env, name=None, ctx=ctx,
+                             pip_packages_path=os.path.join(ctx.path.abspath(),
+                                                            'pip_packages'))
+
+
 def configure(conf):
 
     # Ensure that the waf-light program is available in the in the
     # waf folder. This is used to build the waf binary.
     conf.find_program('waf-light', exts='',
-        path_list=[conf.dependency_path('waf')])
+                      path_list=[conf.dependency_path('waf')])
 
 
-def build_waf_binary(tsk):
-    """
-    Task for building the waf binary.
-    """
+def _build_waf_binary(bld):
+    """ Build the waf binary."""
 
-    # Get the working directory
-    # Waf checks whether a path is a waflib.Node or string by checking
-    # isinstance(str) but in python3 most string are unicode, which makes the
-    # test fail.
-    wd = str(getattr(tsk, 'cwd', None))
+    tools_dir = [
+        os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
+        os.path.join(bld.dependency_path('python-archive'), 'archive'),
+        'src/wurf'
+    ]
 
-    # Tools dir
-    tools_dir = getattr(tsk.generator, 'tools_dir', None)
     tools_dir = [os.path.abspath(os.path.expanduser(d)) for d in tools_dir]
+
+    # waf-light will look for the wscript in the folder where the process
+    # is started, so we must run this command in the folder where we
+    # resolved the waf dependency.
+    cwd = bld.dependency_path('waf')
 
     # Run with ./waf --zones wurf to see the print
     waflib.Logs.debug("wurf: tools_dir={}".format(tools_dir))
 
     # Get the absolute path to all the tools (passed as input to the task)
-    tool_paths = [t.abspath() for t in tsk.inputs] + tools_dir
-    tool_paths = ','.join(tool_paths)
+    tool_paths = ','.join(tools_dir)
 
     # The prelude option
     prelude = '\timport waflib.extras.wurf.waf_entry_point'
 
     # Build the command to execute
-    command = 'python waf-light configure build --make-waf --prelude="{}" '\
-              '--tools={}'.format(prelude, tool_paths)
+    python = sys.executable
+    command = python + ' waf-light configure build --make-waf '\
+                       '--prelude="{}" --tools={}'.format(prelude, tool_paths)
 
-    # Get the waf BuildContext
-    bld = tsk.generator.bld
-    bld.cmd_and_log(command, cwd=wd, quiet=waflib.Context.BOTH)
+    bld.cmd_and_log(command, cwd=cwd)
 
     # Copy the waf binary to the build folder
-    waf_src = bld.root.find_resource(os.path.join(wd, 'waf'))
+    waf_src = bld.root.find_resource(os.path.join(cwd, 'waf'))
     waf_dest = bld.bldnode.make_node('waf')
     waf_dest.write(waf_src.read('rb'), 'wb')
+
+    bld.msg("Build waf binary", waf_dest.abspath())
 
 
 def build(bld):
 
-    tools_dir = \
-    [
-        os.path.join(bld.dependency_path('python-semver'), 'semver.py'),
-        'src/wurf'
-    ]
+    # Create a log file for the output
+    path = os.path.join(bld.bldnode.abspath(), 'build.log')
+    bld.logger = waflib.Logs.make_logger(path, 'cfg')
 
-    # waf-light will look for the wscript in the folder where the process
-    # is started, so we must run this command in the folder where we
-    # resolved the waf dependency.
-    bld(rule=build_waf_binary,
-        cwd=bld.dependency_path('waf'),
-        tools_dir=tools_dir,
-        always=True)
-
-    bld.add_group()
+    _build_waf_binary(bld=bld)
 
     if bld.options.run_tests:
         _pytest(bld=bld)
@@ -147,44 +142,51 @@ def build(bld):
 
 def _pytest(bld):
 
-    python_path = \
-    [
-        bld.dependency_path('pytest'),
-        bld.dependency_path('py'),
-        bld.dependency_path('mock'),
-        bld.dependency_path('python-semver'),
-        os.path.join(os.getcwd(), 'src')
-    ]
+    venv = _create_virtualenv(ctx=bld, cwd=bld.path.abspath())
 
-    bld_env = bld.env.derive()
-    bld_env.env = dict(os.environ)
+    with venv:
 
-    separator = ';' if sys.platform == 'win32' else ':'
-    bld_env.env.update({'PYTHONPATH': separator.join(python_path)})
+        venv.pip_install('pytest', 'mock', 'vcrpy', 'pytest-testdirectory',
+                         'pep8', 'pyflakes')
 
-    # Make python not write any .pyc files. These may linger around
-    # in the file system and make some tests pass although their .py
-    # counter-part has been e.g. deleted
-    test_command = 'python -B -m pytest test'
+        # Add our sources to the Python path
+        python_path = [
+            bld.dependency_path('python-semver'),
+            os.path.join(os.getcwd(), 'src')
+        ]
 
-    # We override the pytest temp folder with the basetemp option,
-    # so the test folders will be available at the specified location
-    # on all platforms. The default location is the "pytest" local folder.
+        venv.env.update({'PYTHONPATH': os.path.pathsep.join(python_path)})
+        venv.env['PATH'] = os.path.pathsep.join(
+            [venv.env['PATH'], os.environ['PATH']])
 
-    basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
-    test_command += ' --basetemp {}'.format(basetemp)
+        # We override the pytest temp folder with the basetemp option,
+        # so the test folders will be available at the specified location
+        # on all platforms. The default location is the "pytest" local folder.
+        basetemp = os.path.abspath(os.path.expanduser(
+            bld.options.pytest_basetemp))
 
-    # We need to manually remove the previously created basetemp folder,
-    # because pytest uses os.listdir in the removal process, and that fails
-    # if there are any broken symlinks in that folder.
-    if os.path.exists(basetemp):
-        waflib.extras.wurf.directory.remove_directory(path=basetemp)
+        # We need to manually remove the previously created basetemp folder,
+        # because pytest uses os.listdir in the removal process, and that fails
+        # if there are any broken symlinks in that folder.
+        if os.path.exists(basetemp):
+            waflib.extras.wurf.directory.remove_directory(path=basetemp)
 
-    # Conditionally disable the tests that have the "networktest" marker
-    if bld.options.skip_network_tests:
-        test_command += ' -m "not networktest"'
+        # Make python not write any .pyc files. These may linger around
+        # in the file system and make some tests pass although their .py
+        # counter-part has been e.g. deleted
+        command = 'python -B -m pytest test --basetemp ' + basetemp
 
-    bld(rule=test_command,
-        cwd=bld.path,
-        env=bld_env,
-        always=True)
+        # Conditionally disable the tests that have the "networktest" marker
+        if bld.options.skip_network_tests:
+            command += ' -m "not networktest"'
+
+        venv.run(command)
+
+        # Run PEP8 check
+        bld.msg("Running", "pep8")
+        venv.run('python -m pep8 --filename=*.py,wscript '
+                 'src test wscript buildbot.py')
+
+        # Run pyflakes
+        bld.msg("Running", "pyflakes")
+        venv.run('python -m pyflakes src test')

@@ -1,4 +1,3 @@
-import pytest
 import mock
 
 from wurf.list_resolver import ListResolver
@@ -31,4 +30,4 @@ def test_list_resolver():
 
     ret = resolver.resolve()
 
-    assert ret == None
+    assert ret is None

@@ -1,20 +1,19 @@
 import os
-import pytest
 import mock
 
 from wurf.git_checkout_resolver import GitCheckoutResolver
 
 
-def test_git_checkout_resolver(test_directory):
+def test_git_checkout_resolver(testdirectory):
 
     ctx = mock.Mock()
     git = mock.Mock()
     dependency = mock.Mock()
-    cwd = test_directory.path()
+    cwd = testdirectory.path()
 
     # Create a parent folder for the dependency and the corresponding
     # subfolder for the 'master' checkout
-    repo_folder = test_directory.mkdir('links-01234')
+    repo_folder = testdirectory.mkdir('links-01234')
     master_folder = repo_folder.mkdir('master')
 
     git_resolver = mock.Mock()
@@ -22,10 +21,10 @@ def test_git_checkout_resolver(test_directory):
 
     dependency.name = 'links'
     checkout = 'my-branch'
-    repo_url = 'https://gitlab.com/steinwurf/links.git'
 
-    resolver = GitCheckoutResolver(git=git, resolver=git_resolver,
-        ctx=ctx, dependency=dependency, cwd=cwd, checkout=checkout)
+    resolver = GitCheckoutResolver(
+        git=git, resolver=git_resolver, ctx=ctx, dependency=dependency,
+        cwd=cwd, checkout=checkout)
 
     path = resolver.resolve()
 
@@ -46,7 +45,7 @@ def test_git_checkout_resolver(test_directory):
 
     assert path2 == path
 
-    assert git.checkout.called == False
+    assert git.checkout.called is False
     git.pull.assert_called_once_with(cwd=path)
     git.pull_submodules.assert_called_once_with(cwd=path)
 
@@ -61,6 +60,6 @@ def test_git_checkout_resolver(test_directory):
 
     assert path3 == path
 
-    assert git.checkout.called == False
-    assert git.pull.called == False
+    assert git.checkout.called is False
+    assert git.pull.called is False
     git.pull_submodules.assert_called_once_with(cwd=path)

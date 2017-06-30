@@ -3,7 +3,6 @@
 
 import os
 
-from .error import Error
 
 class Configuration(object):
 
@@ -17,8 +16,8 @@ class Configuration(object):
     # 4. The "store_lock" works like "store", but also write a lock file
     #    to the project directory - fixating a dependency to a specific
     #    version or path
-    # 5. The "store_from_lock" will load the depenency information from the lock
-    #    file and fetch dependencies.
+    # 5. The "store_from_lock" will load the depenency information from the
+    #    lock file and fetch dependencies.
     RESOLVE = 'resolve'
     LOAD = 'load'
     HELP = 'help'
@@ -92,7 +91,7 @@ class Configuration(object):
 
     def choose_resolve_from_lock(self):
 
-        if not 'configure' in self.args:
+        if 'configure' not in self.args:
             # We are not configuring
             return False
 
@@ -103,13 +102,13 @@ class Configuration(object):
             # No lock file
             return False
 
-        # If all above checks out, we want to resolve the dependencies using the
-        # lock file
+        # If all above checks out, we want to resolve the dependencies using
+        # the lock file
         return True
 
     def choose_resolve_and_lock(self):
 
-        if not 'configure' in self.args:
+        if 'configure' not in self.args:
             # We are not configuring
             return False
 

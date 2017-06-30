@@ -1,12 +1,9 @@
-import os
-import pytest
 import mock
-import shutil
 
 from wurf.existing_tag_resolver import ExistingTagResolver
-from wurf.git_semver_resolver import GitSemverResolver
 
-def test_existing_tag_resolver(test_directory):
+
+def test_existing_tag_resolver(testdirectory):
     ctx = mock.Mock()
 
     dependency = mock.Mock()
@@ -17,8 +14,8 @@ def test_existing_tag_resolver(test_directory):
     dependency.__contains__.return_value = True
     latest_tag = '5.1.0'
 
-    cwd = test_directory.mkdir('cwd')
-    resolve_path = test_directory.mkdir('resolve_path')
+    cwd = testdirectory.mkdir('cwd')
+    resolve_path = testdirectory.mkdir('resolve_path')
 
     semver_selector = mock.Mock()
     semver_selector.select_tag.return_value = latest_tag
@@ -30,9 +27,9 @@ def test_existing_tag_resolver(test_directory):
     semver_resolver.resolve.return_value = resolve_path.path()
 
     # Run without any tags file
-    resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
-        semver_selector=semver_selector, tag_database=tag_database,
-        resolver=semver_resolver, cwd=cwd.path())
+    resolver = ExistingTagResolver(
+        ctx=ctx, dependency=dependency, semver_selector=semver_selector,
+        tag_database=tag_database, resolver=semver_resolver, cwd=cwd.path())
 
     path = resolver.resolve()
     # The path is returned by the semver_resolver and a tag file is created
@@ -43,22 +40,22 @@ def test_existing_tag_resolver(test_directory):
     semver_resolver.reset_mock()
 
     # Run with a tags file, we will not use the semver_resolver
-    resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
-        semver_selector=semver_selector, tag_database=tag_database,
-        resolver=None, cwd=cwd.path())
+    resolver = ExistingTagResolver(
+        ctx=ctx, dependency=dependency, semver_selector=semver_selector,
+        tag_database=tag_database, resolver=None, cwd=cwd.path())
 
     path = resolver.resolve()
-    assert semver_resolver.resolve.called == False
+    assert semver_resolver.resolve.called is False
     assert path == resolve_path.path()
 
     # Remove the resolve path and check that we fallback to semver_resolver
     resolve_path.rmdir()
-    resolve_path = test_directory.mkdir('resolve_path2')
+    resolve_path = testdirectory.mkdir('resolve_path2')
     semver_resolver.resolve.return_value = resolve_path.path()
 
-    resolver = ExistingTagResolver(ctx=ctx, dependency=dependency,
-        semver_selector=semver_selector, tag_database=tag_database,
-        resolver=semver_resolver, cwd=cwd.path())
+    resolver = ExistingTagResolver(
+        ctx=ctx, dependency=dependency, semver_selector=semver_selector,
+        tag_database=tag_database, resolver=semver_resolver, cwd=cwd.path())
 
     path = resolver.resolve()
     semver_resolver.resolve.assert_called_once()

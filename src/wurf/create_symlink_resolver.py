@@ -4,6 +4,7 @@
 import os
 import sys
 
+
 class CreateSymlinkResolver(object):
     """
     Creates a local symlink for a resolved dependency.
@@ -41,7 +42,8 @@ class CreateSymlinkResolver(object):
             # On Windows, os.path.realpath does not follow the symlink,
             # therefore the two sides are only equal if link_path == path
             if os.path.realpath(link_path) == os.path.realpath(path):
-                # Symlink is already in place. We may have loaded it from cache.
+                # Symlink is already in place.
+                # We may have loaded it from cache.
                 self.dependency.is_symlink = True
                 self.dependency.real_path = os.path.realpath(path)
                 return link_path
@@ -78,7 +80,7 @@ class CreateSymlinkResolver(object):
 
             os_symlink(path, link_path)
 
-        except Exception as e:
+        except Exception:
 
             # Using exc_info will attach the current exception information
             # to the log message (including the traceback)

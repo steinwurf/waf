@@ -1,11 +1,10 @@
 import os
-import pytest
 import mock
 
 from wurf.git_resolver import GitResolver
 
 
-def test_git_resolver(test_directory):
+def test_git_resolver(testdirectory):
 
     ctx = mock.Mock()
     git = mock.Mock()
@@ -15,10 +14,10 @@ def test_git_resolver(test_directory):
     git_url_rewriter = mock.Mock()
     git_url_rewriter.rewrite_url.return_value = url
 
-    cwd = test_directory.path()
+    cwd = testdirectory.path()
 
     # GitResolver checks that the directory is created during git.clone,
-    # so we create it within the test_directory as a side effect
+    # so we create it within the testdirectory as a side effect
     def fake_git_clone(repository, directory, cwd):
         os.makedirs(os.path.join(cwd, directory))
 
@@ -27,7 +26,8 @@ def test_git_resolver(test_directory):
     dependency = mock.Mock()
     dependency.name = 'links'
 
-    resolver = GitResolver(git=git, ctx=ctx, dependency=dependency,
+    resolver = GitResolver(
+        git=git, ctx=ctx, dependency=dependency,
         git_url_rewriter=git_url_rewriter, source=source, cwd=cwd)
 
     path = resolver.resolve()
@@ -50,6 +50,6 @@ def test_git_resolver(test_directory):
 
     assert path2 == path
 
-    assert git.clone.called == False
+    assert git.clone.called is False
     git.pull.assert_called_once_with(cwd=path)
     git.pull_submodules.assert_called_once_with(cwd=path)

@@ -3,6 +3,7 @@
 
 from .error import TopLevelError
 
+
 class MandatoryResolver(object):
     """ Iterates through a list of resolvers until a path is resolved."""
 

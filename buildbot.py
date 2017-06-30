@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import os
 import sys
 import json
-import shutil
 import subprocess
 
 project_name = 'waf'

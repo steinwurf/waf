@@ -6,7 +6,6 @@ import os
 import json
 import hashlib
 import inspect
-import copy
 import collections
 
 from .git_resolver import GitResolver
@@ -29,16 +28,17 @@ from .mandatory_resolver import MandatoryResolver
 from .create_symlink_resolver import CreateSymlinkResolver
 from .configuration import Configuration
 from .store_lock_path_resolver import StoreLockPathResolver
-from .load_lock_path_resolver import LoadLockPathResolver
 from .store_lock_version_resolver import StoreLockVersionResolver
 from .check_lock_cache_resolver import CheckLockCacheResolver
 from .lock_cache import LockCache
 from .semver_selector import SemverSelector
 from .tag_database import TagDatabase
 from .existing_tag_resolver import ExistingTagResolver
+from .url_download import UrlDownload
+from .http_resolver import HttpResolver
+from .archive_resolver import ArchiveResolver
 
 from .error import Error
-from .error import DependencyError
 
 
 class RegistryProviderError(Error):
@@ -47,6 +47,7 @@ class RegistryProviderError(Error):
         self.name = name
         super(RegistryProviderError, self).__init__(
             "Registry error: {} already added to registry".format(self.name))
+
 
 class RegistryInjectError(Error):
     def __init__(self, provider_function, missing_provider):
@@ -58,6 +59,7 @@ class RegistryInjectError(Error):
             'Fatal error provider "{}" requires "{}"'.format(
                 self.provider_function.__name__, self.missing_provider))
 
+
 class RegistryCacheOnceError(Error):
     def __init__(self, provider_name, provider_function):
 
@@ -68,7 +70,8 @@ class RegistryCacheOnceError(Error):
             'Fatal error provider "{}" should only be cached once. The '
             'provided values passed to "{}" have changed since the object was '
             'initially cached.'.format(self.provider_name,
-                self.provider_function.__name__))
+                                       self.provider_function.__name__))
+
 
 class Registry(object):
 
@@ -97,13 +100,13 @@ class Registry(object):
         def provide_value(self, provider_name, value):
             self.provider_names.append(provider_name)
 
-            self.registry.provide_value(provider_name=provider_name,
+            self.registry.provide_value(
+                provider_name=provider_name,
                 value=value)
 
         def __exit__(self, type, value, traceback):
             for provider_name in self.provider_names:
                 self.registry.remove(provider_name=provider_name)
-
 
     ShouldCache = collections.namedtuple('ShouldCache', 'name once')
 
@@ -122,8 +125,9 @@ class Registry(object):
 
     def __init__(self, use_providers=True, use_cache_providers=True):
         """
-        :param use_providers: True if the class providers should be added. False
-            will create a new Registry instance without any added providers.
+        :param use_providers: True if the class providers should be added.
+            False will create a new Registry instance without any added
+            providers.
         """
         # Dictionary which will contain the feature as a key and a
         # provider function as value
@@ -137,9 +141,9 @@ class Registry(object):
         #   ....
         # }
         #
-        # Where the provider name is the key to a dictionary where cached values
-        # are stored. The nested dict uses a hash of the arguments passed to
-        # require(...) to find the right cached response.
+        # Where the provider name is the key to a dictionary where cached
+        # values are stored. The nested dict uses a hash of the arguments
+        # passed to require(...) to find the right cached response.
         self.cache = {}
 
         # Set which contains the name of features that should be cached
@@ -148,8 +152,8 @@ class Registry(object):
                 self.cache_provider(provider_name=s.name, once=s.once)
 
         if use_providers:
-            for k,v in Registry.providers.items():
-                self.provide_function(k,v)
+            for k, v in Registry.providers.items():
+                self.provide_function(k, v)
 
     def cache_provider(self, provider_name, once):
         """ Specify that objects / values produced by the provider should be
@@ -178,7 +182,7 @@ class Registry(object):
         :return: Dictionary containing the arguments and corresponding values.
         """
 
-        inject_arguments = { }
+        inject_arguments = {}
         require_arguments = inspect.getargspec(provider_function)[0]
 
         for argument in require_arguments:
@@ -189,7 +193,7 @@ class Registry(object):
 
             if argument not in self:
                 raise RegistryInjectError(provider_function=provider_function,
-                    missing_provider=argument)
+                                          missing_provider=argument)
 
             inject_arguments[argument] = self.require(argument)
 
@@ -204,7 +208,7 @@ class Registry(object):
         """
 
         hash_dict = {}
-        for k,v in arguments.items():
+        for k, v in arguments.items():
 
             if isinstance(v, (list, tuple, dict, set)):
                 hash_dict[k] = hash(json.dumps(v, sort_keys=True))
@@ -214,16 +218,17 @@ class Registry(object):
         return hash(json.dumps(hash_dict, sort_keys=True))
 
     def provide_function(self, provider_name, provider_function,
-        override=False):
+                         override=False):
         """
         :param provider_name: The name of the provider as a string
         :param provider_function: Function to call which will provide the value
-        :param cache: Determines whether calls to the provider should be cached.
+        :param cache: Determines whether calls to the provider should be
+            cached.
             If arguments are passed to the provider in the require(...)
             function, they must be hashable.
-        :param override: Determines whether the provider should override/replace
-            an existing provider. If True we will override an existing provider
-            with the same name.
+        :param override: Determines whether the provider should
+            override/replace an existing provider. If True we will override an
+            existing provider with the same name.
         """
         if not override and provider_name in self.registry:
             raise RegistryProviderError(provider_name)
@@ -233,9 +238,8 @@ class Registry(object):
             inject_arguments = self.__inject_arguments(
                 provider_function=provider_function)
 
+            # Did we already cache?
             if provider_name in self.cache:
-                # Did we already cache?
-                #key = frozenset(inject_arguments.items())
                 key = self.__hash_arguments(inject_arguments)
 
                 provider = self.cache[provider_name]
@@ -245,15 +249,13 @@ class Registry(object):
                 except KeyError:
 
                     if provider.once and len(provider.data) > 0:
-                        raise RegistryCacheOnceError(provider_name,
-                            provider_function)
+                        raise RegistryCacheOnceError(
+                            provider_name, provider_function)
 
-                    call = self.registry[provider_name]
                     result = provider_function(**inject_arguments)
                     provider.data[key] = result
                     return result
             else:
-                call = self.registry[provider_name]
                 result = provider_function(**inject_arguments)
                 return result
 
@@ -277,7 +279,8 @@ class Registry(object):
         if provider_name in self.registry:
             raise RegistryProviderError(provider_name)
 
-        def call(): return value
+        def call():
+            return value
 
         self.registry[provider_name] = call
 
@@ -313,13 +316,13 @@ class Registry(object):
     @staticmethod
     def cache(func):
         Registry.cache_providers.add(
-            Registry.ShouldCache(name=func.__name__,once=False))
+            Registry.ShouldCache(name=func.__name__, once=False))
         return func
 
     @staticmethod
     def cache_once(func):
         Registry.cache_providers.add(
-            Registry.ShouldCache(name=func.__name__,once=True))
+            Registry.ShouldCache(name=func.__name__, once=True))
         return func
 
     @staticmethod
@@ -352,10 +355,11 @@ def symlinks_path(mandatory_options, waf_utils):
 
     return symlinks_path
 
+
 @Registry.cache
 @Registry.provide
 def dependency_path(git_url_rewriter, resolve_path, source, dependency,
-    waf_utils):
+                    waf_utils):
 
     if dependency.resolver == 'git':
         repo_url = git_url_rewriter.rewrite_url(url=source)
@@ -392,7 +396,8 @@ def git_url_rewriter(git_url_parser, git_protocol):
 @Registry.cache_once
 @Registry.provide
 def parser():
-    return argparse.ArgumentParser(description='Resolve Options',
+    return argparse.ArgumentParser(
+        description='Resolve Options',
         # add_help=False will remove the default handling of --help and -h
         # https://docs.python.org/3/library/argparse.html#add-help
         # This will be handled by waf's default options context.
@@ -427,7 +432,9 @@ def options(parser, args, default_resolve_path, default_symlinks_path):
     # We support the protocols we know how to rewrite
     supported_git_protocols = GitUrlRewriter.git_protocols.keys()
 
-    return Options(args=args, parser=parser,
+    return Options(
+        args=args,
+        parser=parser,
         default_resolve_path=default_resolve_path,
         default_symlinks_path=default_symlinks_path,
         supported_git_protocols=supported_git_protocols)
@@ -456,6 +463,13 @@ def tag_database(ctx):
 
 @Registry.cache_once
 @Registry.provide
+def url_download():
+    """ Return the UrlDownload provider. """
+    return UrlDownload()
+
+
+@Registry.cache_once
+@Registry.provide
 def project_git_protocol(git, ctx, git_url_parser):
     """ Return the Git protocol used by the parent project.
 
@@ -469,9 +483,15 @@ def project_git_protocol(git, ctx, git_url_parser):
             'Exception when executing git.remote_origin_url: {}'.format(e))
         return None
 
-    else:
+    try:
         url = git_url_parser.parse(parent_url)
         return url.protocol
+
+    except Exception as e:
+        ctx.to_log(
+            'Exception could not parse git URL {} error: {}'.format(
+                parent_url, e))
+        return None
 
 
 @Registry.cache_once
@@ -513,18 +533,19 @@ def user_path_resolver(mandatory_options, dependency):
 
 @Registry.provide
 def git_resolver(git, ctx, dependency, source, git_url_rewriter,
-    dependency_path):
+                 dependency_path):
     """ Builds a GitResolver instance.
 
     :param registry: A Registry instance.
     """
     return GitResolver(git=git, ctx=ctx, dependency=dependency,
-        source=source, git_url_rewriter=git_url_rewriter, cwd=dependency_path)
+                       source=source, git_url_rewriter=git_url_rewriter,
+                       cwd=dependency_path)
 
 
 @Registry.provide
 def git_checkout_resolver(registry, git, git_resolver, ctx, dependency,
-    dependency_path):
+                          dependency_path):
     """ Builds a GitResolver instance.
 
     :param registry: A Registry instance.
@@ -535,31 +556,34 @@ def git_checkout_resolver(registry, git, git_resolver, ctx, dependency,
         checkout = dependency.checkout
 
     return GitCheckoutResolver(git=git, resolver=git_resolver, ctx=ctx,
-        dependency=dependency, checkout=checkout, cwd=dependency_path)
+                               dependency=dependency, checkout=checkout,
+                               cwd=dependency_path)
 
 
 @Registry.provide
 def git_semver_resolver(git, git_resolver, ctx, semver_selector,
-    dependency, dependency_path):
+                        dependency, dependency_path):
     """ Builds a GitResolver instance.
 
     :param registry: A Registry instance.
     """
     return GitSemverResolver(git=git, resolver=git_resolver, ctx=ctx,
-        semver_selector=semver_selector, dependency=dependency,
-        cwd=dependency_path)
+                             semver_selector=semver_selector,
+                             dependency=dependency,
+                             cwd=dependency_path)
 
 
 @Registry.provide
 def existing_tag_resolver(ctx, dependency, semver_selector, tag_database,
-    git_semver_resolver, dependency_path):
+                          git_semver_resolver, dependency_path):
     """ Builds a GitResolver instance.
 
     :param registry: A Registry instance.
     """
-    return ExistingTagResolver(ctx=ctx, dependency=dependency,
-        semver_selector=semver_selector, tag_database=tag_database,
-        resolver=git_semver_resolver, cwd=dependency_path)
+    return ExistingTagResolver(
+        ctx=ctx, dependency=dependency, semver_selector=semver_selector,
+        tag_database=tag_database, resolver=git_semver_resolver,
+        cwd=dependency_path)
 
 
 @Registry.provide
@@ -591,7 +615,8 @@ def resolve_git_user_checkout(registry, ctx, mandatory_options, dependency):
         # When the user specified the checkout one must succeed:
         resolver = registry.require('resolve_git_checkout')
 
-        resolver = MandatoryResolver(resolver=resolver,
+        resolver = MandatoryResolver(
+            resolver=resolver,
             msg="User checkout of '{}' failed.".format(checkout),
             dependency=dependency)
 
@@ -646,14 +671,16 @@ def resolve_git(registry, ctx, options, dependency):
     if options.fast_resolve():
 
         # Set the resolver action on the dependency
-        dependency.resolver_action = 'fast/'+dependency.resolver_action
+        dependency.resolver_action = 'fast/' + dependency.resolver_action
 
         resolve_config_path = registry.require('resolve_config_path')
 
-        fast_resolver = OnPassiveLoadPathResolver(dependency=dependency,
+        fast_resolver = OnPassiveLoadPathResolver(
+            dependency=dependency,
             resolve_config_path=resolve_config_path)
 
-        fast_resolver = TryResolver(resolver=fast_resolver, ctx=ctx,
+        fast_resolver = TryResolver(
+            resolver=fast_resolver, ctx=ctx,
             dependency=dependency)
 
         return ListResolver(resolvers=[fast_resolver, git_resolver])
@@ -681,8 +708,44 @@ def resolve_from_lock_git(registry, lock_cache, dependency):
 
         resolver = registry.require('resolve_chain')
 
-    resolver = CheckLockCacheResolver(resolver=resolver, lock_cache=lock_cache,
+    resolver = CheckLockCacheResolver(
+        resolver=resolver, lock_cache=lock_cache,
         dependency=dependency)
+
+    return resolver
+
+
+@Registry.cache
+@Registry.provide
+def resolve_http(options, registry, archive_extractor, url_download,
+                 dependency, source, ctx, dependency_path):
+    """
+    """
+
+    dependency.resolver_action = 'http'
+
+    resolver = HttpResolver(
+        url_download=url_download, dependency=dependency, source=source,
+        cwd=dependency_path)
+
+    if dependency.extract:
+        resolver = ArchiveResolver(archive_extractor=archive_extractor,
+                                   resolver=resolver,
+                                   cwd=dependency_path)
+
+    if options.fast_resolve():
+        # Set the resolver action on the dependency
+        dependency.resolver_action = 'fast/' + dependency.resolver_action
+
+        resolve_config_path = registry.require('resolve_config_path')
+
+        fast_resolver = OnPassiveLoadPathResolver(
+            dependency=dependency, resolve_config_path=resolve_config_path)
+
+        fast_resolver = TryResolver(
+            resolver=fast_resolver, ctx=ctx, dependency=dependency)
+
+        resolver = ListResolver(resolvers=[fast_resolver, resolver])
 
     return resolver
 
@@ -694,8 +757,8 @@ def resolve_from_lock_path(lock_cache, registry, dependency):
         temporary.provide_value('resolver', 'lock_path')
         resolver = registry.require('resolve_chain')
 
-    resolver = CheckLockCacheResolver(resolver=resolver,
-        lock_cache=lock_cache, dependency=dependency)
+    resolver = CheckLockCacheResolver(
+        resolver=resolver, lock_cache=lock_cache, dependency=dependency)
 
     return resolver
 
@@ -718,8 +781,8 @@ def help_chain(ctx, resolve_config_path, dependency):
     dependency.resolver_chain = 'Load'
     dependency.resolver_action = 'help'
 
-    resolver = OnPassiveLoadPathResolver(dependency=dependency,
-        resolve_config_path=resolve_config_path)
+    resolver = OnPassiveLoadPathResolver(
+        dependency=dependency, resolve_config_path=resolve_config_path)
 
     resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
 
@@ -732,13 +795,13 @@ def load_chain(ctx, resolve_config_path, dependency):
     # Set the resolver chain on the dependency
     dependency.resolver_chain = 'Load'
 
-    resolver = OnPassiveLoadPathResolver(dependency=dependency,
-        resolve_config_path=resolve_config_path)
+    resolver = OnPassiveLoadPathResolver(
+        dependency=dependency, resolve_config_path=resolve_config_path)
 
     resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
 
-    resolver = CheckOptionalResolver(resolver=resolver,
-        dependency=dependency)
+    resolver = CheckOptionalResolver(
+        resolver=resolver, dependency=dependency)
 
     return resolver
 
@@ -760,21 +823,21 @@ def sources_resolver(ctx, registry, dependency):
             resolver_key = "resolve_{}".format(resolver)
             resolver = registry.require(resolver_key)
 
-            resolver = TryResolver(resolver=resolver, ctx=ctx,
-                dependency=dependency)
+            resolver = TryResolver(
+                resolver=resolver, ctx=ctx, dependency=dependency)
 
             resolvers.append(resolver)
 
     resolver = ListResolver(resolvers=resolvers)
-    resolver = CheckOptionalResolver(resolver=resolver,
-        dependency=dependency)
+    resolver = CheckOptionalResolver(
+        resolver=resolver, dependency=dependency)
 
     return resolver
 
 
 @Registry.provide
 def resolve_chain(ctx, options, registry, dependency, resolve_config_path,
-    symlinks_path):
+                  symlinks_path):
 
     # Set the resolver chain on the dependency
     dependency.resolver_chain = 'Resolve'
@@ -803,13 +866,13 @@ def resolve_and_lock_chain(registry, dependency, project_path, lock_cache):
     lock_type = lock_cache.type()
 
     if lock_type == 'versions':
-        return StoreLockVersionResolver(resolver=resolver,
-            lock_cache=lock_cache, dependency=dependency)
+        return StoreLockVersionResolver(
+            resolver=resolver, lock_cache=lock_cache, dependency=dependency)
 
     elif lock_type == 'paths':
-        return StoreLockPathResolver(resolver=resolver,
-            lock_cache=lock_cache, project_path=project_path,
-            dependency=dependency)
+        return StoreLockPathResolver(
+            resolver=resolver, lock_cache=lock_cache,
+            project_path=project_path, dependency=dependency)
 
     else:
         raise Error("Unknown lock type {}".format(lock_type))
@@ -846,13 +909,15 @@ def dependency_resolver(registry, ctx, configuration, dependency):
 
     resolver = registry.require(resolver_key)
 
-    return ContextMsgResolver(resolver=resolver, ctx=ctx,
-        dependency=dependency)
+    return ContextMsgResolver(
+        resolver=resolver, ctx=ctx, dependency=dependency)
+
 
 @Registry.cache_once
 @Registry.provide
 def configuration(options, args, project_path, waf_lock_file):
-    return Configuration(options=options, args=args, project_path=project_path,
+    return Configuration(
+        options=options, args=args, project_path=project_path,
         waf_lock_file=waf_lock_file)
 
 
@@ -865,8 +930,9 @@ def dependency_manager(registry):
     dependency_cache = registry.require('dependency_cache')
     options = registry.require('options')
 
-    return DependencyManager(registry=registry,
-        dependency_cache=dependency_cache, ctx=ctx, options=options)
+    return DependencyManager(
+        registry=registry, dependency_cache=dependency_cache, ctx=ctx,
+        options=options)
 
 
 @Registry.provide
@@ -892,8 +958,8 @@ def post_resolver_actions(registry, configuration):
 
 
 def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
-    default_symlinks_path, semver, waf_utils, args, project_path,
-    waf_lock_file):
+                   default_symlinks_path, semver, archive_extractor, waf_utils,
+                   args, project_path, waf_lock_file):
     """ Builds a registry.
 
     :param ctx: A Waf Context instance.
@@ -905,6 +971,7 @@ def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
     :param default_symlinks_path: A string containing the path where the
         dependency symlinks should be created per default.
     :param semver: The semver module
+    :param archive_extractor: An archive (zip, tar, etc.) extractor function.
     :param waf_utils: The waflib.Utils module
     :param args: Argument strings as a list, typically this will come
         from sys.argv
@@ -923,6 +990,7 @@ def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
     registry.provide_value('resolve_config_path', resolve_config_path)
     registry.provide_value('default_symlinks_path', default_symlinks_path)
     registry.provide_value('semver', semver)
+    registry.provide_value('archive_extractor', archive_extractor)
     registry.provide_value('waf_utils', waf_utils)
     registry.provide_value('args', args)
     registry.provide_value('project_path', project_path)

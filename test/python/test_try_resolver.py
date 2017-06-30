@@ -1,11 +1,10 @@
-import pytest
 import mock
 
 from wurf.try_resolver import TryResolver
 from wurf.error import Error
 
 
-def test_try_resolver(test_directory):
+def test_try_resolver(testdirectory):
 
     ctx = mock.Mock()
     dependency = mock.Mock()
@@ -15,13 +14,13 @@ def test_try_resolver(test_directory):
 
     # TryResolver needs a resolver that returns a valid path
     resolver1 = mock.Mock()
-    resolver1.resolve = mock.Mock(return_value=test_directory.path())
+    resolver1.resolve = mock.Mock(return_value=testdirectory.path())
 
     resolver = TryResolver(resolver=resolver1, ctx=ctx, dependency=dependency)
 
     path = resolver.resolve()
 
-    assert path == test_directory.path()
+    assert path == testdirectory.path()
 
     # Make resolver1 fail with an Error
     def raise_error():
@@ -32,4 +31,4 @@ def test_try_resolver(test_directory):
     # TryResolver should just return with None
     path = resolver.resolve()
 
-    assert path == None
+    assert path is None

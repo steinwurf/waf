@@ -1,0 +1,9 @@
+[
+    {
+        "name": "foo",
+        "resolver": "git",
+        "method": "checkout",
+        "checkout": "1.3.3.7",
+        "sources": ["github.com/acme-corp/foo.git"]
+    }
+]

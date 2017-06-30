@@ -3,6 +3,8 @@
 
 import os
 import json
+from .error import DependencyError
+
 
 class ExistingTagResolver(object):
     """
@@ -10,8 +12,8 @@ class ExistingTagResolver(object):
     out, and there is no newer version in the tag database.
     """
 
-    def __init__(self, ctx, dependency, semver_selector, tag_database, resolver,
-        cwd):
+    def __init__(self, ctx, dependency, semver_selector, tag_database,
+                 resolver, cwd):
         """ Construct a new ExistingTagResolver instance.
 
         :param ctx: A Waf Context instance.
@@ -56,7 +58,7 @@ class ExistingTagResolver(object):
             tags[self.dependency.git_tag] = path
         else:
             raise DependencyError(msg="No git tag available",
-                dependency=dependency)
+                                  dependency=self.dependency)
 
         self.__store_tag_file(tags=tags)
         return path
@@ -102,7 +104,7 @@ class ExistingTagResolver(object):
             self.ctx.to_log(
                 "resolve: {} {} contained invalid path {} for tag {}"
                 "- removing it".format(self.dependency.name, tags, path,
-                most_recent))
+                                       most_recent))
 
             del tags[most_recent]
             return None

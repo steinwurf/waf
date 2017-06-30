@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+
 class ListResolver(object):
     """ Iterates through a list of resolvers until a path is resolved."""
 
@@ -11,7 +12,6 @@ class ListResolver(object):
            sources
         """
         self.resolvers = resolvers
-
 
     def resolve(self):
         """ Resolve the dependency.
