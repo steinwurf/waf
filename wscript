@@ -59,6 +59,11 @@ def options(opt):
         help='Run all unit tests')
 
     opt.add_option(
+        '--test_filter', default=None, action='store',
+        help='Runs all tests that include the substring specified.'
+             'Wildcards not allowed. (Used with --run_tests)')
+
+    opt.add_option(
         '--pytest_basetemp', default='pytest',
         help='Set the basetemp folder where pytest executes the tests')
 
@@ -179,6 +184,10 @@ def _pytest(bld):
         # Conditionally disable the tests that have the "networktest" marker
         if bld.options.skip_network_tests:
             command += ' -m "not networktest"'
+
+        # Adds the test filter if specified
+        if bld.options.test_filter:
+            command += ' -k ' + bld.options.test_filter
 
         venv.run(command)
 
