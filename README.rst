@@ -53,6 +53,34 @@ An example of such a test is the ``self_build`` test. The ``self_build`` test
 will invoke a freshly built ``waf`` binary with the wscript used to build it -
 yes very meta :)
 
+``--test_filter``
+.................
+
+When working with a failing test or similar it may be beneficial to be able
+to run only a selected set of tests. This can be achieved by passing a test
+filter to pytest. The pytest test filter can be passed using the
+``--test_filter``::
+
+    python waf --test_filter="test_git"
+
+The ``--test_filter`` string will by passed to the pytest ``-k``
+option. See more information in the pytest documentation:
+https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests
+
+Running ``pytest --help`` will produce the following description of the
+``-k`` option::
+
+    -k EXPRESSION         only run tests which match the given substring
+                           expression. An expression is a python evaluatable
+                           expression where all names are substring-matched
+                           against test names and their parent classes. Example:
+                           -k 'test_method or test_other' matches all test
+                           functions and classes whose name contains
+                           'test_method' or 'test_other'. Additionally keywords
+                           are matched to classes and functions containing extra
+                           names in their 'extra_keyword_matches' set, as well as
+                           functions which have names assigned directly to them.
+
 Fixing unit tests
 .................
 
