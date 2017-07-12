@@ -53,6 +53,23 @@ An example of such a test is the ``self_build`` test. The ``self_build`` test
 will invoke a freshly built ``waf`` binary with the wscript used to build it -
 yes very meta :)
 
+``--test_filter``
+.................
+
+When working with a failing test or similar it may be beneficial to be able
+to run only a selected set of tests. This can be achieved by passing a test
+filter to pytest. The pytest test filter can be passed using the
+``--test_filter``::
+
+    python waf --test_filter="test_git.py"
+
+More elaborate string expressions can also be passed such as::
+
+    python waf --test_filter="test_git.py and test_registry.py"
+
+See more information in the pytest documentation:
+https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests
+
 Fixing unit tests
 .................
 

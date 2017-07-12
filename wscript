@@ -187,7 +187,7 @@ def _pytest(bld):
 
         # Adds the test filter if specified
         if bld.options.test_filter:
-            command += ' -k ' + bld.options.test_filter
+            command += ' -k "{}"'.format(bld.options.test_filter)
 
         venv.run(command)
 
