@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-APPNAME = 'minimal_wscript'
+APPNAME = 'broken_resolve_json'
 VERSION = '1.0.0'
 
 
