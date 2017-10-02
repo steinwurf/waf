@@ -129,7 +129,8 @@ class WafResolveContext(Context.Context):
                                                       mandatory=False)
         except ValueError as e:
             # The ValueError is raised when the json is malformed. We
-            # could potentially catch more errors here. But, we
+            # could potentially catch more errors here. But, we can
+            # expand this if needed to catch more error types later..
             msg = "Error in load dependencies (resolve.json) {}: {}".format(
                 self.path.abspath(), e)
             self.logger.debug(msg, exc_info=True)
