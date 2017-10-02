@@ -122,8 +122,18 @@ class WafResolveContext(Context.Context):
         # This is done after calling a possible user-defined
         # resolve() function, since we always want to allow the user to
         # run custom code before the actual resolving starts.
-        self.dependency_manager.load_dependencies(self.path.abspath(),
-                                                  mandatory=False)
+
+        try:
+
+            self.dependency_manager.load_dependencies(self.path.abspath(),
+                                                      mandatory=False)
+        except ValueError as e:
+            # The ValueError is raised when the json is malformed. We
+            # could potentially catch more errors here. But, we
+            msg = "Error in load dependencies (resolve.json) {}: {}".format(
+                self.path.abspath(), e)
+            self.logger.debug(msg, exc_info=True)
+            self.fatal(msg)
 
         super(WafResolveContext, self).post_recurse(node)
 
