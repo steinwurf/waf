@@ -6,7 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
-* Minor: Added exceptions for accidental empty options. 
+* Minor: Use a version of python-archive which perseveres file permissions.
+* Minor: Added exceptions for accidental empty options.
 * Major: Full rewrite of our Waf depedency resolve code.
 * Minor: Support for new resolver options.
 * Minor: Adding support for `resolve.json` files.
