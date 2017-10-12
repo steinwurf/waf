@@ -37,7 +37,7 @@ def resolve(ctx):
         optional=False,
         resolver='git',
         method='checkout',
-        checkout='toolify',
+        checkout='zipfile-perserve-permissions',
         sources=['github.com/steinwurf/python-archive.git'])
 
     # Testing dependencies
