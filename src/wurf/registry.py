@@ -832,7 +832,7 @@ def sources_resolver(ctx, registry, dependency):
     resolver = CheckOptionalResolver(
         resolver=resolver, dependency=dependency)
 
-    # Post resolve 
+    # Post resolve
 
     return resolver
 

@@ -4,28 +4,27 @@
 import os
 import hashlib
 
+from .directory import copy_directory
+from .directory import remove_directory
+
 
 class PostResolveRun(object):
     """
     Runs a command in the directory of a resolved dependency.
     """
 
-    def __init__(self, ctx, run, cwd):
+    def __init__(self, resolver, ctx, run, cwd):
 
-        """ Construct a new WurfGitResolver instance.
+        """ Construct a new instance.
 
-        :param git: A Git instance
+        :param resolver: A resolver instance.
         :param ctx: A Waf Context instance.
-        :param dependency: The dependency instance.
-        :param git_url_rewriter: A GitUrlRewriter instance
-        :param source: The URL of the dependency as a string
+        :param run: The command to run and a string or list.
         :param cwd: Current working directory as a string. This is the place
             where we should create new folders etc.
         """
-        self.resolve = resolver
+        self.resolver = resolver
         self.ctx = ctx
-        self.dependency = dependency
-        self.git_url_rewriter = git_url_rewriter
         self.run = run
         self.cwd = cwd
 
@@ -49,14 +48,16 @@ class PostResolveRun(object):
         if os.path.isdir(run_path):
             return run_path
 
-        shutil.copytree(src=path, dst=tag_path, symlinks=True)
+        try:
+            copy_directory(path=path, to_path=run_path)
+            self.ctx.cmd_and_log(cmd=self.run, cwd=run_path)
 
-        self.ctx.command_and_log(XXXXXXXXXX)
+        except:
+
+            # If we do not succeed clean up and make sure we start from
+            # scratch next time around
+            if os.path.isdir(run_path):
+                remove_directory(path=run_path)
+            raise
 
         return run_path
-
-    def __repr__(self):
-        """
-        :return: Representation of this object as a string
-        """
-        return "%s(%r)" % (self.__class__.__name__, self.__dict__)
