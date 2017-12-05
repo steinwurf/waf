@@ -9,8 +9,13 @@ def test_post_resolve_run_http(testdirectory):
 
     r = testdirectory.run('python', 'waf', 'configure')
 
-    assert r.returncode == 0
     assert r.stdout.match('*finished successfully*')
+
+    assert testdirectory.contains_file(
+        'resolved_dependencies/baz-*/run-*/somefile.txt')
+
+    assert testdirectory.contains_file(
+        'resolved_dependencies/baz-*/run-*/ok.txt')
 
     r = testdirectory.run('python', 'waf', 'build')
 

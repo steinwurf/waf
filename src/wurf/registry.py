@@ -533,7 +533,7 @@ def post_resolve(registry, current_resolver, dependency):
     for resolve in dependency.post_resolve:
         with registry.provide_temporary() as temporary:
             temporary.provide_value('{}_arguments'.format(resolve["type"]),
-                                    resolve["args"])
+                                    resolve["arguments"])
 
             resolver = registry.require(
                 "post_resolve_{}".format(resolve["type"]))

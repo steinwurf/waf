@@ -351,14 +351,18 @@ Example of attributes::
         "internal": true,
         "sources": ["github.com/myorg/mylib.git"],
         "post_resolve": [
-            { "run": "tar xvj file.tar" }
+            { "type": "run", "command": "tar -xvj file.tar" }
         ]
     }
 
 The idea is to support different types of ``post_resolve`` steps,
 currently we support the following:
 
-1. ``run``
+1. ``run``: This type of post resolve step runs a ``command`` in the folder
+   where the dependency has been resolved. The ``command`` can be either
+   a string or list of strings i.e. the following is also valid::
+
+       { "type": "run", "command": ["tar", "-xvj", "file.tar"] }
 
 
 Specifying a ``git`` dependency

@@ -19,7 +19,8 @@ def resolve(ctx):
     post_resolve = [
         {
             'type': 'run',
-            'args': ['python', '-c', "f = open('ok.txt', 'w'); f.write('ok')"]
+            'arguments':
+                ['python', '-c', "f = open('ok.txt', 'w'); f.write('ok')"]
         }
     ]
 
