@@ -532,8 +532,8 @@ def post_resolve(registry, current_resolver, dependency):
 
     for resolve in dependency.post_resolve:
         with registry.provide_temporary() as temporary:
-            temporary.provide_value('{}_arguments'.format(resolve["type"]),
-                                    resolve["arguments"])
+            temporary.provide_value('{}_command'.format(resolve["type"]),
+                                    resolve["command"])
 
             resolver = registry.require(
                 "post_resolve_{}".format(resolve["type"]))
@@ -556,11 +556,11 @@ def user_path_resolver(mandatory_options, dependency):
 
 
 @Registry.provide
-def post_resolve_run(current_resolver, ctx, run_arguments,
+def post_resolve_run(current_resolver, ctx, run_command,
                      dependency_path):
 
     return PostResolveRun(resolver=current_resolver, ctx=ctx,
-                          run=run_arguments, cwd=dependency_path)
+                          run=run_command, cwd=dependency_path)
 
 
 @Registry.provide
