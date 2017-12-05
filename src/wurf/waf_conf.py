@@ -49,7 +49,7 @@ def recurse_dependencies(ctx):
     # handler below.
     try:
         logfile = ctx.logger.handlers[0].baseFilename
-    except:
+    except Exception:
         logfile = None
 
     # Since dependency_cache is an OrderedDict, the dependencies will be

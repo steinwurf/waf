@@ -6,6 +6,7 @@ import hashlib
 
 from .directory import copy_directory
 from .directory import remove_directory
+from .error import Error
 
 
 class PostResolveRun(object):
@@ -36,9 +37,13 @@ class PostResolveRun(object):
         """
         path = self.resolver.resolve()
 
-        # Use the first 6 characters of the SHA1 hash of the repository url
-        # to uniquely identify the repository
-        run_hash = hashlib.sha1(self.run.encode('utf-8')).hexdigest()[:6]
+        if os.path.isfile(path):
+            path = os.path.dirname(path)
+
+        # Use the first 6 characters of the SHA1 hash of the run command
+        # and the path
+        hash_data = str(self.run) + path
+        run_hash = hashlib.sha1(hash_data.encode('utf-8')).hexdigest()[:6]
 
         # The folder for storing the master branch of this repository
         folder_name = 'run-' + run_hash
@@ -52,7 +57,7 @@ class PostResolveRun(object):
             copy_directory(path=path, to_path=run_path)
             self.ctx.cmd_and_log(cmd=self.run, cwd=run_path)
 
-        except:
+        except Error:
 
             # If we do not succeed clean up and make sure we start from
             # scratch next time around

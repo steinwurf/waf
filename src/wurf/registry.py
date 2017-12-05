@@ -37,6 +37,7 @@ from .existing_tag_resolver import ExistingTagResolver
 from .url_download import UrlDownload
 from .http_resolver import HttpResolver
 from .archive_resolver import ArchiveResolver
+from .post_resolve_run import PostResolveRun
 
 from .error import Error
 
@@ -97,12 +98,12 @@ class Registry(object):
         def __enter__(self):
             return self
 
-        def provide_value(self, provider_name, value):
+        def provide_value(self, provider_name, value, override=False):
             self.provider_names.append(provider_name)
 
             self.registry.provide_value(
                 provider_name=provider_name,
-                value=value)
+                value=value, override=override)
 
         def __exit__(self, type, value, traceback):
             for provider_name in self.provider_names:
@@ -271,12 +272,15 @@ class Registry(object):
         """
         return Registry.TemporaryValue(registry=self)
 
-    def provide_value(self, provider_name, value):
+    def provide_value(self, provider_name, value, override=False):
         """
         :param provider_name: The name of the provider as a string
         :param value: The value with should be returned on require(...)
+        :param override: Determines whether the provider should
+            override/replace an existing provider. If True we will override an
+            existing provider with the same name.
         """
-        if provider_name in self.registry:
+        if not override and provider_name in self.registry:
             raise RegistryProviderError(provider_name)
 
         def call():
@@ -521,6 +525,26 @@ def git_protocol(options, project_git_protocol):
 
 
 @Registry.provide
+def post_resolve(registry, current_resolver, dependency):
+    """ Add the post resolve steps """
+
+    resolver = current_resolver
+
+    for resolve in dependency.post_resolve:
+        with registry.provide_temporary() as temporary:
+            temporary.provide_value('{}_arguments'.format(resolve["type"]),
+                                    resolve["args"])
+
+            resolver = registry.require(
+                "post_resolve_{}".format(resolve["type"]))
+
+        registry.provide_value(provider_name='current_resolver',
+                               value=resolver, override=True)
+
+    return resolver
+
+
+@Registry.provide
 def user_path_resolver(mandatory_options, dependency):
 
     path = mandatory_options.path(dependency=dependency)
@@ -529,6 +553,14 @@ def user_path_resolver(mandatory_options, dependency):
     dependency.resolver_action = 'user path'
 
     return PathResolver(dependency=dependency, path=path)
+
+
+@Registry.provide
+def post_resolve_run(current_resolver, ctx, run_arguments,
+                     dependency_path):
+
+    return PostResolveRun(resolver=current_resolver, ctx=ctx,
+                          run=run_arguments, cwd=dependency_path)
 
 
 @Registry.provide
@@ -808,6 +840,8 @@ def load_chain(ctx, resolve_config_path, dependency):
 
 @Registry.provide
 def sources_resolver(ctx, registry, dependency):
+    """ For each source in a dependency this builds up the resolver chain.
+    """
 
     resolvers = []
 
@@ -815,6 +849,10 @@ def sources_resolver(ctx, registry, dependency):
         with registry.provide_temporary() as temporary:
             temporary.provide_value('source', source)
 
+            # The resolver to be used for a dependency can be overridden
+            # and example of this is when resolving from a lock path.
+            # In that case the resolver is provided and the
+            # 'resolve_lock_path' will be used.
             if 'resolver' in registry:
                 resolver = registry.require('resolver')
             else:
@@ -823,16 +861,20 @@ def sources_resolver(ctx, registry, dependency):
             resolver_key = "resolve_{}".format(resolver)
             resolver = registry.require(resolver_key)
 
+            if "post_resolve" in dependency:
+                # Add the post resolve
+                temporary.provide_value('current_resolver', resolver)
+                resolver = registry.require('post_resolve')
+
             resolver = TryResolver(
                 resolver=resolver, ctx=ctx, dependency=dependency)
 
             resolvers.append(resolver)
 
     resolver = ListResolver(resolvers=resolvers)
+
     resolver = CheckOptionalResolver(
         resolver=resolver, dependency=dependency)
-
-    # Post resolve
 
     return resolver
 
