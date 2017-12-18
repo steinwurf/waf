@@ -153,7 +153,7 @@ def _pytest(bld):
 
         venv.pip_install('pytest', 'mock', 'vcrpy',
                          'pytest-testdirectory==2.1.0',
-                         'pep8', 'pyflakes')
+                         'pycodestyle', 'pyflakes')
 
         # Add our sources to the Python path
         python_path = [
@@ -193,8 +193,8 @@ def _pytest(bld):
         venv.run(command)
 
         # Run PEP8 check
-        bld.msg("Running", "pep8")
-        venv.run('python -m pep8 --filename=*.py,wscript '
+        bld.msg("Running", "pycodestyle")
+        venv.run('python -m pycodestyle --filename=*.py,wscript '
                  'src test wscript buildbot.py')
 
         # Run pyflakes

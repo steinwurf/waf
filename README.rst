@@ -333,6 +333,38 @@ Example of attributes::
         "sources": ["github.com/myorg/mylib.git"]
     }
 
+Attribute ``post_resolve`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``post_resolve`` attribute is a list of steps to be performed after
+succesfully resolving a dependency.
+
+The steps will be performed in the order they are specified.
+
+Example of attributes::
+
+    {
+        "name": "my-pet-library",
+        "resolver": "git",
+        "optional": true,
+        "recurse": true,
+        "internal": true,
+        "sources": ["github.com/myorg/mylib.git"],
+        "post_resolve": [
+            { "type": "run", "command": "tar -xvj file.tar" }
+        ]
+    }
+
+The idea is to support different types of ``post_resolve`` steps,
+currently we support the following:
+
+1. ``run``: This type of post resolve step runs a ``command`` in the folder
+   where the dependency has been resolved. The ``command`` can be either
+   a string or list of strings i.e. the following is also valid::
+
+       { "type": "run", "command": ["tar", "-xvj", "file.tar"] }
+
+
 Specifying a ``git`` dependency
 ...............................
 
