@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Added post_resolve property
 * Minor: Use a version of python-archive which perseveres file permissions.
 * Minor: Added exceptions for accidental empty options.
 * Major: Full rewrite of our Waf depedency resolve code.
