@@ -257,6 +257,9 @@ a folder Waf will look for a wscript in the folder and execute its commands.
 Currently we will automatically (if recurse is ``true``), recurse into and execute
 following Waf commands: (``resolve``, ``options``, ``configure``, ``build``)
 
+As we also recurse into ``resolve`` it also enables us to recursively to resolve
+the dependencies of our dependencies. 
+
 If you have a wscript where you would like to recurse dependencies for a custom
 waf command, say ``upload``, then add the following to your wscript's
 ``upload`` function::
@@ -364,6 +367,36 @@ currently we support the following:
 
        { "type": "run", "command": ["tar", "-xvj", "file.tar"] }
 
+Attribute ``override`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``override`` attribute is a boolean which forces specific settings
+for a dependency. This attribute is useful if the same dependency is defined in
+multiple projects and we want to force all libraries to use the same version.
+Example::
+
+    +---------+          +---------+
+    |   app   +--------->| libbar  |
+    +----+----+          +----+----+
+         |                    |
+         |                    |
+         |                    v
+         |               +----+----+
+         +-------------->| libfoo  |
+                         +---------+
+
+
+ As an example it works wespecifies that a dependency is
+allowed to fail during the resolve step::
+
+    {
+        "name": "my-pet-library",
+        "resolver": "git",
+        "override": true,
+        ...
+    }
+
+If ``override`` is not specified, it will default to ``false``.
 
 Specifying a ``git`` dependency
 ...............................
