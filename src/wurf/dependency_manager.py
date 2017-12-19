@@ -120,6 +120,20 @@ class DependencyManager(object):
 
             seen_dependency = self.seen_dependencies[dependency.name]
 
+            if not dependency.override and seen_dependency.override:
+                # The seen dependency is marked override, so we should use that
+                # one.
+                return True
+
+            if dependency.override and not seen_dependency.override:
+                raise Error(
+                    "Overriding dependency:\n{}\n"
+                    "added after non overriding dependency:\n{}".format(
+                        dependency, seen_dependency))
+
+            # In this case either both or non of the dependencies are marked
+            # override and we need to check the SHA1
+
             if seen_dependency.sha1 != dependency.sha1:
 
                 raise Error(
