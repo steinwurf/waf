@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Update to newest pytest-testdirectory plugin
 * Minor: Adding override attribute.
 * Minor: Added post_resolve.
 * Minor: Use a version of python-archive which perseveres file permissions.
