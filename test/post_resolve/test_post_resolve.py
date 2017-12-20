@@ -7,7 +7,7 @@ def test_post_resolve_run_http(testdirectory):
     testdirectory.copy_file('test/post_resolve/wscript')
     testdirectory.copy_file('build/waf')
 
-    r = testdirectory.run('python', 'waf', 'configure')
+    r = testdirectory.run('python waf configure')
 
     assert r.stdout.match('*finished successfully*')
 
@@ -17,6 +17,6 @@ def test_post_resolve_run_http(testdirectory):
     assert testdirectory.contains_file(
         'resolved_dependencies/baz-*/run-*/ok.txt')
 
-    r = testdirectory.run('python', 'waf', 'build')
+    r = testdirectory.run('python waf build')
 
     assert r.returncode == 0

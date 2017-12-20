@@ -36,4 +36,4 @@ def _py2_unix_create_symlink(from_path, to_path):
 
 
 def _py3_create_symlink(from_path, to_path):
-    os.symlink(src=from_path, dest=to_path)
+    os.symlink(src=from_path, dst=to_path)

@@ -12,7 +12,7 @@ def test_waf_tools(testdirectory):
 
     # Note: waf will call "git config --get remote.origin.url" in this folder,
     # so "git init" is required to test the default behavior (https resolver)
-    root.run('git', 'init')
+    root.run('git init')
 
     root.copy_file('test/waf_tools/main.cpp')
     root.copy_file('test/waf_tools/resolve.json')
@@ -20,25 +20,24 @@ def test_waf_tools(testdirectory):
     root.copy_file('build/waf')
 
     # First, configure without any options
-    r = root.run('python', 'waf', 'configure')
+    r = root.run('python waf configure')
     assert r.returncode == 0
     assert r.stdout.match('*finished successfully*')
     # The cxx_default mkspec should be selected
     assert r.stdout.match('*Using the mkspec*cxx_default*')
 
-    r = root.run('python', 'waf', 'build')
+    r = root.run('python waf build')
     assert r.returncode == 0
     assert r.stdout.match('*finished successfully*')
 
-    r = root.run('python', 'waf', '--run_tests')
+    r = root.run('python waf --run_tests')
     assert r.returncode == 0
     assert r.stdout.match('*finished successfully*')
     assert r.stdout.match('*REACHED END OF TEST PROGRAM*')
     assert r.stdout.match('*successful runs 1/1*')
 
     # Configure again with some extra options
-    r = root.run('python', 'waf', 'configure', '--cxx_mkspec=cxx_default',
-                 'msvs2012')
+    r = root.run('python waf configure --cxx_mkspec=cxx_default msvs2012')
 
     assert r.returncode == 0
     assert r.stdout.match("*'configure' finished successfully*")
@@ -61,7 +60,7 @@ def test_waf_tools(testdirectory):
         os.path.join(root.path(), 'waf-tools-tester_2012.vcxproj'))
 
     # Build the test binary at the new location
-    r = root.run('python', 'waf', 'build')
+    r = root.run('python waf build')
     assert r.returncode == 0
     assert r.stdout.match('*finished successfully*')
 
@@ -73,15 +72,14 @@ def test_waf_tools(testdirectory):
 
     assert os.path.isfile(program_path)
 
-    r = root.run('python', 'waf', '--run_tests')
+    r = root.run('python waf --run_tests')
     assert r.returncode == 0
     assert r.stdout.match('*finished successfully*')
     assert r.stdout.match('*REACHED END OF TEST PROGRAM*')
     assert r.stdout.match('*successful runs 1/1*')
 
     # Now we install the executable using install_path and install_relative
-    r = root.run('python', 'waf', 'install', '--install_path=inst',
-                 '--install_relative')
+    r = root.run('python waf install --install_path=inst --install_relative')
 
     assert r.returncode == 0
     assert r.stdout.match("*'install' finished successfully*")

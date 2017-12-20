@@ -11,7 +11,7 @@ def test_broken_resolve_json(testdirectory):
     testdirectory.copy_file('build/waf')
 
     with pytest.raises(RunResultError) as excinfo:
-        testdirectory.run('python', 'waf', 'configure')
+        testdirectory.run('python waf configure')
 
     r = excinfo.value.runresult
 
