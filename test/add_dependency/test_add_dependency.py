@@ -68,6 +68,24 @@ def mkdir_app_json(directory):
     return app_dir
 
 
+def mkdir_app_override(directory):
+    app_dir = directory.mkdir('app')
+    app_dir.copy_file('test/add_dependency/app/main.cpp')
+    app_dir.copy_file('test/add_dependency/app/wscript_json',
+                      rename_as='wscript')
+    app_dir.copy_file('test/add_dependency/app/resolve_override.json',
+                      rename_as='resolve.json')
+
+    app_dir.copy_file('test/add_dependency/fake_git_clone.py')
+    app_dir.copy_file('build/waf')
+    # Note: waf will call "git config --get remote.origin.url" in this folder,
+    # so "git init" is required if the pytest temp folder is located within
+    # the main waf folder
+    app_dir.run('git', 'init')
+
+    return app_dir
+
+
 def commit_file(directory, filename, content):
     directory.write_text(filename, content, encoding='utf-8')
     directory.run('git', 'add', '.')
@@ -402,3 +420,42 @@ def test_create_standalone_archive(testdirectory):
     app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths')
     app_dir.run('python', 'waf', '-v', 'standalone')
     assert app_dir.contains_file('test_add_dependency-1.0.0.zip')
+
+
+def test_override_json(testdirectory):
+    """ Tests that dependencies marked as override works
+    """
+
+    app_dir = mkdir_app_override(directory=testdirectory)
+
+    # Make a directory where we place the libraries that we would have cloned
+    # if we had use the full waf resolve functionality.
+    #
+    # To avoid relying on network connectivity we simply place the
+    # libraries there and then fake the git clone step.
+    git_dir = testdirectory.mkdir(directory='git_dir')
+
+    foo_dir = mkdir_libfoo_json(directory=git_dir)
+    bar_dir = mkdir_libbar(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir)
+
+    # Instead of doing an actual Git clone - we fake it and use the paths in
+    # this mapping
+    clone_path = {
+        'github.com/acme-corp/foo.git': foo_dir.path(),
+        'gitlab.com/acme-corp/bar.git': bar_dir.path(),
+        'gitlab.com/acme/baz.git': baz_dir.path()}
+
+    json_path = os.path.join(app_dir.path(), 'clone_path.json')
+
+    with open(json_path, 'w') as json_file:
+        json.dump(clone_path, json_file)
+
+    # Try the use checkout
+    app_dir.run('python', 'waf', 'configure', '-v')
+    app_dir.run('python', 'waf', 'build', '-v')
+
+    resolve_dir = app_dir.join('resolved_dependencies')
+    assert resolve_dir.contains_dir('foo-*', '1.3.3.7-*')
+    assert resolve_dir.contains_dir('baz-*', '4.0.0-*')
+    assert resolve_dir.contains_dir('bar-*', 'someh4sh-*')

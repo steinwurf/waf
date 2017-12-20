@@ -95,6 +95,8 @@ class Dependency(object):
             kwargs['optional'] = False
         if 'internal' not in kwargs:
             kwargs['internal'] = False
+        if 'override' not in kwargs:
+            kwargs['override'] = False
 
         # Some user-defined attributes will not be included in the hash
         # computation, since these are not required to uniquely identify the
@@ -105,6 +107,7 @@ class Dependency(object):
         hash_attributes = kwargs.copy()
         hash_attributes.pop('optional', None)
         hash_attributes.pop('internal', None)
+        hash_attributes.pop('override', None)
 
         s = json.dumps(hash_attributes, sort_keys=True)
         sha1 = hashlib.sha1(s.encode('utf-8')).hexdigest()

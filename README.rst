@@ -257,6 +257,9 @@ a folder Waf will look for a wscript in the folder and execute its commands.
 Currently we will automatically (if recurse is ``true``), recurse into and execute
 following Waf commands: (``resolve``, ``options``, ``configure``, ``build``)
 
+As we also recurse into ``resolve`` it also enables us to recursively to resolve
+the dependencies of our dependencies. 
+
 If you have a wscript where you would like to recurse dependencies for a custom
 waf command, say ``upload``, then add the following to your wscript's
 ``upload`` function::
@@ -364,6 +367,52 @@ currently we support the following:
 
        { "type": "run", "command": ["tar", "-xvj", "file.tar"] }
 
+Attribute ``override`` (general)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+The ``override`` attribute is a boolean which forces specific settings
+for a dependency. This attribute is useful if the same dependency is defined in
+multiple projects and we want to force all projects to use the same version.
+
+Example::
+
+    +---------+  v1.1.0  +---------+
+    |   app   +--------->| libbar  |
+    +----+----+          +----+----+
+         |                    |
+         |                    | v2.0.0
+         |                    v
+         |     v2.0.0    +----+----+
+         +-------------->| libfoo  |
+                         +---------+
+
+In the example above both ``app`` and ``libbar`` both depend on ``v2.0.0`` of
+``libfoo``. Now lets say that the maintainer of ``app`` would like to experiment
+with the new version of ``libfoo``. However, doing this results in a dependency 
+mismatch since ``libbar`` still depends on the old version. 
+
+To force a specific dependency we can use the ``override`` attribute (we use the
+``git`` resolver here, you can read more about that below)::
+
+    {
+        "name": "libfoo"
+        "resolver": "git",
+        "method": "checkout",
+        "checkout": "v3.0.0",
+        "override": true,
+        "sources": ["github.com/myorg/libfoo.git"]
+        ...
+    }
+
+Setting ``override`` to ``true`` means that all projects will be forced to use
+the specified options for a dependency. If ``override`` is not specified 
+it will default to ``false``. 
+
+Aside: The ``override`` attribute is similar to what can be locally acheived by
+passing *user options* e.g. ``--libfoo-checkout=v3.0.0`` or
+``--libfoo_path=...`` to ``./waf configure``. However, specifying the
+``override`` attribute will allow such a change to be pushed to version control
+etc.
 
 Specifying a ``git`` dependency
 ...............................
