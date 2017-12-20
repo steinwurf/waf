@@ -10,12 +10,12 @@ from .compat import IS_PY2
 
 def create_symlink(from_path, to_path, overwrite=False):
     """ Creates a symlink.
-    :param from_path: The path to the directory or file we want to create a 
+    :param from_path: The path to the directory or file we want to create a
         symlink to.
     :param to_path: The path where the symbolic link should be created.
-    :param overwrite: If overwrite is True we first remove the path where the 
+    :param overwrite: If overwrite is True we first remove the path where the
         symbolic link should be created.
-    """ 
+    """
 
     if overwrite and os.path.lexists(path=to_path):
         _remove_symlink(path=to_path)
