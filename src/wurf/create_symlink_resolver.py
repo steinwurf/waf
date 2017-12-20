@@ -4,6 +4,7 @@
 import os
 import sys
 
+from .symlink import create_symlink
 
 class CreateSymlinkResolver(object):
     """
