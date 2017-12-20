@@ -26,9 +26,16 @@ def _py2_win32_create_symlink(from_path, to_path):
 
     # mklink is used to create an NTFS junction, i.e. symlink
     # https://stackoverflow.com/a/22225651/1717320
-    cmd = 'mklink /J "{}" "{}"'.format(
-        to_path.replace('/', '\\'), from_path.replace('/', '\\'))
-    subprocess.call(cmd, shell=True)
+
+    cmd = ['mklink']
+   
+    if os.path.isdir(from_path):
+        cmd += ['/J']
+
+    cmd += ['"{}"'.format(to_path.replace('/', '\\')),
+            '"{}"'.format(from_path.replace('/', '\\'))]
+
+    subprocess.call(' '.join(cmd), shell=True)
 
 
 def _py2_unix_create_symlink(from_path, to_path):
