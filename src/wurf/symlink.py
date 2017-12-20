@@ -10,12 +10,26 @@ from .compat import IS_PY2
 
 def create_symlink(from_path, to_path, overwrite=False):
 
+    if overwrite and os.path.lexists(path=to_path):
+        _remove_symlink(path=to_path)
+
     if IS_PY2 and sys.platform == 'win32':
         _py2_win32_create_symlink(from_path=from_path, to_path=to_path)
     elif IS_PY2:
         _py2_unix_create_symlink(from_path=from_path, to_path=to_path)
     else:
         _py3_create_symlink(from_path=from_path, to_path=to_path)
+
+
+def _remove_symlink(path):
+    if sys.platform == 'win32':
+        # On Windows, the symlink is not considered a link, but
+        # a directory, so it is removed with rmdir. The contents
+        # of the original folder will not be removed.
+        os.rmdir(path)
+    else:
+        # On Unix, we remove the symlink with unlink
+        os.unlink(path)
 
 
 def _py2_win32_create_symlink(from_path, to_path):
@@ -28,7 +42,7 @@ def _py2_win32_create_symlink(from_path, to_path):
     # https://stackoverflow.com/a/22225651/1717320
 
     cmd = ['mklink']
-   
+
     if os.path.isdir(from_path):
         cmd += ['/J']
 

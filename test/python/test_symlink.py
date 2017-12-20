@@ -18,6 +18,8 @@ def test_symlink_directory(testdirectory):
     assert os.path.exists(link_dir)
     assert os.path.isdir(link_dir)
 
+    create_symlink(from_path=foo_dir.path(), to_path=link_dir, overwrite=True)
+
 
 def test_symlink_file(testdirectory):
     sub1 = testdirectory.mkdir('sub1')
@@ -31,3 +33,5 @@ def test_symlink_file(testdirectory):
 
     assert sub2.contains_file('ok.txt')
     assert os.path.isfile(link_path)
+
+    create_symlink(from_path=ok_path, to_path=link_path, overwrite=True)
