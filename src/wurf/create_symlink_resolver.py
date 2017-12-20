@@ -6,6 +6,7 @@ import sys
 
 from .symlink import create_symlink
 
+
 class CreateSymlinkResolver(object):
     """
     Creates a local symlink for a resolved dependency.
