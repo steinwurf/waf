@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 import os
-import sys
 
 from .symlink import create_symlink
 
@@ -50,37 +49,14 @@ class CreateSymlinkResolver(object):
                 self.dependency.real_path = os.path.realpath(path)
                 return link_path
 
-        # os.symlink() is not available in Python 2.7 on Windows.
-        # We use the original function if it is available, otherwise we
-        # create a helper function for Windows
-        os_symlink = getattr(os, "symlink", None)
-        if not callable(os_symlink) and sys.platform == 'win32':
-
-            def symlink_windows(target, link_path):
-                # mklink is used to create an NTFS junction, i.e. symlink
-                cmd = 'mklink /J "{}" "{}"'.format(
-                    link_path.replace('/', '\\'), target.replace('/', '\\'))
-                self.ctx.cmd_and_log(cmd)
-
-            os_symlink = symlink_windows
-
         try:
+
             self.ctx.to_log('wurf: CreateSymlinkResolver {} -> {}'.format(
                             link_path, path))
 
-            # We need to remove the symlink if it already exists,
-            # since it may point to an incorrect folder
-            if os.path.lexists(link_path):
-                if sys.platform == 'win32':
-                    # On Windows, the symlink is not considered a link, but
-                    # a directory, so it is removed with rmdir. The contents
-                    # of the original folder will not be removed.
-                    os.rmdir(link_path)
-                else:
-                    # On Unix, we remove the symlink with unlink
-                    os.unlink(link_path)
-
-            os_symlink(path, link_path)
+            # We set overwrite True since We need to remove the symlink if it
+            # already exists since it may point to an incorrect folder
+            create_symlink(from_path=path, to_path=link_path, overwrite=True)
 
         except Exception:
 
