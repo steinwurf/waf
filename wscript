@@ -152,7 +152,7 @@ def _pytest(bld):
     with venv:
 
         venv.pip_install('pytest', 'mock', 'vcrpy',
-                         'pytest-testdirectory==2.1.0',
+                         'pytest-testdirectory==3.1.0',
                          'pycodestyle', 'pyflakes')
 
         # Add our sources to the Python path

@@ -6,6 +6,9 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Refactor symlink code into a standalone utility. This makes it reusable by other tools which needs to make
+  symlinks.
+* Patch: Update to newest pytest-testdirectory plugin
 * Minor: Adding override attribute.
 * Minor: Added post_resolve.
 * Minor: Use a version of python-archive which perseveres file permissions.
