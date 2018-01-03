@@ -112,8 +112,10 @@ def _build_waf_binary(bld):
     # Run with ./waf --zones wurf to see the print
     waflib.Logs.debug("wurf: tools_dir={}".format(tools_dir))
 
+    waf_extras = ['clang_compilation_database']
+
     # Get the absolute path to all the tools (passed as input to the task)
-    tool_paths = ','.join(tools_dir)
+    tools = ','.join(tools_dir + waf_extras)
 
     # The prelude option
     prelude = '\timport waflib.extras.wurf.waf_entry_point'
@@ -121,7 +123,7 @@ def _build_waf_binary(bld):
     # Build the command to execute
     python = sys.executable
     command = python + ' waf-light configure build --make-waf '\
-                       '--prelude="{}" --tools={}'.format(prelude, tool_paths)
+                       '--prelude="{}" --tools={}'.format(prelude, tools)
 
     bld.cmd_and_log(command, cwd=cwd)
 
