@@ -6,12 +6,11 @@ from waflib.Build import BuildContext
 
 class WafBuildContext(BuildContext):
 
-    def pre_recurse(self, node):
-
-        super(WafBuildContext, self).pre_recurse(node)
+    def execute_build(self):
 
         # Call build() in all dependencies before executing build()
         # in the top-level wscript: this allows us to define all build tasks
         # from the dependencies before reaching the main project
-        if self.is_toplevel():
-            self.recurse_dependencies()
+        self.recurse_dependencies()
+
+        super(WafBuildContext, self).execute_build()
