@@ -6,8 +6,11 @@ of every change, see the Git log.
 
 Latest
 ------
-* Patch: Refactor symlink code into a standalone utility. This makes it reusable by other tools which needs to make
-  symlinks.
+* Patch: Move recurse_dependencies() to Waf's execute_build() function. Since
+  this is known to only be called once. This eliminates using the is_toplevel to
+  avoid inifinite recursion.
+* Patch: Refactor symlink code into a standalone utility. This makes it
+  reusable by other tools which needs to make symlinks.
 * Patch: Update to newest pytest-testdirectory plugin
 * Minor: Adding override attribute.
 * Minor: Added post_resolve.
