@@ -46,7 +46,7 @@ def mkdir_app(directory):
     # Note: waf will call "git config --get remote.origin.url" in this folder,
     # so "git init" is required if the pytest temp folder is located within
     # the main waf folder
-    app_dir.run('git', 'init')
+    app_dir.run(['git', 'init'])
 
     return app_dir
 
@@ -63,7 +63,7 @@ def mkdir_app_json(directory):
     # Note: waf will call "git config --get remote.origin.url" in this folder,
     # so "git init" is required if the pytest temp folder is located within
     # the main waf folder
-    app_dir.run('git', 'init')
+    app_dir.run(['git', 'init'])
 
     return app_dir
 
@@ -81,16 +81,16 @@ def mkdir_app_override(directory):
     # Note: waf will call "git config --get remote.origin.url" in this folder,
     # so "git init" is required if the pytest temp folder is located within
     # the main waf folder
-    app_dir.run('git', 'init')
+    app_dir.run(['git', 'init'])
 
     return app_dir
 
 
 def commit_file(directory, filename, content):
     directory.write_text(filename, content, encoding='utf-8')
-    directory.run('git', 'add', '.')
-    directory.run('git', '-c', 'user.name=John', '-c',
-                  'user.email=doe@email.org', 'commit', '-m', 'oki')
+    directory.run(['git', 'add', '.'])
+    directory.run(['git', '-c', 'user.name=John', '-c',
+                  'user.email=doe@email.org', 'commit', '-m', 'oki'])
 
 
 def mkdir_libfoo(directory):
@@ -99,15 +99,15 @@ def mkdir_libfoo(directory):
     foo_dir.copy_file('test/add_dependency/libfoo/wscript')
     foo_dir.copy_file('test/add_dependency/libfoo/some_repos_contain')
     foo_dir.copy_dir(directory='test/add_dependency/libfoo/src')
-    foo_dir.run('git', 'init')
-    foo_dir.run('git', 'add', '.')
+    foo_dir.run(['git', 'init'])
+    foo_dir.run(['git', 'add', '.'])
 
     # We cannot commit without setting a user + email, but that is not always
     # available. So we can set it just for the one commit command using this
     # approach: http://stackoverflow.com/a/22058263/1717320
-    foo_dir.run('git', '-c', 'user.name=John', '-c',
-                'user.email=doe@email.org', 'commit', '-m', 'oki')
-    foo_dir.run('git', 'tag', '1.3.3.7')
+    foo_dir.run(['git', '-c', 'user.name=John', '-c',
+                'user.email=doe@email.org', 'commit', '-m', 'oki'])
+    foo_dir.run(['git', 'tag', '1.3.3.7'])
 
     commit_file(directory=foo_dir, filename='ok.txt', content=u'hello world')
 
@@ -122,15 +122,15 @@ def mkdir_libfoo_json(directory):
     foo_dir.copy_file('test/add_dependency/libfoo/some_repos_contain')
     foo_dir.copy_file('test/add_dependency/libfoo/resolve.json')
     foo_dir.copy_dir(directory='test/add_dependency/libfoo/src')
-    foo_dir.run('git', 'init')
-    foo_dir.run('git', 'add', '.')
+    foo_dir.run(['git', 'init'])
+    foo_dir.run(['git', 'add', '.'])
 
     # We cannot commit without setting a user + email, but that is not always
     # available. So we can set it just for the one commit command using this
     # approach: http://stackoverflow.com/a/22058263/1717320
-    foo_dir.run('git', '-c', 'user.name=John', '-c',
-                'user.email=doe@email.org', 'commit', '-m', 'oki')
-    foo_dir.run('git', 'tag', '1.3.3.7')
+    foo_dir.run(['git', '-c', 'user.name=John', '-c',
+                'user.email=doe@email.org', 'commit', '-m', 'oki'])
+    foo_dir.run(['git', 'tag', '1.3.3.7'])
 
     commit_file(directory=foo_dir, filename='ok.txt', content=u'hello world')
 
@@ -140,11 +140,11 @@ def mkdir_libfoo_json(directory):
 def mkdir_libbar(directory):
     # Add bar dir
     bar_dir = directory.copy_dir(directory='test/add_dependency/libbar')
-    bar_dir.run('git', 'init')
-    bar_dir.run('git', 'add', '.')
-    bar_dir.run('git', '-c', 'user.name=John', '-c',
-                'user.email=doe@email.org', 'commit', '-m', 'oki')
-    bar_dir.run('git', 'tag', 'someh4sh')
+    bar_dir.run(['git', 'init'])
+    bar_dir.run(['git', 'add', '.'])
+    bar_dir.run(['git', '-c', 'user.name=John', '-c',
+                'user.email=doe@email.org', 'commit', '-m', 'oki'])
+    bar_dir.run(['git', 'tag', 'someh4sh'])
 
     return bar_dir
 
@@ -152,18 +152,18 @@ def mkdir_libbar(directory):
 def mkdir_libbaz(directory):
     # Add baz dir
     baz_dir = directory.copy_dir(directory='test/add_dependency/libbaz')
-    baz_dir.run('git', 'init')
-    baz_dir.run('git', 'add', '.')
-    baz_dir.run('git', '-c', 'user.name=John', '-c',
-                'user.email=doe@email.org', 'commit', '-m', 'oki')
-    baz_dir.run('git', 'tag', '3.1.2')
-    baz_dir.run('git', 'tag', '3.2.0')
-    baz_dir.run('git', 'tag', '3.3.0')
-    baz_dir.run('git', 'tag', '3.3.1')
+    baz_dir.run(['git', 'init'])
+    baz_dir.run(['git', 'add', '.'])
+    baz_dir.run(['git', '-c', 'user.name=John', '-c',
+                'user.email=doe@email.org', 'commit', '-m', 'oki'])
+    baz_dir.run(['git', 'tag', '3.1.2'])
+    baz_dir.run(['git', 'tag', '3.2.0'])
+    baz_dir.run(['git', 'tag', '3.3.0'])
+    baz_dir.run(['git', 'tag', '3.3.1'])
 
     commit_file(directory=baz_dir, filename='ok.txt', content=u'hello world')
 
-    baz_dir.run('git', 'tag', '4.0.0')
+    baz_dir.run(['git', 'tag', '4.0.0'])
 
     return baz_dir
 
@@ -176,15 +176,19 @@ def run_commands(app_dir, git_dir):
     # behavior, we need to invoke help with the NOCLIMB variable.
     env = dict(os.environ)
     env['NOCLIMB'] = '1'
-    app_dir.run('python', 'waf', '--help', env=env)
+    app_dir.run(['python', 'waf', '--help'], env=env)
 
     # We should be able to use --foo_magic_option that is defined in 'foo'
-    app_dir.run('python', 'waf', 'configure', '-v', '--foo_magic_option=xyz')
+    app_dir.run(['python', 'waf', 'configure', '-v', '--foo_magic_option=xyz'])
 
     # After configure, the help text should include the description of
     # --foo_magic_option (defined in the 'foo' wscript)
-    r = app_dir.run('python', 'waf', '--help')
+    r = app_dir.run(['python', 'waf', '--help'])
     assert r.stdout.match('*Magic option for foo*')
+
+    # The symlink to 'current_build' should be created
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'build_current'))
 
     # The symlinks should be available to all dependencies
     assert os.path.exists(os.path.join(
@@ -194,27 +198,27 @@ def run_commands(app_dir, git_dir):
     assert os.path.exists(os.path.join(
         app_dir.path(), 'resolve_symlinks', 'bar'))
 
-    app_dir.run('python', 'waf', 'build', '-v')
-    app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
-    app_dir.run('python', 'waf', 'build', '-v')
+    app_dir.run(['python', 'waf', 'build', '-v'])
+    app_dir.run(['python', 'waf', 'configure', '-v', '--fast_resolve'])
+    app_dir.run(['python', 'waf', 'build', '-v'])
 
     # Test the zones print
-    r = app_dir.run('python', 'waf', 'build', '-v', '--zones=resolve')
+    r = app_dir.run(['python', 'waf', 'build', '-v', '--zones=resolve'])
 
     assert r.stdout.match('* resolve recurse foo *')
     assert r.stdout.match('* resolve recurse baz *')
     assert r.stdout.match('* resolve recurse bar *')
 
     # Try the use checkout
-    app_dir.run('python', 'waf', 'configure', '-v', '--baz_checkout=4.0.0')
-    app_dir.run('python', 'waf', 'build', '-v')
+    app_dir.run(['python', 'waf', 'configure', '-v', '--baz_checkout=4.0.0'])
+    app_dir.run(['python', 'waf', 'build', '-v'])
 
     # Lets remove the resolved dependencies
     resolve_dir = app_dir.join('resolved_dependencies')
     resolve_dir.rmdir()
 
     # Test the --lock_versions options
-    app_dir.run('python', 'waf', 'configure', '-v', '--lock_versions')
+    app_dir.run(['python', 'waf', 'configure', '-v', '--lock_versions'])
     assert app_dir.contains_file('lock_resolve.json')
 
     # The symlinks should be available to all dependencies
@@ -225,7 +229,7 @@ def run_commands(app_dir, git_dir):
     assert os.path.exists(os.path.join(
         app_dir.path(), 'resolve_symlinks', 'bar'))
 
-    app_dir.run('python', 'waf', 'build', '-v')
+    app_dir.run(['python', 'waf', 'build', '-v'])
 
     resolve_dir = app_dir.join('resolved_dependencies')
     assert resolve_dir.contains_dir('foo-*', '1.3.3.7-*')
@@ -235,13 +239,13 @@ def run_commands(app_dir, git_dir):
     resolve_dir.rmdir()
 
     # This configure should happen from the lock
-    app_dir.run('python', 'waf', 'configure', '-v')
+    app_dir.run(['python', 'waf', 'configure', '-v'])
 
     assert app_dir.contains_dir('resolve_symlinks', 'foo')
     assert app_dir.contains_dir('resolve_symlinks', 'baz')
     assert app_dir.contains_dir('resolve_symlinks', 'bar')
 
-    app_dir.run('python', 'waf', 'build', '-v')
+    app_dir.run(['python', 'waf', 'build', '-v'])
 
     lock_path = os.path.join(app_dir.path(), 'lock_resolve.json')
     with open(lock_path, 'r') as lock_file:
@@ -266,26 +270,26 @@ def run_commands(app_dir, git_dir):
     resolve_dir.rmdir()
 
     # Test the --lock_paths options
-    app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths',
-                '--resolve_path', 'locked')
+    app_dir.run(['python', 'waf', 'configure', '-v', '--lock_paths',
+                '--resolve_path', 'locked'])
 
     assert app_dir.contains_dir('resolve_symlinks', 'foo')
     assert app_dir.contains_dir('resolve_symlinks', 'baz')
     assert app_dir.contains_dir('resolve_symlinks', 'bar')
 
     assert app_dir.contains_file('lock_resolve.json')
-    app_dir.run('python', 'waf', 'build', '-v')
+    app_dir.run(['python', 'waf', 'build', '-v'])
 
     # This configure should happen from the lock
     # Now we can delete the git folders - as we should be able to configure
     # from the frozen dependencies
-    app_dir.run('python', 'waf', 'configure', '-v')
+    app_dir.run(['python', 'waf', 'configure', '-v'])
 
     assert app_dir.contains_dir('resolve_symlinks', 'foo')
     assert app_dir.contains_dir('resolve_symlinks', 'baz')
     assert app_dir.contains_dir('resolve_symlinks', 'bar')
 
-    app_dir.run('python', 'waf', 'build', '-v')
+    app_dir.run(['python', 'waf', 'build', '-v'])
 
 
 def test_resolve_json(testdirectory):
@@ -380,8 +384,8 @@ def test_add_dependency_path(testdirectory):
     path_test = testdirectory.mkdir(directory='path_test')
     baz_dir = mkdir_libbaz(directory=path_test)
 
-    app_dir.run('python', 'waf', 'configure', '-v', '--baz_path={}'.format(
-                baz_dir.path()))
+    app_dir.run(['python', 'waf', 'configure', '-v', '--baz_path={}'.format(
+                baz_dir.path())])
 
     # The symlinks should be available to all dependencies
     assert os.path.exists(os.path.join(
@@ -391,8 +395,8 @@ def test_add_dependency_path(testdirectory):
     assert os.path.exists(os.path.join(
         app_dir.path(), 'resolve_symlinks', 'bar'))
 
-    app_dir.run('python', 'waf', 'build', '-v')
-    app_dir.run('python', 'waf', 'configure', '-v', '--fast_resolve')
+    app_dir.run(['python', 'waf', 'build', '-v'])
+    app_dir.run(['python', 'waf', 'configure', '-v', '--fast_resolve'])
 
 
 def test_create_standalone_archive(testdirectory):
@@ -417,8 +421,8 @@ def test_create_standalone_archive(testdirectory):
     with open(json_path, 'w') as json_file:
         json.dump(clone_path, json_file)
 
-    app_dir.run('python', 'waf', 'configure', '-v', '--lock_paths')
-    app_dir.run('python', 'waf', '-v', 'standalone')
+    app_dir.run(['python', 'waf', 'configure', '-v', '--lock_paths'])
+    app_dir.run(['python', 'waf', '-v', 'standalone'])
     assert app_dir.contains_file('test_add_dependency-1.0.0.zip')
 
 
@@ -452,8 +456,8 @@ def test_override_json(testdirectory):
         json.dump(clone_path, json_file)
 
     # Try the use checkout
-    app_dir.run('python', 'waf', 'configure', '-v')
-    app_dir.run('python', 'waf', 'build', '-v')
+    app_dir.run(['python', 'waf', 'configure', '-v'])
+    app_dir.run(['python', 'waf', 'build', '-v'])
 
     resolve_dir = app_dir.join('resolved_dependencies')
     assert resolve_dir.contains_dir('foo-*', '1.3.3.7-*')

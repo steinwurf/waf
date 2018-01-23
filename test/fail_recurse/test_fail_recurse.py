@@ -16,12 +16,12 @@ def test_fail_recurse(testdirectory):
     testdirectory.copy_file('test/fail_recurse/resolve.json')
     testdirectory.copy_file('build/waf')
 
-    r = testdirectory.run('python', 'waf', 'configure',
-                          '--foo_path={}'.format(foo_dir.path()))
+    r = testdirectory.run(['python', 'waf', 'configure',
+                          '--foo_path={}'.format(foo_dir.path())])
 
     assert r.stdout.match('*finished successfully*')
 
-    testdirectory.run('python', 'waf', 'build')
+    testdirectory.run('python waf build')
 
 
 def test_fail_recurse_configure_python_error(testdirectory):
@@ -35,8 +35,8 @@ def test_fail_recurse_configure_python_error(testdirectory):
     testdirectory.copy_file('build/waf')
 
     with pytest.raises(RunResultError) as excinfo:
-        testdirectory.run('python', 'waf', 'configure',
-                          '--foo_path={}'.format(foo_dir.path()))
+        testdirectory.run(['python', 'waf', 'configure',
+                          '--foo_path={}'.format(foo_dir.path())])
 
     r = excinfo.value.runresult
 
@@ -53,11 +53,11 @@ def test_fail_recurse_build_python_error(testdirectory):
     testdirectory.copy_file('test/fail_recurse/resolve.json')
     testdirectory.copy_file('build/waf')
 
-    r = testdirectory.run('python', 'waf', 'configure',
-                          '--foo_path={}'.format(foo_dir.path()))
+    r = testdirectory.run(['python', 'waf', 'configure',
+                          '--foo_path={}'.format(foo_dir.path())])
 
     with pytest.raises(RunResultError) as excinfo:
-        testdirectory.run('python', 'waf', 'build')
+        testdirectory.run(['python', 'waf', 'build'])
 
     r = excinfo.value.runresult
 
@@ -75,8 +75,8 @@ def test_fail_recurse_configure_waf_error(testdirectory):
     testdirectory.copy_file('build/waf')
 
     with pytest.raises(RunResultError) as excinfo:
-        testdirectory.run('python', 'waf', 'configure',
-                          '--foo_path={}'.format(foo_dir.path()))
+        testdirectory.run(['python', 'waf', 'configure',
+                          '--foo_path={}'.format(foo_dir.path())])
 
     r = excinfo.value.runresult
 
@@ -94,11 +94,11 @@ def test_fail_recurse_build_waf_error(testdirectory):
     testdirectory.copy_file('test/fail_recurse/resolve.json')
     testdirectory.copy_file('build/waf')
 
-    testdirectory.run('python', 'waf', 'configure',
-                      '--foo_path={}'.format(foo_dir.path()))
+    testdirectory.run(['python', 'waf', 'configure',
+                      '--foo_path={}'.format(foo_dir.path())])
 
     with pytest.raises(RunResultError) as excinfo:
-        testdirectory.run('python', 'waf', 'build')
+        testdirectory.run(['python', 'waf', 'build'])
 
     r = excinfo.value.runresult
 

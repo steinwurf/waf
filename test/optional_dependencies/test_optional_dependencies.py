@@ -8,5 +8,5 @@ def test_optional_dependencies(testdirectory):
     testdirectory.copy_file('test/optional_dependencies/wscript')
     testdirectory.copy_file('build/waf')
 
-    testdirectory.run('python', 'waf', 'configure')
-    testdirectory.run('python', 'waf', 'build')
+    testdirectory.run('python waf configure')
+    testdirectory.run('python waf build')
