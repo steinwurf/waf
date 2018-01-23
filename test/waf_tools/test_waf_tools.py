@@ -54,8 +54,10 @@ def test_waf_tools(testdirectory):
     assert r.stdout.match('*OUTPUT PATH:*')
 
     # The build_current link should be created
-    print("output_path = {}".format(output_path))
+
     link_path = os.path.realpath(os.path.join(root.path(), 'build_current'))
+    print("output_path = {}".format(output_path))
+    print("link_path = {}".format(link_path))
     assert link_path.endswith(output_path)
 
     # The Visual Studio solution and project files should be generated
