@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Add symlink in source folder to the current build folder. The symlink
+  called 'build_current' will point to Waf's build folder.
 * Patch: Move recurse_dependencies() to Waf's execute_build() function. Since
   this is known to only be called once. This eliminates using the is_toplevel to
   avoid inifinite recursion.

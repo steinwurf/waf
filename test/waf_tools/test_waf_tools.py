@@ -53,6 +53,16 @@ def test_waf_tools(testdirectory):
         "*<task_gen 'waf-tools-tester' declared in {}>*".format(root.path()))
     assert r.stdout.match('*OUTPUT PATH:*')
 
+    # The build_current link should be created
+    link_path = os.path.join(root.path(), 'build_current')
+    assert os.path.isdir(link_path)
+
+    # Note, it would be great to more thoroughly be able to test the
+    # build_current link. However, unfortunately it seems that we cannot
+    # resolve a symbolic link to a directory with Python:
+    # - https://stackoverflow.com/questions/43333640
+    # - https://bugs.python.org/issue9949
+
     # The Visual Studio solution and project files should be generated
     assert os.path.isfile(
         os.path.join(root.path(), 'waf-tools-tester_2012.sln'))

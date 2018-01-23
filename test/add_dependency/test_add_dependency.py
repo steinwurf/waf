@@ -186,6 +186,10 @@ def run_commands(app_dir, git_dir):
     r = app_dir.run(['python', 'waf', '--help'])
     assert r.stdout.match('*Magic option for foo*')
 
+    # The symlink to 'current_build' should be created
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'build_current'))
+
     # The symlinks should be available to all dependencies
     assert os.path.exists(os.path.join(
         app_dir.path(), 'resolve_symlinks', 'foo'))
