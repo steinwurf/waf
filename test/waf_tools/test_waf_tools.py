@@ -53,6 +53,10 @@ def test_waf_tools(testdirectory):
         "*<task_gen 'waf-tools-tester' declared in {}>*".format(root.path()))
     assert r.stdout.match('*OUTPUT PATH:*')
 
+    # The build_current link should be created
+    link_path = os.path.realpath(os.path.join(root.path(), 'build_current'))
+    assert link_path.endswith(output_path)
+
     # The Visual Studio solution and project files should be generated
     assert os.path.isfile(
         os.path.join(root.path(), 'waf-tools-tester_2012.sln'))

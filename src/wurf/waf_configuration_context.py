@@ -1,16 +1,36 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import os
+
 from waflib import Context
 from waflib import Utils
 
 from waflib.Configure import ConfigurationContext
+
+from .symlink import create_symlink
 
 
 class WafConfigurationContext(ConfigurationContext):
 
     def __init__(self, **kw):
         super(WafConfigurationContext, self).__init__(**kw)
+
+    def init_dirs(self):
+
+        # First call the configuration context init_dirs(..) function
+        # which creates the actual folders.
+
+        super(WafConfigurationContext, self).init_dirs()
+
+        # Now create the symlink to where the build directory is. This gives
+        # us a stable point in the filesystem from where we can always find
+        # the bldnode directory.
+
+        link_path = os.path.join(self.path.abspath(), 'build_current')
+
+        create_symlink(from_path=self.bldnode.abspath(),
+                       to_path=link_path, overwrite=True)
 
     def execute(self):
         # If the main wscript has no "configure" function, bind it to an
