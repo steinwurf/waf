@@ -16,6 +16,6 @@ def configure(conf):
 def build(bld):
 
     bld.program(
-        features='c cxxprogram',
+        features='cxxprogram',
         source='main.cpp',
         target='clang_compilation_database')
