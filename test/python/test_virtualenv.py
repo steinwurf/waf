@@ -15,10 +15,8 @@ def test_virtualenv_noname(testdirectory):
     env = dict(os.environ)
     name = None
     ctx = mock.Mock()
-    pip_packages_path = '/tmp/pip_packages'
 
-    venv = VirtualEnv.create(cwd=cwd, env=env, name=name, ctx=ctx,
-                             pip_packages_path=pip_packages_path)
+    venv = VirtualEnv.create(cwd=cwd, env=env, name=name, ctx=ctx)
 
     assert fnmatch.fnmatch(venv.path, os.path.join(cwd, 'virtualenv-*'))
 
@@ -36,8 +34,7 @@ def test_virtualenv_name(testdirectory):
     testdirectory.mkdir(name)
     assert testdirectory.contains_dir(name)
 
-    venv = VirtualEnv.create(cwd=cwd, env=env, name=name, ctx=ctx,
-                             pip_packages_path=pip_packages_dir.path())
+    venv = VirtualEnv.create(cwd=cwd, env=env, name=name, ctx=ctx)
 
     assert fnmatch.fnmatch(venv.path, os.path.join(cwd, name))
     assert not testdirectory.contains_dir(name)
@@ -46,7 +43,9 @@ def test_virtualenv_name(testdirectory):
         [sys.executable, '-m', 'virtualenv', name, '--no-site-packages'],
         cwd=cwd, env=env)
 
-    venv.pip_download('pytest', 'twine')
+    venv.pip_local_download(
+        pip_packages_path=pip_packages_dir.path(),
+        packages=['pytest', 'twine'])
 
     ctx.exec_command.assert_called_once_with(
         'python -m pip download pytest twine --dest {}'.format(
@@ -57,9 +56,20 @@ def test_virtualenv_name(testdirectory):
     ctx.exec_command = mock.Mock()
 
     # We have to make sure the pip_packages_path exists
-    venv.pip_local_install('pytest', 'twine')
+    venv.pip_local_install(
+        pip_packages_path=pip_packages_dir.path(),
+        packages=['pytest', 'twine'])
 
     ctx.exec_command.assert_called_once_with(
         'python -m pip install --no-index --find-links={} pytest twine'.format(
             pip_packages_dir.path()),
+        cwd=venv.cwd, env=venv.env, stdout=None, stderr=None)
+
+    # Reset state
+    ctx.exec_command = mock.Mock()
+
+    venv.pip_install(packages=['pytest', 'twine'])
+
+    ctx.exec_command.assert_called_once_with(
+        'python -m pip install pytest twine',
         cwd=venv.cwd, env=venv.env, stdout=None, stderr=None)
