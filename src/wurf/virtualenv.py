@@ -6,7 +6,6 @@ import sys
 import hashlib
 
 from .directory import remove_directory
-from .compat import IS_PY2
 
 
 class VirtualEnv(object):
@@ -162,14 +161,9 @@ class VirtualEnv(object):
         if os.path.isdir(path):
             remove_directory(path=path)
 
-        if IS_PY2:
-            # Create the new virtualenv - requires the virtualenv module to
-            # be available
-            cmd = [python, '-m', 'virtualenv', name, '--no-site-packages']
-        else:
-            # In Python3 we have venv. The default behavior of venv is to
-            # not expose system packages.
-            cmd = cmd = [python, '-m', 'venv', name]
+        # Create the new virtualenv - requires the virtualenv module to
+        # be available
+        cmd = [python, '-m', 'virtualenv', name, '--no-site-packages']
 
         ctx.cmd_and_log(cmd, cwd=cwd, env=env)
 

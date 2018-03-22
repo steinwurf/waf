@@ -10,16 +10,14 @@ VERSION = '1.0.0'
 
 def resolve(ctx):
 
-    if IS_PY2:
-
-        ctx.add_dependency(
-            name='virtualenv',
-            recurse=False,
-            optional=False,
-            resolver='git',
-            method='checkout',
-            checkout='15.1.0',
-            sources=['github.com/pypa/virtualenv.git'])
+    ctx.add_dependency(
+        name='virtualenv',
+        recurse=False,
+        optional=False,
+        resolver='git',
+        method='checkout',
+        checkout='15.1.0',
+        sources=['github.com/pypa/virtualenv.git'])
 
 
 def options(opt):
@@ -30,10 +28,9 @@ def configure(conf):
 
     env = dict(os.environ)
 
-    if IS_PY2:
-        # Make sure the virtualenv Python module is in path
-        env.update({'PYTHONPATH': os.path.pathsep.join(
-            [conf.dependency_path('virtualenv')])})
+    # Make sure the virtualenv Python module is in path
+    env.update({'PYTHONPATH': os.path.pathsep.join(
+        [conf.dependency_path('virtualenv')])})
 
     conf.create_virtualenv(env=env)
 
