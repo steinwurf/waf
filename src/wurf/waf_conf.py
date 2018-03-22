@@ -17,9 +17,17 @@ from . import virtualenv
 @conf
 def dependency_path(ctx, name):
     """
-    Returns the dependency path
+    Returns the dependency path as a string
     """
     return waf_resolve_context.dependency_cache[name]['path']
+
+
+@conf
+def dependency_node(ctx, name):
+    """
+    Returns the dependency path as a Waf Node
+    """
+    return ctx.root.find_node(ctx.dependency_path(name))
 
 
 @conf
