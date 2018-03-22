@@ -11,6 +11,7 @@ from waflib.Errors import WafError
 from waflib import Logs
 
 from . import waf_resolve_context
+from . import virtualenv
 
 
 @conf
@@ -93,3 +94,8 @@ def recurse_dependencies(ctx):
                 msg = '{}\n(run with -v for more information)'.format(msg)
 
             raise WafError(msg=msg, ex=e)
+
+
+@conf
+def create_virtualenv(ctx, cwd=None, env=None, name=None):
+    return virtualenv.VirtualEnv.create(ctx=ctx, cwd=cwd, env=env, name=name)

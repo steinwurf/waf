@@ -144,7 +144,7 @@ class VirtualEnv(object):
 
         if not cwd:
             # Use the working directory of the waf context
-            cwd = ctx.path
+            cwd = ctx.path.abspath()
 
         if not env:
             # Use the current environment
