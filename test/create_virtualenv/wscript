@@ -2,7 +2,6 @@
 # encoding: utf-8
 import os
 
-from waflib.extras.wurf.compat import IS_PY2
 
 APPNAME = 'test_create_virtualenv'
 VERSION = '1.0.0'
