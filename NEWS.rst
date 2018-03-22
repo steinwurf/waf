@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Added Context dependency_node() function to return a waf node to a
+  dependency. Making it easy to use Waf's ant_glob(...) function.
 * Major: Updated the create(...) function for virtual environments.
 * Minor: Added the `clang_compilation_database` tool.
 * Minor: Add symlink in source folder to the current build folder. The symlink
