@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Updated the create(...) function for virtual environments.
 * Minor: Added the `clang_compilation_database` tool.
 * Minor: Add symlink in source folder to the current build folder. The symlink
   called 'build_current' will point to Waf's build folder.
