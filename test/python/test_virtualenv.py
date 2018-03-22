@@ -7,6 +7,7 @@ import mock
 import fnmatch
 
 from wurf.virtualenv import VirtualEnv
+from wurf.compat import IS_PY2
 
 
 def test_virtualenv_noname(testdirectory):
@@ -39,9 +40,14 @@ def test_virtualenv_name(testdirectory):
     assert fnmatch.fnmatch(venv.path, os.path.join(cwd, name))
     assert not testdirectory.contains_dir(name)
 
-    ctx.cmd_and_log.assert_called_once_with(
-        [sys.executable, '-m', 'virtualenv', name, '--no-site-packages'],
-        cwd=cwd, env=env)
+    if IS_PY2:
+        ctx.cmd_and_log.assert_called_once_with(
+            [sys.executable, '-m', 'virtualenv', name, '--no-site-packages'],
+            cwd=cwd, env=env)
+    else:
+        ctx.cmd_and_log.assert_called_once_with(
+            [sys.executable, '-m', 'venv', name],
+            cwd=cwd, env=env)
 
     venv.pip_local_download(
         pip_packages_path=pip_packages_dir.path(),
