@@ -65,16 +65,15 @@ def mkdir_libbaz(directory, qux_dir):
     baz_dir.run(['git', 'init'])
     baz_dir.run(['git', 'add', '.'])
     baz_dir.run(['git', 'submodule', 'add', qux_dir.path(), 'libqux'])
+    baz_dir.run(['git', 'add', '.'])
     baz_dir.run(['git', '-c', 'user.name=John', '-c',
                  'user.email=doe@email.org', 'commit', '-m', 'oki'])
     baz_dir.run(['git', 'tag', '3.1.2'])
-    baz_dir.run(['git', 'tag', '3.2.0'])
-    baz_dir.run(['git', 'tag', '3.3.0'])
-    baz_dir.run(['git', 'tag', '3.3.1'])
 
-    commit_file(directory=baz_dir, filename='ok.txt', content=u'hello world')
-
-    baz_dir.run(['git', 'tag', '4.0.0'])
+    # We now remove the submodule dir - if pull_submodules is true in
+    # resolve.json it will get recreated.
+    libqux = baz_dir.join('libqux')
+    libqux.rmdir()
 
     return baz_dir
 
