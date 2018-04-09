@@ -1,0 +1,12 @@
+[
+    {
+        "name": "baz",
+        "resolver": "git",
+        "method": "semver",
+        "pull_submodules": false,
+        "major": 3,
+        "sources": [
+            "gitlab.com/acme/baz.git"
+        ]
+    }
+]

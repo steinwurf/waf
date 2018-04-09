@@ -18,9 +18,9 @@ We are setting up the following dependency graph:
       +--------+      +-------+
       |                       |
       v                       v
-+-----+------+          +-----+-----+
-|  libfoo    |          |  libbaz   |
-+-----+------+          +-----+-----+
++-----+------+          +-----+-----+   submodule  +--------+
+|  libfoo    |          |  libbaz   | +----------> | libqux |
++-----+------+          +-----+-----+              +--------+
       |                       ^
       v                       |
 +-----+------+                |
@@ -90,7 +90,7 @@ def commit_file(directory, filename, content):
     directory.write_text(filename, content, encoding='utf-8')
     directory.run(['git', 'add', '.'])
     directory.run(['git', '-c', 'user.name=John', '-c',
-                  'user.email=doe@email.org', 'commit', '-m', 'oki'])
+                   'user.email=doe@email.org', 'commit', '-m', 'oki'])
 
 
 def mkdir_libfoo(directory):
@@ -106,7 +106,7 @@ def mkdir_libfoo(directory):
     # available. So we can set it just for the one commit command using this
     # approach: http://stackoverflow.com/a/22058263/1717320
     foo_dir.run(['git', '-c', 'user.name=John', '-c',
-                'user.email=doe@email.org', 'commit', '-m', 'oki'])
+                 'user.email=doe@email.org', 'commit', '-m', 'oki'])
     foo_dir.run(['git', 'tag', '1.3.3.7'])
 
     commit_file(directory=foo_dir, filename='ok.txt', content=u'hello world')
@@ -129,7 +129,7 @@ def mkdir_libfoo_json(directory):
     # available. So we can set it just for the one commit command using this
     # approach: http://stackoverflow.com/a/22058263/1717320
     foo_dir.run(['git', '-c', 'user.name=John', '-c',
-                'user.email=doe@email.org', 'commit', '-m', 'oki'])
+                 'user.email=doe@email.org', 'commit', '-m', 'oki'])
     foo_dir.run(['git', 'tag', '1.3.3.7'])
 
     commit_file(directory=foo_dir, filename='ok.txt', content=u'hello world')
@@ -143,19 +143,29 @@ def mkdir_libbar(directory):
     bar_dir.run(['git', 'init'])
     bar_dir.run(['git', 'add', '.'])
     bar_dir.run(['git', '-c', 'user.name=John', '-c',
-                'user.email=doe@email.org', 'commit', '-m', 'oki'])
+                 'user.email=doe@email.org', 'commit', '-m', 'oki'])
     bar_dir.run(['git', 'tag', 'someh4sh'])
 
     return bar_dir
 
 
-def mkdir_libbaz(directory):
+def mkdir_libqux(directory):
+    # Add bar dir
+    qux_dir = directory.mkdir('libqux')
+    qux_dir.run(['git', 'init'])
+    commit_file(directory=qux_dir, filename='ok.txt', content=u'hello world')
+
+    return qux_dir
+
+
+def mkdir_libbaz(directory, qux_dir):
     # Add baz dir
     baz_dir = directory.copy_dir(directory='test/add_dependency/libbaz')
     baz_dir.run(['git', 'init'])
     baz_dir.run(['git', 'add', '.'])
+    baz_dir.run(['git', 'submodule', 'add', qux_dir.path(), 'libqux'])
     baz_dir.run(['git', '-c', 'user.name=John', '-c',
-                'user.email=doe@email.org', 'commit', '-m', 'oki'])
+                 'user.email=doe@email.org', 'commit', '-m', 'oki'])
     baz_dir.run(['git', 'tag', '3.1.2'])
     baz_dir.run(['git', 'tag', '3.2.0'])
     baz_dir.run(['git', 'tag', '3.3.0'])
@@ -197,6 +207,10 @@ def run_commands(app_dir, git_dir):
         app_dir.path(), 'resolve_symlinks', 'baz'))
     assert os.path.exists(os.path.join(
         app_dir.path(), 'resolve_symlinks', 'bar'))
+
+    # Also check that libbaz submodule was cloned
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'baz', 'libqux'))
 
     app_dir.run(['python', 'waf', 'build', '-v'])
     app_dir.run(['python', 'waf', 'configure', '-v', '--fast_resolve'])
@@ -271,7 +285,7 @@ def run_commands(app_dir, git_dir):
 
     # Test the --lock_paths options
     app_dir.run(['python', 'waf', 'configure', '-v', '--lock_paths',
-                '--resolve_path', 'locked'])
+                 '--resolve_path', 'locked'])
 
     assert app_dir.contains_dir('resolve_symlinks', 'foo')
     assert app_dir.contains_dir('resolve_symlinks', 'baz')
@@ -306,9 +320,10 @@ def test_resolve_json(testdirectory):
     # libraries there and then fake the git clone step.
     git_dir = testdirectory.mkdir(directory='git_dir')
 
+    qux_dir = mkdir_libqux(directory=git_dir)
     foo_dir = mkdir_libfoo_json(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)
-    baz_dir = mkdir_libbaz(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir, qux_dir=qux_dir)
 
     # Instead of doing an actual Git clone - we fake it and use the paths in
     # this mapping
@@ -339,9 +354,10 @@ def test_add_dependency(testdirectory):
     # libraries there and then fake the git clone step.
     git_dir = testdirectory.mkdir(directory='git_dir')
 
+    qux_dir = mkdir_libqux(directory=git_dir)
     foo_dir = mkdir_libfoo(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)
-    baz_dir = mkdir_libbaz(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir, qux_dir=qux_dir)
 
     # Instead of doing an actual Git clone - we fake it and use the paths in
     # this mapping
@@ -364,6 +380,7 @@ def test_add_dependency_path(testdirectory):
 
     git_dir = testdirectory.mkdir(directory='git_dir')
 
+    qux_dir = mkdir_libqux(directory=git_dir)
     foo_dir = mkdir_libfoo(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)
 
@@ -382,7 +399,7 @@ def test_add_dependency_path(testdirectory):
     # git_dir, we make sure that our fake git clone step in the wscript
     # cannot find it. Therefore the test will fail if it tries to clone baz.
     path_test = testdirectory.mkdir(directory='path_test')
-    baz_dir = mkdir_libbaz(directory=path_test)
+    baz_dir = mkdir_libbaz(directory=path_test, qux_dir=qux_dir)
 
     app_dir.run(['python', 'waf', 'configure', '-v', '--baz_path={}'.format(
                 baz_dir.path())])
@@ -405,9 +422,10 @@ def test_create_standalone_archive(testdirectory):
 
     git_dir = testdirectory.mkdir(directory='git_dir')
 
+    qux_dir = mkdir_libqux(directory=git_dir)
     foo_dir = mkdir_libfoo(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)
-    baz_dir = mkdir_libbaz(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir, qux_dir=qux_dir)
 
     # Instead of doing an actual Git clone - we fake it and use the paths in
     # this mapping
@@ -439,9 +457,10 @@ def test_override_json(testdirectory):
     # libraries there and then fake the git clone step.
     git_dir = testdirectory.mkdir(directory='git_dir')
 
+    qux_dir = mkdir_libqux(directory=git_dir)
     foo_dir = mkdir_libfoo_json(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)
-    baz_dir = mkdir_libbaz(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir, qux_dir=qux_dir)
 
     # Instead of doing an actual Git clone - we fake it and use the paths in
     # this mapping
