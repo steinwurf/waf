@@ -98,6 +98,9 @@ class Dependency(object):
         if 'override' not in kwargs:
             kwargs['override'] = False
 
+        if 'pull_submodules' not in kwargs and kwargs['resolver'] == 'git':
+            kwargs['pull_submodules'] = True
+
         # Some user-defined attributes will not be included in the hash
         # computation, since these are not required to uniquely identify the
         # dependency. In practical scenarios, it can easily happen that
@@ -131,15 +134,15 @@ class Dependency(object):
         # e.g. python2.7 and then read under python3.3 the sha1 must stay the
         # same for a given input.
         #
-        # This is guarenteed by the SHA1 algorithm.
+        # This is guaranteed by the SHA1 algorithm.
         #
-        # This guarentee does not seem (we are just not sure) to be implemented
+        # This guarantee does not seem (we are just not sure) to be implemented
         # for the in-built hash() function. Which could change it's
         # implementation for e.g. hashing strings between interpreter versions.
         #
         # However, we cannot rely only on the SHA1 as it is stored as a string
         # which means it cannot be returned from the __hash__ function (it
-        # requires an integer). The simplest solution therefore seemd to be:
+        # requires an integer). The simplest solution therefore seemed to be:
         #
         # 1. Use the stable / consistent SHA1 hash for describing a dependency
         #    in external formats such as files

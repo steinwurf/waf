@@ -258,7 +258,7 @@ Currently we will automatically (if recurse is ``true``), recurse into and execu
 following Waf commands: (``resolve``, ``options``, ``configure``, ``build``)
 
 As we also recurse into ``resolve`` it also enables us to recursively to resolve
-the dependencies of our dependencies. 
+the dependencies of our dependencies.
 
 If you have a wscript where you would like to recurse dependencies for a custom
 waf command, say ``upload``, then add the following to your wscript's
@@ -388,8 +388,8 @@ Example::
 
 In the example above both ``app`` and ``libbar`` both depend on ``v2.0.0`` of
 ``libfoo``. Now lets say that the maintainer of ``app`` would like to experiment
-with the new version of ``libfoo``. However, doing this results in a dependency 
-mismatch since ``libbar`` still depends on the old version. 
+with the new version of ``libfoo``. However, doing this results in a dependency
+mismatch since ``libbar`` still depends on the old version.
 
 To force a specific dependency we can use the ``override`` attribute (we use the
 ``git`` resolver here, you can read more about that below)::
@@ -405,8 +405,8 @@ To force a specific dependency we can use the ``override`` attribute (we use the
     }
 
 Setting ``override`` to ``true`` means that all projects will be forced to use
-the specified options for a dependency. If ``override`` is not specified 
-it will default to ``false``. 
+the specified options for a dependency. If ``override`` is not specified
+it will default to ``false``.
 
 Aside: The ``override`` attribute is similar to what can be locally acheived by
 passing *user options* e.g. ``--libfoo-checkout=v3.0.0`` or
@@ -469,6 +469,22 @@ Attributes::
         "sources": ["github.com/myorg/someotherlib.git"]
     }
 
+Attribute ``pull_submodules`` (``git`` resolver)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+Using this attribute you can control whether submodules in a git dependency
+should be cloned/pulled. Default is ``true`` which will clone/pull submodules if
+found. To avoid cloning/pulling a submodule set ``pull_submodules: false``::
+
+    {
+        "name": "somelib"
+        "resolver": "git",
+        "method": "checkout",
+        "checkout": "my-branch"
+        "sources": ["github.com/myorg/somelib.git"],
+        "pull_submodules": false
+        ...
+    }
 
 Specifying a ``http`` dependency
 ...............................
