@@ -69,7 +69,8 @@ class GitSemverResolver(object):
             self.git.checkout(branch=tag, cwd=tag_path)
 
         # If the project contains submodules, we also get those
-        self.git.pull_submodules(cwd=tag_path)
+        if self.dependency.pull_submodules:
+            self.git.pull_submodules(cwd=tag_path)
 
         # Record the commmit id of the current working copy
         self.dependency.git_commit = self.git.current_commit(cwd=tag_path)

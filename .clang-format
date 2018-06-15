@@ -1,0 +1,15 @@
+---
+AlignAfterOpenBracket: Align
+AlignEscapedNewlinesLeft: 'true'
+AlignOperands: 'true'
+AlwaysBreakTemplateDeclarations: 'true'
+AccessModifierOffset: -4
+BreakBeforeBraces: Allman
+Standard: Cpp11
+IndentWidth: 4
+IndentCaseLabels: 'true'
+PointerAlignment: Left
+TabWidth: 4
+UseTab: Never
+AllowShortFunctionsOnASingleLine: None
+...

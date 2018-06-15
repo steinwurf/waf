@@ -16,8 +16,8 @@ class GitCheckoutResolver(object):
     def __init__(self, git, resolver, ctx, dependency, checkout, cwd):
         """ Construct an instance.
 
-        :param git: A WurfGit instance
-        :param url_resolver: A WurfGitResolver instance.
+        :param git: A Git instance
+        :param resolver: A GitResolver instance.
         :param ctx: A Waf Context instance.
         :param dependency: Dependency instance.
         :param checkout: The branch, tag, or sha1 as a string.
@@ -86,7 +86,8 @@ class GitCheckoutResolver(object):
                 self.git.pull(cwd=checkout_path)
 
         # If the project contains submodules, we also get those
-        self.git.pull_submodules(cwd=checkout_path)
+        if self.dependency.pull_submodules:
+            self.git.pull_submodules(cwd=checkout_path)
 
         # Record the commmit id of the current working copy
         self.dependency.git_commit = \

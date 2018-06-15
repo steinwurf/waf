@@ -726,8 +726,7 @@ def resolve_git(registry, ctx, options, dependency):
 @Registry.cache
 @Registry.provide
 def resolve_from_lock_git(registry, lock_cache, dependency):
-    """ Builds resolver that uses a specific checkout provided by the lock
-        file.
+    """ Builds resolver that uses a checkout provided by the lock file.
 
     :param registry: A Registry instance.
     :param dependency: A Dependency instance.

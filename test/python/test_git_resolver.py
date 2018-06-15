@@ -53,3 +53,17 @@ def test_git_resolver(testdirectory):
     assert git.clone.called is False
     git.pull.assert_called_once_with(cwd=path)
     git.pull_submodules.assert_called_once_with(cwd=path)
+
+    # Reset the git mock
+    git.reset_mock()
+
+    # Make sure we don't pull submodules if this attribute is specified
+    dependency.pull_submodules = False
+
+    path2 = resolver.resolve()
+
+    assert path2 == path
+
+    assert git.clone.called is False
+    git.pull.assert_called_once_with(cwd=path)
+    assert not git.pull_submodules.called
