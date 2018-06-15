@@ -123,7 +123,7 @@ class VirtualEnv(object):
         remove_directory(path=self.path)
 
     @staticmethod
-    def create(ctx, cwd=None, env=None, name=None):
+    def create(ctx, cwd=None, env=None, name=None, overwrite=True):
         """ Create a new virtual env.
 
         :param ctx: The Waf Context used to run commands.
@@ -136,6 +136,9 @@ class VirtualEnv(object):
             PYTHONPATH variable.
         :param name: The name of the virtualenv, as a string. If None a default
             name will be used.
+        :param overwrite: If an existing virtualenv with the same name already
+            exists we will overwrite it. To reuse the virtualenv pass
+            overwrite=False.
         """
 
         # The Python executable
@@ -158,13 +161,15 @@ class VirtualEnv(object):
 
         # If a virtualenv already exists - lets remove it
         path = os.path.join(cwd, name)
-        if os.path.isdir(path):
+
+        if os.path.isdir(path) and overwrite:
             remove_directory(path=path)
 
-        # Create the new virtualenv - requires the virtualenv module to
-        # be available
-        cmd = [python, '-m', 'virtualenv', name, '--no-site-packages']
+        if not os.path.isdir(path):
+            # Create the new virtualenv - requires the virtualenv module to
+            # be available
+            cmd = [python, '-m', 'virtualenv', name, '--no-site-packages']
 
-        ctx.cmd_and_log(cmd, cwd=cwd, env=env)
+            ctx.cmd_and_log(cmd, cwd=cwd, env=env)
 
         return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)

@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Allow persistant virtualenv
 * Minor: Added capability to prevent git dependencies from pulling submodules.
 * Minor: Added Context dependency_node() function to return a waf node to a
   dependency. Making it easy to use Waf's ant_glob(...) function.
