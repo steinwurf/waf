@@ -165,10 +165,11 @@ class VirtualEnv(object):
         if os.path.isdir(path) and overwrite:
             remove_directory(path=path)
 
-        # Create the new virtualenv - requires the virtualenv module to
-        # be available
-        cmd = [python, '-m', 'virtualenv', name, '--no-site-packages']
+        if not os.path.isdir(path):
+            # Create the new virtualenv - requires the virtualenv module to
+            # be available
+            cmd = [python, '-m', 'virtualenv', name, '--no-site-packages']
 
-        ctx.cmd_and_log(cmd, cwd=cwd, env=env)
+            ctx.cmd_and_log(cmd, cwd=cwd, env=env)
 
         return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
