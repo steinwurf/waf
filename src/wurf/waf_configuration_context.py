@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 import os
-import sys
 
 from waflib import Context
 from waflib import Utils
