@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import sys
 
 from waflib import Context
 from waflib import Utils
@@ -26,11 +27,19 @@ class WafConfigurationContext(ConfigurationContext):
         # Now create the symlink to where the build directory is. This gives
         # us a stable point in the filesystem from where we can always find
         # the bldnode directory.
-
         link_path = os.path.join(self.path.abspath(), 'build_current')
 
-        create_symlink(from_path=self.bldnode.abspath(),
-                       to_path=link_path, overwrite=True)
+        try:
+            # This command may fail when the user does not have sufficient
+            # permissions to create symlinks (e.g. non-admin user on Windows)
+            create_symlink(from_path=self.bldnode.abspath(),
+                           to_path=link_path, overwrite=True)
+        except Exception:
+            # self.logger is not available in init_dirs(), so we just print
+            # the error message to stderr
+            msg = "Could not create the 'build_current' symlink\n"
+            sys.stderr.write(msg)
+            sys.stderr.flush()
 
     def execute(self):
         # If the main wscript has no "configure" function, bind it to an

@@ -56,7 +56,11 @@ def _py2_win32_create_symlink(from_path, to_path):
     cmd += ['"{}"'.format(to_path.replace('/', '\\')),
             '"{}"'.format(from_path.replace('/', '\\'))]
 
-    subprocess.call(' '.join(cmd), shell=True)
+    # Hide the output of the mklink shell command unless an error happens.
+    # If the return code is non-zero, check_output raises a
+    # CalledProcessError that contains the return code and the output.
+    subprocess.check_output(
+        ' '.join(cmd), stderr=subprocess.STDOUT, shell=True)
 
 
 def _py2_unix_create_symlink(from_path, to_path):

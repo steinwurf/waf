@@ -81,8 +81,7 @@ def _create_virtualenv(ctx, cwd):
 
     from waflib.extras.wurf.virtualenv import VirtualEnv
     return VirtualEnv.create(cwd=cwd, env=env, name=None, ctx=ctx,
-                             pip_packages_path=os.path.join(ctx.path.abspath(),
-                                                            'pip_packages'))
+        pip_packages_path=os.path.join(ctx.path.abspath(), 'pip_packages'))
 
 
 def configure(conf):
