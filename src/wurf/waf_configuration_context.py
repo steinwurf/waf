@@ -6,6 +6,7 @@ import sys
 
 from waflib import Context
 from waflib import Utils
+from waflib import Logs
 
 from waflib.Configure import ConfigurationContext
 
@@ -35,11 +36,10 @@ class WafConfigurationContext(ConfigurationContext):
             create_symlink(from_path=self.bldnode.abspath(),
                            to_path=link_path, overwrite=True)
         except Exception:
-            # self.logger is not available in init_dirs(), so we just print
-            # the error message to stderr
-            msg = "Could not create the 'build_current' symlink\n"
-            sys.stderr.write(msg)
-            sys.stderr.flush()
+            # config.log is created after init_dirs(), so waf will print
+            # the warning message to stderr
+            Logs.warn("Could not create the 'build_current' symlink in "
+                      "{}".format(self.path.abspath()))
 
     def execute(self):
         # If the main wscript has no "configure" function, bind it to an

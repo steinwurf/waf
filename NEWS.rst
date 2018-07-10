@@ -6,27 +6,29 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Hide the output of the mklink command on Windows when calling the
+  create_symlink function (the output is logged when an error occurs)
 * Minor: Allow persistant virtualenv
 * Minor: Added capability to prevent git dependencies from pulling submodules.
 * Minor: Added Context dependency_node() function to return a waf node to a
   dependency. Making it easy to use Waf's ant_glob(...) function.
 * Major: Updated the create_virtualenv(...) function for virtual environments.
-* Minor: Added the `clang_compilation_database` tool.
+* Minor: Added the clang_compilation_database tool.
 * Minor: Add symlink in source folder to the current build folder. The symlink
   called 'build_current' will point to Waf's build folder.
 * Patch: Move recurse_dependencies() to Waf's execute_build() function. Since
   this is known to only be called once. This eliminates using the is_toplevel to
   avoid infinite recursion.
 * Patch: Refactor symlink code into a standalone utility. This makes it
-  reusable by other tools which needs to make symlinks.
+  reusable by other tools which need to make symlinks.
 * Patch: Update to newest pytest-testdirectory plugin
 * Minor: Adding override attribute.
 * Minor: Added post_resolve.
-* Minor: Use a version of python-archive which perseveres file permissions.
+* Minor: Use a version of python-archive which preserves file permissions.
 * Minor: Added exceptions for accidental empty options.
 * Major: Full rewrite of our Waf dependency resolve code.
 * Minor: Support for new resolver options.
-* Minor: Adding support for `resolve.json` files.
+* Minor: Adding support for resolve.json files.
 * Minor: Updated waf to 1.9.8.
 
 Un-released changes
