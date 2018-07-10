@@ -7,7 +7,6 @@ waf3-*
 build
 resolve_symlinks
 resolved_dependencies
-pytest_environment_*
 
 # Emacs temp / auto save
 \#*#
@@ -19,6 +18,8 @@ pytest_environment_*
 .cache
 .tox
 pytest
+.pytest_cache
+pytest_environment_*
 pip_packages
 
 # Visual Studio ignore

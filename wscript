@@ -80,9 +80,7 @@ def _create_virtualenv(ctx, cwd):
     env.update({'PYTHONPATH': os.path.pathsep.join([venv_path])})
 
     from waflib.extras.wurf.virtualenv import VirtualEnv
-    return VirtualEnv.create(cwd=cwd, env=env, name=None, ctx=ctx,
-                             pip_packages_path=os.path.join(ctx.path.abspath(),
-                                                            'pip_packages'))
+    return VirtualEnv.create(cwd=cwd, env=env, name=None, ctx=ctx)
 
 
 def configure(conf):
@@ -153,9 +151,9 @@ def _pytest(bld):
 
     with venv:
 
-        venv.pip_install('pytest', 'mock', 'vcrpy',
-                         'pytest-testdirectory==3.1.0',
-                         'pycodestyle', 'pyflakes')
+        venv.pip_install(['pytest', 'mock', 'vcrpy',
+                          'pytest-testdirectory==3.1.0',
+                          'pycodestyle', 'pyflakes'])
 
         # Add our sources to the Python path
         python_path = [

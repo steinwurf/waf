@@ -58,12 +58,19 @@ class CreateSymlinkResolver(object):
             # already exists since it may point to an incorrect folder
             create_symlink(from_path=path, to_path=link_path, overwrite=True)
 
-        except Exception:
+        except Exception as ex:
+
+            msg = "Symlink creation failed for: {}\n".format(
+                self.dependency.name)
+
+            # We also want to log the captured output if the command failed
+            # with a CalledProcessError, the output would be lost otherwise
+            if hasattr(ex, 'output'):
+                msg += str(ex.output)
 
             # Using exc_info will attach the current exception information
             # to the log message (including the traceback)
-            self.ctx.logger.debug("Symlink creation failed for: {}".format(
-                self.dependency.name), exc_info=True)
+            self.ctx.logger.debug(msg, exc_info=True)
 
             # Return the original path if something went wrong
             return path
