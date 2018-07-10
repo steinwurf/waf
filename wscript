@@ -80,7 +80,8 @@ def _create_virtualenv(ctx, cwd):
     env.update({'PYTHONPATH': os.path.pathsep.join([venv_path])})
 
     from waflib.extras.wurf.virtualenv import VirtualEnv
-    return VirtualEnv.create(cwd=cwd, env=env, name=None, ctx=ctx,
+    return VirtualEnv.create(
+        cwd=cwd, env=env, name=None, ctx=ctx,
         pip_packages_path=os.path.join(ctx.path.abspath(), 'pip_packages'))
 
 
