@@ -19,7 +19,7 @@ def resolve(ctx):
         method='checkout',
         # The next release after waf 1.9.8 should contain the fix for the
         # Windows build issue: https://github.com/waf-project/waf/pull/1915
-        checkout='e596b529d8',
+        checkout='waf-1.9.12',
         sources=['github.com/waf-project/waf.git'])
 
     ctx.add_dependency(
