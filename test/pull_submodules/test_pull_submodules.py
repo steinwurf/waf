@@ -97,7 +97,7 @@ def test_pull_submodule(testdirectory):
     # Instead of doing an actual Git clone - we fake it and use the paths in
     # this mapping
     clone_path = {
-        'git@gitlab.com:acme/baz.git': baz_dir.path()}
+        'gitlab.com/acme/baz.git': baz_dir.path()}
 
     json_path = os.path.join(app_dir.path(), 'clone_path.json')
 
@@ -134,7 +134,7 @@ def test_no_pull_submodule(testdirectory):
     # Instead of doing an actual Git clone - we fake it and use the paths in
     # this mapping
     clone_path = {
-        'git@gitlab.com:acme/baz.git': baz_dir.path()}
+        'gitlab.com/acme/baz.git': baz_dir.path()}
 
     json_path = os.path.join(app_dir.path(), 'clone_path.json')
 
