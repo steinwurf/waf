@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Updated waf to 2.0.10.
 * Patch: Hide the output of the mklink command on Windows when calling the
   create_symlink function (the output is logged when an error occurs)
 * Minor: Allow persistant virtualenv

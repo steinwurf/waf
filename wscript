@@ -19,8 +19,8 @@ def resolve(ctx):
         method='checkout',
         # The next release after waf 1.9.8 should contain the fix for the
         # Windows build issue: https://github.com/waf-project/waf/pull/1915
-        checkout='e596b529d8',
-        sources=['github.com/waf-project/waf.git'])
+        checkout='waf-2.0.10',
+        sources=['gitlab.com/ita1024/waf.git'])
 
     ctx.add_dependency(
         name='python-semver',
