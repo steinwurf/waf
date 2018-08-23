@@ -17,8 +17,6 @@ def resolve(ctx):
         optional=False,
         resolver='git',
         method='checkout',
-        # The next release after waf 1.9.8 should contain the fix for the
-        # Windows build issue: https://github.com/waf-project/waf/pull/1915
         checkout='waf-2.0.10',
         sources=['gitlab.com/ita1024/waf.git'])
 
