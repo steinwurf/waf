@@ -25,7 +25,7 @@ def build(properties):
 
 
 def run_tests(properties):
-    command = [sys.executable, 'waf', '-v', '--run_tests', '--zones=resolve']
+    command = [sys.executable, 'waf', '-vv', '--run_tests', '--zones=resolve']
     run_command(command)
 
 
