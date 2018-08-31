@@ -150,11 +150,11 @@ class VirtualEnv(object):
             # Use the current environment
             env = dict(os.environ)
 
-        # We should delete the PYTHONPATH variable if it exists. Since otherwise
-        # already installed packages might get in our way e.g.:
+        # We should delete the PYTHONPATH variable if it exists. Since
+        # otherwise already installed packages might get in our way e.g.:
         # https://stackoverflow.com/a/15887589/1717320
 
-         if 'PYTHONPATH' in env:
+        if 'PYTHONPATH' in env:
             del env['PYTHONPATH']
 
         if not name:
