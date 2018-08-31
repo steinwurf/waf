@@ -137,7 +137,12 @@ def _pytest(bld):
             os.path.join(os.getcwd(), 'src')
         ]
 
-        venv.env.update({'PYTHONPATH': os.path.pathsep.join(python_path)})
+        if 'PYTHONPATH' in venv.env:
+            venv.env['PYTHONPATH'] = os.path.pathsep.join(
+                python_path + [venv.env['PYTHONPATH']])
+        else:
+            venv.env['PYTHONPATH'] = os.path.pathsep.join(
+                python_path)
 
         # We override the pytest temp folder with the basetemp option,
         # so the test folders will be available at the specified location
