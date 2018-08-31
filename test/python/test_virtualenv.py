@@ -34,7 +34,8 @@ def test_virtualenv_name(testdirectory):
     testdirectory.mkdir(name)
     assert testdirectory.contains_dir(name)
 
-    venv = VirtualEnv.create(cwd=cwd, env=env, name=name, ctx=ctx)
+    venv = VirtualEnv.create(
+        cwd=cwd, env=env, name=name, ctx=ctx, download=False)
 
     assert fnmatch.fnmatch(venv.path, os.path.join(cwd, name))
     assert not testdirectory.contains_dir(name)

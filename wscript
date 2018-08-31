@@ -38,17 +38,6 @@ def resolve(ctx):
         checkout='zipfile-perserve-permissions',
         sources=['github.com/steinwurf/python-archive.git'])
 
-    # Testing dependencies
-
-    ctx.add_dependency(
-        name='virtualenv',
-        recurse=False,
-        optional=False,
-        resolver='git',
-        method='checkout',
-        checkout='15.1.0',
-        sources=['github.com/pypa/virtualenv.git'])
-
 
 def options(opt):
 
@@ -68,17 +57,6 @@ def options(opt):
     opt.add_option(
         '--skip_network_tests', default=False, action='store_true',
         help='Skip the unit tests that use network resources')
-
-
-def _create_virtualenv(ctx, cwd):
-    # Make sure the virtualenv Python module is in path
-    venv_path = ctx.dependency_path('virtualenv')
-
-    env = dict(os.environ)
-    env.update({'PYTHONPATH': os.path.pathsep.join([venv_path])})
-
-    from waflib.extras.wurf.virtualenv import VirtualEnv
-    return VirtualEnv.create(cwd=cwd, env=env, name=None, ctx=ctx)
 
 
 def configure(conf):
@@ -145,7 +123,7 @@ def build(bld):
 
 def _pytest(bld):
 
-    venv = _create_virtualenv(ctx=bld, cwd=bld.path.abspath())
+    venv = bld.create_virtualenv()
 
     with venv:
 
@@ -160,8 +138,6 @@ def _pytest(bld):
         ]
 
         venv.env.update({'PYTHONPATH': os.path.pathsep.join(python_path)})
-        venv.env['PATH'] = os.path.pathsep.join(
-            [venv.env['PATH'], os.environ['PATH']])
 
         # We override the pytest temp folder with the basetemp option,
         # so the test folders will be available at the specified location
