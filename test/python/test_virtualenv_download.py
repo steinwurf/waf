@@ -25,9 +25,6 @@ def test_virtualenv_download(testdirectory):
                   directory=path, cwd=testdirectory.path(), depth=1,
                   branch='15.1.0')])
 
-    # git.checkout.assert_has_calls([
-    #     mock.call(branch='15.1.0', cwd=path)])
-
 
 def test_virtualenv_download_exists(testdirectory):
 
