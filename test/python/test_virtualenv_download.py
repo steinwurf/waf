@@ -11,9 +11,10 @@ def test_virtualenv_download(testdirectory):
 
     git = mock.Mock()
     ctx = mock.Mock()
+    log = mock.Mock()
 
     downloader = VirtualEnvDownload(
-        git=git, ctx=ctx, download_path=testdirectory.path())
+        git=git, ctx=ctx, log=log, download_path=testdirectory.path())
 
     path = downloader.download()
 
@@ -31,11 +32,12 @@ def test_virtualenv_download_exists(testdirectory):
 
     git = mock.Mock()
     ctx = mock.Mock()
+    log = mock.Mock()
 
     clone_dir = testdirectory.mkdir('15.1.0')
 
     downloader = VirtualEnvDownload(
-        git=git, ctx=ctx, download_path=testdirectory.path())
+        git=git, ctx=ctx, log=log, download_path=testdirectory.path())
 
     path = downloader.download()
 

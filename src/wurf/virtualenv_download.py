@@ -11,9 +11,10 @@ VERSION = '15.1.0'
 
 class VirtualEnvDownload(object):
 
-    def __init__(self, ctx, git=None, download_path=None):
+    def __init__(self, ctx, log, git=None, download_path=None):
 
         self.ctx = ctx
+        self.log = log
 
         if git is None:
             self.git = Git(git_binary='git', ctx=self.ctx)
@@ -34,14 +35,14 @@ class VirtualEnvDownload(object):
 
         if not os.path.isdir(repo_path):
 
-            self.ctx.logger.debug('Cloning {} into {}'.format(URL, repo_path))
+            self.log.debug('Cloning {} into {}'.format(URL, repo_path))
 
             self.git.clone(repository=URL, directory=repo_path,
                            cwd=self.download_path)
 
             self.git.checkout(branch=VERSION, cwd=repo_path)
 
-        self.ctx.logger.debug('Using virtualenv from {}'.format(repo_path))
+        self.log.debug('Using virtualenv from {}'.format(repo_path))
 
         return repo_path
 

@@ -120,11 +120,12 @@ class VirtualEnv(object):
         remove_directory(path=self.path)
 
     @staticmethod
-    def create(ctx, cwd=None, env=None, name=None, overwrite=True,
+    def create(ctx, log, cwd=None, env=None, name=None, overwrite=True,
                download=True):
         """ Create a new virtual env.
 
         :param ctx: The Waf Context used to run commands.
+        :param log: The logging object to use
         :param cwd: The working directory, as a string, where the virtualenv
             will be created and where the commands will run.
         :param env: The environment to use during creation of the virtualenv,
@@ -178,7 +179,7 @@ class VirtualEnv(object):
         # Create the new virtualenv - requires the virtualenv module to
         # be available
         if download:
-            downloader = VirtualEnvDownload(ctx=ctx)
+            downloader = VirtualEnvDownload(ctx=ctx, log=log)
             venv_path = downloader.download()
 
             # Add to the PYTHONPATH

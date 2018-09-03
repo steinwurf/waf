@@ -11,3 +11,7 @@ def test_create_virtualenv(testdirectory):
     testdirectory.run('python waf configure')
 
     assert testdirectory.contains_dir('virtualenv-*')
+
+    testdirectory.run('python waf build')
+
+    assert testdirectory.contains_dir('virtualenv-*')

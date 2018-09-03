@@ -15,8 +15,9 @@ def test_virtualenv_noname(testdirectory):
     env = dict(os.environ)
     name = None
     ctx = mock.Mock()
+    log = mock.Mock()
 
-    venv = VirtualEnv.create(cwd=cwd, env=env, name=name, ctx=ctx)
+    venv = VirtualEnv.create(cwd=cwd, env=env, name=name, log=log, ctx=ctx)
 
     assert fnmatch.fnmatch(venv.path, os.path.join(cwd, 'virtualenv-*'))
 
@@ -27,6 +28,7 @@ def test_virtualenv_name(testdirectory):
     env = dict(os.environ)
     name = 'gogo'
     ctx = mock.Mock()
+    log = mock.Mock()
 
     pip_packages_dir = testdirectory.mkdir('pip_packages')
 
@@ -35,7 +37,7 @@ def test_virtualenv_name(testdirectory):
     assert testdirectory.contains_dir(name)
 
     venv = VirtualEnv.create(
-        cwd=cwd, env=env, name=name, ctx=ctx, download=False)
+        log=log, cwd=cwd, env=env, name=name, ctx=ctx, download=False)
 
     assert fnmatch.fnmatch(venv.path, os.path.join(cwd, name))
     assert not testdirectory.contains_dir(name)
