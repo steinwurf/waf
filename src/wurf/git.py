@@ -41,7 +41,7 @@ class Git(object):
 
         return output
 
-    def clone(self, repository, directory, cwd, depth=None):
+    def clone(self, repository, directory, cwd, branch=None, depth=None):
         """
         Runs 'git clone <repository> <directory>' in the directory cwd.
         """
@@ -49,6 +49,9 @@ class Git(object):
 
         if depth:
             args += ['--depth', str(depth)]
+
+        if branch:
+            args += ['--branch', branch]
 
         self.ctx.cmd_and_log(args, cwd=cwd)
 
