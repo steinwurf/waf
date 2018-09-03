@@ -48,8 +48,6 @@ class VirtualEnvDownload(object):
             self.git.clone(repository=URL, directory=repo_path,
                            cwd=self.download_path, depth=1, branch=VERSION)
 
-            #self.git.checkout(branch=VERSION, cwd=repo_path)
-
         self.log.debug('Using virtualenv from {}'.format(repo_path))
 
         return repo_path
