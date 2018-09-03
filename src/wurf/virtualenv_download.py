@@ -12,6 +12,13 @@ VERSION = '15.1.0'
 class VirtualEnvDownload(object):
 
     def __init__(self, ctx, log, git=None, download_path=None):
+        """ Create a new VirtualEnvDownload instance
+
+        :param ctx: A Waf context
+        :param log: A logging object
+        :param git: The Git object to use
+        :param download_path: The path where the virtualenv should be placed
+        """
 
         self.ctx = ctx
         self.log = log
@@ -27,6 +34,7 @@ class VirtualEnvDownload(object):
             self.download_path = download_path
 
     def download(self):
+        """ Initiate the download """
 
         if not os.path.isdir(self.download_path):
             os.makedirs(self.download_path)
@@ -38,7 +46,7 @@ class VirtualEnvDownload(object):
             self.log.debug('Cloning {} into {}'.format(URL, repo_path))
 
             self.git.clone(repository=URL, directory=repo_path,
-                           cwd=self.download_path)
+                           cwd=self.download_path, depth=1)
 
             self.git.checkout(branch=VERSION, cwd=repo_path)
 
