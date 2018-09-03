@@ -6,12 +6,14 @@ VERSION = '1.0.0'
 
 
 def options(opt):
-    pass
+
+    # Allows us to control the download path of the virtualenv
+    opt.add_option('--download_path')
 
 
 def configure(conf):
-    conf.create_virtualenv()
+    conf.create_virtualenv(download_path=conf.options.download_path)
 
 
 def build(bld):
-    bld.create_virtualenv()
+    bld.create_virtualenv(download_path=bld.options.download_path)

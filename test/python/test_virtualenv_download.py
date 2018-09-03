@@ -22,10 +22,8 @@ def test_virtualenv_download(testdirectory):
 
     git.clone.assert_has_calls([
         mock.call(repository='https://github.com/pypa/virtualenv.git',
-                  directory=path, cwd=testdirectory.path(), depth=1)])
-
-    git.checkout.assert_has_calls([
-        mock.call(branch='15.1.0', cwd=path)])
+                  directory=path, cwd=testdirectory.path(), depth=1,
+                  branch='15.1.0')])
 
 
 def test_virtualenv_download_exists(testdirectory):

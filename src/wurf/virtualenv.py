@@ -121,7 +121,7 @@ class VirtualEnv(object):
 
     @staticmethod
     def create(ctx, log, cwd=None, env=None, name=None, overwrite=True,
-               download=True):
+               download=True, download_path=None):
         """ Create a new virtual env.
 
         :param ctx: The Waf Context used to run commands.
@@ -179,7 +179,8 @@ class VirtualEnv(object):
         # Create the new virtualenv - requires the virtualenv module to
         # be available
         if download:
-            downloader = VirtualEnvDownload(ctx=ctx, log=log)
+            downloader = VirtualEnvDownload(
+                ctx=ctx, log=log, download_path=download_path)
             venv_path = downloader.download()
 
             # Add to the PYTHONPATH
