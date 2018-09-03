@@ -4,8 +4,10 @@
 import os
 import sys
 import hashlib
+import copy
 
 from .directory import remove_directory
+from .virtualenv_download import VirtualEnvDownload
 
 
 class VirtualEnv(object):
@@ -44,18 +46,13 @@ class VirtualEnv(object):
         self.cwd = cwd
         self.ctx = ctx
 
-        if 'PATH' in self.env:
-            del self.env['PATH']
-
-        if 'PYTHONPATH' in self.env:
-            del self.env['PYTHONPATH']
-
-        self.env['PATH'] = os.path.join(path, 'Scripts')
-
+        # Make sure the virtualenv Python executable is first in PATH
         if sys.platform == 'win32':
-            self.env['PATH'] = os.path.join(path, 'Scripts')
+            python_path = os.path.join(path, 'Scripts')
         else:
-            self.env['PATH'] = os.path.join(path, 'bin')
+            python_path = os.path.join(path, 'bin')
+
+        self.env['PATH'] = os.path.pathsep.join([python_path, env['PATH']])
 
     def run(self, cmd, cwd=None):
         """ Runs a command in the virtualenv.
@@ -123,10 +120,12 @@ class VirtualEnv(object):
         remove_directory(path=self.path)
 
     @staticmethod
-    def create(ctx, cwd=None, env=None, name=None, overwrite=True):
+    def create(ctx, log, cwd=None, env=None, name=None, overwrite=True,
+               download=True):
         """ Create a new virtual env.
 
         :param ctx: The Waf Context used to run commands.
+        :param log: The logging object to use
         :param cwd: The working directory, as a string, where the virtualenv
             will be created and where the commands will run.
         :param env: The environment to use during creation of the virtualenv,
@@ -152,6 +151,13 @@ class VirtualEnv(object):
             # Use the current environment
             env = dict(os.environ)
 
+        # We should delete the PYTHONPATH variable if it exists. Since
+        # otherwise already installed packages might get in our way e.g.:
+        # https://stackoverflow.com/a/15887589/1717320
+
+        if 'PYTHONPATH' in env:
+            del env['PYTHONPATH']
+
         if not name:
 
             # Make a unique virtualenv for different Python executables
@@ -159,17 +165,31 @@ class VirtualEnv(object):
             unique = hashlib.sha1(python.encode('utf-8')).hexdigest()[:6]
             name = 'virtualenv-{}'.format(unique)
 
-        # If a virtualenv already exists - lets remove it
         path = os.path.join(cwd, name)
 
+        # If a virtualenv already exists - and overwrite is True
+        # lets remove it
         if os.path.isdir(path) and overwrite:
             remove_directory(path=path)
 
-        if not os.path.isdir(path):
-            # Create the new virtualenv - requires the virtualenv module to
-            # be available
-            cmd = [python, '-m', 'virtualenv', name, '--no-site-packages']
+        if os.path.isdir(path):
+            # The virtualenv already exists lets use that...
+            return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
 
-            ctx.cmd_and_log(cmd, cwd=cwd, env=env)
+        # Create the new virtualenv - requires the virtualenv module to
+        # be available
+        if download:
+            downloader = VirtualEnvDownload(ctx=ctx, log=log)
+            venv_path = downloader.download()
+
+            # Add to the PYTHONPATH
+            temp_env = copy.deepcopy(env)
+            temp_env.update({'PYTHONPATH': venv_path})
+        else:
+            temp_env = env
+
+        cmd = [python, '-m', 'virtualenv', name, '--no-site-packages']
+
+        ctx.cmd_and_log(cmd, cwd=cwd, env=temp_env)
 
         return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
