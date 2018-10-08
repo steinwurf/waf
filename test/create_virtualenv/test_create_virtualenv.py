@@ -20,3 +20,5 @@ def test_create_virtualenv(testdirectory):
         download_path.path()))
 
     assert testdirectory.contains_dir('virtualenv-*')
+
+    testdirectory.run('python waf clean')
