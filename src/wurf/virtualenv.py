@@ -47,12 +47,12 @@ class VirtualEnv(object):
         self.ctx = ctx
 
         # Make sure the virtualenv Python executable is first in PATH
-        if sys.platform == 'win32':
-            python_path = os.path.join(path, 'Scripts')
+        if sys.platform == "win32":
+            python_path = os.path.join(path, "Scripts")
         else:
-            python_path = os.path.join(path, 'bin')
+            python_path = os.path.join(path, "bin")
 
-        self.env['PATH'] = os.path.pathsep.join([python_path, env['PATH']])
+        self.env["PATH"] = os.path.pathsep.join([python_path, env["PATH"]])
 
     def run(self, cmd, cwd=None):
         """ Runs a command in the virtualenv.
@@ -65,7 +65,8 @@ class VirtualEnv(object):
             cwd = self.cwd
 
         ret = self.ctx.exec_command(
-            cmd, cwd=cwd, env=self.env, stdout=None, stderr=None)
+            cmd, cwd=cwd, env=self.env, stdout=None, stderr=None
+        )
 
         if ret != 0:
             self.ctx.fatal('Exec command "{}" failed!'.format(cmd))
@@ -80,8 +81,9 @@ class VirtualEnv(object):
         """
         packages = " ".join(packages)
 
-        self.run('python -m pip download {} --dest {}'.format(
-            packages, pip_packages_path))
+        self.run(
+            "python -m pip download {} --dest {}".format(packages, pip_packages_path)
+        )
 
     def pip_local_install(self, pip_packages_path, packages):
         """ Installs a set of packages from pip, using local packages from the
@@ -94,10 +96,13 @@ class VirtualEnv(object):
         """
         packages = " ".join(packages)
 
-        assert(os.path.isdir(pip_packages_path))
+        assert os.path.isdir(pip_packages_path)
 
-        self.run('python -m pip install --no-index --find-links={} {}'.format(
-            pip_packages_path, packages))
+        self.run(
+            "python -m pip install --no-index --find-links={} {}".format(
+                pip_packages_path, packages
+            )
+        )
 
     def pip_install(self, packages):
         """ Installs a set of packages from pip
@@ -107,7 +112,7 @@ class VirtualEnv(object):
         """
         packages = " ".join(packages)
 
-        self.run('python -m pip install {}'.format(packages))
+        self.run("python -m pip install {}".format(packages))
 
     def __enter__(self):
         """ When used in a with statement the virtualenv will be automatically
@@ -120,8 +125,16 @@ class VirtualEnv(object):
         remove_directory(path=self.path)
 
     @staticmethod
-    def create(ctx, log, cwd=None, env=None, name=None, overwrite=True,
-               download=True, download_path=None):
+    def create(
+        ctx,
+        log,
+        cwd=None,
+        env=None,
+        name=None,
+        overwrite=True,
+        download=True,
+        download_path=None,
+    ):
         """ Create a new virtual env.
 
         :param ctx: The Waf Context used to run commands.
@@ -147,6 +160,18 @@ class VirtualEnv(object):
             # Use the working directory of the waf context
             cwd = ctx.path.abspath()
 
+        # Check if the cwd is a subdirectory of the build folder. It's a bad
+        # idea to create the virtualenv in the build folder. Reason being that
+        # virtualenv will create symlinks to the Python interpreter and other
+        # stuff - if those are create in the build folder waf will try to
+        # delete them when running waf clean.
+        if cwd.startswith(ctx.bldnode.abspath()):
+            ctx.fatal(
+                "Cannot create virtualenv inside the build folder. "
+                "Virtualenv create symlinks to files that will be "
+                "deleted with 'waf clean'."
+            )
+
         if not env:
             # Use the current environment
             env = dict(os.environ)
@@ -155,15 +180,15 @@ class VirtualEnv(object):
         # otherwise already installed packages might get in our way e.g.:
         # https://stackoverflow.com/a/15887589/1717320
 
-        if 'PYTHONPATH' in env:
-            del env['PYTHONPATH']
+        if "PYTHONPATH" in env:
+            del env["PYTHONPATH"]
 
         if not name:
 
             # Make a unique virtualenv for different Python executables
             # (e.g. 2.x and 3.x)
-            unique = hashlib.sha1(python.encode('utf-8')).hexdigest()[:6]
-            name = 'virtualenv-{}'.format(unique)
+            unique = hashlib.sha1(python.encode("utf-8")).hexdigest()[:6]
+            name = "virtualenv-{}".format(unique)
 
         path = os.path.join(cwd, name)
 
@@ -180,16 +205,17 @@ class VirtualEnv(object):
         # be available
         if download:
             downloader = VirtualEnvDownload(
-                ctx=ctx, log=log, download_path=download_path)
+                ctx=ctx, log=log, download_path=download_path
+            )
             venv_path = downloader.download()
 
             # Add to the PYTHONPATH
             temp_env = copy.deepcopy(env)
-            temp_env.update({'PYTHONPATH': venv_path})
+            temp_env.update({"PYTHONPATH": venv_path})
         else:
             temp_env = env
 
-        cmd = [python, '-m', 'virtualenv', name, '--no-site-packages']
+        cmd = [python, "-m", "virtualenv", name, "--no-site-packages"]
 
         ctx.cmd_and_log(cmd, cwd=cwd, env=temp_env)
 

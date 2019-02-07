@@ -185,7 +185,7 @@ class Registry(object):
         """
 
         inject_arguments = {}
-        require_arguments = inspect.getargspec(provider_function)[0]
+        require_arguments = inspect.getfullargspec(provider_function)[0]
 
         for argument in require_arguments:
 
