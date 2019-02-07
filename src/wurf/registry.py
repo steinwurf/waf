@@ -8,6 +8,7 @@ import hashlib
 import inspect
 import collections
 
+from .compat import IS_PY2
 from .git_resolver import GitResolver
 from .path_resolver import PathResolver
 from .context_msg_resolver import ContextMsgResolver
@@ -185,7 +186,12 @@ class Registry(object):
         """
 
         inject_arguments = {}
-        require_arguments = inspect.getargspec(provider_function)[0]
+
+        if IS_PY2:
+            require_arguments = inspect.getargspec(provider_function)[0]
+
+        else:
+            require_arguments = inspect.getfullargspec(provider_function)[0]
 
         for argument in require_arguments:
 

@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Prevent creation of virtualenv in build folder
 * Patch: Make the virtualenv clone shallow.
 * Major: Remove the explict dependency on virtualenv. Instead we will
   automatically download the virtualenv dependency.
