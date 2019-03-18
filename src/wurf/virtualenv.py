@@ -21,14 +21,7 @@ class VirtualEnv(object):
 
         # Will remove the virtualenv when 'with' block is exited
         with venv:
-            venv.pip_local_download(
-                pip_packages_path='/tmp/pip_packages',
-                packages=['pytest', 'twine'])
-
-            venv.pip_local_install(
-                pip_packages_path='/tmp/pip_packages',
-                packages=['pytest'])
-
+            venv.run('python -m pip install pytest')
             venv.run('python -m pip --version')
 
     It is important to be aware of the cwd parameter, e.g. if you access files
@@ -71,49 +64,6 @@ class VirtualEnv(object):
         if ret != 0:
             self.ctx.fatal('Exec command "{}" failed!'.format(cmd))
 
-    def pip_local_download(self, pip_packages_path, packages):
-        """ Downloads a set of packages from pip.
-
-        :param pip_packages_path: Path to pip packages (is used when
-            downloading/installing pip packages)
-        :param packages: Package names as string, which should be
-            downloaded.
-        """
-        packages = " ".join(packages)
-
-        self.run(
-            "python -m pip download {} --dest {}".format(packages, pip_packages_path)
-        )
-
-    def pip_local_install(self, pip_packages_path, packages):
-        """ Installs a set of packages from pip, using local packages from the
-        path directory.
-
-        :param pip_packages_path: Path to pip packages (is used when
-            downloading/installing pip packages)
-        :param packages: Package names as string, which be installed in the
-            virtualenv
-        """
-        packages = " ".join(packages)
-
-        assert os.path.isdir(pip_packages_path)
-
-        self.run(
-            "python -m pip install --no-index --find-links={} {}".format(
-                pip_packages_path, packages
-            )
-        )
-
-    def pip_install(self, packages):
-        """ Installs a set of packages from pip
-
-        :param packages: Package names as string, which be installed in the
-            virtualenv
-        """
-        packages = " ".join(packages)
-
-        self.run("python -m pip install {}".format(packages))
-
     def __enter__(self):
         """ When used in a with statement the virtualenv will be automatically
         revmoved.
@@ -132,6 +82,7 @@ class VirtualEnv(object):
         env=None,
         name=None,
         overwrite=True,
+        no_site_packages=True,
         download=True,
         download_path=None,
     ):
@@ -151,6 +102,8 @@ class VirtualEnv(object):
         :param overwrite: If an existing virtualenv with the same name already
             exists we will overwrite it. To reuse the virtualenv pass
             overwrite=False.
+        :param no_site_packages: If true the --no-site-packages will be passed
+            to virtualenv.
         """
 
         # The Python executable
@@ -215,7 +168,10 @@ class VirtualEnv(object):
         else:
             temp_env = env
 
-        cmd = [python, "-m", "virtualenv", name, "--no-site-packages"]
+        cmd = [python, "-m", "virtualenv", name]
+
+        if no_site_packages:
+            cmd += ["--no-site-packages"]
 
         ctx.cmd_and_log(cmd, cwd=cwd, env=temp_env)
 
