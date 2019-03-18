@@ -6,6 +6,9 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Romoved pip_local_download, pip_local_install, pip_install from the
+  virtualenv implementation. Users might as well directly call run with the
+  appropiate command.
 * Major: Prevent creation of virtualenv in build folder
 * Patch: Make the virtualenv clone shallow.
 * Major: Remove the explict dependency on virtualenv. Instead we will
