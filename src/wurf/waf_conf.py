@@ -106,9 +106,9 @@ def recurse_dependencies(ctx):
 
 @conf
 def create_virtualenv(ctx, cwd=None, env=None, name=None, overwrite=True,
-                      no_site_packages=True, download=True, download_path=None):
+                      system_site_packages=False, download=True, download_path=None):
 
     return virtualenv.VirtualEnv.create(
         ctx=ctx, log=Logs, cwd=cwd, env=env, name=name,
-        overwrite=overwrite, no_site_packages=no_site_packages,
+        overwrite=overwrite, system_site_packages=system_site_packages,
         download=download, download_path=download_path)

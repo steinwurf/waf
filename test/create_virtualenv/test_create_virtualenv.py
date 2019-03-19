@@ -16,7 +16,7 @@ def test_create_virtualenv(testdirectory):
     )
 
     assert testdirectory.contains_dir("virtualenv-*")
-    assert download_path.contains_dir("15.1.0")
+    assert download_path.contains_dir("16.4.3")
 
     testdirectory.run(
         "python waf build --download_path {}".format(download_path.path())
@@ -44,7 +44,7 @@ def test_create_virtualenv_fail(testdirectory):
     )
 
     assert testdirectory.contains_dir("virtualenv-*")
-    assert download_path.contains_dir("15.1.0")
+    assert download_path.contains_dir("16.4.3")
 
     with pytest.raises(RunResultError) as excinfo:
         testdirectory.run(
