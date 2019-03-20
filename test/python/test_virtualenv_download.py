@@ -18,12 +18,12 @@ def test_virtualenv_download(testdirectory):
 
     path = downloader.download()
 
-    assert(path == os.path.join(testdirectory.path(), '15.1.0'))
+    assert(path == os.path.join(testdirectory.path(), '16.4.3'))
 
     git.clone.assert_has_calls([
         mock.call(repository='https://github.com/pypa/virtualenv.git',
                   directory=path, cwd=testdirectory.path(), depth=1,
-                  branch='15.1.0')])
+                  branch='16.4.3')])
 
 
 def test_virtualenv_download_exists(testdirectory):
@@ -32,7 +32,7 @@ def test_virtualenv_download_exists(testdirectory):
     ctx = mock.Mock()
     log = mock.Mock()
 
-    clone_dir = testdirectory.mkdir('15.1.0')
+    clone_dir = testdirectory.mkdir('16.4.3')
 
     downloader = VirtualEnvDownload(
         git=git, ctx=ctx, log=log, download_path=testdirectory.path())

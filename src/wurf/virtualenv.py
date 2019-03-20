@@ -58,8 +58,7 @@ class VirtualEnv(object):
             cwd = self.cwd
 
         ret = self.ctx.exec_command(
-            cmd, cwd=cwd, env=self.env, stdout=None, stderr=None
-        )
+            cmd, cwd=cwd, env=self.env, stdout=None, stderr=None)
 
         if ret != 0:
             self.ctx.fatal('Exec command "{}" failed!'.format(cmd))
@@ -82,7 +81,7 @@ class VirtualEnv(object):
         env=None,
         name=None,
         overwrite=True,
-        no_site_packages=True,
+        system_site_packages=False,
         download=True,
         download_path=None,
     ):
@@ -102,8 +101,8 @@ class VirtualEnv(object):
         :param overwrite: If an existing virtualenv with the same name already
             exists we will overwrite it. To reuse the virtualenv pass
             overwrite=False.
-        :param no_site_packages: If true the --no-site-packages will be passed
-            to virtualenv.
+        :param system_site_packages: If true give the virtual environment access
+               to the global site-packages.
         """
 
         # The Python executable
@@ -170,8 +169,8 @@ class VirtualEnv(object):
 
         cmd = [python, "-m", "virtualenv", name]
 
-        if no_site_packages:
-            cmd += ["--no-site-packages"]
+        if system_site_packages:
+            cmd += ["--system-site-packages"]
 
         ctx.cmd_and_log(cmd, cwd=cwd, env=temp_env)
 

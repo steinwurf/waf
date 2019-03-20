@@ -17,5 +17,5 @@ def configure(conf):
 
 def build(bld):
     venv = bld.create_virtualenv(download_path=bld.options.download_path,
-                                 no_site_packages=True)
+                                 system_site_packages=True)
     venv.run('python -m pip install pytest')

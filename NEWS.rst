@@ -6,7 +6,10 @@ of every change, see the Git log.
 
 Latest
 ------
-* Major: Romoved pip_local_download, pip_local_install, pip_install from the
+* Major: Upgraded to virtualenv 16.4.3. The option --no-site-packages was
+  deprecated and replaced with --system-site-packages. Which is now reflected
+  in the API to create virtualenvs.
+* Major: Removed pip_local_download, pip_local_install, pip_install from the
   virtualenv implementation. Users might as well directly call run with the
   appropiate command.
 * Major: Prevent creation of virtualenv in build folder
