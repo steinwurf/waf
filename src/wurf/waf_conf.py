@@ -27,7 +27,8 @@ def dependency_node(ctx, name):
     """
     Returns the dependency path as a Waf Node
     """
-    return ctx.root.find_node(ctx.dependency_path(name))
+    # find_node(..) requires a str
+    return ctx.root.find_node(str(ctx.dependency_path(name)))
 
 
 @conf

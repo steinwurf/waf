@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Fix dependency_node(..) function to work with unicode strings.
 * Major: Upgraded to virtualenv 16.4.3. The option --no-site-packages was
   deprecated and replaced with --system-site-packages. Which is now reflected
   in the API to create virtualenvs.
