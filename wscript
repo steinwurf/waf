@@ -17,7 +17,7 @@ def resolve(ctx):
         optional=False,
         resolver="git",
         method="checkout",
-        checkout="waf-2.0.10",
+        checkout="396117b4ddf37dad7a22227cbc69406dc47d9404",
         sources=["gitlab.com/ita1024/waf.git"],
     )
 
@@ -74,7 +74,8 @@ def configure(conf):
 
     # Ensure that the waf-light program is available in the in the
     # waf folder. This is used to build the waf binary.
-    conf.find_program("waf-light", exts="", path_list=[conf.dependency_path("waf")])
+    conf.find_program("waf-light", exts="",
+                      path_list=[conf.dependency_path("waf")])
 
 
 def _build_waf_binary(bld):
@@ -166,7 +167,8 @@ def _pytest(bld):
         # We override the pytest temp folder with the basetemp option,
         # so the test folders will be available at the specified location
         # on all platforms. The default location is the "pytest" local folder.
-        basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
+        basetemp = os.path.abspath(
+            os.path.expanduser(bld.options.pytest_basetemp))
 
         # We need to manually remove the previously created basetemp folder,
         # because pytest uses os.listdir in the removal process, and that fails
