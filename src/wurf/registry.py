@@ -19,6 +19,7 @@ from .on_passive_load_path_resolver import OnPassiveLoadPathResolver
 from .try_resolver import TryResolver
 from .list_resolver import ListResolver
 from .git_checkout_resolver import GitCheckoutResolver
+from .existing_checkout_resolver import ExistingCheckoutResolver
 from .git_semver_resolver import GitSemverResolver
 from .git_url_parser import GitUrlParser
 from .git_url_rewriter import GitUrlRewriter
@@ -637,6 +638,18 @@ def resolve_git_checkout(git_checkout_resolver, dependency):
     dependency.resolver_action = 'git checkout'
 
     return git_checkout_resolver
+
+
+@Registry.provide
+def existing_checkout_resolver(ctx, dependency, semver_selector, tag_database,
+                               git_semver_resolver, dependency_path):
+    """ Builds a GitResolver instance.
+
+    :param registry: A Registry instance.
+    """
+    return ExistingCheckoutResolver(
+        ctx=ctx, dependency=dependency, resolver=git_semver_resolver,
+        cwd=dependency_path)
 
 
 @Registry.provide
