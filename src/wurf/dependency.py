@@ -57,7 +57,7 @@ class Dependency(object):
         user provided information, passed in e.g. add_dependency(...), has been
         changed. If this happens the SHA1 will flag a mismatch, and the user
         should do a reconfigure to continue. The fact that we rewrite(...) the
-        depenency information e.g. to use a user-defined git checkout does not
+        dependency information e.g. to use a user-defined git checkout does not
         change this. In fact after having resolved the dependency we do not
         really care how we got there.
 

@@ -71,6 +71,9 @@ class GitResolver(object):
         if self.dependency.pull_submodules:
             self.git.pull_submodules(cwd=master_path)
 
+        self.dependency.git_commit = \
+            self.git.current_commit(cwd=master_path)
+
         return master_path
 
     def __repr__(self):

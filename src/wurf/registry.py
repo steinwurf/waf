@@ -19,6 +19,7 @@ from .on_passive_load_path_resolver import OnPassiveLoadPathResolver
 from .try_resolver import TryResolver
 from .list_resolver import ListResolver
 from .git_checkout_resolver import GitCheckoutResolver
+from .existing_checkout_resolver import ExistingCheckoutResolver
 from .git_semver_resolver import GitSemverResolver
 from .git_url_parser import GitUrlParser
 from .git_url_rewriter import GitUrlRewriter
@@ -600,6 +601,24 @@ def git_checkout_resolver(registry, git, git_resolver, ctx, dependency,
 
 
 @Registry.provide
+def existing_checkout_resolver(registry, ctx, dependency, git_checkout_resolver,
+                               dependency_path):
+    """ Builds a GitResolver instance.
+
+    :param registry: A Registry instance.
+    """
+
+    if 'checkout' in registry:
+        checkout = registry.require('checkout')
+    else:
+        checkout = dependency.checkout
+
+    return ExistingCheckoutResolver(
+        ctx=ctx, dependency=dependency, resolver=git_checkout_resolver,
+        checkout=checkout, cwd=dependency_path)
+
+
+@Registry.provide
 def git_semver_resolver(git, git_resolver, ctx, semver_selector,
                         dependency, dependency_path):
     """ Builds a GitResolver instance.
@@ -626,7 +645,7 @@ def existing_tag_resolver(ctx, dependency, semver_selector, tag_database,
 
 
 @Registry.provide
-def resolve_git_checkout(git_checkout_resolver, dependency):
+def resolve_git_checkout(existing_checkout_resolver, dependency):
     """ Builds a WurfGitCheckoutResolver instance.
 
     :param registry: A Registry instance.
@@ -636,7 +655,7 @@ def resolve_git_checkout(git_checkout_resolver, dependency):
     # Set the resolver method on the dependency
     dependency.resolver_action = 'git checkout'
 
-    return git_checkout_resolver
+    return existing_checkout_resolver
 
 
 @Registry.provide
