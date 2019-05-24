@@ -12,18 +12,20 @@ class ExistingCheckoutResolver(object):
     out.
     """
 
-    def __init__(self, ctx, dependency, resolver, cwd):
+    def __init__(self, ctx, dependency, resolver, checkout, cwd):
         """ Construct a new ExistingCheckoutResolver instance.
 
         :param ctx: A Waf Context instance.
         :param dependency: The Dependency object.
         :param resolver: A resolver instance.
+        :param checkout: The branch, tag, or sha1 as a string.
         :param cwd: Current working directory as a string. This is the place
             where we should create new folders etc.
         """
         self.ctx = ctx
         self.dependency = dependency
         self.resolver = resolver
+        self.checkout = checkout
         self.cwd = cwd
 
     def resolve(self):
@@ -50,7 +52,10 @@ class ExistingCheckoutResolver(object):
         assert os.path.isdir(path)
 
         if 'git_commit' in self.dependency:
-            commits[self.dependency.git_commit] = path
+            # We can only store this if we are asking for a specific commit and
+            # not a branch.
+            if self.dependency.git_commit.startswith(self.checkout):
+                commits[self.dependency.git_commit] = path
         else:
             raise DependencyError(msg="No git commit id available",
                                   dependency=self.dependency)
@@ -79,13 +84,15 @@ class ExistingCheckoutResolver(object):
 
     def __resolve_path(self, commits):
 
-        commit = self.dependency.checkout
-
         # Check if the commit is the start of any of the stored commits
         for stored_commit in commits:
-            if stored_commit.startswith(commit):
+            if stored_commit.startswith(self.checkout):
                 break
         else:
+            self.ctx.to_log(
+                "resolve: ExistingCheckoutResolver {} no stored checkout"
+                " for commit {}".format(
+                    self.dependency.name, self.checkout))
             return None
 
         path = commits[stored_commit]
