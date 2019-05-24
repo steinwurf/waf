@@ -601,6 +601,18 @@ def git_checkout_resolver(registry, git, git_resolver, ctx, dependency,
 
 
 @Registry.provide
+def existing_checkout_resolver(ctx, dependency, semver_selector, tag_database,
+                               git_semver_resolver, dependency_path):
+    """ Builds a GitResolver instance.
+
+    :param registry: A Registry instance.
+    """
+    return ExistingCheckoutResolver(
+        ctx=ctx, dependency=dependency, resolver=git_semver_resolver,
+        cwd=dependency_path)
+
+
+@Registry.provide
 def git_semver_resolver(git, git_resolver, ctx, semver_selector,
                         dependency, dependency_path):
     """ Builds a GitResolver instance.
@@ -627,7 +639,7 @@ def existing_tag_resolver(ctx, dependency, semver_selector, tag_database,
 
 
 @Registry.provide
-def resolve_git_checkout(git_checkout_resolver, dependency):
+def resolve_git_checkout(existing_tag_resolver, dependency):
     """ Builds a WurfGitCheckoutResolver instance.
 
     :param registry: A Registry instance.
@@ -637,19 +649,8 @@ def resolve_git_checkout(git_checkout_resolver, dependency):
     # Set the resolver method on the dependency
     dependency.resolver_action = 'git checkout'
 
+    # return existing_checkout_resolver
     return git_checkout_resolver
-
-
-@Registry.provide
-def existing_checkout_resolver(ctx, dependency, semver_selector, tag_database,
-                               git_semver_resolver, dependency_path):
-    """ Builds a GitResolver instance.
-
-    :param registry: A Registry instance.
-    """
-    return ExistingCheckoutResolver(
-        ctx=ctx, dependency=dependency, resolver=git_semver_resolver,
-        cwd=dependency_path)
 
 
 @Registry.provide
