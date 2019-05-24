@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Added git checkout resolver which will reuse previously checked out
+  checkouts, and thereby making the configure step faster.
 * Patch: Fix dependency_node(..) function to work with unicode strings.
 * Major: Upgraded to virtualenv 16.4.3. The option --no-site-packages was
   deprecated and replaced with --system-site-packages. Which is now reflected
