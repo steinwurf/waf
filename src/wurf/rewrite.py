@@ -16,9 +16,6 @@ def rewrite(filename):
             self.content = re.sub(
                 pattern=pattern, repl=replacement, string=self.content)
 
-        def parse_replace(self, pattern, replacement):
-            pass
-
     content = Content()
 
     with open(filename) as f:
