@@ -41,6 +41,22 @@ class Git(object):
 
         return output
 
+    def current_tag(self, cwd):
+        """
+        Check if the current commmit matches a tag
+
+        :return: The current tags as a string otherwise None
+        """
+        args = [self.git_binary, 'tag',
+                '--points-at', self.current_commit(cwd)]
+
+        output = self.ctx.cmd_and_log(args, cwd=cwd).strip()
+
+        if output:
+            return output
+        else:
+            return None
+
     def clone(self, repository, directory, cwd, branch=None, depth=None):
         """
         Runs 'git clone <repository> <directory>' in the directory cwd.
