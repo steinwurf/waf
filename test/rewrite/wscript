@@ -1,0 +1,15 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+APPNAME = 'rewrite_file'
+VERSION = '1.0.0'
+
+
+def build(bld):
+
+    with bld.rewrite_file(filename='in_version.hpp') as f:
+
+        pattern = r'return "\d+\.\d+\.\d+"'
+        replacement = r'return "3.0.0"'
+
+        f.regex_replace(pattern=pattern, replacement=replacement)

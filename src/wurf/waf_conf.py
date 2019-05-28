@@ -12,6 +12,7 @@ from waflib import Logs
 
 from . import waf_resolve_context
 from . import virtualenv
+from . import rewrite
 
 
 @conf
@@ -113,3 +114,9 @@ def create_virtualenv(ctx, cwd=None, env=None, name=None, overwrite=True,
         ctx=ctx, log=Logs, cwd=cwd, env=env, name=name,
         overwrite=overwrite, system_site_packages=system_site_packages,
         download=download, download_path=download_path)
+
+
+@conf
+def rewrite_file(ctx, filename):
+
+    return rewrite.rewrite_file(filename=filename)
