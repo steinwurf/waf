@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Adding helper functionality for rewriting files. This is useful
+  when releasing projects and some files need to be updated programatically.
 * Minor: Added git checkout resolver which will reuse previously checked out
   checkouts, and thereby making the configure step faster.
 * Patch: Fix dependency_node(..) function to work with unicode strings.
