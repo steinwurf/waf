@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+from . import registry
+from waflib import Context
 import sys
 
 # This file is the "entry point" for all our extensions to Waf. The main
@@ -70,3 +72,26 @@ _check_minimum_python_version(2, 7)
 
 # Check we can handle Unicode properly
 compat.check_locale_python3()
+
+# We would like to have the registry available in all Waf's contexts
+# so here we bind it to the basic
+
+
+def build_registry(ctx):
+
+    default_resolve_path = os.path.join(
+        self.path.abspath(), 'resolved_dependencies')
+
+    default_symlinks_path = os.path.join(
+        self.path.abspath(), 'resolve_symlinks')
+
+    self.registry = registry.build_registry(
+        ctx=self, git_binary='git',
+        semver=semver,
+        archive_extractor=archive.extract,
+        default_resolve_path=default_resolve_path,
+        resolve_config_path=self.resolve_config_path(),
+        default_symlinks_path=default_symlinks_path,
+        waf_utils=Utils, args=sys.argv[1:],
+        project_path=self.path.abspath(),
+        waf_lock_file=Options.lockfile)
