@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import os
+
 from waflib import Context
 from waflib import Options
+from waflib import Logs
 
+
+from . import registry
 from . import waf_conf
 
 
@@ -35,6 +40,16 @@ class WafOptionsContext(Options.OptionsContext):
     def execute(self):
 
         self.srcnode = self.path
+
+        # Build the registry
+        self.registry = registry.options_registry(ctx=self, git_binary='git')
+
+        # To avoid logs going to stdout create an logger
+        bldnode = self.path.make_node('build')
+        bldnode.mkdir()
+
+        path = os.path.join(bldnode.abspath(), 'options.log')
+        self.logger = Logs.make_logger(path, 'cfg')
 
         # Create and execute the resolve context
         ctx = Context.create_context('resolve')
