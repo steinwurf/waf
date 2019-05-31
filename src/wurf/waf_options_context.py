@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# import os
+import os
 
 from waflib import Context
 from waflib import Options
-# from waflib import Logs
+from waflib import Logs
 
 
 from . import registry
@@ -48,8 +48,8 @@ class WafOptionsContext(Options.OptionsContext):
         bldnode = self.path.make_node('build')
         bldnode.mkdir()
 
-        # path = os.path.join(bldnode.abspath(), 'options.log')
-        # self.logger = Logs.make_logger(path, 'cfg')
+        path = os.path.join(bldnode.abspath(), 'options.log')
+        self.logger = Logs.make_logger(path=path, name='options')
 
         # Create and execute the resolve context
         ctx = Context.create_context('resolve')
