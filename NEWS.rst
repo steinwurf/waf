@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Added registry for the OptionsContext - this allows us to build git
+  helpers etc.
 * Minor: Adding helper functionality for rewriting files. This is useful
   when releasing projects and some files need to be updated programatically.
 * Minor: Added git checkout resolver which will reuse previously checked out
