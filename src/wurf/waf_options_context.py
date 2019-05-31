@@ -49,7 +49,7 @@ class WafOptionsContext(Options.OptionsContext):
         bldnode.mkdir()
 
         path = os.path.join(bldnode.abspath(), 'options.log')
-        self.logger = Logs.make_logger(path, 'cfg')
+        #self.logger = Logs.make_logger(path, 'cfg')
 
         # Create and execute the resolve context
         ctx = Context.create_context('resolve')
