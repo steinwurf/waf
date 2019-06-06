@@ -85,7 +85,7 @@ class WafResolveContext(Context.Context):
         path = os.path.join(self.bldnode.abspath(),
                             configuration.resolver_chain() + '.resolve.log')
 
-        self.logger = Logs.make_logger(path, 'cfg')
+        self.logger = Logs.make_logger(path, 'resolve')
         self.logger.debug('wurf: Resolve execute {}'.format(
             configuration.resolver_chain()))
 

@@ -40,7 +40,8 @@ def test_rewrite(testdirectory):
         # has already been updated
         with rewrite_file(filename=filename) as f:
 
-            pattern = r"VERSION = '\d+\.\d+\.\d+'"
+            # Pattern does not exist (missing '.' )
+            pattern = r"VERSION = '\d+\d+\d+'"
             replacement = r"VERSION = '2.0.0'"
 
             f.regex_replace(pattern=pattern, replacement=replacement)

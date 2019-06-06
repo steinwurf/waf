@@ -118,5 +118,4 @@ def create_virtualenv(ctx, cwd=None, env=None, name=None, overwrite=True,
 
 @conf
 def rewrite_file(ctx, filename):
-
     return rewrite.rewrite_file(filename=filename)

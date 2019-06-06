@@ -77,6 +77,9 @@ class WafOptionsContext(Options.OptionsContext):
 
         super(WafOptionsContext, self).execute()
 
+        # Close the log file
+        Logs.free_logger(self.logger)
+
     def is_toplevel(self):
         """
         Returns true if the current script is the top-level wscript
