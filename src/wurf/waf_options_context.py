@@ -39,6 +39,8 @@ class WafOptionsContext(Options.OptionsContext):
 
     def execute(self):
 
+        print("IN OPTIONS ---")
+
         self.srcnode = self.path
 
         # Build the registry
@@ -82,7 +84,10 @@ class WafOptionsContext(Options.OptionsContext):
         for handler in handlers:
             handler.close()
             self.logger.removeHandler(handler)
+
+        self.logger = None
         # Logs.free_logger(self.logger)
+        print("out OPTIONS ---")
 
     def is_toplevel(self):
         """
