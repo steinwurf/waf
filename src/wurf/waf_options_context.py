@@ -78,7 +78,11 @@ class WafOptionsContext(Options.OptionsContext):
         super(WafOptionsContext, self).execute()
 
         # Close the log file
-        Logs.free_logger(self.logger)
+        handlers = self.logger.handlers[:]
+        for handler in handlers:
+            handler.close()
+            self.logger.removeHandler(handler)
+        # Logs.free_logger(self.logger)
 
     def is_toplevel(self):
         """
