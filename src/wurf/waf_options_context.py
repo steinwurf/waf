@@ -51,8 +51,8 @@ class WafOptionsContext(Options.OptionsContext):
         bldnode = self.path.make_node('build')
         bldnode.mkdir()
 
-        path = os.path.join(bldnode.abspath(), 'options.log')
-        self.logger = Logs.make_logger(path=path, name='options')
+        log_path = os.path.join(bldnode.abspath(), 'options.log')
+        self.logger = Logs.make_logger(path=log_path, name='options')
 
         # Create and execute the resolve context
         ctx = Context.create_context('resolve')
@@ -89,9 +89,10 @@ class WafOptionsContext(Options.OptionsContext):
         self.logger = None
         # Logs.free_logger(self.logger)
 
+        print("Before look")
         for i in range(10):
             try:
-                os.remove(path)
+                os.remove(log_path)
                 print(i)
                 break
             except Exception:
