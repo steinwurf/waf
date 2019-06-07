@@ -92,6 +92,8 @@ class WafOptionsContext(Options.OptionsContext):
             handler.close()
             self.logger.removeHandler(handler)
 
+        print("After {}".format(self.logger.handlers))
+
         self.logger = None
         # Logs.free_logger(self.logger)
 
