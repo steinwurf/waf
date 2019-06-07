@@ -54,24 +54,7 @@ class WafOptionsContext(Options.OptionsContext):
 
         log_path = os.path.join('options.log')
 
-        class MyHandler(logging.Handler):
-            def emit(self, record):
-                log = self.format(record)
-                with open(log_path, 'a') as fd:
-                    fd.write(log)
-
-        assert(self.logger is None)
-
         self.logger = Logs.make_logger(path=log_path, name='options')
-        #self.logger = logging.getLogger(name='options')
-        #handler = MyHandler()
-        # handler = logging.FileHandler(log_path, 'w')
-        # formatter = logging.Formatter('%(message)s')
-        # handler.setFormatter(formatter)
-        # self.logger.addHandler(handler)
-
-        # self.logger.setLevel(logging.DEBUG)
-
         self.logger.debug('wurf: Options execute')
 
         # Create and execute the resolve context
@@ -98,26 +81,18 @@ class WafOptionsContext(Options.OptionsContext):
         # before running OptionsContext.execute() where parse_args is called
         waf_conf.recurse_dependencies(self)
 
-        # print(self.logger.handlers)
-
+        # This caused some issues on windows since we make a logger to
+        # intercept calls being run during options(). If we keep this
+        # logger around while calling super(WafOptionsContext, self).execute()
+        # some process are being allocated. These process will inherit the
+        # open file descriptors - meaning we cannot remove the log file
+        # in e.g. a subsequent call to waf clean.
         handlers = self.logger.handlers[:]
         for handler in handlers:
             handler.close()
             self.logger.removeHandler(handler)
 
         super(WafOptionsContext, self).execute()
-
-        # print(self.logger.handlers)
-
-        # # Close the log file
-        # handler.close()
-
-        # print("After {}".format(self.logger.handlers))
-        # self.logger = None
-
-        # os.remove(log_path)
-
-        # print("out OPTIONS ---")
 
     def is_toplevel(self):
         """
