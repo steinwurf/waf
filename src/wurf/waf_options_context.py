@@ -105,7 +105,7 @@ class WafOptionsContext(Options.OptionsContext):
 
         for handler in handlers:
             # handler.flush()
-            # handler.close()
+            handler.stream.close()
             self.logger.removeHandler(handler)
 
         print("After {}".format(self.logger.handlers))
