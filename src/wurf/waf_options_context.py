@@ -97,10 +97,7 @@ class WafOptionsContext(Options.OptionsContext):
 
         print("Before look")
 
-        print(i)
         os.remove(log_path)
-
-        print(e)
 
         print("out OPTIONS ---")
 
