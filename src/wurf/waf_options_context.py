@@ -98,6 +98,8 @@ class WafOptionsContext(Options.OptionsContext):
         # before running OptionsContext.execute() where parse_args is called
         waf_conf.recurse_dependencies(self)
 
+        super(WafOptionsContext, self).execute()
+
         # Close the log file
         handler.close()
 
@@ -107,8 +109,6 @@ class WafOptionsContext(Options.OptionsContext):
         os.remove(log_path)
 
         print("out OPTIONS ---")
-
-        super(WafOptionsContext, self).execute()
 
     def is_toplevel(self):
         """
