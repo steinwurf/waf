@@ -54,6 +54,8 @@ class WafOptionsContext(Options.OptionsContext):
         log_path = os.path.join(bldnode.abspath(), 'options.log')
         self.logger = Logs.make_logger(path=log_path, name='options')
 
+        self.logger.debug('wurf: Options execute')
+
         # Create and execute the resolve context
         ctx = Context.create_context('resolve')
 
