@@ -3,6 +3,7 @@
 
 import os
 import time
+import logging
 
 from waflib import Context
 from waflib import Options
@@ -52,7 +53,20 @@ class WafOptionsContext(Options.OptionsContext):
         bldnode.mkdir()
 
         log_path = os.path.join(bldnode.abspath(), 'options.log')
-        self.logger = Logs.make_logger(path=log_path, name='options')
+
+        class MyHandler(logging.Handler):
+            def emit(self, record):
+                log = self.format(record)
+                with open(log_path, 'a') as fd:
+                    fd.write(log)
+
+        #self.logger = Logs.make_logger(path=log_path, name='options')
+        self.logger = logging.getLogger(name='options')
+        ldlr = MyHandler()
+        formatter = logging.Formatter('%(message)s')
+        ldlr.setFormatter(formatter)
+        self.logger.addHandler(ldlr)
+        self.logger.setLevel(logging.DEBUG)
 
         self.logger.debug('wurf: Options execute')
 
