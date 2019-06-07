@@ -101,14 +101,15 @@ class WafOptionsContext(Options.OptionsContext):
         super(WafOptionsContext, self).execute()
 
         # Close the log file
-        handlers = self.logger.handlers[:]
+        # handlers = self.logger.handlers[:]
 
-        print(handlers)
+        # print(handlers)
 
-        for handler in handlers:
-            # handler.flush()
-            handler.stream.close()
-            self.logger.removeHandler(handler)
+        # for handler in handlers:
+        #     # handler.flush()
+        #     handler.close()
+        #     self.logger.removeHandler(handler)
+        handler.close()
 
         print("After {}".format(self.logger.handlers))
 
