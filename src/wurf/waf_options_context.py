@@ -98,7 +98,11 @@ class WafOptionsContext(Options.OptionsContext):
         # before running OptionsContext.execute() where parse_args is called
         waf_conf.recurse_dependencies(self)
 
+        print(self.logger.handlers)
+
         super(WafOptionsContext, self).execute()
+
+        print(self.logger.handlers)
 
         # Close the log file
         handler.close()
