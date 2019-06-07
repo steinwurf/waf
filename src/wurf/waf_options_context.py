@@ -60,6 +60,8 @@ class WafOptionsContext(Options.OptionsContext):
                 with open(log_path, 'a') as fd:
                     fd.write(log)
 
+        assert(self.logger is None)
+
         #self.logger = Logs.make_logger(path=log_path, name='options')
         self.logger = logging.getLogger(name='options')
         #handler = MyHandler()
