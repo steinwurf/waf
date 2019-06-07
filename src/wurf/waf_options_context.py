@@ -92,8 +92,8 @@ class WafOptionsContext(Options.OptionsContext):
         print("Before look")
         for i in range(10):
             try:
-                os.remove(log_path)
                 print(i)
+                os.remove(log_path)
                 break
             except Exception:
                 time.sleep(0.05)
