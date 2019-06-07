@@ -74,28 +74,6 @@ class WafOptionsContext(Options.OptionsContext):
 
         self.logger.debug('wurf: Options execute')
 
-        # Close the log file
-        # handlers = self.logger.handlers[:]
-
-        # print(handlers)
-
-        # for handler in handlers:
-        #     # handler.flush()
-        #     handler.close()
-        #     self.logger.removeHandler(handler)
-        handler.close()
-
-        print("After {}".format(self.logger.handlers))
-
-        self.logger = None
-        # Logs.free_logger(self.logger)
-
-        print("Before look")
-
-        os.remove(log_path)
-
-        print("out OPTIONS ---")
-
         # Create and execute the resolve context
         ctx = Context.create_context('resolve')
 
@@ -103,6 +81,16 @@ class WafOptionsContext(Options.OptionsContext):
             ctx.execute()
         finally:
             ctx.finalize()
+
+        # Close the log file
+        handler.close()
+
+        print("After {}".format(self.logger.handlers))
+        self.logger = None
+
+        os.remove(log_path)
+
+        print("out OPTIONS ---")
 
         # Fetch the resolve options parser such that we can
         # print help if needed:
