@@ -97,7 +97,8 @@ class WafOptionsContext(Options.OptionsContext):
                 print(i)
                 os.remove(log_path)
                 break
-            except Exception:
+            except Exception as e:
+                print(e)
                 time.sleep(1)
 
         print("out OPTIONS ---")
