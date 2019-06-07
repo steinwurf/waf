@@ -62,10 +62,12 @@ class WafOptionsContext(Options.OptionsContext):
 
         #self.logger = Logs.make_logger(path=log_path, name='options')
         self.logger = logging.getLogger(name='options')
-        ldlr = MyHandler()
+        #handler = MyHandler()
+        handler = logging.FileHandler(log_path, 'w')
         formatter = logging.Formatter('%(message)s')
-        ldlr.setFormatter(formatter)
-        self.logger.addHandler(ldlr)
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
+
         self.logger.setLevel(logging.DEBUG)
 
         self.logger.debug('wurf: Options execute')
