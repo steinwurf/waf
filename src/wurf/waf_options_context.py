@@ -2,8 +2,6 @@
 # encoding: utf-8
 
 import os
-import time
-import logging
 
 from waflib import Context
 from waflib import Options
