@@ -84,6 +84,9 @@ class WafOptionsContext(Options.OptionsContext):
 
         # Close the log file
         handlers = self.logger.handlers[:]
+
+        print(handlers)
+
         for handler in handlers:
             handler.flush()
             handler.close()
@@ -93,14 +96,11 @@ class WafOptionsContext(Options.OptionsContext):
         # Logs.free_logger(self.logger)
 
         print("Before look")
-        for i in range(10):
-            try:
-                print(i)
-                os.remove(log_path)
-                break
-            except Exception as e:
-                print(e)
-                time.sleep(1)
+
+        print(i)
+        os.remove(log_path)
+
+        print(e)
 
         print("out OPTIONS ---")
 
