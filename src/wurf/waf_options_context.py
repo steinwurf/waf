@@ -62,15 +62,15 @@ class WafOptionsContext(Options.OptionsContext):
 
         assert(self.logger is None)
 
-        #self.logger = Logs.make_logger(path=log_path, name='options')
-        self.logger = logging.getLogger(name='options')
+        self.logger = Logs.make_logger(path=log_path, name='options')
+        #self.logger = logging.getLogger(name='options')
         #handler = MyHandler()
-        handler = logging.FileHandler(log_path, 'w')
-        formatter = logging.Formatter('%(message)s')
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
+        # handler = logging.FileHandler(log_path, 'w')
+        # formatter = logging.Formatter('%(message)s')
+        # handler.setFormatter(formatter)
+        # self.logger.addHandler(handler)
 
-        self.logger.setLevel(logging.DEBUG)
+        # self.logger.setLevel(logging.DEBUG)
 
         self.logger.debug('wurf: Options execute')
 
@@ -98,21 +98,26 @@ class WafOptionsContext(Options.OptionsContext):
         # before running OptionsContext.execute() where parse_args is called
         waf_conf.recurse_dependencies(self)
 
-        print(self.logger.handlers)
+        # print(self.logger.handlers)
+
+        handlers = self.logger.handlers[:]
+        for handler in handlers:
+            handler.close()
+            self.logger.removeHandler(handler)
 
         super(WafOptionsContext, self).execute()
 
-        print(self.logger.handlers)
+        # print(self.logger.handlers)
 
-        # Close the log file
-        handler.close()
+        # # Close the log file
+        # handler.close()
 
-        print("After {}".format(self.logger.handlers))
-        self.logger = None
+        # print("After {}".format(self.logger.handlers))
+        # self.logger = None
 
-        os.remove(log_path)
+        # os.remove(log_path)
 
-        print("out OPTIONS ---")
+        # print("out OPTIONS ---")
 
     def is_toplevel(self):
         """
