@@ -50,8 +50,8 @@ class WafOptionsContext(Options.OptionsContext):
         bldnode = self.path.make_node('build')
         bldnode.mkdir()
 
-        path = os.path.join(bldnode.abspath(), 'wafoptions.log')
-        self.logger = Logs.make_logger(path=path, name='wafoptions')
+        path = os.path.join(bldnode.abspath(), 'options.log')
+        self.logger = Logs.make_logger(path=path, name='options')
 
         # Create and execute the resolve context
         ctx = Context.create_context('resolve')
@@ -87,6 +87,7 @@ class WafOptionsContext(Options.OptionsContext):
 
         self.logger = None
         # Logs.free_logger(self.logger)
+        os.remove(path)
         print("out OPTIONS ---")
 
     def is_toplevel(self):
