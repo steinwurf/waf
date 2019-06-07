@@ -82,16 +82,6 @@ class WafOptionsContext(Options.OptionsContext):
         finally:
             ctx.finalize()
 
-        # Close the log file
-        handler.close()
-
-        print("After {}".format(self.logger.handlers))
-        self.logger = None
-
-        os.remove(log_path)
-
-        print("out OPTIONS ---")
-
         # Fetch the resolve options parser such that we can
         # print help if needed:
         self.wurf_options = ctx.registry.require('options')
@@ -103,6 +93,16 @@ class WafOptionsContext(Options.OptionsContext):
 
         # Load any extra tools that define regular options for waf
         self.load('wurf.waf_standalone_context')
+
+        # Close the log file
+        handler.close()
+
+        print("After {}".format(self.logger.handlers))
+        self.logger = None
+
+        os.remove(log_path)
+
+        print("out OPTIONS ---")
 
         # Call options() in all dependencies: all options must be defined
         # before running OptionsContext.execute() where parse_args is called
