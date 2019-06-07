@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import time
 
 from waflib import Context
 from waflib import Options
@@ -87,7 +88,15 @@ class WafOptionsContext(Options.OptionsContext):
 
         self.logger = None
         # Logs.free_logger(self.logger)
-        os.remove(path)
+
+        for i in range(10):
+            try:
+                os.remove(path)
+                print(i)
+                break
+            except Exception:
+                time.sleep(0.05)
+
         print("out OPTIONS ---")
 
     def is_toplevel(self):
