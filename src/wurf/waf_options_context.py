@@ -52,7 +52,7 @@ class WafOptionsContext(Options.OptionsContext):
         bldnode = self.path.make_node('build')
         bldnode.mkdir()
 
-        log_path = os.path.join(bldnode.abspath(), 'options.log')
+        log_path = os.path.join('options.log')
 
         class MyHandler(logging.Handler):
             def emit(self, record):
