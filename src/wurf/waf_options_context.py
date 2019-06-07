@@ -85,6 +85,7 @@ class WafOptionsContext(Options.OptionsContext):
         # Close the log file
         handlers = self.logger.handlers[:]
         for handler in handlers:
+            handler.flush()
             handler.close()
             self.logger.removeHandler(handler)
 
