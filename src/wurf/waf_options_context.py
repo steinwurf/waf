@@ -39,8 +39,6 @@ class WafOptionsContext(Options.OptionsContext):
 
     def execute(self):
 
-        print("IN OPTIONS ---")
-
         self.srcnode = self.path
 
         # Build the registry
