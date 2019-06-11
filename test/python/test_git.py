@@ -32,6 +32,24 @@ def test_git_current_commit():
         ['/bin/git_binary', 'rev-parse', 'HEAD'], cwd='/tmp')
 
 
+def test_git_current_tag(testdirectory):
+
+    ctx = mock.Mock()
+    ctx.cmd_and_log.side_effect = [
+        "044d59505f3b63645c7fb7dec145154b8e518086", "2.0.0"]
+
+    git = Git('/bin/git_binary', ctx)
+
+    assert git.current_tag(cwd='/tmp') == "2.0.0"
+
+    print(ctx.cmd_and_log.call_args_list)
+
+    ctx.cmd_and_log.assert_has_calls([
+        mock.call(['/bin/git_binary', 'rev-parse', 'HEAD'], cwd='/tmp'),
+        mock.call(['/bin/git_binary', 'tag', '--points-at',
+                   '044d59505f3b63645c7fb7dec145154b8e518086'], cwd='/tmp')])
+
+
 def test_git_clone():
 
     ctx = mock.Mock()

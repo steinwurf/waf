@@ -1027,9 +1027,9 @@ def post_resolver_actions(registry, configuration):
     return actions
 
 
-def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
-                   default_symlinks_path, semver, archive_extractor, waf_utils,
-                   args, project_path, waf_lock_file):
+def resolve_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
+                     default_symlinks_path, semver, archive_extractor, waf_utils,
+                     args, project_path, waf_lock_file):
     """ Builds a registry.
 
     :param ctx: A Waf Context instance.
@@ -1065,5 +1065,23 @@ def build_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
     registry.provide_value('args', args)
     registry.provide_value('project_path', project_path)
     registry.provide_value('waf_lock_file', waf_lock_file)
+
+    return registry
+
+
+def options_registry(ctx, git_binary):
+    """ Builds a registry.
+
+    :param ctx: A Waf Context instance.
+    :param git_binary: A string containing the path to a git executable.
+
+
+    :returns:
+        A new Registery instance.
+    """
+    registry = Registry()
+
+    registry.provide_value('ctx', ctx)
+    registry.provide_value('git_binary', git_binary)
 
     return registry

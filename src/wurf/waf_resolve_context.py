@@ -63,7 +63,7 @@ class WafResolveContext(Context.Context):
         default_symlinks_path = os.path.join(
             self.path.abspath(), 'resolve_symlinks')
 
-        self.registry = registry.build_registry(
+        self.registry = registry.resolve_registry(
             ctx=self, git_binary='git',
             semver=semver,
             archive_extractor=archive.extract,
@@ -85,7 +85,7 @@ class WafResolveContext(Context.Context):
         path = os.path.join(self.bldnode.abspath(),
                             configuration.resolver_chain() + '.resolve.log')
 
-        self.logger = Logs.make_logger(path, 'cfg')
+        self.logger = Logs.make_logger(path, 'resolve')
         self.logger.debug('wurf: Resolve execute {}'.format(
             configuration.resolver_chain()))
 

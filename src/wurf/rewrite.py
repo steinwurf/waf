@@ -16,12 +16,13 @@ def rewrite_file(filename):
             """ Replace the string matching the pattern in the content with
             the replacement
             """
-            updated = re.sub(
+            updated, count = re.subn(
                 pattern=pattern, repl=replacement, string=self.content)
 
-            if updated == self.content:
+            if count == 0:
                 raise RuntimeError("Rewrite failed in {}. Pattern {} not "
-                                   "found in file.".format(filename, pattern))
+                                   "found in file.\nContent:\n{}".format(
+                                       filename, pattern, self.content))
 
             self.content = updated
 

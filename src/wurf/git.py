@@ -31,6 +31,25 @@ class Git(object):
         int_list = [int(s) for s in re.findall('\\d+', output)]
         return tuple(int_list)
 
+    def is_git_repository(self, cwd):
+        """
+        Tries to determine if the cwd is a git repository
+        """
+
+        # Approach outlined here:
+        # https://stackoverflow.com/a/2180367/1717320
+
+        git_dir = os.path.join('cwd', '.git')
+        if os.path.isdir(git_dir):
+            return True
+
+        try:
+            args = [self.git_binary, 'rev-parse', '--git-dir']
+            self.ctx.cmd_and_log(args, cwd=cwd)
+            return True
+        except Exception:
+            return False
+
     def current_commit(self, cwd):
         """
         Runs 'git rev-parse HEAD' parse and return the commit id (SHA1) of the
@@ -40,6 +59,22 @@ class Git(object):
         output = self.ctx.cmd_and_log(args, cwd=cwd).strip()
 
         return output
+
+    def current_tag(self, cwd):
+        """
+        Check if the current commmit matches a tag
+
+        :return: The current tags as a string otherwise None
+        """
+        args = [self.git_binary, 'tag',
+                '--points-at', self.current_commit(cwd)]
+
+        output = self.ctx.cmd_and_log(args, cwd=cwd).strip()
+
+        if output:
+            return output
+        else:
+            return None
 
     def clone(self, repository, directory, cwd, branch=None, depth=None):
         """

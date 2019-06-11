@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import os
+
 from waflib import Context
 from waflib import Options
+from waflib import Logs
 
+
+from . import registry
 from . import waf_conf
 
 
@@ -34,7 +39,21 @@ class WafOptionsContext(Options.OptionsContext):
 
     def execute(self):
 
+        print("IN OPTIONS ---")
+
         self.srcnode = self.path
+
+        # Build the registry
+        self.registry = registry.options_registry(ctx=self, git_binary='git')
+
+        # To avoid logs going to stdout create an logger
+        bldnode = self.path.make_node('build')
+        bldnode.mkdir()
+
+        log_path = os.path.join('options.log')
+
+        self.logger = Logs.make_logger(path=log_path, name='options')
+        self.logger.debug('wurf: Options execute')
 
         # Create and execute the resolve context
         ctx = Context.create_context('resolve')
@@ -59,6 +78,17 @@ class WafOptionsContext(Options.OptionsContext):
         # Call options() in all dependencies: all options must be defined
         # before running OptionsContext.execute() where parse_args is called
         waf_conf.recurse_dependencies(self)
+
+        # This caused some issues on windows since we make a logger to
+        # intercept calls being run during options(). If we keep this
+        # logger around while calling super(WafOptionsContext, self).execute()
+        # some process are being allocated. These process will inherit the
+        # open file descriptors - meaning we cannot remove the log file
+        # in e.g. a subsequent call to waf clean.
+        handlers = self.logger.handlers[:]
+        for handler in handlers:
+            handler.close()
+            self.logger.removeHandler(handler)
 
         super(WafOptionsContext, self).execute()
 
