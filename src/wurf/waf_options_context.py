@@ -48,7 +48,7 @@ class WafOptionsContext(Options.OptionsContext):
         bldnode = self.path.make_node('build')
         bldnode.mkdir()
 
-        log_path = os.path.join('options.log')
+        log_path = os.path.join(bldnode.abspath(), 'options.log')
 
         self.logger = Logs.make_logger(path=log_path, name='options')
         self.logger.debug('wurf: Options execute')
