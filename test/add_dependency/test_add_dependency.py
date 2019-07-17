@@ -482,3 +482,40 @@ def test_override_json(testdirectory):
     assert resolve_dir.contains_dir('foo-*', '1.3.3.7-*')
     assert resolve_dir.contains_dir('baz-*', '4.0.0-*')
     assert resolve_dir.contains_dir('bar-*', 'someh4sh-*')
+
+
+def test_resolve_only(testdirectory):
+
+    app_dir = mkdir_app(directory=testdirectory)
+
+    git_dir = testdirectory.mkdir(directory='git_dir')
+
+    qux_dir = mkdir_libqux(directory=git_dir)
+    foo_dir = mkdir_libfoo(directory=git_dir)
+    bar_dir = mkdir_libbar(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir, qux_dir=qux_dir)
+
+    # Instead of doing an actual Git clone - we fake it and use the paths in
+    # this mapping
+    clone_path = {
+        'github.com/acme-corp/foo.git': foo_dir.path(),
+        'gitlab.com/acme-corp/bar.git': bar_dir.path(),
+        'gitlab.com/acme/baz.git': baz_dir.path()}
+
+    json_path = os.path.join(app_dir.path(), 'clone_path.json')
+
+    with open(json_path, 'w') as json_file:
+        json.dump(clone_path, json_file)
+
+    env = dict(os.environ)
+    env['NOCLIMB'] = '1'
+
+    app_dir.run(['python', 'waf', 'resolve'], env=env)
+
+    # The symlinks should be available to all dependencies
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'foo'))
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'baz'))
+    assert os.path.exists(os.path.join(
+        app_dir.path(), 'resolve_symlinks', 'bar'))
