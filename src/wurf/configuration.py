@@ -70,13 +70,13 @@ class Configuration(object):
         There are two cases where we want to use the help chain:
 
         1. If we explicity pass -h or --help
-        2. If we run waf without configure and we have not already configured
+        2. If we run waf without wanting to resolve
         """
 
         if '-h' in self.args or '--help' in self.args:
             return True
 
-        if 'configure' in self.args:
+        if self.choose_resolve():
             return False
 
         # We use the lock file created by waf to check if the project
@@ -122,8 +122,9 @@ class Configuration(object):
 
     def choose_resolve(self):
 
-        if 'configure' in self.args:
-            # This is the configure step
-            return True
+        for command in ['configure', 'resolve']:
+            if command in self.args:
+                # We should resolve
+                return True
 
         return False

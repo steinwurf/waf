@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Allow resolve without configuration, by calling python waf resolve.
 * Minor: Added registry for the OptionsContext - this allows us to build git
   helpers etc.
 * Minor: Adding helper functionality for rewriting files. This is useful
