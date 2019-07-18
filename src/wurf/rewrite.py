@@ -52,8 +52,10 @@ def rewrite_file(filename):
 
     content = Content()
 
-    # All line endings should be translated to \n
-    with open(filename, 'rU') as f:
+    # All line endings should be translated to \n when reading the file
+    # This is the default behavior in Python 3, but not in Python 2
+    flag = 'rU' if sys.version_info.major < 3 else 'r'
+    with open(filename, flag) as f:
         content.content = f.read()
 
     yield content
