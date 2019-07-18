@@ -31,7 +31,7 @@ def test_rewrite(testdirectory):
 
         f.regex_replace(pattern=pattern, replacement=replacement)
 
-    with open(filename) as f:
+    with open(filename, 'rU') as f:
         assert expected == f.read()
 
     with pytest.raises(RuntimeError):

@@ -1,4 +1,3 @@
-
 def test_rewrite_version(testdirectory):
 
     in_version = testdirectory.copy_file("test/rewrite/in_version.hpp")
@@ -9,10 +8,10 @@ def test_rewrite_version(testdirectory):
     testdirectory.run("python waf configure")
     testdirectory.run("python waf build")
 
-    with open(in_version) as f:
+    with open(in_version, 'rU') as f:
         old = f.read()
 
-    with open(out_version) as f:
+    with open(out_version, 'rU') as f:
         new = f.read()
 
     assert old == new
