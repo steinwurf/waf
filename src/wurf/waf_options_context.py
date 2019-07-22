@@ -54,7 +54,7 @@ class WafOptionsContext(Options.OptionsContext):
         self.logger.debug('wurf: Options execute')
 
         # Create and execute the resolve context
-        ctx = Context.create_context('resolve')
+        ctx = Context.create_context('resolve', resolve=True)
 
         try:
             ctx.execute()
