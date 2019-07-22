@@ -37,11 +37,23 @@ class WafResolveContext(Context.Context):
     cmd = 'resolve'
     fun = 'resolve'
 
-    def __init__(self, **kw):
+    def __init__(self, resolve=False, **kw):
         """ Create a WafResolveContext"""
         super(WafResolveContext, self).__init__(**kw)
 
+        # We only want to carry out the actual resolve once, when intially
+        # created by the options context. However, this context may
+        # be create multiple times e.g. if the user passes resolve as a
+        # command to run a resolve without a configure - this is ok. But,
+        # in that case we don't want to run resolve twice.
+        self.resolve = resolve
+
     def execute(self):
+
+        if not self.resolve:
+            # Skip out if we are should not execute - see __init__ for
+            # explanation
+            return
 
         # Check whether the main wscript has a resolve function defined,
         # if not we create one. This is also done for other functions such
