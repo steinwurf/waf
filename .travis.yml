@@ -30,6 +30,10 @@ matrix:
         # git bash changes the codepage to 65001 which breaks waf's msvc tool,
         # so we run the configure step in powershell using the 850 codepage
         - powershell "chcp 850; python --version; python waf configure"
+      script:
+        - powershell "chcp 850; python waf build -v"
+        # Network tests are terribly slow on Windows, so we skip those
+        - powershell "chcp 850; python waf --run_tests --skip_network_tests"
 install:
   - python waf configure
 script:
