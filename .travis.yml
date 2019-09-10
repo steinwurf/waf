@@ -21,10 +21,15 @@ matrix:
       compiler: clang
     - name: Windows - Visual Studio 2017
       os: windows
+      env:
+        - CHOCO_PYTHON="/c/Python27"
+      before_install:
+        - choco install python2
+        - export PATH=$CHOCO_PYTHON:$PATH
       install:
         # git bash changes the codepage to 65001 which breaks waf's msvc tool,
         # so we run the configure step in powershell using the 850 codepage
-        - powershell "chcp 850; python waf configure"
+        - powershell "chcp 850; python --version; python waf configure"
 install:
   - python waf configure
 script:
