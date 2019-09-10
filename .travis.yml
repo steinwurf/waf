@@ -22,9 +22,9 @@ matrix:
     - name: Windows - Visual Studio 2017
       os: windows
       env:
-        - CHOCO_PYTHON="/c/Python27"
+        - CHOCO_PYTHON="/c/Python37"
       before_install:
-        - choco install python2
+        - choco install python --version 3.7.4
         - export PATH=$CHOCO_PYTHON:$PATH
       install:
         # git bash changes the codepage to 65001 which breaks waf's msvc tool,
