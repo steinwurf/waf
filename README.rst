@@ -1,6 +1,9 @@
-Introduction
-============
+Steinwurf's Waf
+===============
 
+.. image:: https://travis-ci.org/steinwurf/waf.svg?branch=master
+    :target: https://travis-ci.org/steinwurf/waf
+    
 We use Waf as our build tool. However, before adding the Waf
 file to the individual projects we first add some additional
 tools to Waf.
