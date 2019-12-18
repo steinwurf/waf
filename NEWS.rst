@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Change the default interpreter to python3
 * Patch: Fix resolve such that it won't run twice when invoked explicitly.
 * Minor: Allow resolve without configuration, by calling python waf resolve.
 * Minor: Added registry for the OptionsContext - this allows us to build git

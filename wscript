@@ -30,7 +30,7 @@ def resolve(ctx):
         optional=False,
         resolver="git",
         method="checkout",
-        checkout="2.4.1",
+        checkout="2.9.0",
         sources=["github.com/k-bx/python-semver.git"],
     )
 
@@ -108,11 +108,16 @@ def _build_waf_binary(bld):
     # The prelude option
     prelude = "\timport waflib.extras.wurf.waf_entry_point"
 
+    # The shebang at the top of the waf file. This will be the default python
+    # version used when a user types e.g. ./waf configure
+    intrepreter = "#!/usr/bin/env python3"
+
     # Build the command to execute
     python = sys.executable
     command = (
         python + " waf-light configure build --make-waf "
-        '--prelude="{}" --tools={}'.format(prelude, tools)
+        '--prelude="{}" --tools={} --interpreter="{}"'.format(
+            prelude, tools, intrepreter)
     )
 
     bld.cmd_and_log(command, cwd=cwd)
@@ -143,16 +148,12 @@ def _pytest(bld):
 
     with venv:
 
-        venv.pip_install(
-            [
-                "pytest",
-                "mock",
-                "vcrpy",
-                "pytest-testdirectory==3.1.0",
-                "pycodestyle",
-                "pyflakes",
-            ]
-        )
+        venv.run("python -m pip install pytest")
+        venv.run("python -m pip install mock")
+        venv.run("python -m pip install vcrpy")
+        venv.run("python -m pip install pytest-testdirectory==3.1.0")
+        venv.run("python -m pip install pycodestyle")
+        venv.run("python -m pip install pyflakes")
 
         # Add our sources to the Python path
         python_path = [
@@ -182,7 +183,7 @@ def _pytest(bld):
         # Make python not write any .pyc files. These may linger around
         # in the file system and make some tests pass although their .py
         # counter-part has been e.g. deleted
-        command = "python -B -m pytest test --basetemp " + basetemp
+        command = "python -B -m pytest test --last-failed --basetemp " + basetemp
 
         # Conditionally disable the tests that have the "networktest" marker
         if bld.options.skip_network_tests:
