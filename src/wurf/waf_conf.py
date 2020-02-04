@@ -9,10 +9,24 @@
 from waflib.Configure import conf
 from waflib.Errors import WafError
 from waflib import Logs
+from waflib import Context
 
 from . import waf_resolve_context
 from . import virtualenv
 from . import rewrite
+
+
+def extend_context(f):
+    """
+    Decorator: attach new  functions to waflib.Context. It is like
+    Waf's conf decorator. But instead of just extending the
+    ConfigurationContext and BuildContext this will extend the
+    base Context.
+
+    :param f: Method to bind
+    """
+    setattr(Context.Context, f.__name__, f)
+    return f
 
 
 @conf
@@ -106,7 +120,7 @@ def recurse_dependencies(ctx):
             raise WafError(msg=msg, ex=e)
 
 
-@conf
+@extend_context
 def create_virtualenv(ctx, cwd=None, env=None, name=None, overwrite=True,
                       system_site_packages=False, download=True, download_path=None):
 

@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import sys
 
 from waflib import Context
 from waflib import Options
@@ -37,6 +38,10 @@ class WafOptionsContext(Options.OptionsContext):
         # Options parser used in the resolve step.
         self.wurf_options = None
 
+        # Add option to skip resolve
+        gr = self.add_option_group('Resolve options')
+        gr.add_option('--no_resolve', default=False, action='store_true')
+
     def execute(self):
 
         self.srcnode = self.path
@@ -53,8 +58,13 @@ class WafOptionsContext(Options.OptionsContext):
         self.logger = Logs.make_logger(path=log_path, name='options')
         self.logger.debug('wurf: Options execute')
 
+        # Peek into the options and see of --no_resolve was passed
+        # if it was skip the resolve. We have at this point not parsed
+        # the options so we just do it manually
+        resolve = '--no_resolve' not in sys.argv
+
         # Create and execute the resolve context
-        ctx = Context.create_context('resolve', resolve=True)
+        ctx = Context.create_context('resolve', resolve=resolve)
 
         try:
             ctx.execute()
@@ -63,12 +73,15 @@ class WafOptionsContext(Options.OptionsContext):
 
         # Fetch the resolve options parser such that we can
         # print help if needed:
-        self.wurf_options = ctx.registry.require('options')
+        if resolve:
+            self.wurf_options = ctx.registry.require('options')
 
-        # Fetch the arguments not parsed in the resolve step
-        # We are just interested in the left-over args, which is the
-        # second value retuned by parse_known_args(...)
-        self.waf_options = self.wurf_options.unknown_args
+            # Fetch the arguments not parsed in the resolve step
+            # We are just interested in the left-over args, which is the
+            # second value retuned by parse_known_args(...)
+            self.waf_options = self.wurf_options.unknown_args
+        else:
+            self.waf_options = sys.argv
 
         # Load any extra tools that define regular options for waf
         self.load('wurf.waf_standalone_context')

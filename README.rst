@@ -3,7 +3,7 @@ Steinwurf's Waf
 
 .. image:: https://travis-ci.org/steinwurf/waf.svg?branch=master
     :target: https://travis-ci.org/steinwurf/waf
-    
+
 We use Waf as our build tool. However, before adding the Waf
 file to the individual projects we first add some additional
 tools to Waf.
@@ -195,6 +195,16 @@ Lets outline the different steps:
 
 Resolver features
 -----------------
+
+Skipping resolve
+................
+
+Sometimes it is useful to skip the resolve step e.g. if you doing something
+different than building the source code.
+
+We've added an option to skip the resolve step::
+
+    python waf --no_resolve ...
 
 Specifying a dependency
 .......................
