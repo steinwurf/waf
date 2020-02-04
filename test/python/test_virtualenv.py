@@ -15,7 +15,7 @@ def test_virtualenv_noname(testdirectory):
     env = dict(os.environ)
     name = None
     ctx = mock.Mock()
-    ctx.bldnode.abspath = lambda: testdirectory.mkdir("build").path()
+    ctx.path.abspath = lambda: testdirectory.path()
     log = mock.Mock()
 
     venv = VirtualEnv.create(cwd=cwd, env=env, name=name, log=log, ctx=ctx)
@@ -29,7 +29,7 @@ def test_virtualenv_name(testdirectory):
     env = dict(os.environ)
     name = "gogo"
     ctx = mock.Mock()
-    ctx.bldnode.abspath = lambda: testdirectory.mkdir("build").path()
+    ctx.path.abspath = lambda: testdirectory.path()
     log = mock.Mock()
 
     # Lets make the directory to make sure it is removed
@@ -64,7 +64,7 @@ def test_virtualenv_system_site_packages(testdirectory):
     env = dict(os.environ)
     name = "gogo"
     ctx = mock.Mock()
-    ctx.bldnode.abspath = lambda: testdirectory.mkdir("build").path()
+    ctx.path.abspath = lambda: testdirectory.path()
     log = mock.Mock()
 
     # Lets make the directory to make sure it is removed

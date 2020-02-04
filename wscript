@@ -183,7 +183,7 @@ def _pytest(bld):
         # Make python not write any .pyc files. These may linger around
         # in the file system and make some tests pass although their .py
         # counter-part has been e.g. deleted
-        command = "python -B -m pytest test --last-failed --basetemp " + basetemp
+        command = "python -B -m pytest test --basetemp " + basetemp
 
         # Conditionally disable the tests that have the "networktest" marker
         if bld.options.skip_network_tests:

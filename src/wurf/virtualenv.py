@@ -117,7 +117,7 @@ class VirtualEnv(object):
         # virtualenv will create symlinks to the Python interpreter and other
         # stuff - if those are create in the build folder waf will try to
         # delete them when running waf clean.
-        if cwd.startswith(ctx.bldnode.abspath()):
+        if cwd.startswith(os.path.join(ctx.path.abspath(), 'build')):
             ctx.fatal(
                 "Cannot create virtualenv inside the build folder. "
                 "Virtualenv create symlinks to files that will be "
