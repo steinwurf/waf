@@ -91,3 +91,17 @@ def test_virtualenv_system_site_packages(testdirectory):
         env=venv.env,
         stdout=None,
         stderr=None)
+
+
+def test_virtualenv_activate(testdirectory):
+
+    cwd = testdirectory.path()
+    env = dict(os.environ)
+    name = None
+    ctx = mock.Mock()
+    ctx.path.abspath = lambda: testdirectory.path()
+    log = mock.Mock()
+
+    venv = VirtualEnv.create(cwd=cwd, env=env, name=name, log=log, ctx=ctx)
+
+    assert fnmatch.fnmatch(venv.path, os.path.join(cwd, "virtualenv-*"))

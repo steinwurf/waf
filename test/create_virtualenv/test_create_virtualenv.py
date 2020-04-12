@@ -18,9 +18,11 @@ def test_create_virtualenv(testdirectory):
     assert testdirectory.contains_dir("virtualenv-*")
     assert download_path.contains_dir("16.4.3")
 
-    testdirectory.run(
+    r = testdirectory.run(
         "python waf build --download_path {}".format(download_path.path())
     )
+
+    r.stdout.match("Here is a joke: *")
 
     assert testdirectory.contains_dir("virtualenv-*")
 

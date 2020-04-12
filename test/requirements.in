@@ -1,0 +1,6 @@
+pytest
+mock
+vcrpy
+pytest-testdirectory
+pycodestyle
+pyflakes

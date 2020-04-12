@@ -144,16 +144,16 @@ def build(bld):
 
 def _pytest(bld):
 
-    venv = bld.create_virtualenv()
+    with bld.create_virtualenv() as venv:
 
-    with venv:
+        # To update the requirements.txt just delete it - a fresh one
+        # will be generated from test/requirements.in
+        if not os.path.isfile('test/requirements.txt'):
+            venv.run('python -m pip install pip-tools')
+            venv.run('pip-compile test/requirements.in '
+                     '--output-file test/requirements.txt')
 
-        venv.run("python -m pip install pytest")
-        venv.run("python -m pip install mock")
-        venv.run("python -m pip install vcrpy")
-        venv.run("python -m pip install pytest-testdirectory==3.1.0")
-        venv.run("python -m pip install pycodestyle")
-        venv.run("python -m pip install pyflakes")
+        venv.run('python -m pip install -r test/requirements.txt')
 
         # Add our sources to the Python path
         python_path = [

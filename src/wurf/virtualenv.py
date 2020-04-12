@@ -38,6 +38,7 @@ class VirtualEnv(object):
         self.path = path
         self.cwd = cwd
         self.ctx = ctx
+        self.sys_path = None
 
         # Make sure the virtualenv Python executable is first in PATH
         if sys.platform == "win32":
@@ -46,6 +47,36 @@ class VirtualEnv(object):
             python_path = os.path.join(path, "bin")
 
         self.env["PATH"] = os.path.pathsep.join([python_path, env["PATH"]])
+
+    def activate(self):
+        """ Activate the virtualenv by adding the site-packages directory
+        to our current sys.path. This makes the virtualenv package availble
+        in the current Python process.
+        """
+        site_packages = self.ctx.root.find_node(self.path).ant_glob(
+            os.path.join('**', 'site-packages'), dir=True, src=False)
+
+        if not site_packages:
+            self.ctx.fatal(
+                "Could not find site-packages directory in virtualenv path")
+
+        # ant_glob returns a list of Node objects
+        site_packages = str(site_packages[0])
+
+        try:
+            sys.path.index(site_packages)
+            self.ctx.fatal("virtualenv already activated")
+        except ValueError:
+            self.sys_path = sys.path  # Save to be able to restore
+            sys.path = [site_packages] + sys.path
+
+    def deactivate(self):
+        """ Deactivates the virtualenv """
+        if not self.sys_path:
+            self.ctx.fatal("virtualenv not activated")
+
+        sys.path = self.sys_path
+        self.sys_path = None
 
     def run(self, cmd, cwd=None):
         """ Runs a command in the virtualenv.
@@ -72,6 +103,9 @@ class VirtualEnv(object):
     def __exit__(self, type, value, traceback):
         """ Remove the virtualenv. """
         remove_directory(path=self.path)
+
+        if self.sys_path:
+            sys.path = self.sys_path
 
     @staticmethod
     def create(
