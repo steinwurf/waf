@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Recurse dependencies of dependencies before the dependency.
 * Major: Change the default interpreter to python3
 * Patch: Fix resolve such that it won't run twice when invoked explicitly.
 * Minor: Allow resolve without configuration, by calling python waf resolve.
