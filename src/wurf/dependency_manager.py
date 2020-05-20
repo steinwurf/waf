@@ -94,9 +94,10 @@ class DependencyManager(object):
         if not path:
             return
 
-        self.dependency_cache[dependency.name] = \
-            {'path': path, 'recurse': dependency.recurse}
-
+        # Recurse dependencies (of dependency) before adding self to the
+        # dependency cache.
+        # Normally this is not a problem, but in certain cases where use flags
+        # can't be used (e.g., kernel modules) this is needed.
         if dependency.recurse:
             # We do not require the 'resolve' function to be implemented in
             # dependency projects. Therefore the mandatory=False.
@@ -104,6 +105,9 @@ class DependencyManager(object):
             # str() is needed as waf does not handle unicode in its find_node
             # function (invoked from within recurse).
             self.ctx.recurse([str(path)], mandatory=False)
+
+        self.dependency_cache[dependency.name] = \
+            {'path': path, 'recurse': dependency.recurse}
 
     def __skip_dependency(self, dependency):
         """ Checks if we should skip the dependency.
