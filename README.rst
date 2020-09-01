@@ -18,7 +18,7 @@ automatically.
 License
 -------
 This project is under the same BSD license as the Waf project. The license text
-can be found here: https://github.com/waf-project/waf/blob/master/waf-light#L6-L30
+can be found here: https://gitlab.com/ita1024/waf/blob/master/waf-light#L6-30
 
 Building our custom Waf binary
 ------------------------------
