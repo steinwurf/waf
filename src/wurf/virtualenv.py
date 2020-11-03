@@ -167,7 +167,7 @@ class VirtualEnv(object):
         else:
             temp_env = env
 
-        cmd = [python, "-m", "virtualenv", name]
+        cmd = [python, "-m", "virtualenv", name, '--verbose']
 
         if system_site_packages:
             cmd += ["--system-site-packages"]

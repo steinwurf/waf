@@ -32,6 +32,7 @@ def create_symlink(from_path, to_path, overwrite=False, relative=False):
         parent_dir = os.path.dirname(to_path)
 
         from_path = os.path.relpath(from_path, start=parent_dir)
+        to_path = os.path.relpath(to_path)
 
     print("from_path={}, to_path={}, relative={}".format(
         from_path, to_path, relative))
