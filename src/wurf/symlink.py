@@ -8,17 +8,32 @@ import subprocess
 from .compat import IS_PY2
 
 
-def create_symlink(from_path, to_path, overwrite=False):
+def create_symlink(from_path, to_path, overwrite=False, relative=False):
     """ Creates a symlink.
     :param from_path: The path to the directory or file we want to create a
         symlink to.
     :param to_path: The path where the symbolic link should be created.
     :param overwrite: If overwrite is True we first remove the path where the
         symbolic link should be created.
+    :param relative: If relative is True make the symlink a relative path
     """
 
     if overwrite and os.path.lexists(path=to_path):
         _remove_symlink(path=to_path)
+
+    if relative:
+
+        # If relative we should get the relative path from the actual file or
+        # directory to the location where the symlink will be created i.e. the
+        # parent directory.
+        parent_dir = os.path.dirname(to_path)
+
+        print(parent_dir)
+        print(from_path)
+
+        from_path = os.path.relpath(from_path, start=parent_dir)
+
+        print(from_path)
 
     if IS_PY2 and sys.platform == 'win32':
         _py2_win32_create_symlink(from_path=from_path, to_path=to_path)

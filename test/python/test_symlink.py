@@ -20,6 +20,15 @@ def test_symlink_directory(testdirectory):
 
     create_symlink(from_path=foo_dir.path(), to_path=link_dir, overwrite=True)
 
+    assert os.path.isabs(os.readlink(link_dir)) is True
+    assert os.path.isdir(link_dir)
+
+    create_symlink(from_path=foo_dir.path(), to_path=link_dir,
+                   overwrite=True, relative=True)
+
+    assert os.path.isabs(os.readlink(link_dir)) is False
+    assert os.path.isdir(link_dir)
+
 
 def test_symlink_file(testdirectory):
     sub1 = testdirectory.mkdir('sub1')
@@ -35,3 +44,12 @@ def test_symlink_file(testdirectory):
     assert os.path.isfile(link_path)
 
     create_symlink(from_path=ok_path, to_path=link_path, overwrite=True)
+
+    assert os.path.isabs(os.readlink(link_path)) is True
+    assert os.path.isfile(link_path)
+
+    create_symlink(from_path=ok_path, to_path=link_path,
+                   overwrite=True, relative=True)
+
+    assert os.path.isabs(os.readlink(link_path)) is False
+    assert os.path.isfile(link_path)
