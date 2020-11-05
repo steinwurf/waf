@@ -24,11 +24,14 @@ def create_symlink(from_path, to_path, overwrite=False, relative=False):
     print("from_path={}, to_path={}, relative={}".format(
         from_path, to_path, relative))
 
+    # We need this information in the Python2 windows version and we may
+    # destroy the from variable when making it relative
+    is_directory = os.path.isdir(from_path)
+
     if relative:
 
-        # If relative we should get the relative path from the actual file or
-        # directory to the location where the symlink will be created i.e. the
-        # parent directory.
+        # If relative we should get the relative path from the location of the
+        # symlink to the file or directory we want to point to
         parent_dir = os.path.dirname(to_path)
 
         from_path = os.path.relpath(from_path, start=parent_dir)
@@ -37,7 +40,8 @@ def create_symlink(from_path, to_path, overwrite=False, relative=False):
         from_path, to_path, relative))
 
     if IS_PY2 and sys.platform == 'win32':
-        _py2_win32_create_symlink(from_path=from_path, to_path=to_path)
+        _py2_win32_create_symlink(
+            from_path=from_path, to_path=to_path, is_directory=is_directory)
     elif IS_PY2:
         _py2_unix_create_symlink(from_path=from_path, to_path=to_path)
     else:
@@ -55,7 +59,7 @@ def _remove_symlink(path):
         os.unlink(path)
 
 
-def _py2_win32_create_symlink(from_path, to_path):
+def _py2_win32_create_symlink(from_path, to_path, is_directory):
 
     # os.symlink() is not available in Python 2.7 on Windows.
     # We use the original function if it is available, otherwise we
@@ -66,7 +70,7 @@ def _py2_win32_create_symlink(from_path, to_path):
 
     cmd = ['mklink']
 
-    if os.path.isdir(from_path):
+    if is_directory:
         cmd += ['/J']
 
     cmd += ['"{}"'.format(to_path.replace('/', '\\')),
