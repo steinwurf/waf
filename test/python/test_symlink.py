@@ -26,7 +26,6 @@ def test_symlink_directory(testdirectory):
                    overwrite=True, relative=True)
 
     assert os.path.isdir(link_dir)
-    assert False
 
 
 def test_symlink_file(testdirectory):
