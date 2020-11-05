@@ -21,9 +21,6 @@ def create_symlink(from_path, to_path, overwrite=False, relative=False):
     if overwrite and os.path.lexists(path=to_path):
         _remove_symlink(path=to_path)
 
-    print("from_path={}, to_path={}, relative={}".format(
-        from_path, to_path, relative))
-
     # We need this information in the Python2 windows version and we may
     # destroy the from variable when making it relative
     is_directory = os.path.isdir(from_path)
@@ -35,9 +32,6 @@ def create_symlink(from_path, to_path, overwrite=False, relative=False):
         parent_dir = os.path.dirname(to_path)
 
         from_path = os.path.relpath(from_path, start=parent_dir)
-
-    print("from_path={}, to_path={}, relative={}".format(
-        from_path, to_path, relative))
 
     if IS_PY2 and sys.platform == 'win32':
         _py2_win32_create_symlink(
