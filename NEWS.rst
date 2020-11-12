@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Make resolve symlinks relative.
 * Patch: Recurse dependencies of dependencies before the dependency.
 * Major: Change the default interpreter to python3
 * Patch: Fix resolve such that it won't run twice when invoked explicitly.

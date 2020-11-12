@@ -56,7 +56,8 @@ class CreateSymlinkResolver(object):
 
             # We set overwrite True since We need to remove the symlink if it
             # already exists since it may point to an incorrect folder
-            create_symlink(from_path=path, to_path=link_path, overwrite=True)
+            create_symlink(from_path=path, to_path=link_path,
+                           overwrite=True, relative=True)
 
         except Exception as ex:
 
