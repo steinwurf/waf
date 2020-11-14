@@ -2,8 +2,10 @@
 # encoding: utf-8
 
 import os
+import sys
 
 from wurf.symlink import create_symlink
+from wurf.error import RelativeSymlinkError
 
 
 def test_symlink_directory(testdirectory):
@@ -22,8 +24,16 @@ def test_symlink_directory(testdirectory):
 
     assert os.path.isdir(link_dir)
 
-    create_symlink(from_path=foo_dir.path(), to_path=link_dir,
-                   overwrite=True, relative=True)
+    try:
+        create_symlink(from_path=foo_dir.path(), to_path=link_dir,
+                       overwrite=True, relative=True)
+    except RelativeSymlinkError:
+
+        # Not all windows versions support relative symlinks - so we fallback
+        # to non-realtive there
+        assert sys.platform == 'win32'
+        create_symlink(from_path=foo_dir.path(), to_path=link_dir,
+                       overwrite=True, relative=False)
 
     assert os.path.isdir(link_dir)
 
