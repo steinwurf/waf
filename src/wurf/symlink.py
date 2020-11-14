@@ -5,8 +5,6 @@ import os
 import sys
 import subprocess
 
-from .compat import IS_PY2
-
 
 def create_symlink(from_path, to_path, overwrite=False, relative=False):
     """ Creates a symlink.
@@ -33,13 +31,12 @@ def create_symlink(from_path, to_path, overwrite=False, relative=False):
 
         from_path = os.path.relpath(from_path, start=parent_dir)
 
-    if IS_PY2 and sys.platform == 'win32':
-        _py2_win32_create_symlink(
-            from_path=from_path, to_path=to_path, is_directory=is_directory)
-    elif IS_PY2:
-        _py2_unix_create_symlink(from_path=from_path, to_path=to_path)
+    if sys.platform == 'win32':
+        _win32_create_symlink(
+            from_path=from_path, to_path=to_path, is_directory=is_directory,
+            is_relative=relative)
     else:
-        _py3_create_symlink(from_path=from_path, to_path=to_path)
+        _unix_create_symlink(from_path=from_path, to_path=to_path)
 
 
 def _remove_symlink(path):
@@ -53,8 +50,36 @@ def _remove_symlink(path):
         os.unlink(path)
 
 
-def _py2_win32_create_symlink(from_path, to_path, is_directory):
+def _unix_create_symlink(from_path, to_path):
+    os.symlink(from_path, to_path)
 
+# The situation is that on Windows we may or may not have access to
+# os.symlink(). There are three main issues:
+#
+# 1. Not supported on Python version < 3.2
+# 2. May require administrator privileges on Windows:
+#    https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/
+# 3. We can fall back to junctions, but those do not support relative paths:
+#    https://superuser.com/a/1291446
+#
+
+
+def _win32_create_symlink(from_path, to_path, is_directory, is_relative):
+
+    try:
+        _win32_py3_create_symlink(
+            from_path, to_path, is_directory, is_relative)
+    except (OSError, NotImplementedError, AttributeError):
+
+        # If the symlink is not relative or is we do not have the right
+        # privileges try a junction
+        if is_relative:
+            raise
+
+        _win32_create_junction(from_path, to_path, is_directory)
+
+
+def _win32_create_junction(from_path, to_path, is_directory):
     # os.symlink() is not available in Python 2.7 on Windows.
     # We use the original function if it is available, otherwise we
     # create a helper function for Windows
@@ -77,9 +102,6 @@ def _py2_win32_create_symlink(from_path, to_path, is_directory):
         ' '.join(cmd), stderr=subprocess.STDOUT, shell=True)
 
 
-def _py2_unix_create_symlink(from_path, to_path):
-    os.symlink(from_path, to_path)
-
-
-def _py3_create_symlink(from_path, to_path):
-    os.symlink(src=from_path, dst=to_path)
+def _win32_py3_create_symlink(from_path, to_path, is_directory, is_relative):
+    # Support for this was not added until Python 3.3
+    os.symlink(src=from_path, dst=to_path, target_is_directory=is_directory)
