@@ -76,7 +76,7 @@ def _win32_create_symlink(from_path, to_path, is_directory, is_relative):
         # If the symlink is not relative or is we do not have the right
         # privileges try a junction
         if is_relative:
-            raise RelativeSymlinkError from e
+            raise RelativeSymlinkError
 
         _win32_create_junction(from_path, to_path, is_directory)
 
