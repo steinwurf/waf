@@ -5,6 +5,8 @@ import os
 import sys
 import subprocess
 
+from .error import RelativeSymlinkError
+
 
 def create_symlink(from_path, to_path, overwrite=False, relative=False):
     """ Creates a symlink.
@@ -69,12 +71,12 @@ def _win32_create_symlink(from_path, to_path, is_directory, is_relative):
     try:
         _win32_py3_create_symlink(
             from_path, to_path, is_directory, is_relative)
-    except (OSError, NotImplementedError, AttributeError):
+    except (OSError, NotImplementedError, AttributeError) as e:
 
         # If the symlink is not relative or is we do not have the right
         # privileges try a junction
         if is_relative:
-            raise
+            raise RelativeSymlinkError from e
 
         _win32_create_junction(from_path, to_path, is_directory)
 

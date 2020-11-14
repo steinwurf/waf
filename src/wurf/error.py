@@ -53,3 +53,9 @@ def help_message(dependency):
                     'license and you can access the repository at: '  \
                     '{}'.format(map(str, steinwurf_sources))
     return text
+
+
+class RelativeSymlinkError(Error):
+    def __init__(self, *args):
+        super(RelativeSymlinkError, self).__init__(
+            "Relative symlinks are not suported on this platform", *args)
