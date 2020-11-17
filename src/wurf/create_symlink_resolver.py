@@ -4,6 +4,7 @@
 import os
 
 from .symlink import create_symlink
+from .error import RelativeSymlinkError
 
 
 class CreateSymlinkResolver(object):
@@ -54,10 +55,19 @@ class CreateSymlinkResolver(object):
             self.ctx.to_log('wurf: CreateSymlinkResolver {} -> {}'.format(
                             link_path, path))
 
-            # We set overwrite True since We need to remove the symlink if it
-            # already exists since it may point to an incorrect folder
-            create_symlink(from_path=path, to_path=link_path,
-                           overwrite=True, relative=True)
+            try:
+                # We set overwrite True since We need to remove the symlink if it
+                # already exists since it may point to an incorrect folder
+                create_symlink(from_path=path, to_path=link_path,
+                               overwrite=True, relative=True)
+
+            except RelativeSymlinkError:
+
+                self.ctx.to_log('wurf: Using relative symlink failed - fallback '
+                                'to absolute.')
+
+                create_symlink(from_path=path, to_path=link_path,
+                               overwrite=True, relative=False)
 
         except Exception as ex:
 
