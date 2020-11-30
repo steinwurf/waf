@@ -27,3 +27,14 @@ def test_git_url_rewriter_git():
 
     r = rewriter.rewrite_url('github.com/steinwurf/gtest.git')
     assert r == 'git://github.com/steinwurf/gtest.git'
+
+
+def test_git_url_rewriter_custom():
+
+    parser = GitUrlParser()
+    rewriter = GitUrlRewriter(
+        parser=parser,
+        rewrite_protocol='git+https://TOKEN:x-oauth-basic@{host}/{path}.git')
+
+    r = rewriter.rewrite_url('github.com/steinwurf/gtest.git')
+    assert r == 'git+https://TOKEN:x-oauth-basic@github.com/steinwurf/gtest.git'
