@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Added support for git_protocol `ssh://git@`
+  (used when "cloning" with pip).
 * Minor: Added support for custom git_protocols.
 * Patch: Recurse dependencies of dependencies before the dependency.
 * Major: Change the default interpreter to python3

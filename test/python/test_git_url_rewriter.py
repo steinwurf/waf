@@ -29,6 +29,17 @@ def test_git_url_rewriter_git():
     assert r == 'git://github.com/steinwurf/gtest.git'
 
 
+def test_git_url_rewriter_ssh_git_at():
+
+    parser = GitUrlParser()
+    rewriter = GitUrlRewriter(
+        parser=parser,
+        rewrite_protocol='ssh://git@')
+
+    r = rewriter.rewrite_url('github.com/steinwurf/rely-python.git')
+    assert r == 'git@github.com:steinwurf/rely-python.git'
+
+
 def test_git_url_rewriter_custom():
 
     parser = GitUrlParser()
