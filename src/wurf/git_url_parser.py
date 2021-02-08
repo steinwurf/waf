@@ -21,7 +21,7 @@ class GitUrlParser(object):
                 http(s)?    #     Match 'http' followed by 0 or 1 's'
               )             #   End of group
               (             #   Group and match the following
-                ://         #     Match '://'
+                ://(git@)?  #     Match '://' followed by 0 or 1 '@git'
               )             #   End group
               |             # Or
               (             #   Group and match the following

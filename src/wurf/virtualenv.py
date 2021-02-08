@@ -11,7 +11,7 @@ from .virtualenv_download import VirtualEnvDownload
 
 
 class VirtualEnv(object):
-    """ Simple object which can be used to work within a virtualevn.
+    """ Simple object which can be used to work within a virtualenv.
 
     Example (within a wscript build function):
 

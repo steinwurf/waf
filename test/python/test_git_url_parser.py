@@ -51,3 +51,14 @@ def test_git_url_parser_git():
     assert url.protocol == 'git://'
     assert url.host == 'gitlab.com'
     assert url.path == 'steinwurf/score'
+
+
+def test_git_url_parser_ssh_git_a():
+
+    parser = GitUrlParser()
+    # Used when cloning with pip with ssh
+    url = parser.parse('ssh://git@github.com/steinwurf/rely-python.git')
+
+    assert url.protocol == 'ssh://git@'
+    assert url.host == 'github.com'
+    assert url.path == 'steinwurf/rely-python'
