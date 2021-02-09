@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Updated to waf 2.0.22
 * Major: Make resolve symlinks relative.
 * Minor: Added support for git_protocol `ssh://git@`
   (used when "cloning" with pip).
