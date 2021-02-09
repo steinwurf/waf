@@ -78,10 +78,10 @@ def _win32_create_symlink(from_path, to_path, is_directory, is_relative):
         if is_relative:
             raise RelativeSymlinkError
 
-        _win32_create_junction(from_path, to_path, is_directory)
+        _win32_create_link(from_path, to_path, is_directory)
 
 
-def _win32_create_junction(from_path, to_path, is_directory):
+def _win32_create_link(from_path, to_path, is_directory):
     # os.symlink() is not available in Python 2.7 on Windows.
     # We use the original function if it is available, otherwise we
     # create a helper function for Windows
@@ -92,7 +92,11 @@ def _win32_create_junction(from_path, to_path, is_directory):
     cmd = ['mklink']
 
     if is_directory:
+        # If directory create junction
         cmd += ['/J']
+    else:
+        # If file create hardlink
+        cmd += ['/H']
 
     cmd += ['"{}"'.format(to_path.replace('/', '\\')),
             '"{}"'.format(from_path.replace('/', '\\'))]
