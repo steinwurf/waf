@@ -17,9 +17,6 @@ def resolve(ctx):
         optional=False,
         resolver="git",
         method="checkout",
-        # We use a commit since the newest released waf still does not
-        # include the feature we want. Update to tag once a version newer than
-        # 2.0.16 is released
         checkout="waf-2.0.22",
         sources=["gitlab.com/ita1024/waf.git"],
     )
