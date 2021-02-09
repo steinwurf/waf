@@ -4,6 +4,7 @@
 import os
 
 from .symlink import create_symlink
+from .error import RelativeSymlinkError
 
 
 class CreateSymlinkResolver(object):
@@ -35,28 +36,36 @@ class CreateSymlinkResolver(object):
         path = self.resolver.resolve()
 
         if not path:
+            # If no path was returned skip symlink generation
             return path
 
-        link_path = os.path.join(self.symlinks_path, self.dependency.name)
+        if self.dependency.is_symlink:
+            # If the path returned is already a symlink, this is the case if the
+            # dependency is loaded from cache e.g. with fast-resolve. In this
+            # case the symlink resolve should use the real path as the target
+            # for the symlink
+            path = self.dependency.real_path
 
-        if os.path.exists(link_path):
-            # On Windows, os.path.realpath does not follow the symlink,
-            # therefore the two sides are only equal if link_path == path
-            if os.path.realpath(link_path) == os.path.realpath(path):
-                # Symlink is already in place.
-                # We may have loaded it from cache.
-                self.dependency.is_symlink = True
-                self.dependency.real_path = os.path.realpath(path)
-                return link_path
+        link_path = os.path.join(self.symlinks_path, self.dependency.name)
 
         try:
 
             self.ctx.to_log('wurf: CreateSymlinkResolver {} -> {}'.format(
                             link_path, path))
 
-            # We set overwrite True since We need to remove the symlink if it
-            # already exists since it may point to an incorrect folder
-            create_symlink(from_path=path, to_path=link_path, overwrite=True)
+            try:
+                # We set overwrite True since We need to remove the symlink if it
+                # already exists since it may point to an incorrect folder
+                create_symlink(from_path=path, to_path=link_path,
+                               overwrite=True, relative=True)
+
+            except RelativeSymlinkError:
+
+                self.ctx.to_log('wurf: Using relative symlink failed - fallback '
+                                'to absolute.')
+
+                create_symlink(from_path=path, to_path=link_path,
+                               overwrite=True, relative=False)
 
         except Exception as ex:
 

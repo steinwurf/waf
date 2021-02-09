@@ -4,6 +4,7 @@
 
 class Error(Exception):
     """Basic exception for errors raised by wurf tools"""
+
     def __init__(self, *args):
         super(Error, self).__init__(*args)
 
@@ -32,6 +33,7 @@ class TopLevelError(Error):
     Top-level error that also displays error messages that might have
     occurred previously when resolving this dependency
     """
+
     def __init__(self, msg, dependency):
         if isinstance(dependency.error_messages, list) and \
            len(dependency.error_messages):
@@ -51,3 +53,9 @@ def help_message(dependency):
                     'license and you can access the repository at: '  \
                     '{}'.format(map(str, steinwurf_sources))
     return text
+
+
+class RelativeSymlinkError(Error):
+    def __init__(self, *args):
+        super(RelativeSymlinkError, self).__init__(
+            "Relative symlinks are not suported on this platform", *args)
