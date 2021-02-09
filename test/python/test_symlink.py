@@ -55,7 +55,14 @@ def test_symlink_file(testdirectory):
 
     assert os.path.isfile(link_path)
 
-    create_symlink(from_path=ok_path, to_path=link_path,
-                   overwrite=True, relative=True)
+    try:
+        create_symlink(from_path=ok_path, to_path=link_path,
+                       overwrite=True, relative=True)
+    except RelativeSymlinkError:
+        # Not all windows versions support relative symlinks - so we fallback
+        # to non-realtive there
+        assert sys.platform == 'win32'
+        create_symlink(from_path=ok_path, to_path=link_path,
+                       overwrite=True, relative=False)
 
     assert os.path.isfile(link_path)
