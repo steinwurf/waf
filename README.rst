@@ -332,6 +332,9 @@ Example of attributes::
 
 If ``internal`` is not specified, it will default to ``false``.
 
+Internal dependencies can be skipped from the top-level resolve step by
+providing the ``--skip_internal`` option.
+
 Attribute ``sources`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 

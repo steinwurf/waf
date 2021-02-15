@@ -10,7 +10,7 @@ from .error import Error
 
 class DependencyManager(object):
 
-    def __init__(self, registry, dependency_cache, ctx, options):
+    def __init__(self, registry, dependency_cache, ctx, options, skip_internal):
         """ Construct an instance.
 
         As the manager resolves dependencies it will store the results
@@ -28,13 +28,14 @@ class DependencyManager(object):
         :param registry: A Registry instance.
         :param cache: Dict where paths to dependencies should be stored.
         :param ctx: A Waf Context instance.
-        :param options: Options instance for collecing / parsing options
+        :param options: Options instance for collecting / parsing options
         """
 
         self.registry = registry
         self.dependency_cache = dependency_cache
         self.ctx = ctx
         self.options = options
+        self.skip_internal = skip_internal
 
         # Dict where we will store the dependencies already added. For
         # example two libraries may have an overlap in their
@@ -46,7 +47,7 @@ class DependencyManager(object):
         self.seen_dependencies = {}
 
         # Actions to be executed once all dependencies have been resolved
-        # will only be invoked if the post_resolve(...) fuction is invoked.
+        # will only be invoked if the post_resolve(...) function is invoked.
         self.post_resolve_actions = []
 
     def load_dependencies(self, path, mandatory=False):
@@ -115,10 +116,14 @@ class DependencyManager(object):
         :param dependency: A WurfDependency instance.
         :return: True if the dependency should be skipped, otherwise False.
         """
-        if dependency.internal and not self.ctx.is_toplevel():
-            # Internal dependencies should be skipped, if this is not the
-            # top-level wscript
-            return True
+        if dependency.internal:
+            if self.skip_internal:
+                return True
+
+            if not self.ctx.is_toplevel():
+                # Internal dependencies should be skipped, if this is not the
+                # top-level wscript
+                return True
 
         if dependency.name in self.seen_dependencies:
 

@@ -42,6 +42,10 @@ class WafOptionsContext(Options.OptionsContext):
         gr = self.add_option_group('Resolve options')
         gr.add_option('--no_resolve', default=False, action='store_true')
 
+        # Add option to skip internal dependencies
+        gr = self.add_option_group('Resolve options')
+        gr.add_option('--skip_internal', default=False, action='store_true')
+
     def execute(self):
 
         self.srcnode = self.path
@@ -63,8 +67,13 @@ class WafOptionsContext(Options.OptionsContext):
         # the options so we just do it manually
         resolve = '--no_resolve' not in sys.argv
 
+        # Peek into the options and see of --skip_internal was passed
+        # if it was skip the internal dependencies.
+        skip_internal = '--skip_internal' in sys.argv
+
         # Create and execute the resolve context
-        ctx = Context.create_context('resolve', resolve=resolve)
+        ctx = Context.create_context(
+            'resolve', resolve=resolve, skip_internal=skip_internal)
 
         try:
             ctx.execute()

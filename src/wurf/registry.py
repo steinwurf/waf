@@ -999,10 +999,11 @@ def dependency_manager(registry):
     ctx = registry.require('ctx')
     dependency_cache = registry.require('dependency_cache')
     options = registry.require('options')
+    skip_internal = registry.require('skip_internal')
 
     return DependencyManager(
         registry=registry, dependency_cache=dependency_cache, ctx=ctx,
-        options=options)
+        options=options, skip_internal=skip_internal)
 
 
 @Registry.provide
@@ -1029,7 +1030,7 @@ def post_resolver_actions(registry, configuration):
 
 def resolve_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
                      default_symlinks_path, semver, archive_extractor, waf_utils,
-                     args, project_path, waf_lock_file):
+                     args, project_path, waf_lock_file, skip_internal):
     """ Builds a registry.
 
     :param ctx: A Waf Context instance.
@@ -1048,9 +1049,10 @@ def resolve_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
     :param project_path: The path to the project as a string
     :param waf_lock_file: The lock file created by waf after a successful
         configure.
-
+    :param skip_internal: A flag specifying whether internal dependencies
+        should be skipped.
     :returns:
-        A new Registery instance.
+        A new Registry instance.
     """
     registry = Registry()
 
@@ -1065,6 +1067,7 @@ def resolve_registry(ctx, git_binary, default_resolve_path, resolve_config_path,
     registry.provide_value('args', args)
     registry.provide_value('project_path', project_path)
     registry.provide_value('waf_lock_file', waf_lock_file)
+    registry.provide_value('skip_internal', skip_internal)
 
     return registry
 
