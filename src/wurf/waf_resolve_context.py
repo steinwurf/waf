@@ -37,7 +37,7 @@ class WafResolveContext(Context.Context):
     cmd = 'resolve'
     fun = 'resolve'
 
-    def __init__(self, resolve=False, **kw):
+    def __init__(self, resolve=False, skip_internal=False, **kw):
         """ Create a WafResolveContext"""
         super(WafResolveContext, self).__init__(**kw)
 
@@ -47,6 +47,7 @@ class WafResolveContext(Context.Context):
         # command to run a resolve without a configure - this is ok. But,
         # in that case we don't want to run resolve twice.
         self.resolve = resolve
+        self.skip_internal = skip_internal
 
     def execute(self):
 
@@ -58,8 +59,7 @@ class WafResolveContext(Context.Context):
         # Check whether the main wscript has a resolve function defined,
         # if not we create one. This is also done for other functions such
         # as options by waf itself. See:
-        # https://github.com/waf-project/waf/blob/master/waflib/Scripting.py#L201-L207
-        #
+        # https://gitlab.com/ita1024/waf/-/blob/89175bf97/waflib/Scripting.py#L203-209
         if 'resolve' not in Context.g_module.__dict__:
             Context.g_module.resolve = Utils.nada
 
@@ -84,7 +84,8 @@ class WafResolveContext(Context.Context):
             default_symlinks_path=default_symlinks_path,
             waf_utils=Utils, args=sys.argv[1:],
             project_path=self.path.abspath(),
-            waf_lock_file=Options.lockfile)
+            waf_lock_file=Options.lockfile,
+            skip_internal=self.skip_internal)
 
         # Enable/disable colors based on the currently used terminal.
         # Note: this prevents jumbled output if waf is invoked from an IDE

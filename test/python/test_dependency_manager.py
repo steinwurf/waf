@@ -13,6 +13,6 @@ def test_dependency_manager():
     options = mock.Mock()
 
     DependencyManager(registry=registry, dependency_cache=dependency_cache,
-                      ctx=ctx, options=options)
+                      ctx=ctx, options=options, skip_internal=False)
 
     # @todo add tests
