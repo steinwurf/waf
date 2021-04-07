@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-from .error import Error
+from .error import WurfError
 import argparse
 
 
@@ -101,7 +101,7 @@ class Options(object):
         self.unknown_args = unknown
 
         if self.lock_versions() and self.lock_paths():
-            raise Error('Incompatible options')
+            raise WurfError('Incompatible options')
 
     def __add_path(self, dependency):
 

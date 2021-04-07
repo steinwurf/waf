@@ -5,7 +5,7 @@ import os
 import json
 
 from .dependency import Dependency
-from .error import Error
+from .error import WurfError
 
 
 class DependencyManager(object):
@@ -62,7 +62,7 @@ class DependencyManager(object):
         if not os.path.isfile(resolve_path):
 
             if mandatory:
-                raise Error('Mandatory resolve.json not found here: {}'.format(
+                raise WurfError('Mandatory resolve.json not found here: {}'.format(
                     resolve_path))
             else:
                 return
@@ -135,7 +135,7 @@ class DependencyManager(object):
                 return True
 
             if dependency.override and not seen_dependency.override:
-                raise Error(
+                raise WurfError(
                     "Overriding dependency:\n{}\n"
                     "added after non overriding dependency:\n{}".format(
                         dependency, seen_dependency))
@@ -145,7 +145,7 @@ class DependencyManager(object):
 
             if seen_dependency.sha1 != dependency.sha1:
 
-                raise Error(
+                raise WurfError(
                     "SHA1 mismatch when adding:\n{}\n"
                     "the previous definition was:\n{}".format(
                         dependency, seen_dependency))

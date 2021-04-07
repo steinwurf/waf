@@ -15,7 +15,7 @@ class CreateSymlinkResolver(object):
     def __init__(self, resolver, dependency, symlinks_path, ctx):
         """ Construct a new CreateSymlinkResolver instance.
 
-        :param resolver: The resolver used to fecth the dependency
+        :param resolver: The resolver used to fetch the dependency
         :param dependency: The Dependency object.
         :param symlinks_path: The folder where the symlink should be created.
         :param ctx: A Waf Context instance.

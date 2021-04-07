@@ -52,7 +52,7 @@ class GitSemverResolver(object):
                     "were {}".format(self.dependency.major, tags),
                 dependency=self.dependency)
 
-        # Use the path retuned to create a unique location for this checkout
+        # Use the path returned to create a unique location for this checkout
         repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
 
         # The folder for storing the requested tag

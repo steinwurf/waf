@@ -41,10 +41,10 @@ from .http_resolver import HttpResolver
 from .archive_resolver import ArchiveResolver
 from .post_resolve_run import PostResolveRun
 
-from .error import Error
+from .error import WurfError
 
 
-class RegistryProviderError(Error):
+class RegistryProviderError(WurfError):
     """Exception used by the Registry"""
 
     def __init__(self, name):
@@ -53,7 +53,7 @@ class RegistryProviderError(Error):
             "Registry error: {} already added to registry".format(self.name))
 
 
-class RegistryInjectError(Error):
+class RegistryInjectError(WurfError):
     def __init__(self, provider_function, missing_provider):
 
         self.provider_function = provider_function
@@ -64,7 +64,7 @@ class RegistryInjectError(Error):
                 self.provider_function.__name__, self.missing_provider))
 
 
-class RegistryCacheOnceError(Error):
+class RegistryCacheOnceError(WurfError):
     def __init__(self, provider_name, provider_function):
 
         self.provider_name = provider_name
@@ -90,7 +90,7 @@ class Registry(object):
     #
     #    assert 'temperature' not in registry
     #
-    # The TemporaryValue is retuned by the provide_temporary function and
+    # The TemporaryValue is returned by the provide_temporary function and
     # ensures that the value is removed from the registry after the "with"
     # block is finished.
     class TemporaryValue:
@@ -140,7 +140,7 @@ class Registry(object):
         # Dictionary which contains cached values produced for the different
         # providers. The layout of the dictionary will be:
         # { 'provider1': { argument_hash1: value1
-        #                  arguemnt_hash2, value2},
+        #                  argument_hash2, value2},
         #   'provider2': { argument_hash1: value1 },
         #   ....
         # }
@@ -432,7 +432,7 @@ def lock_cache(configuration, options, project_path):
         lock_path = os.path.join(project_path, Configuration.LOCK_FILE)
         return LockCache.create_from_file(lock_path=lock_path)
     else:
-        raise Error("Lock cache not available for {} chain".format(
+        raise WurfError("Lock cache not available for {} chain".format(
             configuration.resolver_chain()))
 
 
@@ -945,7 +945,7 @@ def resolve_and_lock_chain(registry, dependency, project_path, lock_cache):
             project_path=project_path, dependency=dependency)
 
     else:
-        raise Error("Unknown lock type {}".format(lock_type))
+        raise WurfError("Unknown lock type {}".format(lock_type))
 
 
 @Registry.provide
@@ -962,7 +962,7 @@ def resolve_from_lock_chain(registry, dependency, lock_cache):
         resolver = registry.require('resolve_from_lock_path')
 
     else:
-        raise Error("Unknown lock type {}".format(lock_type))
+        raise WurfError("Unknown lock type {}".format(lock_type))
 
     return resolver
 
@@ -1080,7 +1080,7 @@ def options_registry(ctx, git_binary):
 
 
     :returns:
-        A new Registery instance.
+        A new Registry instance.
     """
     registry = Registry()
 

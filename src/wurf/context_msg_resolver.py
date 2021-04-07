@@ -7,7 +7,7 @@ class ContextMsgResolver(object):
     def __init__(self, resolver, ctx, dependency):
         """ Construct an instance.
 
-        :param resolver: The resolver used to fecth the dependency
+        :param resolver: The resolver used to fetch the dependency
         :param ctx: A Waf Context instance.
         :param dependency: A Dependency instance.
         """

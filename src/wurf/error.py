@@ -2,17 +2,17 @@
 # encoding: utf-8
 
 
-class Error(Exception):
+class WurfError(Exception):
     """Basic exception for errors raised by wurf tools"""
 
     def __init__(self, *args):
-        super(Error, self).__init__(*args)
+        super(WurfError, self).__init__(*args)
 
     def __str__(self):
         return "\n".join(map(str, self.args))
 
 
-class CmdAndLogError(Error):
+class CmdAndLogError(WurfError):
     def __init__(self, error):
         self.error = error
         msg = str(error)
@@ -23,12 +23,12 @@ class CmdAndLogError(Error):
         super(CmdAndLogError, self).__init__(msg)
 
 
-class DependencyError(Error):
+class DependencyError(WurfError):
     def __init__(self, msg, dependency):
         super(DependencyError, self).__init__(msg, help_message(dependency))
 
 
-class TopLevelError(Error):
+class TopLevelError(WurfError):
     """
     Top-level error that also displays error messages that might have
     occurred previously when resolving this dependency
@@ -55,7 +55,7 @@ def help_message(dependency):
     return text
 
 
-class RelativeSymlinkError(Error):
+class RelativeSymlinkError(WurfError):
     def __init__(self, *args):
         super(RelativeSymlinkError, self).__init__(
-            "Relative symlinks are not suported on this platform", *args)
+            "Relative symlinks are not supported on this platform", *args)

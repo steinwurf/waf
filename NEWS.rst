@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Rename Error to WurfError to make it's origin more obvious.
 * Minor: Added --skip_internal option which allows the user to skip internal
   dependencies when resolving.
 * Major: Updated to waf 2.0.22
@@ -20,7 +21,7 @@ Latest
 * Minor: Added registry for the OptionsContext - this allows us to build git
   helpers etc.
 * Minor: Adding helper functionality for rewriting files. This is useful
-  when releasing projects and some files need to be updated programatically.
+  when releasing projects and some files need to be updated programmatically.
 * Minor: Added git checkout resolver which will reuse previously checked out
   checkouts, and thereby making the configure step faster.
 * Patch: Fix dependency_node(..) function to work with unicode strings.
@@ -29,15 +30,15 @@ Latest
   in the API to create virtualenvs.
 * Major: Removed pip_local_download, pip_local_install, pip_install from the
   virtualenv implementation. Users might as well directly call run with the
-  appropiate command.
+  appropriate command.
 * Major: Prevent creation of virtualenv in build folder
 * Patch: Make the virtualenv clone shallow.
-* Major: Remove the explict dependency on virtualenv. Instead we will
+* Major: Remove the explicit dependency on virtualenv. Instead we will
   automatically download the virtualenv dependency.
 * Minor: Updated waf to 2.0.10.
 * Patch: Hide the output of the mklink command on Windows when calling the
   create_symlink function (the output is logged when an error occurs)
-* Minor: Allow persistant virtualenv
+* Minor: Allow persistent virtualenv
 * Minor: Added capability to prevent git dependencies from pulling submodules.
 * Minor: Added Context dependency_node() function to return a waf node to a
   dependency. Making it easy to use Waf's ant_glob(...) function.

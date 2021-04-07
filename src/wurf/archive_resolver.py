@@ -33,7 +33,7 @@ class ArchiveResolver(object):
 
         assert os.path.isfile(path)
 
-        # Use the path retuned to create a unique location for extracted files
+        # Use the path returned to create a unique location for extracted files
         extract_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
 
         # The folder for storing the requested checkout

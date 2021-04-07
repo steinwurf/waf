@@ -13,7 +13,7 @@ from waflib.Errors import WafError
 
 from . import registry
 from .error import CmdAndLogError
-from .error import Error
+from .error import WurfError
 
 from waflib.extras import semver
 from waflib.extras import archive
@@ -110,7 +110,7 @@ class WafResolveContext(Context.Context):
             # which will trigger loading the dependency.
             super(WafResolveContext, self).execute()
 
-        except Error as e:
+        except WurfError as e:
             self.logger.debug("Error in resolve:\n", exc_info=True)
             self.fatal(str(e))
         except Exception:

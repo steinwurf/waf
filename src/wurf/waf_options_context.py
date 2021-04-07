@@ -38,13 +38,14 @@ class WafOptionsContext(Options.OptionsContext):
         # Options parser used in the resolve step.
         self.wurf_options = None
 
+        # Create option group for resolve options.
+        option_group = self.add_option_group('Resolve options')
+
         # Add option to skip resolve
-        gr = self.add_option_group('Resolve options')
-        gr.add_option('--no_resolve', default=False, action='store_true')
+        option_group.add_option('--no_resolve', default=False, action='store_true')
 
         # Add option to skip internal dependencies
-        gr = self.add_option_group('Resolve options')
-        gr.add_option('--skip_internal', default=False, action='store_true')
+        option_group.add_option('--skip_internal', default=False, action='store_true')
 
     def execute(self):
 
@@ -87,7 +88,7 @@ class WafOptionsContext(Options.OptionsContext):
 
             # Fetch the arguments not parsed in the resolve step
             # We are just interested in the left-over args, which is the
-            # second value retuned by parse_known_args(...)
+            # second value returned by parse_known_args(...)
             self.waf_options = self.wurf_options.unknown_args
         else:
             self.waf_options = sys.argv

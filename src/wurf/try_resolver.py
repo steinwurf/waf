@@ -3,7 +3,7 @@
 
 import os
 
-from .error import Error
+from .error import WurfError
 
 
 class TryResolver(object):
@@ -25,7 +25,7 @@ class TryResolver(object):
         """
         try:
             path = self.resolver.resolve()
-        except Error as e:
+        except WurfError as e:
             # Using exc_info will attach the current exception information
             # to the log message (including traceback to where the
             # exception was thrown).
