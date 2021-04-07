@@ -25,7 +25,7 @@ class MandatoryOptions(object):
         call = getattr(self.options, name)
 
         # Wrap the option access function with a function which
-        # checks that the arguement is not None
+        # checks that the argument is not None
 
         def require(*args, **kwargs):
             value = call(*args, **kwargs)

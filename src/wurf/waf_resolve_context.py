@@ -76,7 +76,8 @@ class WafResolveContext(Context.Context):
             self.path.abspath(), 'resolve_symlinks')
 
         self.registry = registry.resolve_registry(
-            ctx=self, git_binary='git',
+            ctx=self,
+            git_binary='git',
             semver=semver,
             archive_extractor=archive.extract,
             default_resolve_path=default_resolve_path,
