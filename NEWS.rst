@@ -33,7 +33,7 @@ Latest
   appropriate command.
 * Major: Prevent creation of virtualenv in build folder
 * Patch: Make the virtualenv clone shallow.
-* Major: Remove the explict dependency on virtualenv. Instead we will
+* Major: Remove the explicit dependency on virtualenv. Instead we will
   automatically download the virtualenv dependency.
 * Minor: Updated waf to 2.0.10.
 * Patch: Hide the output of the mklink command on Windows when calling the
