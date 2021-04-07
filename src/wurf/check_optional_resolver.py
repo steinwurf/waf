@@ -9,7 +9,7 @@ class CheckOptionalResolver(object):
     def __init__(self, resolver, dependency):
         """ Construct an instance.
 
-        :param resolver: The resolver used to fecth the dependency
+        :param resolver: The resolver used to fetch the dependency
         :param dependency: The Dependency object.
         """
         self.resolver = resolver

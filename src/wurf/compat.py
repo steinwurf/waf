@@ -14,7 +14,7 @@ def check_locale_python3():
     You can read about the problem in the Click project documentation:
     http://click.pocoo.org/5/python3/#python-3-surrogate-handling
 
-    tl;dr Python 3 relies on the localed of the computer where the
+    tl;dr Python 3 relies on the locale of the computer where the
     interpreter is running to handled non-ascii characters. If the
     locale is missing or incorrectly specified it will raise an
     UnicodeError.

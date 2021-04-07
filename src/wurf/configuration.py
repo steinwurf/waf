@@ -16,7 +16,7 @@ class Configuration(object):
     # 4. The "store_lock" works like "store", but also write a lock file
     #    to the project directory - fixating a dependency to a specific
     #    version or path
-    # 5. The "store_from_lock" will load the depenency information from the
+    # 5. The "store_from_lock" will load the dependency information from the
     #    lock file and fetch dependencies.
     RESOLVE = 'resolve'
     LOAD = 'load'
@@ -38,7 +38,7 @@ class Configuration(object):
         :param project_path: The path to the project whose dependencies we are
             resolving as a string.
         :param args: The command-line arguments passed as a list.
-        :param options: Options instance for collecing / parsing options
+        :param options: Options instance for collecting / parsing options
         :param waf_lock_file: The lock file created by waf after a successful
             configure.
         """
@@ -69,7 +69,7 @@ class Configuration(object):
 
         There are two cases where we want to use the help chain:
 
-        1. If we explicity pass -h or --help
+        1. If we explicitly pass -h or --help
         2. If we run waf without wanting to resolve
         """
 
