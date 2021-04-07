@@ -2,10 +2,10 @@ import os
 import shutil
 
 from waflib.extras.wurf.git import Git
-from waflib.extras.wurf.error import Error
+from waflib.extras.wurf.error import WurfError
 
 
-class CloneError(Error):
+class CloneError(WurfError):
     """Basic """
     def __init__(self, repository):
         super(CloneError, self).__init__(

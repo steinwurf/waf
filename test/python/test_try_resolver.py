@@ -1,7 +1,7 @@
 import mock
 
 from wurf.try_resolver import TryResolver
-from wurf.error import Error
+from wurf.error import WurfError
 
 
 def test_try_resolver(testdirectory):
@@ -22,9 +22,9 @@ def test_try_resolver(testdirectory):
 
     assert path == testdirectory.path()
 
-    # Make resolver1 fail with an Error
+    # Make resolver1 fail with an WurfError
     def raise_error():
-        raise Error('random error')
+        raise WurfError('random error')
 
     resolver1.resolve = mock.Mock(side_effect=raise_error)
 

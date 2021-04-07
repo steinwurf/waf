@@ -3,7 +3,7 @@ import argparse
 import pytest
 
 from wurf.options import Options
-from wurf.error import Error
+from wurf.error import WurfError
 
 
 def test_resolve_path():
@@ -185,7 +185,7 @@ def test_exclusive_lock_options():
     parser = argparse.ArgumentParser()
     args = ['--lock_versions', '--lock_paths']
 
-    with pytest.raises(Error):
+    with pytest.raises(WurfError):
         options = Options(args=args, parser=parser,
                           default_resolve_path='resolve_path',
                           default_symlinks_path="symlinks_path",

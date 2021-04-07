@@ -6,7 +6,7 @@ import hashlib
 
 from .directory import copy_directory
 from .directory import remove_directory
-from .error import Error
+from .error import WurfError
 
 
 class PostResolveRun(object):
@@ -57,7 +57,7 @@ class PostResolveRun(object):
             copy_directory(path=path, to_path=run_path)
             self.ctx.cmd_and_log(cmd=self.run, cwd=run_path)
 
-        except Error:
+        except WurfError:
 
             # If we do not succeed clean up and make sure we start from
             # scratch next time around

@@ -3,7 +3,7 @@
 
 import json
 
-from .error import Error, DependencyError
+from .error import WurfError, DependencyError
 
 
 class LockCache(object):
@@ -60,7 +60,7 @@ class LockCache(object):
 
             return LockCache(lock_cache=lock_cache)
         else:
-            raise Error('Store lock cache requested, with unknown lock type.')
+            raise WurfError('Store lock cache requested, with unknown lock type.')
 
     @staticmethod
     def create_from_file(lock_path):

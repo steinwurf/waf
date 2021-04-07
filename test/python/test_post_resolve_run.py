@@ -3,7 +3,7 @@ import mock
 import pytest
 
 from wurf.post_resolve_run import PostResolveRun
-from wurf.error import Error
+from wurf.error import WurfError
 
 
 def test_post_resolve_run(testdirectory):
@@ -34,14 +34,14 @@ def test_post_resolve_run_failed(testdirectory):
     resolver.resolve.return_value = resolver_folder.path()
 
     ctx = mock.Mock()
-    ctx.cmd_and_log.side_effect = Error("Bang!")
+    ctx.cmd_and_log.side_effect = WurfError("Bang!")
     run = "tar -xyz this.tar.gz"
     cwd = testdirectory.path()
 
     resolver = PostResolveRun(
         resolver=resolver, ctx=ctx, run=run, cwd=cwd)
 
-    with pytest.raises(Error):
+    with pytest.raises(WurfError):
         resolver.resolve()
 
     # The run-xxxx folder should be cleaned out

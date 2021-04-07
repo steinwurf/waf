@@ -3,7 +3,7 @@
 
 import os
 
-from .error import Error
+from .error import WurfError
 
 
 class StoreLockPathResolver(object):
@@ -13,7 +13,7 @@ class StoreLockPathResolver(object):
 
         :param resolver: A resolver which will do the actual job
         :param lock_cache: The lock cache to store the version information in.
-        :param project_path: The path to the project whoms dependencies we are
+        :param project_path: The path to the project who's dependencies we are
            resolving as a string.
         :param dependency: A Dependency instance.
         """
@@ -52,4 +52,4 @@ class StoreLockPathResolver(object):
         parent = os.path.realpath(self.project_path)
 
         if not child.startswith(parent):
-            raise Error("Locked paths must be a within parent project")
+            raise WurfError("Locked paths must be a within parent project")

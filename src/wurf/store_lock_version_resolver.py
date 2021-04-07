@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-from .error import Error
+from .error import WurfError
 
 
 class StoreLockVersionResolver(object):
@@ -35,7 +35,7 @@ class StoreLockVersionResolver(object):
         elif self.dependency.git_commit:
             checkout = self.dependency.git_commit
         else:
-            raise Error('Not stable checkout information found.')
+            raise WurfError('Not stable checkout information found.')
 
         self.lock_cache.add_checkout(
             dependency=self.dependency, checkout=checkout)
