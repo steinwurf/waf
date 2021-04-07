@@ -6,7 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
-* Minor: Added --skip-internal option which allows the user to skip internal
+* Minor: Added --skip_internal option which allows the user to skip internal
   dependencies when resolving.
 * Major: Updated to waf 2.0.22
 * Major: Make resolve symlinks relative.
