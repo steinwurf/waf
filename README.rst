@@ -74,7 +74,7 @@ Running ``pytest --help`` will produce the following description of the
 ``-k`` option::
 
     -k EXPRESSION         only run tests which match the given substring
-                           expression. An expression is a python evaluatable
+                           expression. An expression is a python evaluable
                            expression where all names are substring-matched
                            against test names and their parent classes. Example:
                            -k 'test_method or test_other' matches all test
@@ -356,7 +356,7 @@ Attribute ``post_resolve`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 The ``post_resolve`` attribute is a list of steps to be performed after
-succesfully resolving a dependency.
+successfully resolving a dependency.
 
 The steps will be performed in the order they are specified.
 
@@ -677,7 +677,7 @@ The version information can be different for different resolvers:
 - ``http`` resolvers will store the SHA1 sum of the downloaded dependency.
 
 If the ``lock_resolve.json`` is present, it will take precedence over all
-resolvers besides the user optionsm such as manually specifying checkout or
+resolvers besides the user options such as manually specifying checkout or
 path.
 
 You can commit the ``lock_resolve.json`` file to git, e.g. when creating
@@ -707,7 +707,24 @@ This makes it possible to easily create a standalone archive::
     python waf configure --lock_paths
     python waf standalone
 
+Config file
+...........
+Using the ``--resolve_path`` option whenever doing a resolve or configure can be
+cumbersome. 
+To combat this a config file can be used for overriding the default value for
+this option.
 
+The config file must be called ``.wurf_config``, and must be located in either
+the project's directory or the user's directory. Note, the former takes priority
+over the latter.
+
+The following is an example of the content of a config file::
+
+    [DEFAULT]
+    resolve_path = ~/projects/dependencies
+
+This config file will will override the default value for the resolve_path with
+``~/projects/dependencies``. 
 
 Future features
 ---------------

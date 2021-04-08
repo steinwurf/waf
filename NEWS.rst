@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Added support for .wurf_config. This allows changing the default
+  resolve path.
 * Major: Rename Error to WurfError to make it's origin more obvious.
 * Minor: Added --skip_internal option which allows the user to skip internal
   dependencies when resolving.

@@ -1010,9 +1010,6 @@ def dependency_manager(registry):
     if config.default_resolve_path:
         registry.provide_value(
             'default_resolve_path', config.default_resolve_path, override=True)
-    if config.default_symlinks_path:
-        registry.provide_value(
-            'default_symlinks_path', config.default_symlinks_path, override=True)
 
     options = registry.require('options')
     skip_internal = registry.require('skip_internal')
