@@ -34,7 +34,7 @@ jobs:
       - name: Configure
         run: ${{ env.python }} waf configure
       - name: Build
-        run: ${{ env.python }} waf build
+        run: ${{ env.python }} waf build -vv
       - name: Unittests
         run: ${{ env.python }} waf --run_tests
   # Code Format Check
