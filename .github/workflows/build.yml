@@ -34,7 +34,7 @@ jobs:
       - name: Configure
         run: ${{ env.python }} waf configure
       - name: Build
-        run: ${{ env.python }} waf build --interpreter="!#C:\\Python\\Python39\\python"
+        run: ${{ env.python }} waf build
       - name: Unittests
         run: ${{ env.python }} waf --run_tests
   # Code Format Check
