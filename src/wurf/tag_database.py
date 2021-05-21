@@ -5,9 +5,8 @@ import json
 
 
 class TagDatabase(object):
-
     def __init__(self, ctx):
-        """ Construct an instance.
+        """Construct an instance.
 
         :param ctx: A Waf Context instance.
         """
@@ -32,15 +31,14 @@ class TagDatabase(object):
             req = Request(url)
             response = urlopen(req)
             tags_json = response.read()
-            self.ctx.to_log(
-                "Tags downloaded. File size: {}\n".format(len(tags_json)))
+            self.ctx.to_log("Tags downloaded. File size: {}\n".format(len(tags_json)))
             self.tags = json.loads(tags_json)
         except Exception:
             self.tags = {}
             # Log the exception, including the traceback information
             self.ctx.logger.debug(
-                "Could not fetch tags.json from: {}".format(url),
-                exc_info=True)
+                "Could not fetch tags.json from: {}".format(url), exc_info=True
+            )
 
     def project_tags(self, project_name):
         """
@@ -53,8 +51,11 @@ class TagDatabase(object):
             self.download_tags()
 
         if project_name in self.tags:
-            self.ctx.to_log("Registered tags for {}:\n{}".format(
-                project_name, self.tags[project_name]))
+            self.ctx.to_log(
+                "Registered tags for {}:\n{}".format(
+                    project_name, self.tags[project_name]
+                )
+            )
             return self.tags[project_name]
         else:
             self.ctx.to_log("No registered tags for {}.".format(project_name))

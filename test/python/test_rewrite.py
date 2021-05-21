@@ -22,7 +22,8 @@ hello hello
 
 def test_rewrite(testdirectory):
     filename = testdirectory.write_text(
-        filename="test.txt", data=data, encoding="utf-8")
+        filename="test.txt", data=data, encoding="utf-8"
+    )
 
     with rewrite_file(filename=filename) as f:
 

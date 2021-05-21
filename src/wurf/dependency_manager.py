@@ -9,9 +9,8 @@ from .error import WurfError
 
 
 class DependencyManager(object):
-
     def __init__(self, registry, dependency_cache, ctx, options, skip_internal):
-        """ Construct an instance.
+        """Construct an instance.
 
         As the manager resolves dependencies it will store the results
         in the dependency cache. The dependency cache contains information
@@ -51,30 +50,31 @@ class DependencyManager(object):
         self.post_resolve_actions = []
 
     def load_dependencies(self, path, mandatory=False):
-        """ Loads dependencies from a resolve.json file.
+        """Loads dependencies from a resolve.json file.
 
         :param path: Location where resolve.json should be found.
         :param mandatory: True if the resolve.json file must exist.
         """
 
-        resolve_path = os.path.join(path, 'resolve.json')
+        resolve_path = os.path.join(path, "resolve.json")
 
         if not os.path.isfile(resolve_path):
 
             if mandatory:
-                raise WurfError('Mandatory resolve.json not found here: {}'.format(
-                    resolve_path))
+                raise WurfError(
+                    "Mandatory resolve.json not found here: {}".format(resolve_path)
+                )
             else:
                 return
 
-        with open(resolve_path, 'r') as resolve_file:
+        with open(resolve_path, "r") as resolve_file:
             resolve_json = json.load(resolve_file)
 
         for dependency in resolve_json:
             self.add_dependency(**dependency)
 
     def add_dependency(self, **kwargs):
-        """ Adds a dependency to the manager.
+        """Adds a dependency to the manager.
 
         :param kwargs: Keyword arguments containing options for the dependency.
         """
@@ -87,8 +87,8 @@ class DependencyManager(object):
         self.options.add_dependency(dependency)
 
         with self.registry.provide_temporary() as tmp:
-            tmp.provide_value('dependency', dependency)
-            resolver = self.registry.require('dependency_resolver')
+            tmp.provide_value("dependency", dependency)
+            resolver = self.registry.require("dependency_resolver")
 
         path = resolver.resolve()
 
@@ -107,11 +107,13 @@ class DependencyManager(object):
             # function (invoked from within recurse).
             self.ctx.recurse([str(path)], mandatory=False)
 
-        self.dependency_cache[dependency.name] = \
-            {'path': path, 'recurse': dependency.recurse}
+        self.dependency_cache[dependency.name] = {
+            "path": path,
+            "recurse": dependency.recurse,
+        }
 
     def __skip_dependency(self, dependency):
-        """ Checks if we should skip the dependency.
+        """Checks if we should skip the dependency.
 
         :param dependency: A WurfDependency instance.
         :return: True if the dependency should be skipped, otherwise False.
@@ -138,7 +140,9 @@ class DependencyManager(object):
                 raise WurfError(
                     "Overriding dependency:\n{}\n"
                     "added after non overriding dependency:\n{}".format(
-                        dependency, seen_dependency))
+                        dependency, seen_dependency
+                    )
+                )
 
             # In this case either both or non of the dependencies are marked
             # override and we need to check the SHA1
@@ -148,7 +152,9 @@ class DependencyManager(object):
                 raise WurfError(
                     "SHA1 mismatch when adding:\n{}\n"
                     "the previous definition was:\n{}".format(
-                        dependency, seen_dependency))
+                        dependency, seen_dependency
+                    )
+                )
 
             # If the current dependency is non-optional and we have already
             # seen the same dependency as optional
@@ -171,7 +177,7 @@ class DependencyManager(object):
         return False
 
     def post_resolve(self):
-        """ Function called when all dependencies have been resolved. """
+        """Function called when all dependencies have been resolved."""
 
         for action in self.post_resolve_actions:
             action(dependency_manager=self)

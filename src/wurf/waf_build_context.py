@@ -5,7 +5,6 @@ from waflib.Build import BuildContext
 
 
 class WafBuildContext(BuildContext):
-
     def execute_build(self):
 
         # Call build() in all dependencies before executing build()

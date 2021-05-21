@@ -5,9 +5,8 @@ from .error import TopLevelError
 
 
 class CheckOptionalResolver(object):
-
     def __init__(self, resolver, dependency):
-        """ Construct an instance.
+        """Construct an instance.
 
         :param resolver: The resolver used to fetch the dependency
         :param dependency: The Dependency object.
@@ -16,7 +15,7 @@ class CheckOptionalResolver(object):
         self.dependency = dependency
 
     def resolve(self):
-        """ Resolve a path to a dependency.
+        """Resolve a path to a dependency.
 
         If we are doing an "passive" resolver, meaning that waf was not invoked
         with configure. Then we load the resolved path to the file-system.
@@ -28,7 +27,8 @@ class CheckOptionalResolver(object):
         path = self.resolver.resolve()
 
         if not path and not self.dependency.optional:
-            raise TopLevelError(msg="Non-optional dependency failed.",
-                                dependency=self.dependency)
+            raise TopLevelError(
+                msg="Non-optional dependency failed.", dependency=self.dependency
+            )
 
         return path

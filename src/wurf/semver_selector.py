@@ -10,7 +10,7 @@ class SemverSelector(object):
     """
 
     def __init__(self, semver):
-        """ Construct an instance.
+        """Construct an instance.
 
         :param semver: The semver module
         """
@@ -33,7 +33,7 @@ class SemverSelector(object):
         for tag in tags:
             try:
                 t = self.semver.parse(tag)
-                if t['major'] != major:
+                if t["major"] != major:
                     continue
 
                 valid_tags.append(tag)

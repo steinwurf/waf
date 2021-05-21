@@ -7,9 +7,8 @@ import pprint
 
 
 class Dependency(object):
-
     def __init__(self, **kwargs):
-        """ Construct an instance.
+        """Construct an instance.
 
         A small object to store information about a dependency.
 
@@ -89,17 +88,17 @@ class Dependency(object):
         assert "sha1" not in kwargs
 
         # Set default values for some common attributes
-        if 'recurse' not in kwargs:
-            kwargs['recurse'] = True
-        if 'optional' not in kwargs:
-            kwargs['optional'] = False
-        if 'internal' not in kwargs:
-            kwargs['internal'] = False
-        if 'override' not in kwargs:
-            kwargs['override'] = False
+        if "recurse" not in kwargs:
+            kwargs["recurse"] = True
+        if "optional" not in kwargs:
+            kwargs["optional"] = False
+        if "internal" not in kwargs:
+            kwargs["internal"] = False
+        if "override" not in kwargs:
+            kwargs["override"] = False
 
-        if 'pull_submodules' not in kwargs and kwargs['resolver'] == 'git':
-            kwargs['pull_submodules'] = True
+        if "pull_submodules" not in kwargs and kwargs["resolver"] == "git":
+            kwargs["pull_submodules"] = True
 
         # Some user-defined attributes will not be included in the hash
         # computation, since these are not required to uniquely identify the
@@ -108,16 +107,16 @@ class Dependency(object):
         # the "internal" and "optional" attributes, which should not lead
         # to a SHA1 mismatch.
         hash_attributes = kwargs.copy()
-        hash_attributes.pop('optional', None)
-        hash_attributes.pop('internal', None)
-        hash_attributes.pop('override', None)
+        hash_attributes.pop("optional", None)
+        hash_attributes.pop("internal", None)
+        hash_attributes.pop("override", None)
 
         s = json.dumps(hash_attributes, sort_keys=True)
-        sha1 = hashlib.sha1(s.encode('utf-8')).hexdigest()
+        sha1 = hashlib.sha1(s.encode("utf-8")).hexdigest()
 
         # kwargs is a dict, we add it as an instance attribute.
-        object.__setattr__(self, 'info', kwargs)
-        self.info['sha1'] = sha1
+        object.__setattr__(self, "info", kwargs)
+        self.info["sha1"] = sha1
 
         # For some operations like, storing a dependency in a dict as the key
         # it is needed that the dependency is hashable (returned as an
@@ -149,20 +148,20 @@ class Dependency(object):
         # 2. Use the Python hash() function to generate a integer hash for
         #    run-time usage (i.e. within the same interpreter session).
 
-        self.info['hash'] = None
+        self.info["hash"] = None
 
         # Resolver attributes (modifiable)
-        object.__setattr__(self, 'read_write', dict())
+        object.__setattr__(self, "read_write", dict())
 
         # Audit log (tracking changes to the info attribute)
-        object.__setattr__(self, 'audit', list())
+        object.__setattr__(self, "audit", list())
 
         # List to store error messages that might occur during the resolution
         # of this dependency
         self.error_messages = []
 
     def rewrite(self, attribute, value, reason):
-        """ Rewrites an info attribute.
+        """Rewrites an info attribute.
 
         :param attribute: The name of the attribute as a string
         :param value: The value of the attribute. If the value is None the
@@ -178,11 +177,12 @@ class Dependency(object):
             self.__modify(attribute=attribute, value=value, reason=reason)
 
     def __delete(self, attribute, reason):
-        """ Deletes an info attribute."""
+        """Deletes an info attribute."""
 
         if attribute not in self.info:
             raise AttributeError(
-                "Cannot delete non existing attribute {}".format(attribute))
+                "Cannot delete non existing attribute {}".format(attribute)
+            )
 
         audit = 'Deleting "{}". Reason: {}'.format(attribute, reason)
 
@@ -190,25 +190,25 @@ class Dependency(object):
         self.audit.append(audit)
 
     def __create(self, attribute, value, reason):
-        """ Creates an info attribute."""
+        """Creates an info attribute."""
 
-        audit = 'Creating "{}" value "{}". Reason: {}'.format(
-            attribute, value, reason)
+        audit = 'Creating "{}" value "{}". Reason: {}'.format(attribute, value, reason)
 
         self.audit.append(audit)
         self.info[attribute] = value
 
     def __modify(self, attribute, value, reason):
-        """ Modifies an info attribute."""
+        """Modifies an info attribute."""
 
         audit = 'Modifying "{}" from "{}" to "{}". Reason: {}'.format(
-            attribute, self.info[attribute], value, reason)
+            attribute, self.info[attribute], value, reason
+        )
 
         self.audit.append(audit)
         self.info[attribute] = value
 
     def __getattr__(self, attribute):
-        """ Return the value corresponding to the attribute.
+        """Return the value corresponding to the attribute.
 
         :param attribute: The name of the attribute to return as a string.
         :return: The attribute value, if the attribute does not exist
@@ -224,7 +224,7 @@ class Dependency(object):
             return None
 
     def __setattr__(self, attribute, value):
-        """ Sets a dependency attribute.
+        """Sets a dependency attribute.
 
         :param attribute: The name of the attribute as a string
         :param value: The value of the attribute
@@ -235,23 +235,24 @@ class Dependency(object):
             self.read_write[attribute] = value
 
     def __contains__(self, attribute):
-        """ Checks if the attribute is available.
+        """Checks if the attribute is available.
 
         :return: True if the attribute is available otherwise False
         """
         return (attribute in self.info) or (attribute in self.read_write)
 
     def __str__(self):
-        """ :return: String representation of the dependency. """
+        """:return: String representation of the dependency."""
         return "Dependency info:\n{}\nread_write: {}\naudit: {}".format(
             pprint.pformat(self.info, indent=2),
             pprint.pformat(self.read_write, indent=2),
-            pprint.pformat(self.audit, indent=2))
+            pprint.pformat(self.audit, indent=2),
+        )
 
     def __hash__(self):
-        """ :return: Integer hash value for the dependency. """
+        """:return: Integer hash value for the dependency."""
 
-        if not self.info['hash']:
-            self.info['hash'] = hash(self.info['sha1'])
+        if not self.info["hash"]:
+            self.info["hash"] = hash(self.info["sha1"])
 
-        return self.info['hash']
+        return self.info["hash"]

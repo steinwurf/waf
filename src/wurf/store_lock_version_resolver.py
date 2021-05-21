@@ -5,9 +5,8 @@ from .error import WurfError
 
 
 class StoreLockVersionResolver(object):
-
     def __init__(self, resolver, lock_cache, dependency):
-        """ Construct an instance.
+        """Construct an instance.
 
         :param resolver: A resolver which will do the actual job
         :param lock_cache: The lock cache to store the version information in.
@@ -18,7 +17,7 @@ class StoreLockVersionResolver(object):
         self.dependency = dependency
 
     def resolve(self):
-        """ Resolve a path to a dependency.
+        """Resolve a path to a dependency.
 
         If we are doing an "active" resolver, meaning that waf was invoked with
         configure. Then we save the resolved checkout to the file-system.
@@ -35,9 +34,8 @@ class StoreLockVersionResolver(object):
         elif self.dependency.git_commit:
             checkout = self.dependency.git_commit
         else:
-            raise WurfError('Not stable checkout information found.')
+            raise WurfError("Not stable checkout information found.")
 
-        self.lock_cache.add_checkout(
-            dependency=self.dependency, checkout=checkout)
+        self.lock_cache.add_checkout(dependency=self.dependency, checkout=checkout)
 
         return path

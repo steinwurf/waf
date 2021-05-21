@@ -6,9 +6,8 @@ import json
 
 
 class OnActiveStorePathResolver(object):
-
     def __init__(self, resolver, dependency, resolve_config_path):
-        """ Construct an instance.
+        """Construct an instance.
 
         :param resolver: A resolver which will do the actual job
         :param dependency: A Dependency instance.
@@ -20,7 +19,7 @@ class OnActiveStorePathResolver(object):
         self.resolve_config_path = resolve_config_path
 
     def resolve(self):
-        """ Resolve a path to a dependency.
+        """Resolve a path to a dependency.
 
         If we are doing an "active" resolver, meaning that waf was invoked with
         configure. Then we save the resolved path to the file-system.
@@ -35,17 +34,21 @@ class OnActiveStorePathResolver(object):
         return path
 
     def __write_config(self, path):
-        """ Write the dependency config to file
+        """Write the dependency config to file
 
         :param path: The path to the dependency as a string.
         """
 
         config_path = os.path.join(
-            self.resolve_config_path, self.dependency.name + '.resolve.json')
+            self.resolve_config_path, self.dependency.name + ".resolve.json"
+        )
 
-        config = {'sha1': self.dependency.sha1, 'path': path,
-                  'is_symlink': self.dependency.is_symlink,
-                  'real_path': self.dependency.real_path}
+        config = {
+            "sha1": self.dependency.sha1,
+            "path": path,
+            "is_symlink": self.dependency.is_symlink,
+            "real_path": self.dependency.real_path,
+        }
 
-        with open(config_path, 'w') as config_file:
+        with open(config_path, "w") as config_file:
             json.dump(config, config_file, indent=4, sort_keys=True)

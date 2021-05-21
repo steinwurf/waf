@@ -11,7 +11,7 @@ from .virtualenv_download import VirtualEnvDownload
 
 
 class VirtualEnv(object):
-    """ Simple object which can be used to work within a virtualenv.
+    """Simple object which can be used to work within a virtualenv.
 
     Example (within a wscript build function):
 
@@ -48,7 +48,7 @@ class VirtualEnv(object):
         self.env["PATH"] = os.path.pathsep.join([python_path, env["PATH"]])
 
     def run(self, cmd, cwd=None):
-        """ Runs a command in the virtualenv.
+        """Runs a command in the virtualenv.
 
         :param cmd: The command to run.
         :param cwd: The working directory i.e. where to run the command. If not
@@ -58,19 +58,20 @@ class VirtualEnv(object):
             cwd = self.cwd
 
         ret = self.ctx.exec_command(
-            cmd, cwd=cwd, env=self.env, stdout=None, stderr=None)
+            cmd, cwd=cwd, env=self.env, stdout=None, stderr=None
+        )
 
         if ret != 0:
             self.ctx.fatal('Exec command "{}" failed!'.format(cmd))
 
     def __enter__(self):
-        """ When used in a with statement the virtualenv will be automatically
+        """When used in a with statement the virtualenv will be automatically
         revmoved.
         """
         return self
 
     def __exit__(self, type, value, traceback):
-        """ Remove the virtualenv. """
+        """Remove the virtualenv."""
         remove_directory(path=self.path)
 
     @staticmethod
@@ -85,7 +86,7 @@ class VirtualEnv(object):
         download=True,
         download_path=None,
     ):
-        """ Create a new virtual env.
+        """Create a new virtual env.
 
         :param ctx: The Waf Context used to run commands.
         :param log: The logging object to use
@@ -117,7 +118,7 @@ class VirtualEnv(object):
         # virtualenv will create symlinks to the Python interpreter and other
         # stuff - if those are create in the build folder waf will try to
         # delete them when running waf clean.
-        if cwd.startswith(os.path.join(ctx.path.abspath(), 'build')):
+        if cwd.startswith(os.path.join(ctx.path.abspath(), "build")):
             ctx.fatal(
                 "Cannot create virtualenv inside the build folder. "
                 "Virtualenv create symlinks to files that will be "

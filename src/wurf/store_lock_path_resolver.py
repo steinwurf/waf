@@ -7,9 +7,8 @@ from .error import WurfError
 
 
 class StoreLockPathResolver(object):
-
     def __init__(self, resolver, lock_cache, project_path, dependency):
-        """ Construct an instance.
+        """Construct an instance.
 
         :param resolver: A resolver which will do the actual job
         :param lock_cache: The lock cache to store the version information in.
@@ -23,7 +22,7 @@ class StoreLockPathResolver(object):
         self.dependency = dependency
 
     def resolve(self):
-        """ Resolve a path to a dependency.
+        """Resolve a path to a dependency.
 
         If we are doing an "active" resolver, meaning that waf was invoked with
         configure. Then we save the resolved path to the file-system.

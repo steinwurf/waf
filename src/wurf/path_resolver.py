@@ -12,7 +12,7 @@ class PathResolver(object):
     """
 
     def __init__(self, dependency, path):
-        """ Construct an instance.
+        """Construct an instance.
 
         :param dependency: A Dependency instance.
         :param path: A path to the dependency
@@ -30,7 +30,8 @@ class PathResolver(object):
 
         if not os.path.isdir(self.path):
             raise DependencyError(
-                'Path error: "{}" is not a valid directory'.format(
-                    self.path), dependency=self.dependency)
+                'Path error: "{}" is not a valid directory'.format(self.path),
+                dependency=self.dependency,
+            )
 
         return self.path

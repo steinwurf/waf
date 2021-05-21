@@ -7,10 +7,10 @@ from .git_url import GitUrl
 
 
 class GitUrlParser(object):
-
     def __init__(self):
 
-        self.parser = re.compile(r"""
+        self.parser = re.compile(
+            r"""
             (?P<protocol>   # Group and match the following (group named
                             # "protocol")
               (             #   Group and match the following
@@ -55,12 +55,17 @@ class GitUrlParser(object):
             (               # Group and match the following
               /             #   Match '/'
             )?              # End of group, which is optional
-          """, re.VERBOSE)
+          """,
+            re.VERBOSE,
+        )
 
     def parse(self, url):
-        """ Parses the url and returns a GitUrl"""
+        """Parses the url and returns a GitUrl"""
 
         result = self.parser.match(url)
 
-        return GitUrl(protocol=result.group('protocol'),
-                      host=result.group('host'), path=result.group('path'))
+        return GitUrl(
+            protocol=result.group("protocol"),
+            host=result.group("host"),
+            path=result.group("path"),
+        )

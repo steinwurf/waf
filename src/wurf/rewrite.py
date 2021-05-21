@@ -18,7 +18,7 @@ def open_for_writing(filename):
         # Python 3 code in this block
         # The "newline" parameter enforces the given line ending on all
         # platforms. This is not available in Python 2.
-        return open(filename, 'w', newline='\n')
+        return open(filename, "w", newline="\n")
     else:
         # Python 2 code in this block
         # The only way to force Python 2 to *not* translate line endings to
@@ -26,27 +26,30 @@ def open_for_writing(filename):
         # should be internally represented as \n. If you read lines from an
         # existing file, open the file with "rU" to translate all line
         # endings to \n.
-        return open(filename, 'wb')
+        return open(filename, "wb")
 
 
 @contextlib.contextmanager
 def rewrite_file(filename):
     class Content:
-
         def __init__(self):
             self.content = None
 
         def regex_replace(self, pattern, replacement):
-            """ Replace the string matching the pattern in the content with
+            """Replace the string matching the pattern in the content with
             the replacement
             """
             updated, count = re.subn(
-                pattern=pattern, repl=replacement, string=self.content)
+                pattern=pattern, repl=replacement, string=self.content
+            )
 
             if count == 0:
-                raise RuntimeError("Rewrite failed in {}. Pattern {} not "
-                                   "found in file.\nContent:\n{}".format(
-                                       filename, pattern, self.content))
+                raise RuntimeError(
+                    "Rewrite failed in {}. Pattern {} not "
+                    "found in file.\nContent:\n{}".format(
+                        filename, pattern, self.content
+                    )
+                )
 
             self.content = updated
 
@@ -54,7 +57,7 @@ def rewrite_file(filename):
 
     # All line endings should be translated to \n when reading the file
     # This is the default behavior in Python 3, but not in Python 2
-    flag = 'rU' if sys.version_info.major < 3 else 'r'
+    flag = "rU" if sys.version_info.major < 3 else "r"
     with open(filename, flag) as f:
         content.content = f.read()
 

@@ -5,11 +5,11 @@
 class GitUrlRewriter(object):
 
     git_protocols = {
-        'https://': 'https://{host}/{path}.git',
-        'http://': 'http://{host}/{path}.git',
-        'git@': 'git@{host}:{path}.git',
-        'git://': 'git://{host}/{path}.git',
-        'ssh://git@': 'git@{host}:{path}.git',
+        "https://": "https://{host}/{path}.git",
+        "http://": "http://{host}/{path}.git",
+        "git@": "git@{host}:{path}.git",
+        "git://": "git://{host}/{path}.git",
+        "ssh://git@": "git@{host}:{path}.git",
     }
 
     def __init__(self, parser, rewrite_protocol):

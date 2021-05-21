@@ -14,7 +14,7 @@ from . import waf_conf
 
 
 class WafOptionsContext(Options.OptionsContext):
-    """ Custom options context which will initiate the dependency resolve step.
+    """Custom options context which will initiate the dependency resolve step.
 
     Default waf will instantiate and use this context in two different ways:
 
@@ -39,42 +39,43 @@ class WafOptionsContext(Options.OptionsContext):
         self.wurf_options = None
 
         # Create option group for resolve options.
-        option_group = self.add_option_group('Resolve options')
+        option_group = self.add_option_group("Resolve options")
 
         # Add option to skip resolve
-        option_group.add_option('--no_resolve', default=False, action='store_true')
+        option_group.add_option("--no_resolve", default=False, action="store_true")
 
         # Add option to skip internal dependencies
-        option_group.add_option('--skip_internal', default=False, action='store_true')
+        option_group.add_option("--skip_internal", default=False, action="store_true")
 
     def execute(self):
 
         self.srcnode = self.path
 
         # Build the registry
-        self.registry = registry.options_registry(ctx=self, git_binary='git')
+        self.registry = registry.options_registry(ctx=self, git_binary="git")
 
         # To avoid logs going to stdout create an logger
-        bldnode = self.path.make_node('build')
+        bldnode = self.path.make_node("build")
         bldnode.mkdir()
 
-        log_path = os.path.join(bldnode.abspath(), 'options.log')
+        log_path = os.path.join(bldnode.abspath(), "options.log")
 
-        self.logger = Logs.make_logger(path=log_path, name='options')
-        self.logger.debug('wurf: Options execute')
+        self.logger = Logs.make_logger(path=log_path, name="options")
+        self.logger.debug("wurf: Options execute")
 
         # Peek into the options and see of --no_resolve was passed
         # if it was skip the resolve. We have at this point not parsed
         # the options so we just do it manually
-        resolve = '--no_resolve' not in sys.argv
+        resolve = "--no_resolve" not in sys.argv
 
         # Peek into the options and see of --skip_internal was passed
         # if it was skip the internal dependencies.
-        skip_internal = '--skip_internal' in sys.argv
+        skip_internal = "--skip_internal" in sys.argv
 
         # Create and execute the resolve context
         ctx = Context.create_context(
-            'resolve', resolve=resolve, skip_internal=skip_internal)
+            "resolve", resolve=resolve, skip_internal=skip_internal
+        )
 
         try:
             ctx.execute()
@@ -84,7 +85,7 @@ class WafOptionsContext(Options.OptionsContext):
         # Fetch the resolve options parser such that we can
         # print help if needed:
         if resolve:
-            self.wurf_options = ctx.registry.require('options')
+            self.wurf_options = ctx.registry.require("options")
 
             # Fetch the arguments not parsed in the resolve step
             # We are just interested in the left-over args, which is the
@@ -94,7 +95,7 @@ class WafOptionsContext(Options.OptionsContext):
             self.waf_options = sys.argv
 
         # Load any extra tools that define regular options for waf
-        self.load('wurf.waf_standalone_context')
+        self.load("wurf.waf_standalone_context")
 
         # Call options() in all dependencies: all options must be defined
         # before running OptionsContext.execute() where parse_args is called
@@ -120,7 +121,7 @@ class WafOptionsContext(Options.OptionsContext):
         return self.srcnode == self.path
 
     def parse_args(self, _args=None):
-        """ Override the parse_args(..) from the OptionsContext.
+        """Override the parse_args(..) from the OptionsContext.
 
         Here we inject the arguments which were not consumed in the resolve
         step.
@@ -128,7 +129,7 @@ class WafOptionsContext(Options.OptionsContext):
         # We expect _args to be None here, if it isn't we should probably
         # figure out why and see if we should combine it with the
         # self.waf_options list
-        assert(_args is None)
+        assert _args is None
 
         try:
             # We may not have a wurf_options instance if running in a folder
@@ -141,7 +142,7 @@ class WafOptionsContext(Options.OptionsContext):
                 # Get the underlying optparse instance from OptionsContext
                 waf_parser = self.parser
                 # We will add the resolve options to this target group
-                target_group = waf_parser.add_option_group('Resolve options')
+                target_group = waf_parser.add_option_group("Resolve options")
                 # argparse.ArgumentParser groups all optional arguments to
                 # the "_optionals" groups by default
                 source_group = self.wurf_options.parser._optionals
@@ -149,7 +150,8 @@ class WafOptionsContext(Options.OptionsContext):
                 for action in source_group._group_actions:
                     target_group.add_option(
                         action.option_strings[0],
-                        action='store_true' if action.nargs == 0 else 'store',
-                        help=action.help)
+                        action="store_true" if action.nargs == 0 else "store",
+                        help=action.help,
+                    )
         finally:
             super(WafOptionsContext, self).parse_args(_args=self.waf_options)

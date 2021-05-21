@@ -3,9 +3,8 @@
 
 
 class ContextMsgResolver(object):
-
     def __init__(self, resolver, ctx, dependency):
-        """ Construct an instance.
+        """Construct an instance.
 
         :param resolver: The resolver used to fetch the dependency
         :param ctx: A Waf Context instance.
@@ -16,7 +15,7 @@ class ContextMsgResolver(object):
         self.dependency = dependency
 
     def resolve(self):
-        """ Print the resolved path to the terminal using Waf's Context.
+        """Print the resolved path to the terminal using Waf's Context.
 
         The print will format the start message differently depending on the
         "resolver_chain" and "resolver_action" attributes of the dependency
@@ -34,9 +33,10 @@ class ContextMsgResolver(object):
         """
 
         start_msg = '{} "{}"'.format(
-            self.dependency.resolver_chain, self.dependency.name)
+            self.dependency.resolver_chain, self.dependency.name
+        )
         if self.dependency.resolver_action:
-            start_msg += ' ({})'.format(self.dependency.resolver_action)
+            start_msg += " ({})".format(self.dependency.resolver_action)
         self.ctx.start_msg(start_msg)
 
         path = self.resolver.resolve()
@@ -45,7 +45,7 @@ class ContextMsgResolver(object):
             # An optional dependency might be unavailable if the user
             # does not have a license to access the repository, so we just
             # print the status message and continue
-            self.ctx.end_msg('Unavailable', color='RED')
+            self.ctx.end_msg("Unavailable", color="RED")
         else:
 
             if self.dependency.is_symlink:
