@@ -112,7 +112,7 @@ def _build_waf_binary(bld):
     python = sys.executable
     command = (
         python + " waf-light configure build --make-waf "
-        '--prelude="{}" --tools={} --interpreter="{}" -vv'.format(
+        '--prelude="{}" --tools={} --interpreter="{}"'.format(
             prelude, tools, intrepreter
         )
     )
