@@ -1,0 +1,50 @@
+name: Tests
+on: [push, pull_request]
+jobs:
+  syntax:
+    strategy:
+      fail-fast: false
+    runs-on: [self-hosted, docker]
+    name: Flake8 Syntax Check
+    container:
+      image: python:3.9.5
+      options: --user 0:0
+      volumes:
+        - /home/buildbot/.ssh:/root/.ssh
+    steps:
+      - name: Install SSH client
+        run: apt update && apt -y install openssh-client
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Create flake file
+        run: echo "[flake8]\n\nexclude = deprecated" >> .flake8
+      - name: Check python syntax
+        uses: cclauss/Find-Python-syntax-errors-action@master
+  waf:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [Linux, Windows]
+    runs-on: [self-hosted, "${{ matrix.os }}"]
+    name: ${{ matrix.os }} Test
+    env:
+      python: python3
+    steps:
+      - name: Configure
+        run: python3 waf configure --git_protocol=git@
+      - name: Unittests
+        env:
+          GIT_SSH_COMMAND: "'ssh -i /home/buildbot/.ssh/id_ed25519 -o IdentitiesOnly=yes' }}"
+        run: python3 waf test --test-study --git_protocol=git@
+  # Code Format Check
+  black:
+    name: Black
+    runs-on: [self-hosted, docker]
+    container:
+      image: kiwicom/black
+      options: --user 0:0
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Run Black Check
+        run: black . --check
