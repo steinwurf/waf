@@ -9,7 +9,7 @@ def test_on_passive_load_path_resolver(testdirectory):
     resolve_config_path = testdirectory.path()
 
     resolve = OnPassiveLoadPathResolver(
-        dependency=dependency,
-        resolve_config_path=resolve_config_path)
+        dependency=dependency, resolve_config_path=resolve_config_path
+    )
 
     assert resolve

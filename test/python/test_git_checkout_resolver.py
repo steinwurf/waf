@@ -13,18 +13,23 @@ def test_git_checkout_resolver(testdirectory):
 
     # Create a parent folder for the dependency and the corresponding
     # subfolder for the 'master' checkout
-    repo_folder = testdirectory.mkdir('links-01234')
-    master_folder = repo_folder.mkdir('master')
+    repo_folder = testdirectory.mkdir("links-01234")
+    master_folder = repo_folder.mkdir("master")
 
     git_resolver = mock.Mock()
     git_resolver.resolve.return_value = master_folder.path()
 
-    dependency.name = 'links'
-    checkout = 'my-branch'
+    dependency.name = "links"
+    checkout = "my-branch"
 
     resolver = GitCheckoutResolver(
-        git=git, resolver=git_resolver, ctx=ctx, dependency=dependency,
-        cwd=cwd, checkout=checkout)
+        git=git,
+        resolver=git_resolver,
+        ctx=ctx,
+        dependency=dependency,
+        cwd=cwd,
+        checkout=checkout,
+    )
 
     path = resolver.resolve()
 

@@ -3,4 +3,5 @@
 
 
 import collections
-GitUrl = collections.namedtuple('GitUrl', 'protocol host path')
+
+GitUrl = collections.namedtuple("GitUrl", "protocol host path")

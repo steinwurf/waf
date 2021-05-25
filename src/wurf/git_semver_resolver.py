@@ -15,9 +15,8 @@ class GitSemverResolver(object):
     Read more about Semantic Versioning here: semver.org
     """
 
-    def __init__(self, git, resolver, ctx, semver_selector,
-                 dependency, cwd):
-        """ Construct an instance.
+    def __init__(self, git, resolver, ctx, semver_selector, dependency, cwd):
+        """Construct an instance.
 
         :param git: A WurfGit instance
         :param url_resolver: A WurfGitResolver instance.
@@ -35,7 +34,7 @@ class GitSemverResolver(object):
         self.cwd = cwd
 
     def resolve(self):
-        """ Fetches the dependency if necessary.
+        """Fetches the dependency if necessary.
         :return: The path to the resolved dependency as a string.
         """
         path = self.git_resolver.resolve()
@@ -43,24 +42,27 @@ class GitSemverResolver(object):
         assert os.path.isdir(path)
 
         tags = self.git.tags(cwd=path)
-        tag = self.semver_selector.select_tag(
-            major=self.dependency.major, tags=tags)
+        tag = self.semver_selector.select_tag(major=self.dependency.major, tags=tags)
 
         if not tag:
             raise DependencyError(
                 msg="No tag found for major version {}, candidates "
-                    "were {}".format(self.dependency.major, tags),
-                dependency=self.dependency)
+                "were {}".format(self.dependency.major, tags),
+                dependency=self.dependency,
+            )
 
         # Use the path returned to create a unique location for this checkout
-        repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
+        repo_hash = hashlib.sha1(path.encode("utf-8")).hexdigest()[:6]
 
         # The folder for storing the requested tag
-        folder_name = tag + '-' + repo_hash
+        folder_name = tag + "-" + repo_hash
         tag_path = os.path.join(self.cwd, folder_name)
 
-        self.ctx.to_log('wurf: GitSemverResolver name {} -> {}'.format(
-            self.dependency.name, tag_path))
+        self.ctx.to_log(
+            "wurf: GitSemverResolver name {} -> {}".format(
+                self.dependency.name, tag_path
+            )
+        )
 
         # If the folder for the chosen tag does not exist,
         # then copy the master and checkout the tag

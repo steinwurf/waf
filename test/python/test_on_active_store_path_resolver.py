@@ -10,7 +10,9 @@ def test_on_active_store_path_resolver(testdirectory):
     resolve_config_path = testdirectory.path()
 
     resolve = OnActiveStorePathResolver(
-        resolver=resolver, dependency=dependency,
-        resolve_config_path=resolve_config_path)
+        resolver=resolver,
+        dependency=dependency,
+        resolve_config_path=resolve_config_path,
+    )
 
     assert resolve

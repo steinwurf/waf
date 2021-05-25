@@ -34,7 +34,7 @@ def dependency_path(ctx, name):
     """
     Returns the dependency path as a string
     """
-    return waf_resolve_context.dependency_cache[name]['path']
+    return waf_resolve_context.dependency_cache[name]["path"]
 
 
 @conf
@@ -64,7 +64,7 @@ def is_toplevel(self):
 
 @conf
 def recurse_dependencies(ctx):
-    """ Recurse the dependencies which have the resolve property set to True.
+    """Recurse the dependencies which have the resolve property set to True.
 
     :param ctx: A Waf Context instance.
     """
@@ -82,17 +82,15 @@ def recurse_dependencies(ctx):
     # (waf-tools should be the first if it is defined)
     for name, dependency in waf_resolve_context.dependency_cache.items():
 
-        if not dependency['recurse']:
+        if not dependency["recurse"]:
 
-            Logs.debug('resolve: Skipped recurse {} cmd={}'.format(
-                name, ctx.cmd))
+            Logs.debug("resolve: Skipped recurse {} cmd={}".format(name, ctx.cmd))
 
             continue
 
-        path = dependency['path']
+        path = dependency["path"]
 
-        Logs.debug('resolve: recurse {} cmd={}, path={}'.format(
-            name, ctx.cmd, path))
+        Logs.debug("resolve: recurse {} cmd={}, path={}".format(name, ctx.cmd, path))
 
         try:
             # @todo mandatory is False here, which means that no wscript
@@ -109,25 +107,39 @@ def recurse_dependencies(ctx):
             ctx.recurse([str(path)], once=False, mandatory=False)
         except WafError as e:
 
-            msg = 'Recurse "{}" for "{}" failed with: {}'.format(
-                name, ctx.cmd, e.msg)
+            msg = 'Recurse "{}" for "{}" failed with: {}'.format(name, ctx.cmd, e.msg)
 
             if logfile:
-                msg = '{}\n(complete log in {})'.format(msg, logfile)
+                msg = "{}\n(complete log in {})".format(msg, logfile)
             else:
-                msg = '{}\n(run with -v for more information)'.format(msg)
+                msg = "{}\n(run with -v for more information)".format(msg)
 
             raise WafError(msg=msg, ex=e)
 
 
 @extend_context
-def create_virtualenv(ctx, cwd=None, env=None, name=None, overwrite=True,
-                      system_site_packages=False, download=True, download_path=None):
+def create_virtualenv(
+    ctx,
+    cwd=None,
+    env=None,
+    name=None,
+    overwrite=True,
+    system_site_packages=False,
+    download=True,
+    download_path=None,
+):
 
     return virtualenv.VirtualEnv.create(
-        ctx=ctx, log=Logs, cwd=cwd, env=env, name=name,
-        overwrite=overwrite, system_site_packages=system_site_packages,
-        download=download, download_path=download_path)
+        ctx=ctx,
+        log=Logs,
+        cwd=cwd,
+        env=env,
+        name=name,
+        overwrite=overwrite,
+        system_site_packages=system_site_packages,
+        download=download,
+        download_path=download_path,
+    )
 
 
 @conf

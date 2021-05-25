@@ -13,7 +13,7 @@ class ExistingCheckoutResolver(object):
     """
 
     def __init__(self, ctx, dependency, resolver, checkout, cwd):
-        """ Construct a new ExistingCheckoutResolver instance.
+        """Construct a new ExistingCheckoutResolver instance.
 
         :param ctx: A Waf Context instance.
         :param dependency: The Dependency object.
@@ -51,35 +51,34 @@ class ExistingCheckoutResolver(object):
 
         assert os.path.isdir(path)
 
-        if 'git_commit' in self.dependency:
+        if "git_commit" in self.dependency:
             # We can only store this if we are asking for a specific commit and
             # not a branch.
             if self.dependency.git_commit.startswith(self.checkout):
                 commits[self.dependency.git_commit] = path
         else:
-            raise DependencyError(msg="No git commit id available",
-                                  dependency=self.dependency)
+            raise DependencyError(
+                msg="No git commit id available", dependency=self.dependency
+            )
 
         self.__store_commits_file(commits=commits)
         return path
 
     def __load_commits_file(self):
 
-        commit_path = os.path.join(
-            self.cwd, self.dependency.name + '.commits.json')
+        commit_path = os.path.join(self.cwd, self.dependency.name + ".commits.json")
 
         if not os.path.isfile(commit_path):
             return {}
 
-        with open(commit_path, 'r') as commit_file:
+        with open(commit_path, "r") as commit_file:
             return json.load(commit_file)
 
     def __store_commits_file(self, commits):
 
-        commit_path = os.path.join(
-            self.cwd, self.dependency.name + '.commits.json')
+        commit_path = os.path.join(self.cwd, self.dependency.name + ".commits.json")
 
-        with open(commit_path, 'w') as commit_file:
+        with open(commit_path, "w") as commit_file:
             return json.dump(commits, commit_file, indent=4)
 
     def __resolve_path(self, commits):
@@ -91,8 +90,8 @@ class ExistingCheckoutResolver(object):
         else:
             self.ctx.to_log(
                 "resolve: ExistingCheckoutResolver {} no stored checkout"
-                " for commit {}".format(
-                    self.dependency.name, self.checkout))
+                " for commit {}".format(self.dependency.name, self.checkout)
+            )
             return None
 
         path = commits[stored_commit]
@@ -100,16 +99,20 @@ class ExistingCheckoutResolver(object):
         if not os.path.isdir(path):
             self.ctx.to_log(
                 "resolve: {} {} contained invalid path {} for commit {}"
-                "- removing it".format(self.dependency.name, commits, path,
-                                       stored_commit))
+                "- removing it".format(
+                    self.dependency.name, commits, path, stored_commit
+                )
+            )
 
             del commits[stored_commit]
             return None
 
         else:
             self.ctx.to_log(
-                'resolve: ExistingCheckoutResolver name {} -> {}'.format(
-                    self.dependency.name, path))
+                "resolve: ExistingCheckoutResolver name {} -> {}".format(
+                    self.dependency.name, path
+                )
+            )
 
             return path
 

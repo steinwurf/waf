@@ -8,7 +8,7 @@ def test_try_resolver(testdirectory):
 
     ctx = mock.Mock()
     dependency = mock.Mock()
-    dependency.name = 'foo'
+    dependency.name = "foo"
     dependency.__contains__ = mock.Mock()
     dependency.__contains__.return_value = False
 
@@ -24,7 +24,7 @@ def test_try_resolver(testdirectory):
 
     # Make resolver1 fail with an WurfError
     def raise_error():
-        raise WurfError('random error')
+        raise WurfError("random error")
 
     resolver1.resolve = mock.Mock(side_effect=raise_error)
 

@@ -13,7 +13,7 @@ class CreateSymlinkResolver(object):
     """
 
     def __init__(self, resolver, dependency, symlinks_path, ctx):
-        """ Construct a new CreateSymlinkResolver instance.
+        """Construct a new CreateSymlinkResolver instance.
 
         :param resolver: The resolver used to fetch the dependency
         :param dependency: The Dependency object.
@@ -50,31 +50,34 @@ class CreateSymlinkResolver(object):
 
         try:
 
-            self.ctx.to_log('wurf: CreateSymlinkResolver {} -> {}'.format(
-                            link_path, path))
+            self.ctx.to_log(
+                "wurf: CreateSymlinkResolver {} -> {}".format(link_path, path)
+            )
 
             try:
                 # We set overwrite True since We need to remove the symlink if it
                 # already exists since it may point to an incorrect folder
-                create_symlink(from_path=path, to_path=link_path,
-                               overwrite=True, relative=True)
+                create_symlink(
+                    from_path=path, to_path=link_path, overwrite=True, relative=True
+                )
 
             except RelativeSymlinkError:
 
-                self.ctx.to_log('wurf: Using relative symlink failed - fallback '
-                                'to absolute.')
+                self.ctx.to_log(
+                    "wurf: Using relative symlink failed - fallback " "to absolute."
+                )
 
-                create_symlink(from_path=path, to_path=link_path,
-                               overwrite=True, relative=False)
+                create_symlink(
+                    from_path=path, to_path=link_path, overwrite=True, relative=False
+                )
 
         except Exception as ex:
 
-            msg = "Symlink creation failed for: {}\n".format(
-                self.dependency.name)
+            msg = "Symlink creation failed for: {}\n".format(self.dependency.name)
 
             # We also want to log the captured output if the command failed
             # with a CalledProcessError, the output would be lost otherwise
-            if hasattr(ex, 'output'):
+            if hasattr(ex, "output"):
                 msg += str(ex.output)
 
             # Using exc_info will attach the current exception information

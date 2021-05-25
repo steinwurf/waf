@@ -5,14 +5,13 @@ import os
 
 from .git import Git
 
-URL = 'https://github.com/pypa/virtualenv.git'
-VERSION = '16.4.3'
+URL = "https://github.com/pypa/virtualenv.git"
+VERSION = "16.4.3"
 
 
 class VirtualEnvDownload(object):
-
     def __init__(self, ctx, log, git=None, download_path=None):
-        """ Create a new VirtualEnvDownload instance
+        """Create a new VirtualEnvDownload instance
 
         :param ctx: A Waf context
         :param log: A logging object
@@ -24,7 +23,7 @@ class VirtualEnvDownload(object):
         self.log = log
 
         if git is None:
-            self.git = Git(git_binary='git', ctx=self.ctx)
+            self.git = Git(git_binary="git", ctx=self.ctx)
         else:
             self.git = git
 
@@ -34,7 +33,7 @@ class VirtualEnvDownload(object):
             self.download_path = download_path
 
     def download(self):
-        """ Initiate the download """
+        """Initiate the download"""
 
         if not os.path.isdir(self.download_path):
             os.makedirs(self.download_path)
@@ -43,12 +42,17 @@ class VirtualEnvDownload(object):
 
         if not os.path.isdir(repo_path):
 
-            self.log.debug('Cloning {} into {}'.format(URL, repo_path))
+            self.log.debug("Cloning {} into {}".format(URL, repo_path))
 
-            self.git.clone(repository=URL, directory=repo_path,
-                           cwd=self.download_path, depth=1, branch=VERSION)
+            self.git.clone(
+                repository=URL,
+                directory=repo_path,
+                cwd=self.download_path,
+                depth=1,
+                branch=VERSION,
+            )
 
-        self.log.debug('Using virtualenv from {}'.format(repo_path))
+        self.log.debug("Using virtualenv from {}".format(repo_path))
 
         return repo_path
 
@@ -56,4 +60,4 @@ class VirtualEnvDownload(object):
 
         # https://stackoverflow.com/a/4028943
         home_path = os.path.join(os.path.expanduser("~"))
-        return os.path.join(home_path, '.waf-local-virtualenv')
+        return os.path.join(home_path, ".waf-local-virtualenv")

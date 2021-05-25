@@ -18,18 +18,18 @@ class Configuration(object):
     #    version or path
     # 5. The "store_from_lock" will load the dependency information from the
     #    lock file and fetch dependencies.
-    RESOLVE = 'resolve'
-    LOAD = 'load'
-    HELP = 'help'
-    RESOLVE_AND_LOCK = 'resolve_and_lock'
-    RESOLVE_FROM_LOCK = 'resolve_from_lock'
+    RESOLVE = "resolve"
+    LOAD = "load"
+    HELP = "help"
+    RESOLVE_AND_LOCK = "resolve_and_lock"
+    RESOLVE_FROM_LOCK = "resolve_from_lock"
 
     # The file name of the lock file used to fix dependencies to a specific
     # verions or path
-    LOCK_FILE = 'lock_resolve.json'
+    LOCK_FILE = "lock_resolve.json"
 
     def __init__(self, project_path, args, options, waf_lock_file):
-        """ Construct an instance.
+        """Construct an instance.
 
         The Configuration instance is responsible for implementing the logic
         determining which actions / strategy should be executed for the
@@ -65,7 +65,7 @@ class Configuration(object):
             return Configuration.LOAD
 
     def choose_help(self):
-        """ Choose whether we should use the help resolver chain.
+        """Choose whether we should use the help resolver chain.
 
         There are two cases where we want to use the help chain:
 
@@ -73,7 +73,7 @@ class Configuration(object):
         2. If we run waf without wanting to resolve
         """
 
-        if '-h' in self.args or '--help' in self.args:
+        if "-h" in self.args or "--help" in self.args:
             return True
 
         if self.choose_resolve():
@@ -91,12 +91,12 @@ class Configuration(object):
 
     def choose_resolve_from_lock(self):
 
-        if 'configure' not in self.args:
+        if "configure" not in self.args:
             # We are not configuring
             return False
 
         # We are not configuring, check for lock file
-        lock_file = os.path.join(self.project_path, 'lock_resolve.json')
+        lock_file = os.path.join(self.project_path, "lock_resolve.json")
 
         if not os.path.isfile(lock_file):
             # No lock file
@@ -108,7 +108,7 @@ class Configuration(object):
 
     def choose_resolve_and_lock(self):
 
-        if 'configure' not in self.args:
+        if "configure" not in self.args:
             # We are not configuring
             return False
 
@@ -122,7 +122,7 @@ class Configuration(object):
 
     def choose_resolve(self):
 
-        for command in ['configure', 'resolve']:
+        for command in ["configure", "resolve"]:
             if command in self.args:
                 # We should resolve
                 return True

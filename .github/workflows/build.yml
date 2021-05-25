@@ -1,0 +1,51 @@
+name: Tests
+on: [push, pull_request]
+jobs:
+  syntax:
+    strategy:
+      fail-fast: false
+    runs-on: [self-hosted, docker]
+    name: Flake8 Syntax Check
+    container:
+      image: python:3.9.5
+      options: --user 0:0
+      volumes:
+        - /home/buildbot/.ssh:/root/.ssh
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Check python syntax
+        uses: cclauss/Find-Python-syntax-errors-action@master
+  waf:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [Linux]
+    runs-on: [self-hosted, "${{ matrix.os }}"]
+    name: ${{ matrix.os }} Test
+    env:
+      python: python3
+    steps:
+      # - name: Rename python3 to python on Windows
+      #   if: runner.os == 'Windows'
+      #   run: echo "python=python" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Configure
+        run: ${{ env.python }} waf configure
+      - name: Build
+        run: ${{ env.python }} waf build
+      - name: Unittests
+        run: ${{ env.python }} waf --run_tests
+  # Code Format Check
+  black:
+    name: Black
+    runs-on: [self-hosted, docker]
+    container:
+      image: kiwicom/black
+      options: --user 0:0
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Run Black Check
+        run: black . --check

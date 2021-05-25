@@ -12,7 +12,7 @@ class ArchiveResolver(object):
 
     def __init__(self, archive_extractor, resolver, cwd):
 
-        """ Construct a new instance.
+        """Construct a new instance.
 
         :param archive_extractor: An archive (zip, tar, etc.) extractor
             function.
@@ -34,10 +34,10 @@ class ArchiveResolver(object):
         assert os.path.isfile(path)
 
         # Use the path returned to create a unique location for extracted files
-        extract_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
+        extract_hash = hashlib.sha1(path.encode("utf-8")).hexdigest()[:6]
 
         # The folder for storing the requested checkout
-        extract_folder = 'extract-' + extract_hash
+        extract_folder = "extract-" + extract_hash
 
         extract_path = os.path.join(self.cwd, extract_folder)
 

@@ -5,7 +5,6 @@ from waflib.Build import InstallContext
 
 
 class WafInstallContext(InstallContext):
-
     def pre_recurse(self, node):
 
         super(WafInstallContext, self).pre_recurse(node)

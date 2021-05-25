@@ -5,10 +5,10 @@ from .error import DependencyError
 
 
 class CheckLockCacheResolver(object):
-    """ Iterates through a list of resolvers until a path is resolved."""
+    """Iterates through a list of resolvers until a path is resolved."""
 
     def __init__(self, resolver, lock_cache, dependency):
-        """ Construct an instance.
+        """Construct an instance.
 
         :param resolvers: A list of resolvers object for the available
            sources
@@ -20,7 +20,7 @@ class CheckLockCacheResolver(object):
         self.dependency = dependency
 
     def resolve(self):
-        """ Resolve the dependency.
+        """Resolve the dependency.
 
         :return: Path to resolved dependency as a string
         """
@@ -28,7 +28,8 @@ class CheckLockCacheResolver(object):
         if self.dependency not in self.lock_cache:
             raise DependencyError(
                 msg="Not found in lock cache: {}".format(self.lock_cache),
-                dependency=self.dependency)
+                dependency=self.dependency,
+            )
 
         self.lock_cache.check_sha1(dependency=self.dependency)
 

@@ -8,19 +8,18 @@ from wurf.error import TopLevelError
 def test_check_optional_resolver():
 
     dependency = mock.Mock()
-    dependency.name = 'foo'
+    dependency.name = "foo"
     dependency.optional = True
 
     # Define a resolver that returns a path
     resolver1 = mock.Mock()
-    resolver1.resolve = mock.Mock(return_value='path1')
+    resolver1.resolve = mock.Mock(return_value="path1")
 
-    resolver = CheckOptionalResolver(resolver=resolver1,
-                                     dependency=dependency)
+    resolver = CheckOptionalResolver(resolver=resolver1, dependency=dependency)
 
     ret = resolver.resolve()
 
-    assert ret == 'path1'
+    assert ret == "path1"
 
     # Make resolver1 return None
     resolver1.resolve = mock.Mock(return_value=None)
