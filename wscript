@@ -195,7 +195,7 @@ def _pytest(bld):
         bld.msg("Running", "pycodestyle")
         venv.run(
             "python -m pycodestyle --max-line-length=88 --filename=*.py,wscript "
-            "src test wscript buildbot.py"
+            "src test wscript"
         )
 
         # Run pyflakes
