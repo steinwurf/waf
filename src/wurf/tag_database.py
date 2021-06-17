@@ -18,7 +18,9 @@ class TagDatabase(object):
         Download the tag information.
         """
         # Retrieve tags.json from the public URL
-        url = "http://files.steinwurf.com/registry/tags.json"
+        url = (
+            "https://raw.githubusercontent.com/steinwurf/tag-registry/master/tags.json"
+        )
 
         # Import tools to be compatible with Python 2 and 3
         try:
