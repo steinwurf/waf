@@ -6,6 +6,10 @@ of every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+6.0.0
+-----
 * Minor: Change location of tag registry.
 * Major: Rename Error to WurfError to make it's origin more obvious.
 * Minor: Added --skip_internal option which allows the user to skip internal
@@ -61,9 +65,6 @@ Latest
 * Minor: Support for new resolver options.
 * Minor: Adding support for resolve.json files.
 * Minor: Updated waf to 1.9.8.
-
-Un-released changes
--------------------
 * Minor: Allow arbitrary git providers in wurf_dependency_resolve.
 * Minor: Allow optional dependencies that might not be resolved if they are
   unavailable to the user.
