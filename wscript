@@ -28,7 +28,7 @@ def resolve(ctx):
         resolver="git",
         method="checkout",
         checkout="2.9.0",
-        sources=["github.com/k-bx/python-semver.git"],
+        sources=["github.com/python-semver/python-semver.git"],
     )
 
     ctx.add_dependency(
