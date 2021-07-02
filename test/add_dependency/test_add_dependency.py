@@ -237,12 +237,17 @@ def run_commands(app_dir, git_dir):
     app_dir.run(["python", "waf", "--help"], env=env)
 
     # We should be able to use --foo_magic_option that is defined in 'foo'
-<<<<<<< HEAD
-    app_dir.run(['python', 'waf', 'configure', '-v', '--foo_magic_option=xyz',
-                 '--resolve_path', 'resolved_dependencies'])
-=======
-    app_dir.run(["python", "waf", "configure", "-v", "--foo_magic_option=xyz"])
->>>>>>> master
+    app_dir.run(
+        [
+            "python",
+            "waf",
+            "configure",
+            "-v",
+            "--foo_magic_option=xyz",
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
 
     # After configure, the help text should include the description of
     # --foo_magic_option (defined in the 'foo' wscript)
@@ -262,16 +267,19 @@ def run_commands(app_dir, git_dir):
         os.path.join(app_dir.path(), "resolve_symlinks", "baz", "libqux")
     )
 
-<<<<<<< HEAD
-    app_dir.run(['python', 'waf', 'build', '-v'])
-    app_dir.run(['python', 'waf', 'configure', '-v', '--fast_resolve',
-                 '--resolve_path', 'resolved_dependencies'])
-    app_dir.run(['python', 'waf', 'build', '-v'])
-=======
     app_dir.run(["python", "waf", "build", "-v"])
-    app_dir.run(["python", "waf", "configure", "-v", "--fast_resolve"])
+    app_dir.run(
+        [
+            "python",
+            "waf",
+            "configure",
+            "-v",
+            "--fast_resolve",
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
     app_dir.run(["python", "waf", "build", "-v"])
->>>>>>> master
 
     # Test the zones print
     r = app_dir.run(["python", "waf", "build", "-v", "--zones=resolve"])
@@ -281,18 +289,36 @@ def run_commands(app_dir, git_dir):
     assert r.stdout.match("* resolve recurse bar *")
 
     # Try the use checkout
-    app_dir.run(['python', 'waf', 'configure', '-v', '--baz_checkout=4.0.0',
-                 '--resolve_path', 'resolved_dependencies'])
-    app_dir.run(['python', 'waf', 'build', '-v'])
+    app_dir.run(
+        [
+            "python",
+            "waf",
+            "configure",
+            "-v",
+            "--baz_checkout=4.0.0",
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
+    app_dir.run(["python", "waf", "build", "-v"])
 
     # Lets remove the resolved dependencies
     resolve_dir = app_dir.join("resolved_dependencies")
     resolve_dir.rmdir()
 
     # Test the --lock_versions options
-    app_dir.run(['python', 'waf', 'configure', '-v', '--lock_versions',
-                 '--resolve_path', 'resolved_dependencies'])
-    assert app_dir.contains_file('lock_resolve.json')
+    app_dir.run(
+        [
+            "python",
+            "waf",
+            "configure",
+            "-v",
+            "--lock_versions",
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
+    assert app_dir.contains_file("lock_resolve.json")
 
     # The symlinks should be available to all dependencies
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "foo"))
@@ -309,8 +335,9 @@ def run_commands(app_dir, git_dir):
     resolve_dir.rmdir()
 
     # This configure should happen from the lock
-    app_dir.run(['python', 'waf', 'configure', '-v',
-                 '--resolve_path', 'resolved_dependencies'])
+    app_dir.run(
+        ["python", "waf", "configure", "-v", "--resolve_path", "resolved_dependencies"]
+    )
 
     assert app_dir.contains_dir("resolve_symlinks", "foo")
     assert app_dir.contains_dir("resolve_symlinks", "baz")
@@ -356,8 +383,9 @@ def run_commands(app_dir, git_dir):
     # This configure should happen from the lock
     # Now we can delete the git folders - as we should be able to configure
     # from the frozen dependencies
-    app_dir.run(['python', 'waf', 'configure', '-v',
-                 '--resolve_path', 'resolved_dependencies'])
+    app_dir.run(
+        ["python", "waf", "configure", "-v", "--resolve_path", "resolved_dependencies"]
+    )
 
     assert app_dir.contains_dir("resolve_symlinks", "foo")
     assert app_dir.contains_dir("resolve_symlinks", "baz")
@@ -464,17 +492,35 @@ def test_add_dependency_path(testdirectory):
     path_test = testdirectory.mkdir(directory="path_test")
     baz_dir = mkdir_libbaz(directory=path_test, qux_dir=qux_dir)
 
-    app_dir.run(['python', 'waf', 'configure', '-v', '--baz_path={}'.format(
-                baz_dir.path()), '--resolve_path', 'resolved_dependencies'])
+    app_dir.run(
+        [
+            "python",
+            "waf",
+            "configure",
+            "-v",
+            "--baz_path={}".format(baz_dir.path()),
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
 
     # The symlinks should be available to all dependencies
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "foo"))
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "baz"))
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "bar"))
 
-    app_dir.run(['python', 'waf', 'build', '-v'])
-    app_dir.run(['python', 'waf', 'configure', '-v', '--fast_resolve',
-                 '--resolve_path', 'resolved_dependencies'])
+    app_dir.run(["python", "waf", "build", "-v"])
+    app_dir.run(
+        [
+            "python",
+            "waf",
+            "configure",
+            "-v",
+            "--fast_resolve",
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
 
 
 def test_create_standalone_archive(testdirectory):
@@ -501,10 +547,19 @@ def test_create_standalone_archive(testdirectory):
     with open(json_path, "w") as json_file:
         json.dump(clone_path, json_file)
 
-    app_dir.run(['python', 'waf', 'configure', '-v', '--lock_paths',
-                 '--resolve_path', 'resolved_dependencies'])
-    app_dir.run(['python', 'waf', '-v', 'standalone'])
-    assert app_dir.contains_file('test_add_dependency-1.0.0.zip')
+    app_dir.run(
+        [
+            "python",
+            "waf",
+            "configure",
+            "-v",
+            "--lock_paths",
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
+    app_dir.run(["python", "waf", "-v", "standalone"])
+    assert app_dir.contains_file("test_add_dependency-1.0.0.zip")
 
 
 def test_override_json(testdirectory):
@@ -538,9 +593,10 @@ def test_override_json(testdirectory):
         json.dump(clone_path, json_file)
 
     # Try the use checkout
-    app_dir.run(['python', 'waf', 'configure', '-v',
-                 '--resolve_path', 'resolved_dependencies'])
-    app_dir.run(['python', 'waf', 'build', '-v'])
+    app_dir.run(
+        ["python", "waf", "configure", "-v", "--resolve_path", "resolved_dependencies"]
+    )
+    app_dir.run(["python", "waf", "build", "-v"])
 
     resolve_dir = app_dir.join("resolved_dependencies")
     assert resolve_dir.contains_dir("foo-*", "1.3.3.7-*")
