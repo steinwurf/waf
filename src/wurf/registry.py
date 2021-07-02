@@ -450,7 +450,7 @@ def lock_cache(configuration, options, project_path):
 @Registry.cache_once
 @Registry.provide
 def options(parser, args, default_resolve_path, default_symlinks_path, config_file):
-    """ Return the Options provider."""
+    """Return the Options provider."""
 
     # We support the protocols we know how to rewrite
     supported_git_protocols = GitUrlRewriter.git_protocols.keys()
@@ -472,7 +472,7 @@ def options(parser, args, default_resolve_path, default_symlinks_path, config_fi
 @Registry.cache_once
 @Registry.provide
 def config_file(ctx):
-    """ Return the ConfigFile provider."""
+    """Return the ConfigFile provider."""
 
     return ConfigFile(ctx=ctx)
 
@@ -1037,11 +1037,7 @@ def resolve_from_lock_chain(registry, dependency, lock_cache):
 
 @Registry.provide
 def dependency_resolver(registry, ctx, configuration, dependency):
-<<<<<<< HEAD
-    """ Builds a ContextMsgResolver instance."""
-=======
-    """Builds a WurfSourceResolver instance."""
->>>>>>> master
+    """Builds a ContextMsgResolver instance."""
 
     # This is where we "wire" together the resolvers. Which actually do the
     # work of via some method obtaining a path to a dependency.
