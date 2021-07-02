@@ -8,9 +8,9 @@ from wurf.error import DependencyError
 def test_path_resolver_invalid_path():
 
     dependency = mock.Mock()
-    dependency.name = 'foo'
+    dependency.name = "foo"
 
-    path = '/tmp/this_should_not_exist'
+    path = "/tmp/this_should_not_exist"
 
     resolver = PathResolver(dependency=dependency, path=path)
 
@@ -22,7 +22,7 @@ def test_path_resolver_invalid_path():
 def test_path_resolver_valid_path(testdirectory):
 
     dependency = mock.Mock()
-    dependency.name = 'foo'
+    dependency.name = "foo"
 
     path = testdirectory.path()
 

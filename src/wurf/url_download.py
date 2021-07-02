@@ -19,9 +19,8 @@ else:
 
 
 class UrlDownload(object):
-
     def _url_filename(self, url):
-        """ Based on the url return the filename it contains or None if no
+        """Based on the url return the filename it contains or None if no
         filename is specified.
 
         URL with a filename:
@@ -48,20 +47,20 @@ class UrlDownload(object):
             return filename
 
     def _response_filename(self, response):
-        """ Returns the filename contained in the HTTP Content-Disposition
+        """Returns the filename contained in the HTTP Content-Disposition
         header.
         """
         # Try to get the file name from the headers
-        header = response.info().get('Content-Disposition', '')
+        header = response.info().get("Content-Disposition", "")
 
         if not header:
             return None
 
         _, params = cgi.parse_header(header)
-        return params.get('filename', None)
+        return params.get("filename", None)
 
     def download(self, cwd, source, filename=None):
-        """ Download the file specified by the source.
+        """Download the file specified by the source.
 
         :param cwd: The directory where to download the file.
         :param source: The URL of the file to download.
@@ -83,7 +82,7 @@ class UrlDownload(object):
 
         # From http://stackoverflow.com/a/1517728
         CHUNK = 16 * 1024
-        with open(filepath, 'wb') as f:
+        with open(filepath, "wb") as f:
             while True:
                 chunk = response.read(CHUNK)
                 if not chunk:

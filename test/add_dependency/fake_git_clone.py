@@ -6,16 +6,17 @@ from waflib.extras.wurf.error import WurfError
 
 
 class CloneError(WurfError):
-    """Basic """
+    """Basic"""
+
     def __init__(self, repository):
         super(CloneError, self).__init__(
-            "No mapping for repository {} found!".format(repository))
+            "No mapping for repository {} found!".format(repository)
+        )
 
 
 class FakeGitClone(Git):
-
     def __init__(self, git_binary, ctx, clone_path):
-        """ Create a new instance.
+        """Create a new instance.
 
         :param git_binary: The git executable
         :param ctx: A Waf context instance
@@ -52,11 +53,11 @@ class FakeGitClone(Git):
         for lib_repository, lib_directory in self.clone_path.items():
             if repository.endswith(lib_repository):
 
-                shutil.copytree(src=lib_directory, dst=dst_directory,
-                                symlinks=True)
+                shutil.copytree(src=lib_directory, dst=dst_directory, symlinks=True)
 
-                assert os.path.isdir(dst_directory), "We should have a valid "\
-                    "path here!"
+                assert os.path.isdir(dst_directory), (
+                    "We should have a valid " "path here!"
+                )
                 return
 
         else:
@@ -64,9 +65,8 @@ class FakeGitClone(Git):
 
     @staticmethod
     def build(registry):
-        git_binary = registry.require('git_binary')
-        ctx = registry.require('ctx')
-        clone_path = registry.require('clone_path')
+        git_binary = registry.require("git_binary")
+        ctx = registry.require("ctx")
+        clone_path = registry.require("clone_path")
 
-        return FakeGitClone(git_binary=git_binary, ctx=ctx,
-                            clone_path=clone_path)
+        return FakeGitClone(git_binary=git_binary, ctx=ctx, clone_path=clone_path)

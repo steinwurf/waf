@@ -3,10 +3,10 @@
 
 
 class ListResolver(object):
-    """ Iterates through a list of resolvers until a path is resolved."""
+    """Iterates through a list of resolvers until a path is resolved."""
 
     def __init__(self, resolvers):
-        """ Construct an instance.
+        """Construct an instance.
 
         :param resolvers: A list of resolvers object for the available
            sources
@@ -14,7 +14,7 @@ class ListResolver(object):
         self.resolvers = resolvers
 
     def resolve(self):
-        """ Resolve the dependency.
+        """Resolve the dependency.
 
         :return: Path to resolved dependency as a string
         """

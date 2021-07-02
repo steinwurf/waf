@@ -8,8 +8,8 @@ def test_git_resolver(testdirectory):
 
     ctx = mock.Mock()
     git = mock.Mock()
-    source = 'gitlab.com/steinwurf/links.git'
-    url = 'https://gitlab.com/steinwurf/links.git'
+    source = "gitlab.com/steinwurf/links.git"
+    url = "https://gitlab.com/steinwurf/links.git"
 
     git_url_rewriter = mock.Mock()
     git_url_rewriter.rewrite_url.return_value = url
@@ -24,20 +24,26 @@ def test_git_resolver(testdirectory):
     git.clone = mock.Mock(side_effect=fake_git_clone)
 
     dependency = mock.Mock()
-    dependency.name = 'links'
+    dependency.name = "links"
 
     resolver = GitResolver(
-        git=git, ctx=ctx, dependency=dependency,
-        git_url_rewriter=git_url_rewriter, source=source, cwd=cwd)
+        git=git,
+        ctx=ctx,
+        dependency=dependency,
+        git_url_rewriter=git_url_rewriter,
+        source=source,
+        cwd=cwd,
+    )
 
     path = resolver.resolve()
 
     repo_name = os.path.basename(os.path.normpath(path))
-    assert repo_name.startswith('master-')
+    assert repo_name.startswith("master-")
     repo_folder = os.path.dirname(os.path.normpath(path))
 
     git.clone.assert_called_once_with(
-        repository=url, directory=repo_name, cwd=repo_folder)
+        repository=url, directory=repo_name, cwd=repo_folder
+    )
 
     git.pull_submodules.assert_called_once_with(cwd=path)
 

@@ -32,13 +32,13 @@ figure out which dependencies exist.
 
 
 class WafResolveContext(Context.Context):
-    '''resolves the dependencies specified in the wscript's resolve function'''
+    """resolves the dependencies specified in the wscript's resolve function"""
 
-    cmd = 'resolve'
-    fun = 'resolve'
+    cmd = "resolve"
+    fun = "resolve"
 
     def __init__(self, resolve=False, skip_internal=False, **kw):
-        """ Create a WafResolveContext"""
+        """Create a WafResolveContext"""
         super(WafResolveContext, self).__init__(**kw)
 
         # We only want to carry out the actual resolve once, when intially
@@ -60,33 +60,35 @@ class WafResolveContext(Context.Context):
         # if not we create one. This is also done for other functions such
         # as options by waf itself. See:
         # https://gitlab.com/ita1024/waf/-/blob/89175bf97/waflib/Scripting.py#L203-209
-        if 'resolve' not in Context.g_module.__dict__:
+        if "resolve" not in Context.g_module.__dict__:
             Context.g_module.resolve = Utils.nada
 
         # Create the nodes that will be used during the resolve step. The build
         # directory is also used by the waf BuildContext
         self.srcnode = self.path
-        self.bldnode = self.path.make_node('build')
+        self.bldnode = self.path.make_node("build")
         self.bldnode.mkdir()
 
         default_resolve_path = os.path.join(
-            self.path.abspath(), 'resolved_dependencies')
+            self.path.abspath(), "resolved_dependencies"
+        )
 
-        default_symlinks_path = os.path.join(
-            self.path.abspath(), 'resolve_symlinks')
+        default_symlinks_path = os.path.join(self.path.abspath(), "resolve_symlinks")
 
         self.registry = registry.resolve_registry(
             ctx=self,
-            git_binary='git',
+            git_binary="git",
             semver=semver,
             archive_extractor=archive.extract,
             default_resolve_path=default_resolve_path,
             resolve_config_path=self.resolve_config_path(),
             default_symlinks_path=default_symlinks_path,
-            waf_utils=Utils, args=sys.argv[1:],
+            waf_utils=Utils,
+            args=sys.argv[1:],
             project_path=self.path.abspath(),
             waf_lock_file=Options.lockfile,
-            skip_internal=self.skip_internal)
+            skip_internal=self.skip_internal,
+        )
 
         # Enable/disable colors based on the currently used terminal.
         # Note: this prevents jumbled output if waf is invoked from an IDE
@@ -94,16 +96,18 @@ class WafResolveContext(Context.Context):
         Logs.enable_colors(1)
 
         # Lets make a different log file for the different resolver chains
-        configuration = self.registry.require('configuration')
+        configuration = self.registry.require("configuration")
 
-        path = os.path.join(self.bldnode.abspath(),
-                            configuration.resolver_chain() + '.resolve.log')
+        path = os.path.join(
+            self.bldnode.abspath(), configuration.resolver_chain() + ".resolve.log"
+        )
 
-        self.logger = Logs.make_logger(path, 'resolve')
-        self.logger.debug('wurf: Resolve execute {}'.format(
-            configuration.resolver_chain()))
+        self.logger = Logs.make_logger(path, "resolve")
+        self.logger.debug(
+            "wurf: Resolve execute {}".format(configuration.resolver_chain())
+        )
 
-        self.dependency_manager = self.registry.require('dependency_manager')
+        self.dependency_manager = self.registry.require("dependency_manager")
 
         try:
             # Calling the context execute will call the resolve(...) functions
@@ -119,13 +123,13 @@ class WafResolveContext(Context.Context):
 
         # Get the cache with the resolved dependencies
         global dependency_cache
-        dependency_cache = self.registry.require('dependency_cache')
+        dependency_cache = self.registry.require("dependency_cache")
 
-        self.logger.debug('wurf: dependency_cache {}'.format(dependency_cache))
+        self.logger.debug("wurf: dependency_cache {}".format(dependency_cache))
 
         # If needed execute any actions which cannot run until after the
         # dependency resolution has completed
-        post_resolver_actions = self.registry.require('post_resolver_actions')
+        post_resolver_actions = self.registry.require("post_resolver_actions")
 
         for action in post_resolver_actions:
             action()
@@ -139,14 +143,16 @@ class WafResolveContext(Context.Context):
 
         try:
 
-            self.dependency_manager.load_dependencies(self.path.abspath(),
-                                                      mandatory=False)
+            self.dependency_manager.load_dependencies(
+                self.path.abspath(), mandatory=False
+            )
         except ValueError as e:
             # The ValueError is raised when the json is malformed. We
             # could potentially catch more errors here. But, we can
             # expand this if needed to catch more error types later..
             msg = "Error in load dependencies (resolve.json) {}: {}".format(
-                self.path.abspath(), e)
+                self.path.abspath(), e
+            )
             self.logger.debug(msg, exc_info=True)
             self.fatal(msg)
 
@@ -174,14 +180,13 @@ class WafResolveContext(Context.Context):
         # Seems the new waf needs the cwd to be a Node object. We do this
         # adaption here to avoid introducing additional Waf dependencies in the
         # other parts of the code.
-        if 'cwd' in kwargs:
-            cwd = kwargs['cwd']
-            kwargs['cwd'] = self.root.find_dir(str(cwd))
-            assert kwargs['cwd']
+        if "cwd" in kwargs:
+            cwd = kwargs["cwd"]
+            kwargs["cwd"] = self.root.find_dir(str(cwd))
+            assert kwargs["cwd"]
 
         try:
-            return super(WafResolveContext, self).cmd_and_log(
-                cmd=cmd, **kwargs)
+            return super(WafResolveContext, self).cmd_and_log(cmd=cmd, **kwargs)
         except WafError as e:
             # @todo Do we need to include the traceback to the original
             # exception here? See: http://bit.ly/2njVD5V

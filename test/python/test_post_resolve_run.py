@@ -8,7 +8,7 @@ from wurf.error import WurfError
 
 def test_post_resolve_run(testdirectory):
 
-    resolver_folder = testdirectory.mkdir('somefolder-01234')
+    resolver_folder = testdirectory.mkdir("somefolder-01234")
     resolver = mock.Mock()
     resolver.resolve.return_value = resolver_folder.path()
 
@@ -16,8 +16,7 @@ def test_post_resolve_run(testdirectory):
     run = "tar -xyz this.tar.gz"
     cwd = testdirectory.path()
 
-    resolver = PostResolveRun(
-        resolver=resolver, ctx=ctx, run=run, cwd=cwd)
+    resolver = PostResolveRun(resolver=resolver, ctx=ctx, run=run, cwd=cwd)
 
     path = resolver.resolve()
 
@@ -29,7 +28,7 @@ def test_post_resolve_run(testdirectory):
 
 def test_post_resolve_run_failed(testdirectory):
 
-    resolver_folder = testdirectory.mkdir('somefolder-01234')
+    resolver_folder = testdirectory.mkdir("somefolder-01234")
     resolver = mock.Mock()
     resolver.resolve.return_value = resolver_folder.path()
 
@@ -38,11 +37,10 @@ def test_post_resolve_run_failed(testdirectory):
     run = "tar -xyz this.tar.gz"
     cwd = testdirectory.path()
 
-    resolver = PostResolveRun(
-        resolver=resolver, ctx=ctx, run=run, cwd=cwd)
+    resolver = PostResolveRun(resolver=resolver, ctx=ctx, run=run, cwd=cwd)
 
     with pytest.raises(WurfError):
         resolver.resolve()
 
     # The run-xxxx folder should be cleaned out
-    assert not resolver_folder.contains_dir('run-*')
+    assert not resolver_folder.contains_dir("run-*")

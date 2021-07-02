@@ -12,7 +12,7 @@ class GitResolver(object):
 
     def __init__(self, git, ctx, dependency, git_url_rewriter, source, cwd):
 
-        """ Construct a new WurfGitResolver instance.
+        """Construct a new WurfGitResolver instance.
 
         :param git: A Git instance
         :param ctx: A Waf Context instance.
@@ -42,16 +42,15 @@ class GitResolver(object):
 
         # Use the first 6 characters of the SHA1 hash of the repository url
         # to uniquely identify the repository
-        repo_hash = hashlib.sha1(repo_url.encode('utf-8')).hexdigest()[:6]
+        repo_hash = hashlib.sha1(repo_url.encode("utf-8")).hexdigest()[:6]
 
         # The folder for storing the master branch of this repository
-        folder_name = 'master-' + repo_hash
+        folder_name = "master-" + repo_hash
         master_path = os.path.join(self.cwd, folder_name)
 
         # If the master folder does not exist, do a git clone first
         if not os.path.isdir(master_path):
-            self.git.clone(repository=repo_url, directory=folder_name,
-                           cwd=self.cwd)
+            self.git.clone(repository=repo_url, directory=folder_name, cwd=self.cwd)
         else:
             # We only want to pull if we haven't just cloned. This avoids
             # having to type in the username and password twice when using
@@ -62,7 +61,7 @@ class GitResolver(object):
                 # the required version for this dependency
                 self.git.pull(cwd=master_path)
             except Exception as e:
-                self.ctx.to_log('Exception when executing git pull:')
+                self.ctx.to_log("Exception when executing git pull:")
                 self.ctx.to_log(e)
 
         assert os.path.isdir(master_path), "We should have a valid path here!"
@@ -71,8 +70,7 @@ class GitResolver(object):
         if self.dependency.pull_submodules:
             self.git.pull_submodules(cwd=master_path)
 
-        self.dependency.git_commit = \
-            self.git.current_commit(cwd=master_path)
+        self.dependency.git_commit = self.git.current_commit(cwd=master_path)
 
         return master_path
 

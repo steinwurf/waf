@@ -8,7 +8,7 @@ IS_PY2 = sys.version_info[0] == 2
 
 
 def check_locale_python3():
-    """ Python 3 depends on the locale to be specified to properly handle
+    """Python 3 depends on the locale to be specified to properly handle
     unicode characters.
 
     You can read about the problem in the Click project documentation:
@@ -31,15 +31,17 @@ def check_locale_python3():
 
     try:
         import locale
+
         fs_enc = codecs.lookup(locale.getpreferredencoding()).name
     except LookupError:
-        fs_enc = 'ascii'
+        fs_enc = "ascii"
 
-    if fs_enc == 'ascii':
+    if fs_enc == "ascii":
         raise RuntimeError(
-            'We will abort further execution because Python 3 '
-            'was configured to use ASCII as encoding for the '
-            'environment. Consult e.g. http://click.pocoo.org/python3/'
-            'for mitigation steps.')
+            "We will abort further execution because Python 3 "
+            "was configured to use ASCII as encoding for the "
+            "environment. Consult e.g. http://click.pocoo.org/python3/"
+            "for mitigation steps."
+        )
     else:
         return

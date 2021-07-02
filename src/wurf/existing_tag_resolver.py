@@ -12,9 +12,8 @@ class ExistingTagResolver(object):
     out, and there is no newer version in the tag database.
     """
 
-    def __init__(self, ctx, dependency, semver_selector, tag_database,
-                 resolver, cwd):
-        """ Construct a new ExistingTagResolver instance.
+    def __init__(self, ctx, dependency, semver_selector, tag_database, resolver, cwd):
+        """Construct a new ExistingTagResolver instance.
 
         :param ctx: A Waf Context instance.
         :param dependency: The Dependency object.
@@ -54,32 +53,31 @@ class ExistingTagResolver(object):
 
         assert os.path.isdir(path)
 
-        if 'git_tag' in self.dependency:
+        if "git_tag" in self.dependency:
             tags[self.dependency.git_tag] = path
         else:
-            raise DependencyError(msg="No git tag available",
-                                  dependency=self.dependency)
+            raise DependencyError(
+                msg="No git tag available", dependency=self.dependency
+            )
 
         self.__store_tag_file(tags=tags)
         return path
 
     def __load_tag_file(self):
 
-        tag_path = os.path.join(
-            self.cwd, self.dependency.name + '.tags.json')
+        tag_path = os.path.join(self.cwd, self.dependency.name + ".tags.json")
 
         if not os.path.isfile(tag_path):
             return {}
 
-        with open(tag_path, 'r') as tag_file:
+        with open(tag_path, "r") as tag_file:
             return json.load(tag_file)
 
     def __store_tag_file(self, tags):
 
-        tag_path = os.path.join(
-            self.cwd, self.dependency.name + '.tags.json')
+        tag_path = os.path.join(self.cwd, self.dependency.name + ".tags.json")
 
-        with open(tag_path, 'w') as tag_file:
+        with open(tag_path, "w") as tag_file:
             return json.dump(tags, tag_file, indent=4)
 
     def __resolve_path(self, tags):
@@ -92,7 +90,8 @@ class ExistingTagResolver(object):
 
         # Select the most recent tag for this major version
         most_recent = self.semver_selector.select_tag(
-            self.dependency.major, project_tags)
+            self.dependency.major, project_tags
+        )
 
         if most_recent not in tags:
             # We do not have a path to the most recent tag
@@ -103,16 +102,18 @@ class ExistingTagResolver(object):
         if not os.path.isdir(path):
             self.ctx.to_log(
                 "resolve: {} {} contained invalid path {} for tag {}"
-                "- removing it".format(self.dependency.name, tags, path,
-                                       most_recent))
+                "- removing it".format(self.dependency.name, tags, path, most_recent)
+            )
 
             del tags[most_recent]
             return None
 
         else:
             self.ctx.to_log(
-                'resolve: ExistingTagResolver name {} -> {}'.format(
-                    self.dependency.name, path))
+                "resolve: ExistingTagResolver name {} -> {}".format(
+                    self.dependency.name, path
+                )
+            )
 
             return path
 

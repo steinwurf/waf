@@ -14,7 +14,7 @@ class GitCheckoutResolver(object):
     """
 
     def __init__(self, git, resolver, ctx, dependency, checkout, cwd):
-        """ Construct an instance.
+        """Construct an instance.
 
         :param git: A Git instance
         :param resolver: A GitResolver instance.
@@ -32,7 +32,7 @@ class GitCheckoutResolver(object):
         self.cwd = cwd
 
     def resolve(self):
-        """ Fetches the dependency if necessary.
+        """Fetches the dependency if necessary.
 
         :return: The path to the resolved dependency as a string.
         """
@@ -47,14 +47,17 @@ class GitCheckoutResolver(object):
             return path
 
         # Use the path returned to create a unique location for this checkout
-        repo_hash = hashlib.sha1(path.encode('utf-8')).hexdigest()[:6]
+        repo_hash = hashlib.sha1(path.encode("utf-8")).hexdigest()[:6]
 
         # The folder for storing the requested checkout
-        folder_name = self.checkout + '-' + repo_hash
+        folder_name = self.checkout + "-" + repo_hash
         checkout_path = os.path.join(self.cwd, folder_name)
 
-        self.ctx.to_log('wurf: GitCheckoutResolver name {} -> {}'.format(
-            self.dependency.name, checkout_path))
+        self.ctx.to_log(
+            "wurf: GitCheckoutResolver name {} -> {}".format(
+                self.dependency.name, checkout_path
+            )
+        )
 
         # If the folder for the chosen version does not exist,
         # then copy the master and checkout that version
@@ -68,6 +71,7 @@ class GitCheckoutResolver(object):
                 # checkout when the user configures again
                 def onerror(func, path, exc_info):
                     import stat
+
                     if not os.access(path, os.W_OK):
                         os.chmod(path, stat.S_IWUSR)
                         func(path)
@@ -90,8 +94,7 @@ class GitCheckoutResolver(object):
             self.git.pull_submodules(cwd=checkout_path)
 
         # Record the commmit id of the current working copy
-        self.dependency.git_commit = \
-            self.git.current_commit(cwd=checkout_path)
+        self.dependency.git_commit = self.git.current_commit(cwd=checkout_path)
 
         return checkout_path
 

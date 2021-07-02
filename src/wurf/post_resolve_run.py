@@ -16,7 +16,7 @@ class PostResolveRun(object):
 
     def __init__(self, resolver, ctx, run, cwd):
 
-        """ Construct a new instance.
+        """Construct a new instance.
 
         :param resolver: A resolver instance.
         :param ctx: A Waf Context instance.
@@ -43,10 +43,10 @@ class PostResolveRun(object):
         # Use the first 6 characters of the SHA1 hash of the run command
         # and the path
         hash_data = str(self.run) + path
-        run_hash = hashlib.sha1(hash_data.encode('utf-8')).hexdigest()[:6]
+        run_hash = hashlib.sha1(hash_data.encode("utf-8")).hexdigest()[:6]
 
         # The folder for storing the master branch of this repository
-        folder_name = 'run-' + run_hash
+        folder_name = "run-" + run_hash
         run_path = os.path.join(self.cwd, folder_name)
 
         # If the folder already exists we are done

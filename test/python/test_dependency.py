@@ -12,7 +12,7 @@ def test_dependency():
         "resolver": "git",
         "method": "checkout",
         "checkout": "somebranch",
-        "sources": ["gitrepo1.git", "gitrepo2.git"]
+        "sources": ["gitrepo1.git", "gitrepo2.git"],
     }
 
     w = Dependency(**dep)
@@ -38,15 +38,15 @@ def test_dependency():
     assert w.name2 == "waf2"
 
     assert w.path is None
-    assert ('path' not in w)
+    assert "path" not in w
 
-    w.rewrite(attribute='method', value='semver', reason='testing it')
-    w.rewrite(attribute='major', value=3, reason='testing it')
-    w.rewrite(attribute='checkout', value=None, reason='testing it')
+    w.rewrite(attribute="method", value="semver", reason="testing it")
+    w.rewrite(attribute="major", value=3, reason="testing it")
+    w.rewrite(attribute="checkout", value=None, reason="testing it")
 
     assert w.method == "semver"
     assert w.major == 3
-    assert 'checkout' not in w
+    assert "checkout" not in w
 
 
 def test_dependency_default_values():
@@ -55,7 +55,7 @@ def test_dependency_default_values():
         "name": "foo",
         "resolver": "git",
         "method": "checkout",
-        "sources": ["gitrepo1.git", "gitrepo2.git"]
+        "sources": ["gitrepo1.git", "gitrepo2.git"],
     }
 
     w = Dependency(**dep)

@@ -3,21 +3,21 @@
 
 
 class MandatoryOptions(object):
-    """ Options wrapper that ensures that an option has a value.
+    """Options wrapper that ensures that an option has a value.
 
     This is useful in parts of the code where it is know that an option
     must have a value.
     """
 
     def __init__(self, options):
-        """ Construct a new instance.
+        """Construct a new instance.
 
         :param options: An Options instance.
         """
         self.options = options
 
     def __getattr__(self, name):
-        """ Access one of the options.
+        """Access one of the options.
 
         :param name: The option name.
         """
@@ -32,7 +32,8 @@ class MandatoryOptions(object):
 
             if value is None:
                 raise RuntimeError(
-                    'Mandatory option "{}" was set to "None"'.format(name))
+                    'Mandatory option "{}" was set to "None"'.format(name)
+                )
             return value
 
         return require

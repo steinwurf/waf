@@ -60,8 +60,10 @@ def _check_minimum_python_version(major, minor):
     if sys.version_info[:2] < (major, minor):
         raise Errors.ConfigurationError(
             "Python version not supported: {0}, "
-            "required minimum version: {1}.{2}"
-            .format(sys.version_info[:3], major, minor))
+            "required minimum version: {1}.{2}".format(
+                sys.version_info[:3], major, minor
+            )
+        )
 
 
 # waf_entry_point is loaded first in every project,

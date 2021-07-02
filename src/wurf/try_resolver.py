@@ -7,10 +7,10 @@ from .error import WurfError
 
 
 class TryResolver(object):
-    """ Try to resolve."""
+    """Try to resolve."""
 
     def __init__(self, resolver, ctx, dependency):
-        """ Construct an instance.
+        """Construct an instance.
 
         :param resolver: A resolver instance
         """
@@ -19,7 +19,7 @@ class TryResolver(object):
         self.dependency = dependency
 
     def resolve(self):
-        """ Resolve the dependency.
+        """Resolve the dependency.
 
         :return: Path to resolved dependency as a string
         """
@@ -32,22 +32,24 @@ class TryResolver(object):
             # Waf is using the standard Python Logger so you can check the
             # docs here (read about the exc_info kwargs):
             # https://docs.python.org/2/library/logging.html
-            self.ctx.logger.debug("Resolve failed in {}:".format(
-                self.resolver), exc_info=True)
+            self.ctx.logger.debug(
+                "Resolve failed in {}:".format(self.resolver), exc_info=True
+            )
             # Also write the detailed dependency info to the log
             self.ctx.logger.debug(self.dependency)
 
             # We also store the error message in the dependency object.
             # This will be displayed later if a TopLevelError is triggered,
             # e.g. when a non-optional dependency fails.
-            error_message = ''
-            if 'current_source' in self.dependency:
+            error_message = ""
+            if "current_source" in self.dependency:
                 error_message = "Current source: {}\n".format(
-                    self.dependency.current_source)
+                    self.dependency.current_source
+                )
             # The first argument of the error contains the error message
             error_message += e.args[0]
-            if not error_message.endswith('\n'):
-                error_message += '\n'
+            if not error_message.endswith("\n"):
+                error_message += "\n"
             self.dependency.error_messages.append(error_message)
 
             return None
@@ -59,6 +61,5 @@ class TryResolver(object):
         if path:
             assert os.path.isdir(path) or os.path.isfile(path)
         else:
-            self.ctx.logger.debug(
-                "No path returned by {}".format(self.resolver))
+            self.ctx.logger.debug("No path returned by {}".format(self.resolver))
         return path

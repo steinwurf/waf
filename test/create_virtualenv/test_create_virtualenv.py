@@ -29,8 +29,8 @@ def test_create_virtualenv(testdirectory):
 
 @pytest.mark.networktest
 def test_create_virtualenv_fail(testdirectory):
-    """ This test checks that if a user tries to create the virtualenv
-        in the build folder - we flag an error.
+    """This test checks that if a user tries to create the virtualenv
+    in the build folder - we flag an error.
     """
     testdirectory.copy_file(
         "test/create_virtualenv/wscript_build_folder", rename_as="wscript"

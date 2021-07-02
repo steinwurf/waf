@@ -4,7 +4,6 @@ from wurf.mandatory_options import MandatoryOptions
 
 
 def test_mandatory_options():
-
     class opt(object):
         def name_none(self):
             return None
@@ -17,4 +16,4 @@ def test_mandatory_options():
     with pytest.raises(RuntimeError):
         options.name_none()
 
-    assert options.name('world') == 'hello world'
+    assert options.name("world") == "hello world"

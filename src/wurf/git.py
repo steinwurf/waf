@@ -6,9 +6,8 @@ import re
 
 
 class Git(object):
-
     def __init__(self, git_binary, ctx):
-        """ Construct a new Git instance.
+        """Construct a new Git instance.
 
         :param git_binary: A string containing the path to a git executable.
         :param ctx: A Waf Context instance.
@@ -25,10 +24,10 @@ class Git(object):
             If the output looks like "git version 1.8.1.msysgit.1"
             we just extract the integers i.e. (1.8.1.1)
         """
-        args = [self.git_binary, 'version']
+        args = [self.git_binary, "version"]
         output = self.ctx.cmd_and_log(args).strip()
 
-        int_list = [int(s) for s in re.findall('\\d+', output)]
+        int_list = [int(s) for s in re.findall("\\d+", output)]
         return tuple(int_list)
 
     def is_git_repository(self, cwd):
@@ -39,12 +38,12 @@ class Git(object):
         # Approach outlined here:
         # https://stackoverflow.com/a/2180367/1717320
 
-        git_dir = os.path.join('cwd', '.git')
+        git_dir = os.path.join("cwd", ".git")
         if os.path.isdir(git_dir):
             return True
 
         try:
-            args = [self.git_binary, 'rev-parse', '--git-dir']
+            args = [self.git_binary, "rev-parse", "--git-dir"]
             self.ctx.cmd_and_log(args, cwd=cwd)
             return True
         except Exception:
@@ -55,7 +54,7 @@ class Git(object):
         Runs 'git rev-parse HEAD' parse and return the commit id (SHA1) of the
         commit currently checked out into the working copy.
         """
-        args = [self.git_binary, 'rev-parse', 'HEAD']
+        args = [self.git_binary, "rev-parse", "HEAD"]
         output = self.ctx.cmd_and_log(args, cwd=cwd).strip()
 
         return output
@@ -66,8 +65,7 @@ class Git(object):
 
         :return: The current tags as a string otherwise None
         """
-        args = [self.git_binary, 'tag',
-                '--points-at', self.current_commit(cwd)]
+        args = [self.git_binary, "tag", "--points-at", self.current_commit(cwd)]
 
         output = self.ctx.cmd_and_log(args, cwd=cwd).strip()
 
@@ -80,13 +78,13 @@ class Git(object):
         """
         Runs 'git clone <repository> <directory>' in the directory cwd.
         """
-        args = [self.git_binary, 'clone', repository, directory]
+        args = [self.git_binary, "clone", repository, directory]
 
         if depth:
-            args += ['--depth', str(depth)]
+            args += ["--depth", str(depth)]
 
         if branch:
-            args += ['--branch', branch]
+            args += ["--branch", branch]
 
         self.ctx.cmd_and_log(args, cwd=cwd)
 
@@ -95,7 +93,7 @@ class Git(object):
         Runs 'git pull' in the directory cwd
         """
 
-        args = [self.git_binary, 'pull']
+        args = [self.git_binary, "pull"]
         self.ctx.cmd_and_log(args, cwd=cwd)
 
     def branch(self, cwd):
@@ -103,23 +101,23 @@ class Git(object):
         Runs 'git branch' and returns the current branch and a list of
         additional branches
         """
-        args = [self.git_binary, 'branch']
+        args = [self.git_binary, "branch"]
         o = self.ctx.cmd_and_log(args, cwd=cwd)
 
-        branch = o.split('\n')
-        branch = [b for b in branch if b != '']
+        branch = o.split("\n")
+        branch = [b for b in branch if b != ""]
 
-        current = ''
+        current = ""
         others = []
 
         for b in branch:
-            if b.startswith('*'):
+            if b.startswith("*"):
                 current = b[1:].strip()
             else:
                 others.append(b)
 
-        if current == '':
-            self.ctx.fatal('Failed to locate current branch')
+        if current == "":
+            self.ctx.fatal("Failed to locate current branch")
 
         return current, others
 
@@ -144,13 +142,13 @@ class Git(object):
         # * (no branch)
         # * (detached from waf-1.9.7)
         # * (HEAD detached at waf-1.9.7)
-        return current.startswith('(') and current.endswith(')')
+        return current.startswith("(") and current.endswith(")")
 
     def checkout(self, branch, cwd):
         """
         Runs 'git checkout branch'
         """
-        args = [self.git_binary, 'checkout', branch]
+        args = [self.git_binary, "checkout", branch]
         self.ctx.cmd_and_log(args, cwd=cwd)
 
     def has_submodules(ctx, cwd):
@@ -158,27 +156,27 @@ class Git(object):
         Returns true if the repository in directory cwd contains the
         .gitmodules file.
         """
-        return os.path.isfile(os.path.join(cwd, '.gitmodules'))
+        return os.path.isfile(os.path.join(cwd, ".gitmodules"))
 
     def sync_submodules(self, cwd):
         """
         Runs 'git submodule sync' in the directory cwd
         """
-        args = [self.git_binary, 'submodule', 'sync']
+        args = [self.git_binary, "submodule", "sync"]
         self.ctx.cmd_and_log(args, cwd=cwd)
 
     def init_submodules(self, cwd):
         """
         Runs 'git submodule init' in the directory cwd
         """
-        args = [self.git_binary, 'submodule', 'init']
+        args = [self.git_binary, "submodule", "init"]
         self.ctx.cmd_and_log(args, cwd=cwd)
 
     def update_submodules(self, cwd):
         """
         Runs 'git submodule update' in the directory cwd
         """
-        args = [self.git_binary, 'submodule', 'update']
+        args = [self.git_binary, "submodule", "update"]
         self.ctx.cmd_and_log(args, cwd=cwd)
 
     def pull_submodules(self, cwd):
@@ -197,11 +195,11 @@ class Git(object):
 
         :param cwd: The current working directory as a string
         """
-        args = [self.git_binary, 'tag', '-l']
+        args = [self.git_binary, "tag", "-l"]
         output = self.ctx.cmd_and_log(args, cwd=cwd)
 
-        tags = output.split('\n')
-        return [t for t in tags if t != '']
+        tags = output.split("\n")
+        return [t for t in tags if t != ""]
 
     def remote_origin_url(self, cwd):
         """
@@ -210,7 +208,7 @@ class Git(object):
 
         :param cwd: The current working directory as a string
         """
-        args = [self.git_binary, 'config', '--get', 'remote.origin.url']
+        args = [self.git_binary, "config", "--get", "remote.origin.url"]
         output = self.ctx.cmd_and_log(args, cwd=cwd)
 
         return output.strip()

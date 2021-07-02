@@ -1,8 +1,8 @@
 Steinwurf's Waf
 ===============
 
-.. image:: https://travis-ci.org/steinwurf/waf.svg?branch=master
-    :target: https://travis-ci.org/steinwurf/waf
+.. image:: https://github.com/steinwurf/waf/actions/workflows/build.yml/badge.svg
+   :target: https://github.com/steinwurf/waf/actions/workflows/build.yml
 
 We use Waf as our build tool. However, before adding the Waf
 file to the individual projects we first add some additional
