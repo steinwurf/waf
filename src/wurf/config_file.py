@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-# Support for python 2
 try:
     import configparser
 except ImportError:
+    # Support for python 2
     import ConfigParser as configparser
 
 import os
@@ -25,15 +25,24 @@ class ConfigFile(object):
             # No config file found
             return
 
-        self.ctx.start_msg("Using config file")
+        # Only write to the log if the context has a logger set.
+        log = self.ctx.logger is not None
+
+        if log:
+            self.ctx.start_msg("Using config file")
         config = configparser.ConfigParser()
         try:
             config.read(config_file)
         except configparser.Error as e:
-            self.ctx.end_msg("ERROR: " + e.message, color="RED")
+            if log:
+                self.ctx.end_msg("ERROR: " + e.message, color="RED")
             return
 
-        self.ctx.end_msg(config_file)
+        if log:
+            self.ctx.end_msg(config_file)
+
         if config.has_option("DEFAULT", "resolve_path"):
             self.default_resolve_path = config.get("DEFAULT", "resolve_path")
-            self.ctx.msg("Default resolve path", self.default_resolve_path)
+
+            if log:
+                self.ctx.msg("Default resolve path", self.default_resolve_path)
