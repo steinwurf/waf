@@ -439,16 +439,21 @@ def lock_cache(configuration, options, project_path):
 
 @Registry.cache_once
 @Registry.provide
-def options(parser, args, default_resolve_path, default_symlinks_path):
+def options(parser, args, default_resolve_path, default_symlinks_path, config_file):
     """ Return the Options provider."""
 
     # We support the protocols we know how to rewrite
     supported_git_protocols = GitUrlRewriter.git_protocols.keys()
 
+    if config_file.default_resolve_path:
+        resolve_path = config_file.default_resolve_path
+    else:
+        resolve_path = default_resolve_path
+
     return Options(
         args=args,
         parser=parser,
-        default_resolve_path=default_resolve_path,
+        default_resolve_path=resolve_path,
         default_symlinks_path=default_symlinks_path,
         supported_git_protocols=supported_git_protocols)
 
@@ -1006,11 +1011,6 @@ def dependency_manager(registry):
 
     ctx = registry.require('ctx')
     dependency_cache = registry.require('dependency_cache')
-    config = registry.require('config_file')
-    if config.default_resolve_path:
-        registry.provide_value(
-            'default_resolve_path', config.default_resolve_path, override=True)
-
     options = registry.require('options')
     skip_internal = registry.require('skip_internal')
 
