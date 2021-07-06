@@ -6,7 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Minor: Added support for .wurf_config. This allows changing the default
+  resolve path.
 
 6.0.0
 -----

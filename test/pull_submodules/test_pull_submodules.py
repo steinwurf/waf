@@ -161,7 +161,9 @@ def test_no_pull_submodule(testdirectory):
         json.dump(clone_path, json_file)
 
     # Try the use checkout
-    app_dir.run(["python", "waf", "configure", "-v"])
+    app_dir.run(
+        ["python", "waf", "configure", "-v", "--resolve_path", "resolved_dependencies"]
+    )
     app_dir.run(["python", "waf", "build", "-v"])
 
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "baz"))

@@ -7,7 +7,7 @@ def test_post_resolve_run_http(testdirectory):
     testdirectory.copy_file("test/post_resolve/wscript")
     testdirectory.copy_file("build/waf")
 
-    r = testdirectory.run("python waf configure")
+    r = testdirectory.run("python waf configure --resolve_path resolved_dependencies")
 
     assert r.stdout.match("*finished successfully*")
 

@@ -39,13 +39,17 @@ class WafOptionsContext(Options.OptionsContext):
         self.wurf_options = None
 
         # Create option group for resolve options.
-        option_group = self.add_option_group("Resolve options")
+        self.resolve_options_group = self.add_option_group("Resolve options")
 
         # Add option to skip resolve
-        option_group.add_option("--no_resolve", default=False, action="store_true")
+        self.resolve_options_group.add_option(
+            "--no_resolve", default=False, action="store_true"
+        )
 
         # Add option to skip internal dependencies
-        option_group.add_option("--skip_internal", default=False, action="store_true")
+        self.resolve_options_group.add_option(
+            "--skip_internal", default=False, action="store_true"
+        )
 
     def execute(self):
 
@@ -139,16 +143,12 @@ class WafOptionsContext(Options.OptionsContext):
             # was created by waf. This way, optparse can print out a unified
             # help text and option errors will be printed as the last line.
             if self.wurf_options:
-                # Get the underlying optparse instance from OptionsContext
-                waf_parser = self.parser
-                # We will add the resolve options to this target group
-                target_group = waf_parser.add_option_group("Resolve options")
                 # argparse.ArgumentParser groups all optional arguments to
                 # the "_optionals" groups by default
                 source_group = self.wurf_options.parser._optionals
 
                 for action in source_group._group_actions:
-                    target_group.add_option(
+                    self.resolve_options_group.add_option(
                         action.option_strings[0],
                         action="store_true" if action.nargs == 0 else "store",
                         help=action.help,
