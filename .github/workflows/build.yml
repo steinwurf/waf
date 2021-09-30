@@ -21,10 +21,15 @@ jobs:
       fail-fast: false
       matrix:
         os: [Windows, macOS_X64, Linux]
+        include:
+          - os: Windows
+            PYTHON: python
+          - os: macOS_X64
+            PYTHON: python3
+          - os: Linux
+            PYTHON: python3
     runs-on: [self-hosted, "${{ matrix.os }}"]
     name: ${{ matrix.os }} Test
-    env:
-      python: python3
     steps:
       # - name: Rename python3 to python on Windows
       #   if: runner.os == 'Windows'
@@ -32,11 +37,11 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v2
       - name: Configure
-        run: ${{ env.python }} waf configure
+        run: ${{ matrix.PYTHON }} waf configure
       - name: Build
-        run: ${{ env.python }} waf build
+        run: ${{ matrix.PYTHON }} waf build
       - name: Unittests
-        run: ${{ env.python }} waf --run_tests
+        run: ${{ matrix.PYTHON }} waf --run_tests
   # Code Format Check
   black:
     name: Black
