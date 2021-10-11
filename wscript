@@ -17,7 +17,9 @@ def resolve(ctx):
         optional=False,
         resolver="git",
         method="checkout",
-        checkout="waf-2.0.22",
+        # Currently latest commit on waf-2.1 branch. Needed since we
+        # have a fix for the python tool in that
+        checkout="065496a6",
         sources=["https://gitlab.com/ita1024/waf"],
     )
 
