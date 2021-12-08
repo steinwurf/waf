@@ -1,0 +1,13 @@
+name: Flake8
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1 * * *" # 3 AM CET
+  push:
+  pull_request:
+jobs:
+  flake8:
+    uses: steinwurf/flake8-action/.github/workflows/action.yml@1.0.0
+    with:
+      excluded_errors: F632
+
