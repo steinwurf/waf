@@ -12,7 +12,7 @@ from waflib import Logs
 from waflib import Context
 
 from . import waf_resolve_context
-from . import virtualenv
+from . import venv
 from . import rewrite
 
 
@@ -118,7 +118,7 @@ def recurse_dependencies(ctx):
 
 
 @extend_context
-def create_virtualenv(
+def create_venv(
     ctx,
     cwd=None,
     env=None,
@@ -129,16 +129,13 @@ def create_virtualenv(
     download_path=None,
 ):
 
-    return virtualenv.VirtualEnv.create(
+    return venv.VEnv.create(
         ctx=ctx,
-        log=Logs,
         cwd=cwd,
         env=env,
         name=name,
         overwrite=overwrite,
         system_site_packages=system_site_packages,
-        download=download,
-        download_path=download_path,
     )
 
 

@@ -4,22 +4,20 @@
 import os
 import sys
 import hashlib
-import copy
 
 from .directory import remove_directory
-from .virtualenv_download import VirtualEnvDownload
 
 
-class VirtualEnv(object):
-    """Simple object which can be used to work within a virtualenv.
+class VEnv(object):
+    """Simple object which can be used to work within a venv.
 
     Example (within a wscript build function):
 
     def build(bld):
 
-        venv = VirtualEnv.create(cwd='/tmp', ctx=bld, name=None)
+        venv = VEnv.create(cwd='/tmp', ctx=bld, name=None)
 
-        # Will remove the virtualenv when 'with' block is exited
+        # Will remove the venv when 'with' block is exited
         with venv:
             venv.run('python -m pip install pytest')
             venv.run('python -m pip --version')
@@ -32,14 +30,14 @@ class VirtualEnv(object):
 
     def __init__(self, env, cwd, path, ctx):
         """
-        Wraps a created virtualenv
+        Wraps a created venv
         """
         self.env = env
         self.path = path
         self.cwd = cwd
         self.ctx = ctx
 
-        # Make sure the virtualenv Python executable is first in PATH
+        # Make sure the venv Python executable is first in PATH
         if sys.platform == "win32":
             python_path = os.path.join(path, "Scripts")
         else:
@@ -48,7 +46,7 @@ class VirtualEnv(object):
         self.env["PATH"] = os.path.pathsep.join([python_path, env["PATH"]])
 
     def run(self, cmd, cwd=None):
-        """Runs a command in the virtualenv.
+        """Runs a command in the venv.
 
         :param cmd: The command to run.
         :param cwd: The working directory i.e. where to run the command. If not
@@ -65,42 +63,39 @@ class VirtualEnv(object):
             self.ctx.fatal('Exec command "{}" failed!'.format(cmd))
 
     def __enter__(self):
-        """When used in a with statement the virtualenv will be automatically
+        """When used in a with statement the venv will be automatically
         revmoved.
         """
         return self
 
     def __exit__(self, type, value, traceback):
-        """Remove the virtualenv."""
+        """Remove the venv."""
         remove_directory(path=self.path)
 
     @staticmethod
     def create(
         ctx,
-        log,
         cwd=None,
         env=None,
         name=None,
         overwrite=True,
         system_site_packages=False,
-        download=True,
-        download_path=None,
     ):
-        """Create a new virtual env.
+        """Create a new venv.
 
         :param ctx: The Waf Context used to run commands.
         :param log: The logging object to use
-        :param cwd: The working directory, as a string, where the virtualenv
+        :param cwd: The working directory, as a string, where the venv
             will be created and where the commands will run.
-        :param env: The environment to use during creation of the virtualenv,
+        :param env: The environment to use during creation of the venv,
             once created the PATH and PYTHONPATH variables will be cleared to
-            reflect the virtualenv. You must make sure that the virtualenv
+            reflect the venv. You must make sure that the venv
             module is avilable. Either as a system package or by specifying the
             PYTHONPATH variable.
-        :param name: The name of the virtualenv, as a string. If None a default
+        :param name: The name of the venv, as a string. If None a default
             name will be used.
-        :param overwrite: If an existing virtualenv with the same name already
-            exists we will overwrite it. To reuse the virtualenv pass
+        :param overwrite: If an existing venv with the same name already
+            exists we will overwrite it. To reuse the venv pass
             overwrite=False.
         :param system_site_packages: If true give the virtual environment access
                to the global site-packages.
@@ -114,14 +109,14 @@ class VirtualEnv(object):
             cwd = ctx.path.abspath()
 
         # Check if the cwd is a subdirectory of the build folder. It's a bad
-        # idea to create the virtualenv in the build folder. Reason being that
-        # virtualenv will create symlinks to the Python interpreter and other
+        # idea to create the venv in the build folder. Reason being that
+        # venv will create symlinks to the Python interpreter and other
         # stuff - if those are create in the build folder waf will try to
         # delete them when running waf clean.
         if cwd.startswith(os.path.join(ctx.path.abspath(), "build")):
             ctx.fatal(
-                "Cannot create virtualenv inside the build folder. "
-                "Virtualenv create symlinks to files that will be "
+                "Cannot create venv inside the build folder. "
+                "Venv creates symlinks to files that will be "
                 "deleted with 'waf clean'."
             )
 
@@ -138,41 +133,29 @@ class VirtualEnv(object):
 
         if not name:
 
-            # Make a unique virtualenv for different Python executables
+            # Make a unique venv for different Python executables
             # (e.g. 2.x and 3.x)
             unique = hashlib.sha1(python.encode("utf-8")).hexdigest()[:6]
-            name = "virtualenv-{}".format(unique)
+            name = "venv-{}".format(unique)
 
         path = os.path.join(cwd, name)
 
-        # If a virtualenv already exists - and overwrite is True
+        # If a venv already exists - and overwrite is True
         # lets remove it
         if os.path.isdir(path) and overwrite:
             remove_directory(path=path)
 
         if os.path.isdir(path):
-            # The virtualenv already exists lets use that...
-            return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
+            # The venv already exists lets use that...
+            return VEnv(env=env, path=path, cwd=cwd, ctx=ctx)
 
-        # Create the new virtualenv - requires the virtualenv module to
-        # be available
-        if download:
-            downloader = VirtualEnvDownload(
-                ctx=ctx, log=log, download_path=download_path
-            )
-            venv_path = downloader.download()
+        temp_env = env
 
-            # Add to the PYTHONPATH
-            temp_env = copy.deepcopy(env)
-            temp_env.update({"PYTHONPATH": venv_path})
-        else:
-            temp_env = env
-
-        cmd = [python, "-m", "virtualenv", name]
+        cmd = [python, "-m", "venv", name]
 
         if system_site_packages:
             cmd += ["--system-site-packages"]
 
         ctx.cmd_and_log(cmd, cwd=cwd, env=temp_env)
 
-        return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
+        return VEnv(env=env, path=path, cwd=cwd, ctx=ctx)
