@@ -125,8 +125,6 @@ def create_venv(
     name=None,
     overwrite=True,
     system_site_packages=False,
-    download=True,
-    download_path=None,
 ):
 
     return venv.VEnv.create(
