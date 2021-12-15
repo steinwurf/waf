@@ -7,7 +7,7 @@ on:
   pull_request:
 jobs:
   waf:
-    runs-on: [self-hosted, Linux, vagrant]
+    runs-on: [self-hosted, Linux, builder]
     name: Linux Waf
     steps:
       - name: Checkout
