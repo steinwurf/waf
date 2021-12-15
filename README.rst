@@ -1,8 +1,15 @@
 Steinwurf's Waf
 ===============
+|Waf Python Tests| |Black| |Flake8|
 
-.. image:: https://github.com/steinwurf/waf/actions/workflows/build.yml/badge.svg
-   :target: https://github.com/steinwurf/waf/actions/workflows/build.yml
+.. |Waf Python Tests| image:: https://github.com/steinwurf/waf/actions/workflows/python-waf.yml/badge.svg
+   :target: https://github.com/steinwurf/waf/actions/workflows/python-waf.yml
+
+.. |Flake8| image:: https://github.com/steinwurf/waf/actions/workflows/flake.yml/badge.svg
+    :target: https://github.com/steinwurf/waf/actions/workflows/flake.yml
+
+.. |Black| image:: https://github.com/steinwurf/waf/actions/workflows/black.yml/badge.svg
+      :target: https://github.com/steinwurf/waf/actions/workflows/black.yml
 
 We use Waf as our build tool. However, before adding the Waf
 file to the individual projects we first add some additional
