@@ -19,7 +19,7 @@ def test_virtualenv_download(testdirectory):
 
     path = downloader.download()
 
-    assert path == os.path.join(testdirectory.path(), "16.4.3")
+    assert path == os.path.join(testdirectory.path(), "20.10.0")
 
     git.clone.assert_has_calls(
         [
@@ -28,7 +28,7 @@ def test_virtualenv_download(testdirectory):
                 directory=path,
                 cwd=testdirectory.path(),
                 depth=1,
-                branch="16.4.3",
+                branch="20.10.0",
             )
         ]
     )
@@ -40,7 +40,7 @@ def test_virtualenv_download_exists(testdirectory):
     ctx = mock.Mock()
     log = mock.Mock()
 
-    clone_dir = testdirectory.mkdir("16.4.3")
+    clone_dir = testdirectory.mkdir("20.10.0")
 
     downloader = VirtualEnvDownload(
         git=git, ctx=ctx, log=log, download_path=testdirectory.path()
