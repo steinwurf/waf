@@ -6,7 +6,7 @@ import os
 from .git import Git
 
 URL = "https://github.com/pypa/virtualenv.git"
-VERSION = "16.4.3"
+VERSION = "20.13.1"
 
 
 class VirtualEnvDownload(object):

@@ -4,10 +4,12 @@
 import os
 import sys
 import hashlib
-import copy
+# @todo cleanup
+# import copy
 
 from .directory import remove_directory
-from .virtualenv_download import VirtualEnvDownload
+# @todo cleanup
+# from .virtualenv_download import VirtualEnvDownload
 
 
 class VirtualEnv(object):
@@ -154,25 +156,27 @@ class VirtualEnv(object):
             # The virtualenv already exists lets use that...
             return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
 
+        # @todo cleanup
         # Create the new virtualenv - requires the virtualenv module to
         # be available
-        if download:
-            downloader = VirtualEnvDownload(
-                ctx=ctx, log=log, download_path=download_path
-            )
-            venv_path = downloader.download()
+        # if download:
+        #     downloader = VirtualEnvDownload(
+        #         ctx=ctx, log=log, download_path=download_path
+        #     )
+        #     venv_path = downloader.download()
 
-            # Add to the PYTHONPATH
-            temp_env = copy.deepcopy(env)
-            temp_env.update({"PYTHONPATH": venv_path})
-        else:
-            temp_env = env
+        #     # Add to the PYTHONPATH
+        #     temp_env = copy.deepcopy(env)
+        #     temp_env.update({"PYTHONPATH": os.path.join(venv_path, 'src')})
+        # else:
+        #     temp_env = env
 
-        cmd = [python, "-m", "virtualenv", name]
+        cmd = [python, "-m", "venv", name]
 
         if system_site_packages:
             cmd += ["--system-site-packages"]
 
-        ctx.cmd_and_log(cmd, cwd=cwd, env=temp_env)
+        # ctx.cmd_and_log(cmd, cwd=cwd, env=temp_env)
+        ctx.cmd_and_log(cmd, cwd=cwd, env=env)
 
         return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)

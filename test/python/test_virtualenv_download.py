@@ -6,8 +6,10 @@ import mock
 
 from wurf.virtualenv_download import VirtualEnvDownload
 
+# @todo delete this test
 
-def test_virtualenv_download(testdirectory):
+
+def _test_virtualenv_download(testdirectory):
 
     git = mock.Mock()
     ctx = mock.Mock()
@@ -34,7 +36,7 @@ def test_virtualenv_download(testdirectory):
     )
 
 
-def test_virtualenv_download_exists(testdirectory):
+def _test_virtualenv_download_exists(testdirectory):
 
     git = mock.Mock()
     ctx = mock.Mock()
