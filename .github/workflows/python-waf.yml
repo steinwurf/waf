@@ -7,14 +7,23 @@ on:
   pull_request:
 jobs:
   waf:
-    runs-on: [self-hosted, Linux, builder]
-    name: Linux Waf
+   matrix:
+        os: [Windows, Linux]
+        include:
+          - os: Windows
+            PYTHON: python
+          - os: macOS_X64
+            PYTHON: python3
+          - os: Linux
+            PYTHON: python3
+    runs-on: [self-hosted, "${{ matrix.os }}"]
+    name: ${{ matrix.os }} Waf
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Configure
-        run: python3 waf configure
+        run: ${{ matrix.PYTHON }} waf configure
       - name: Build
-        run: python3 waf
+        run: ${{ matrix.PYTHON }} waf
       - name: Test
-        run: python3 waf --run_tests
+        run: ${{ matrix.PYTHON }} waf --run_tests
