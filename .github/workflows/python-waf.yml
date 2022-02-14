@@ -7,13 +7,13 @@ on:
   pull_request:
 jobs:
   waf:
-   matrix:
-        os: [Windows, Linux]
-        include:
-          - os: Windows
-            PYTHON: python
-          - os: Linux
-            PYTHON: python3
+    matrix:
+      os: [Windows, Linux]
+      include:
+        - os: Windows
+          PYTHON: python
+        - os: Linux
+          PYTHON: python3
     runs-on: [self-hosted, "${{ matrix.os }}"]
     name: ${{ matrix.os }} Waf
     steps:
