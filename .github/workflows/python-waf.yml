@@ -12,8 +12,6 @@ jobs:
         include:
           - os: Windows
             PYTHON: python
-          - os: macOS_X64
-            PYTHON: python3
           - os: Linux
             PYTHON: python3
     runs-on: [self-hosted, "${{ matrix.os }}"]
