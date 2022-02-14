@@ -8,6 +8,7 @@ Latest
 ------
 * Minor: Added support for .wurf_config. This allows changing the default
   resolve path.
+* Minor: Do not rewrite git protocol if fully specified
 
 6.0.0
 -----
