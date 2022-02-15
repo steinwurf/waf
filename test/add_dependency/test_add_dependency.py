@@ -42,11 +42,9 @@ def mkdir_app(directory):
     app_dir.copy_file("test/add_dependency/app/wscript")
 
     app_dir.copy_file("test/add_dependency/fake_git_clone.py")
+    app_dir.copy_file("test/add_dependency/fake_git.py")
+
     app_dir.copy_file("build/waf")
-    # Note: waf will call "git config --get remote.origin.url" in this folder,
-    # so "git init" is required if the pytest temp folder is located within
-    # the main waf folder
-    app_dir.run(["git", "init"])
 
     return app_dir
 
@@ -58,6 +56,8 @@ def mkdir_app_json(directory):
     app_dir.copy_file("test/add_dependency/app/resolve.json")
 
     app_dir.copy_file("test/add_dependency/fake_git_clone.py")
+    app_dir.copy_file("test/add_dependency/fake_git.py")
+
     app_dir.copy_file("build/waf")
     # Note: waf will call "git config --get remote.origin.url" in this folder,
     # so "git init" is required if the pytest temp folder is located within
@@ -427,6 +427,8 @@ def test_resolve_json(testdirectory):
         json.dump(clone_path, json_file)
 
     run_commands(app_dir=app_dir, git_dir=git_dir)
+
+    assert 0
 
 
 def test_add_dependency(testdirectory):
