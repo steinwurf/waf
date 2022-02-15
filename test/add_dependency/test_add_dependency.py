@@ -197,6 +197,7 @@ def mkdir_libqux(directory):
 
 
 def mkdir_libbaz(directory, qux_dir):
+
     # Add baz dir
     baz_dir = directory.copy_dir(directory="test/add_dependency/libbaz")
     baz_dir.run(["git", "init"])
@@ -222,6 +223,17 @@ def mkdir_libbaz(directory, qux_dir):
     commit_file(directory=baz_dir, filename="ok.txt", content=u"hello world")
 
     baz_dir.run(["git", "tag", "4.0.0"])
+
+    git_info = {
+        "branch": "master",
+        "submodules": [{"libqux": qux_dir.path()}],
+        "tags": ["3.1.2", "3.2.0", "3.3.0", "3.3.1", "4.0.0"],
+    }
+
+    json_path = os.path.join(baz_dir.path(), "git_info.json")
+
+    with open(json_path, "w") as json_file:
+        json.dump(git_info, json_file)
 
     return baz_dir
 
