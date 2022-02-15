@@ -119,14 +119,7 @@ def recurse_dependencies(ctx):
 
 @extend_context
 def create_virtualenv(
-    ctx,
-    cwd=None,
-    env=None,
-    name=None,
-    overwrite=True,
-    system_site_packages=False,
-    download=True,
-    download_path=None,
+    ctx, cwd=None, env=None, name=None, overwrite=True, system_site_packages=False
 ):
 
     return virtualenv.VirtualEnv.create(
@@ -137,8 +130,6 @@ def create_virtualenv(
         name=name,
         overwrite=overwrite,
         system_site_packages=system_site_packages,
-        download=download,
-        download_path=download_path,
     )
 
 

@@ -4,12 +4,8 @@
 import os
 import sys
 import hashlib
-# @todo cleanup
-# import copy
 
 from .directory import remove_directory
-# @todo cleanup
-# from .virtualenv_download import VirtualEnvDownload
 
 
 class VirtualEnv(object):
@@ -155,21 +151,6 @@ class VirtualEnv(object):
         if os.path.isdir(path):
             # The virtualenv already exists lets use that...
             return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
-
-        # @todo cleanup
-        # Create the new virtualenv - requires the virtualenv module to
-        # be available
-        # if download:
-        #     downloader = VirtualEnvDownload(
-        #         ctx=ctx, log=log, download_path=download_path
-        #     )
-        #     venv_path = downloader.download()
-
-        #     # Add to the PYTHONPATH
-        #     temp_env = copy.deepcopy(env)
-        #     temp_env.update({"PYTHONPATH": os.path.join(venv_path, 'src')})
-        # else:
-        #     temp_env = env
 
         cmd = [python, "-m", "venv", name]
 
