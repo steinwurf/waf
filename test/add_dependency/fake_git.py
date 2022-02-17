@@ -2,9 +2,50 @@ import os
 import shutil
 import json
 import hashlib
+import schema
 
-from waflib.extras.wurf.git import Git
 from waflib.extras.wurf.error import WurfError
+
+
+def check_git_info(git_info):
+
+    info_schema = schema.Schema(
+        {
+            "branches": list,
+            "tags": list,
+            "commits": list,
+            "submodules": list,
+            "is_detached_head": bool,
+            "remote_origin_url": str,
+            "checkout": str,
+        }
+    )
+
+    print(git_info)
+
+    info_schema.validate(git_info)
+
+
+def read_git_info(cwd):
+
+    json_path = os.path.join(cwd, "git_info.json")
+
+    with open(json_path) as json_file:
+        git_info = json.load(json_file)
+
+    check_git_info(git_info=git_info)
+
+    return git_info
+
+
+def write_git_info(cwd, git_info):
+
+    check_git_info(git_info=git_info)
+
+    json_path = os.path.join(cwd, "git_info.json")
+
+    with open(json_path, "w") as json_file:
+        json.dump(git_info, json_file)
 
 
 class CloneError(WurfError):
@@ -17,18 +58,10 @@ class CloneError(WurfError):
 
 
 class FakeGit:
-
-
-
     def clone(self, repository, directory, cwd):
 
-        print(f"clone {repository =}")
-        print(f"clone {directory =}")
-        print(f"clone {cwd =}")
-        print(f"clone {os.getcwd() = }")
-
-        with open('clone_path.json') as json_file:
-             clone_path = json.load(json_file)
+        with open("clone_path.json") as json_file:
+            clone_path = json.load(json_file)
 
         dst_directory = os.path.join(cwd, directory)
 
@@ -46,13 +79,9 @@ class FakeGit:
             raise CloneError(repository=repository)
 
     def pull_submodules(self, cwd):
+        """Fake a git pull submodule"""
 
-        print(f"pull_submodule")
-
-        json_path = os.path.join(cwd, "git_info.json")
-
-        with open(json_path) as json_file:
-            git_info = json.load(json_file)
+        git_info = read_git_info(cwd=cwd)
 
         if "submodules" not in git_info:
             return
@@ -67,87 +96,79 @@ class FakeGit:
 
             shutil.copytree(src=path, dst=dst, symlinks=True)
 
-            assert os.path.isdir(dst), (
-                    "We should have a valid " "path here!"
-                )
-
+            assert os.path.isdir(dst), "We should have a valid " "path here!"
 
     def current_commit(self, cwd):
+        """Fake the current commit of a repository"""
 
-        json_path = os.path.join(cwd, "git_info.json")
+        git_info = read_git_info(cwd=cwd)
 
-        with open(json_path) as json_file:
-            git_info = json.load(json_file)
+        if git_info["checkout"] in git_info["branches"]:
+            return self._to_sha1(data=git_info["checkout"])
 
-        commit = hashlib.sha1(git_info['current_branch'].encode("utf-8")).hexdigest()
+        if git_info["checkout"] in git_info["tags"]:
+            return self._to_sha1(data=git_info["checkout"])
 
-        print(f"current_commit => {commit}")
-
-        return commit
+        # The current checkout must already be a commit so we just return
+        # it
+        return git_info["checkout"]
 
     def tags(self, cwd):
+        """ " Fake what tags are in a repository"""
 
-        json_path = os.path.join(cwd, "git_info.json")
-
-        with open(json_path) as json_file:
-            git_info = json.load(json_file)
-
-        print(f"tags => {git_info['tags']}")
-
-        return git_info['tags']
-
+        git_info = read_git_info(cwd=cwd)
+        return git_info["tags"]
 
     def current_branch(self, cwd):
+        """ " Fake the current branch of a repository"""
 
-        json_path = os.path.join(cwd, "git_info.json")
+        git_info = read_git_info(cwd=cwd)
 
-        with open(json_path) as json_file:
-            git_info = json.load(json_file)
+        assert (
+            git_info["checkout"] in git_info["branches"]
+        ), "We are not on a branch it seems"
 
-        print(f"current_branch => {git_info['current_branch']}")
-
-        return git_info['current_branch']
-
+        return git_info["checkout"]
 
     def checkout(self, branch, cwd):
+        """Fake a git checkout.
 
-        print(f"checkout => {branch}")
+        Essentially we can checkout either a branch, tag or commit.
 
+        In FakeGit the commit of a branch or tag will just be the sha1 of the
+        branch or tag name.
+        """
 
-        json_path = os.path.join(cwd, "git_info.json")
+        git_info = read_git_info(cwd=cwd)
 
-        with open(json_path) as json_file:
-            git_info = json.load(json_file)
+        valid = []
+        for tag in git_info["tags"]:
+            valid.append(tag)
+            valid.append(self._to_sha1(data=tag))
 
-        assert branch in git_info["tags"], f"{branch = }, {cwd =}"
+        assert branch in valid, f"{branch = }, {cwd =}"
 
-        git_info["is_detached_head"] = True,
-        git_info["current_branch"] = branch
+        git_info["is_detached_head"] = True
+        git_info["checkout"] = branch
 
-        with open(json_path, "w") as json_file:
-            json.dump(git_info, json_file)
-
+        write_git_info(cwd=cwd, git_info=git_info)
 
     def remote_origin_url(self, cwd):
+        """Fake the remote origin url of a repository"""
 
-        print(f"remote_origin_url")
-
-
-        json_path = os.path.join(cwd, "git_info.json")
-
-        with open(json_path) as json_file:
-            git_info = json.load(json_file)
-
-        return git_info['remote_origin_url']
+        git_info = read_git_info(cwd=cwd)
+        return git_info["remote_origin_url"]
 
     def is_detached_head(self, cwd):
+        """Fake whether we are in detached_head state
 
-        print(f"is_detached_head")
+        In git we have a detached state if we checkout something that is not a
+        branch. See the checkout(...) function to see how it is updated
+        """
+        git_info = read_git_info(cwd=cwd)
 
-        json_path = os.path.join(cwd, "git_info.json")
+        return git_info["is_detached_head"]
 
-        with open(json_path) as json_file:
-            git_info = json.load(json_file)
-
-        return git_info['is_detached_head']
-
+    def _to_sha1(self, data):
+        """Small private helper to calculate SHA1"""
+        return hashlib.sha1(data.encode("utf-8")).hexdigest()

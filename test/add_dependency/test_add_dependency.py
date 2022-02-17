@@ -41,7 +41,6 @@ def mkdir_app(directory):
     app_dir.copy_file("test/add_dependency/app/main.cpp")
     app_dir.copy_file("test/add_dependency/app/wscript")
 
-    app_dir.copy_file("test/add_dependency/fake_git_clone.py")
     app_dir.copy_file("test/add_dependency/fake_git.py")
 
     app_dir.copy_file("build/waf")
@@ -55,20 +54,19 @@ def mkdir_app_json(directory):
     app_dir.copy_file("test/add_dependency/app/wscript_json", rename_as="wscript")
     app_dir.copy_file("test/add_dependency/app/resolve.json")
 
-    app_dir.copy_file("test/add_dependency/fake_git_clone.py")
     app_dir.copy_file("test/add_dependency/fake_git.py")
 
     app_dir.copy_file("build/waf")
-    # Note: waf will call "git config --get remote.origin.url" in this folder,
-    # so "git init" is required if the pytest temp folder is located within
-    # the main waf folder
-    # app_dir.run(["git", "init"])
 
     git_info = {
-        "remote_origin_url": "git@github.com:steinwurf/waf.git",
+        "checkout": "master",
+        "branches": ["master"],
+        "commits": [],
+        "remote_origin_url": "git@github.com/acme-corp/app.git",
         "is_detached_head": False,
+        "submodules": [],
+        "tags": [],
     }
-
     json_path = os.path.join(app_dir.path(), "git_info.json")
 
     with open(json_path, "w") as json_file:
@@ -85,17 +83,22 @@ def mkdir_app_override(directory):
         "test/add_dependency/app/resolve_override.json", rename_as="resolve.json"
     )
 
-    app_dir.copy_file("test/add_dependency/fake_git_clone.py")
+    app_dir.copy_file("test/add_dependency/fake_git.py")
     app_dir.copy_file("build/waf")
     # Note: waf will call "git config --get remote.origin.url" in this folder,
     # so "git init" is required if the pytest temp folder is located within
     # the main waf folder
-    # app_dir.run(["git", "init"])
 
     git_info = {
-        "remote_origin_url": "git@github.com:steinwurf/waf.git",
+        "checkout": "master",
+        "branches": ["master"],
+        "commits": [],
+        "remote_origin_url": "git@github.com/acme-corp/app.git",
         "is_detached_head": False,
+        "submodules": [],
+        "tags": [],
     }
+
     json_path = os.path.join(app_dir.path(), "git_info.json")
 
     with open(json_path, "w") as json_file:
@@ -127,38 +130,23 @@ def mkdir_libfoo(directory):
     foo_dir.copy_file("test/add_dependency/libfoo/wscript")
     foo_dir.copy_file("test/add_dependency/libfoo/some_repos_contain")
     foo_dir.copy_dir(directory="test/add_dependency/libfoo/src")
-    # foo_dir.run(["git", "init"])
-    # foo_dir.run(["git", "add", "."])
-
-    # # We cannot commit without setting a user + email, but that is not always
-    # # available. So we can set it just for the one commit command using this
-    # # approach: http://stackoverflow.com/a/22058263/1717320
-    # foo_dir.run(
-    #     [
-    #         "git",
-    #         "-c",
-    #         "user.name=John",
-    #         "-c",
-    #         "user.email=doe@email.org",
-    #         "commit",
-    #         "-m",
-    #         "oki",
-    #     ]
-    # )
-    # foo_dir.run(["git", "tag", "1.3.3.7"])
 
     git_info = {
-        "current_branch": "master",
-        "tags": ["1.3.3.7"],
+        "checkout": "master",
+        "branches": ["master"],
+        "commits": [],
+        "remote_origin_url": "git@github.com/acme-corp/foo.git",
         "is_detached_head": False,
+        "submodules": [],
+        "tags": ["1.3.3.7"],
     }
+
     json_path = os.path.join(foo_dir.path(), "git_info.json")
 
     with open(json_path, "w") as json_file:
         json.dump(git_info, json_file)
 
     foo_dir.write_text(filename="ok.txt", data=u"hello world", encoding="utf-8")
-    # commit_file(directory=foo_dir, filename="ok.txt", content=u"hello world")
 
     return foo_dir
 
@@ -170,31 +158,17 @@ def mkdir_libfoo_json(directory):
     foo_dir.copy_file("test/add_dependency/libfoo/some_repos_contain")
     foo_dir.copy_file("test/add_dependency/libfoo/resolve.json")
     foo_dir.copy_dir(directory="test/add_dependency/libfoo/src")
-    # foo_dir.run(["git", "init"])
-    # foo_dir.run(["git", "add", "."])
-
-    # # We cannot commit without setting a user + email, but that is not always
-    # # available. So we can set it just for the one commit command using this
-    # # approach: http://stackoverflow.com/a/22058263/1717320
-    # foo_dir.run(
-    #     [
-    #         "git",
-    #         "-c",
-    #         "user.name=John",
-    #         "-c",
-    #         "user.email=doe@email.org",
-    #         "commit",
-    #         "-m",
-    #         "oki",
-    #     ]
-    # )
-    # foo_dir.run(["git", "tag", "1.3.3.7"])
 
     git_info = {
-        "current_branch": "master",
-        "tags": ["1.3.3.7"],
+        "checkout": "master",
+        "branches": ["master"],
+        "commits": [],
+        "remote_origin_url": "git@github.com/acme-corp/foo.git",
         "is_detached_head": False,
+        "submodules": [],
+        "tags": ["1.3.3.7"],
     }
+
     json_path = os.path.join(foo_dir.path(), "git_info.json")
 
     with open(json_path, "w") as json_file:
@@ -209,25 +183,14 @@ def mkdir_libfoo_json(directory):
 def mkdir_libbar(directory):
     # Add bar dir
     bar_dir = directory.copy_dir(directory="test/add_dependency/libbar")
-    # bar_dir.run(["git", "init"])
-    # bar_dir.run(["git", "add", "."])
-    # bar_dir.run(
-    #     [
-    #         "git",
-    #         "-c",
-    #         "user.name=John",
-    #         "-c",
-    #         "user.email=doe@email.org",
-    #         "commit",
-    #         "-m",
-    #         "oki",
-    #     ]
-    # )
-    # bar_dir.run(["git", "tag", "someh4sh"])
 
     git_info = {
-        "current_branch": "master",
+        "checkout": "master",
+        "branches": ["master"],
+        "commits": [],
+        "remote_origin_url": "git@github.com/acme-corp/bar.git",
         "is_detached_head": False,
+        "submodules": [],
         "tags": ["someh4sh"],
     }
 
@@ -240,14 +203,19 @@ def mkdir_libbar(directory):
 
 
 def mkdir_libqux(directory):
-    # Add bar dir
+    # Add qux dir
     qux_dir = directory.mkdir("libqux")
-    # qux_dir.run(["git", "init"])
-
     qux_dir.write_text(filename="ok.txt", data=u"hello world", encoding="utf-8")
-    # commit_file(directory=qux_dir, filename="ok.txt", content=u"hello world")
 
-    git_info = {"current_branch": "master", "is_detached_head": False}
+    git_info = {
+        "checkout": "master",
+        "branches": ["master"],
+        "commits": [],
+        "remote_origin_url": "git@github.com/acme/qux.git",
+        "is_detached_head": False,
+        "submodules": [],
+        "tags": [],
+    }
 
     json_path = os.path.join(qux_dir.path(), "git_info.json")
 
@@ -261,32 +229,12 @@ def mkdir_libbaz(directory, qux_dir):
 
     # Add baz dir
     baz_dir = directory.copy_dir(directory="test/add_dependency/libbaz")
-    # baz_dir.run(["git", "init"])
-    # baz_dir.run(["git", "add", "."])
-    # baz_dir.run(["git", "submodule", "add", qux_dir.path(), "libqux"])
-    # baz_dir.run(
-    #     [
-    #         "git",
-    #         "-c",
-    #         "user.name=John",
-    #         "-c",
-    #         "user.email=doe@email.org",
-    #         "commit",
-    #         "-m",
-    #         "oki",
-    #     ]
-    # )
-    # baz_dir.run(["git", "tag", "3.1.2"])
-    # baz_dir.run(["git", "tag", "3.2.0"])
-    # baz_dir.run(["git", "tag", "3.3.0"])
-    # baz_dir.run(["git", "tag", "3.3.1"])
-
-    # commit_file(directory=baz_dir, filename="ok.txt", content=u"hello world")
-
-    # baz_dir.run(["git", "tag", "4.0.0"])
 
     git_info = {
-        "current_branch": "master",
+        "checkout": "master",
+        "branches": ["master"],
+        "commits": [],
+        "remote_origin_url": "git@github.com/acme/baz.git",
         "is_detached_head": False,
         "submodules": [("libqux", qux_dir.path())],
         "tags": ["3.1.2", "3.2.0", "3.3.0", "3.3.1", "4.0.0"],
@@ -394,78 +342,78 @@ def run_commands(app_dir, git_dir):
     )
     assert app_dir.contains_file("lock_resolve.json")
 
-    # # The symlinks should be available to all dependencies
-    # assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "foo"))
-    # assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "baz"))
-    # assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "bar"))
+    # The symlinks should be available to all dependencies
+    assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "foo"))
+    assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "baz"))
+    assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "bar"))
 
-    # app_dir.run(["python", "waf", "build", "-v"])
+    app_dir.run(["python", "waf", "build", "-v"])
 
-    # resolve_dir = app_dir.join("resolved_dependencies")
-    # assert resolve_dir.contains_dir("foo-*", "1.3.3.7-*")
-    # assert resolve_dir.contains_dir("baz-*", "3.3.1-*")
-    # assert resolve_dir.contains_dir("bar-*", "someh4sh-*")
+    resolve_dir = app_dir.join("resolved_dependencies")
+    assert resolve_dir.contains_dir("foo-*", "1.3.3.7-*")
+    assert resolve_dir.contains_dir("baz-*", "3.3.1-*")
+    assert resolve_dir.contains_dir("bar-*", "someh4sh-*")
 
-    # resolve_dir.rmdir()
+    resolve_dir.rmdir()
 
-    # # This configure should happen from the lock
-    # app_dir.run(
-    #     ["python", "waf", "configure", "-v", "--resolve_path", "resolved_dependencies"]
-    # )
+    # This configure should happen from the lock
+    app_dir.run(
+        ["python", "waf", "configure", "-v", "--resolve_path", "resolved_dependencies"]
+    )
 
-    # assert app_dir.contains_dir("resolve_symlinks", "foo")
-    # assert app_dir.contains_dir("resolve_symlinks", "baz")
-    # assert app_dir.contains_dir("resolve_symlinks", "bar")
+    assert app_dir.contains_dir("resolve_symlinks", "foo")
+    assert app_dir.contains_dir("resolve_symlinks", "baz")
+    assert app_dir.contains_dir("resolve_symlinks", "bar")
 
-    # app_dir.run(["python", "waf", "build", "-v"])
+    app_dir.run(["python", "waf", "build", "-v"])
 
-    # lock_path = os.path.join(app_dir.path(), "lock_resolve.json")
-    # with open(lock_path, "r") as lock_file:
-    #     lock = json.load(lock_file)
+    lock_path = os.path.join(app_dir.path(), "lock_resolve.json")
+    with open(lock_path, "r") as lock_file:
+        lock = json.load(lock_file)
 
-    # resolve_dir = app_dir.join("resolved_dependencies")
+    resolve_dir = app_dir.join("resolved_dependencies")
 
-    # # The content of resolved dependencies is intersting now :)
-    # # We've just resolved from the lock_resolve.json file
-    # # containing the versions needed.
+    # The content of resolved dependencies is intersting now :)
+    # We've just resolved from the lock_resolve.json file
+    # containing the versions needed.
 
-    # # foo should use the commit id in the lock file
-    # assert resolve_dir.contains_dir(
-    #     "foo-*", "{}-*".format(lock["dependencies"]["foo"]["checkout"])
-    # )
-    # # bar is locked to the same commit as the master so it will
-    # # skip the git checkout and just return the master path
-    # assert resolve_dir.contains_dir("bar-*", "master-*")
-    # # baz has its tag in the lock file, so it will be available there
-    # assert resolve_dir.contains_dir("baz-*", "3.3.1-*")
+    # foo should use the commit id in the lock file
+    assert resolve_dir.contains_dir(
+        "foo-*", "{}-*".format(lock["dependencies"]["foo"]["checkout"])
+    )
+    # bar is locked to the same commit as the master so it will
+    # skip the git checkout and just return the master path
+    assert resolve_dir.contains_dir("bar-*", "master-*")
+    # baz has its tag in the lock file, so it will be available there
+    assert resolve_dir.contains_dir("baz-*", "3.3.1-*")
 
-    # app_dir.rmfile("lock_resolve.json")
-    # resolve_dir.rmdir()
+    app_dir.rmfile("lock_resolve.json")
+    resolve_dir.rmdir()
 
-    # # Test the --lock_paths options
-    # app_dir.run(
-    #     ["python", "waf", "configure", "-v", "--lock_paths", "--resolve_path", "locked"]
-    # )
+    # Test the --lock_paths options
+    app_dir.run(
+        ["python", "waf", "configure", "-v", "--lock_paths", "--resolve_path", "locked"]
+    )
 
-    # assert app_dir.contains_dir("resolve_symlinks", "foo")
-    # assert app_dir.contains_dir("resolve_symlinks", "baz")
-    # assert app_dir.contains_dir("resolve_symlinks", "bar")
+    assert app_dir.contains_dir("resolve_symlinks", "foo")
+    assert app_dir.contains_dir("resolve_symlinks", "baz")
+    assert app_dir.contains_dir("resolve_symlinks", "bar")
 
-    # assert app_dir.contains_file("lock_resolve.json")
-    # app_dir.run(["python", "waf", "build", "-v"])
+    assert app_dir.contains_file("lock_resolve.json")
+    app_dir.run(["python", "waf", "build", "-v"])
 
-    # # This configure should happen from the lock
-    # # Now we can delete the git folders - as we should be able to configure
-    # # from the frozen dependencies
-    # app_dir.run(
-    #     ["python", "waf", "configure", "-v", "--resolve_path", "resolved_dependencies"]
-    # )
+    # This configure should happen from the lock
+    # Now we can delete the git folders - as we should be able to configure
+    # from the frozen dependencies
+    app_dir.run(
+        ["python", "waf", "configure", "-v", "--resolve_path", "resolved_dependencies"]
+    )
 
-    # assert app_dir.contains_dir("resolve_symlinks", "foo")
-    # assert app_dir.contains_dir("resolve_symlinks", "baz")
-    # assert app_dir.contains_dir("resolve_symlinks", "bar")
+    assert app_dir.contains_dir("resolve_symlinks", "foo")
+    assert app_dir.contains_dir("resolve_symlinks", "baz")
+    assert app_dir.contains_dir("resolve_symlinks", "bar")
 
-    # app_dir.run(["python", "waf", "build", "-v"])
+    app_dir.run(["python", "waf", "build", "-v"])
 
 
 def test_resolve_json(testdirectory):
@@ -525,9 +473,9 @@ def test_add_dependency(testdirectory):
     # Instead of doing an actual Git clone - we fake it and use the paths in
     # this mapping
     clone_path = {
-        "github.com/acme-corp/foo.git": foo_dir.path(),
-        "gitlab.com/acme-corp/bar.git": bar_dir.path(),
-        "gitlab.com/acme/baz.git": baz_dir.path(),
+        "acme-corp/foo.git": foo_dir.path(),
+        "acme-corp/bar.git": bar_dir.path(),
+        "acme/baz.git": baz_dir.path(),
     }
 
     json_path = os.path.join(app_dir.path(), "clone_path.json")
@@ -551,8 +499,8 @@ def test_add_dependency_path(testdirectory):
     # Instead of doing an actual Git clone - we fake it and use the paths in
     # this mapping
     clone_path = {
-        "github.com/acme-corp/foo.git": foo_dir.path(),
-        "gitlab.com/acme-corp/bar.git": bar_dir.path(),
+        "acme-corp/foo.git": foo_dir.path(),
+        "acme-corp/bar.git": bar_dir.path(),
     }
 
     json_path = os.path.join(app_dir.path(), "clone_path.json")
@@ -611,9 +559,9 @@ def test_create_standalone_archive(testdirectory):
     # Instead of doing an actual Git clone - we fake it and use the paths in
     # this mapping
     clone_path = {
-        "github.com/acme-corp/foo.git": foo_dir.path(),
-        "gitlab.com/acme-corp/bar.git": bar_dir.path(),
-        "gitlab.com/acme/baz.git": baz_dir.path(),
+        "acme-corp/foo.git": foo_dir.path(),
+        "acme-corp/bar.git": bar_dir.path(),
+        "acme/baz.git": baz_dir.path(),
     }
 
     json_path = os.path.join(app_dir.path(), "clone_path.json")
@@ -656,9 +604,9 @@ def test_override_json(testdirectory):
     # Instead of doing an actual Git clone - we fake it and use the paths in
     # this mapping
     clone_path = {
-        "github.com/acme-corp/foo.git": foo_dir.path(),
-        "gitlab.com/acme-corp/bar.git": bar_dir.path(),
-        "gitlab.com/acme/baz.git": baz_dir.path(),
+        "acme-corp/foo.git": foo_dir.path(),
+        "acme-corp/bar.git": bar_dir.path(),
+        "acme/baz.git": baz_dir.path(),
     }
 
     json_path = os.path.join(app_dir.path(), "clone_path.json")
@@ -692,9 +640,9 @@ def test_resolve_only(testdirectory):
     # Instead of doing an actual Git clone - we fake it and use the paths in
     # this mapping
     clone_path = {
-        "github.com/acme-corp/foo.git": foo_dir.path(),
-        "gitlab.com/acme-corp/bar.git": bar_dir.path(),
-        "gitlab.com/acme/baz.git": baz_dir.path(),
+        "acme-corp/foo.git": foo_dir.path(),
+        "acme-corp/bar.git": bar_dir.path(),
+        "acme/baz.git": baz_dir.path(),
     }
 
     json_path = os.path.join(app_dir.path(), "clone_path.json")
@@ -705,7 +653,9 @@ def test_resolve_only(testdirectory):
     env = dict(os.environ)
     env["NOCLIMB"] = "1"
 
-    app_dir.run(["python", "waf", "resolve"], env=env)
+    app_dir.run(
+        ["python", "waf", "resolve", "--resolve_path", "resolved_dependencies"], env=env
+    )
 
     # The symlinks should be available to all dependencies
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "foo"))

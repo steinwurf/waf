@@ -1,25 +1,30 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-VERSION = '1.0.0'
+VERSION = "1.0.0"
 
 
 def options(opt):
-    opts = opt.add_option_group('Foo options')
+    opts = opt.add_option_group("Foo options")
     opts.add_option(
-        '--foo_magic_option', default=None, dest='foo_magic_option',
-        help="Magic option for foo")
+        "--foo_magic_option",
+        default=None,
+        dest="foo_magic_option",
+        help="Magic option for foo",
+    )
 
-    opt.load('compiler_cxx')
+    opt.load("compiler_cxx")
 
 
 def configure(conf):
-    conf.load('compiler_cxx')
+    conf.load("compiler_cxx")
 
 
 def build(bld):
-    bld.stlib(features='cxx',
-              target='foo',
-              source='src/foo/foo.cpp',
-              use=['bar'],
-              export_includes='src')
+    bld.stlib(
+        features="cxx",
+        target="foo",
+        source="src/foo/foo.cpp",
+        use=["bar"],
+        export_includes="src",
+    )
