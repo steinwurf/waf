@@ -255,6 +255,9 @@ def run_commands(app_dir, git_dir):
     # project's main folder (that already has a lock file). To prevent this
     # behavior, we need to invoke help with the NOCLIMB variable.
     env = dict(os.environ)
+
+    print("PATH {}".format(env["PATH"]))
+
     env["NOCLIMB"] = "1"
     app_dir.run(["python", "waf", "--help"], env=env)
 
