@@ -57,8 +57,20 @@ class CloneError(WurfError):
         )
 
 
+class NoClonePathError(WurfError):
+    """Basic"""
+
+    def __init__(self, repository):
+        super(NoClonePathError, self).__init__(
+            "cone_path.json available for repository {} found!".format(repository)
+        )
+
+
 class FakeGit:
     def clone(self, repository, directory, cwd):
+
+        if not os.path.isfile("clone_path.json"):
+            raise NoClonePathError(repository=repository)
 
         with open("clone_path.json") as json_file:
             clone_path = json.load(json_file)
