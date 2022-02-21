@@ -18,7 +18,7 @@ def resolve(ctx):
         resolver="git",
         method="checkout",
         checkout="waf-2.0.22",
-        sources=["gitlab.com/ita1024/waf.git"],
+        sources=["https://gitlab.com/ita1024/waf.git"],
     )
 
     ctx.add_dependency(
