@@ -143,15 +143,18 @@ def _pytest(bld):
 
     venv = bld.create_virtualenv(name="test-venv")
 
-    # with venv:
+    requirements_txt = "test/requirements.txt"
+    requirements_in = "test/requirements.in"
 
-    venv.run("python -m pip install pytest")
-    venv.run("python -m pip install mock")
-    venv.run("python -m pip install vcrpy")
-    venv.run("python -m pip install pytest-testdirectory==3.1.0")
-    venv.run("python -m pip install pycodestyle")
-    venv.run("python -m pip install pyflakes")
-    venv.run("python -m pip install schema")
+    if not os.path.isfile(requirements_txt):
+        with bld.create_virtualenv() as venv:
+            venv.run("python -m pip install pip-tools")
+            venv.run(
+                f"pip-compile {requirements_in} " f"--output-file {requirements_txt}"
+            )
+
+    venv.run("python -m ensurepip --upgrade")
+    venv.run(f"python -m pip install -r {requirements_txt}")
 
     # Add our sources to the Python path
     python_path = [

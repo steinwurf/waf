@@ -2,11 +2,6 @@ import os
 import shutil
 import json
 import hashlib
-
-import sys
-print("EXE {}".format(sys.executable))
-
-
 import schema
 
 from waflib.extras.wurf.error import WurfError
