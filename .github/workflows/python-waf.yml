@@ -25,4 +25,4 @@ jobs:
       - name: Build
         run: ${{ matrix.PYTHON }} waf
       - name: Test
-        run: ${{ matrix.PYTHON }} waf --run_tests
+        run: ${{ matrix.PYTHON }} waf --run_tests -vv
