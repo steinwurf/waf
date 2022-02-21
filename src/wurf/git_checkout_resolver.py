@@ -65,8 +65,6 @@ class GitCheckoutResolver(object):
             try:
                 copy_directory(path=path, to_path=checkout_path)
 
-                print(f"OK HERE {self.checkout = }")
-
                 self.git.checkout(branch=self.checkout, cwd=checkout_path)
             except Exception:
                 # The checkout_path must be removed if the checkout is not
