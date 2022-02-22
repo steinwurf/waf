@@ -153,7 +153,6 @@ def _pytest(bld):
                 f"pip-compile {requirements_in} " f"--output-file {requirements_txt}"
             )
 
-    venv.run("python -m ensurepip --upgrade")
     venv.run(f"python -m pip install -r {requirements_txt}")
 
     # Add our sources to the Python path

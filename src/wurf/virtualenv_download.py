@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import hashlib
 
 from .url_download import UrlDownload
 
@@ -53,6 +54,10 @@ class VirtualEnvDownload(object):
 
         virtualenv_path = os.path.join(self.download_path, "virtualenv.pyz")
 
+        if os.path.isfile(virtualenv_path) and not self._validate(virtualenv_path):
+            self.log.debug("Remove corrupted file virtualenv.pyz")
+            os.remove(virtualenv_path)
+
         if not os.path.isfile(virtualenv_path):
 
             self.log.debug("Downloading {} into {}".format(URL, self.download_path))
@@ -63,7 +68,20 @@ class VirtualEnvDownload(object):
 
         self.log.debug("Using virtualenv from {}".format(self.download_path))
 
+        if not self._validate(virtualenv_path=virtualenv_path):
+            raise RuntimeError("Not valid SHA1 of virtualenv.pyz")
+
         return virtualenv_path
+
+    def _validate(self, virtualenv_path):
+        sha1sum = hashlib.sha1()
+        with open(virtualenv_path, "rb") as source:
+            block = source.read(2 ** 16)
+            while len(block) != 0:
+                sha1sum.update(block)
+                block = source.read(2 ** 16)
+
+        return sha1sum.hexdigest() == SHA1
 
     def _default_download_path(self):
 
