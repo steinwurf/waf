@@ -157,9 +157,9 @@ class VirtualEnv(object):
         try:
             import ensurepip
         except ImportError:
-            ensurepip_available = True
-        else:
             ensurepip_available = False
+        else:
+            ensurepip_available = True
 
         # Use the venv package
         cmd = [python, "-m", "venv", name, "--without-pip"]
