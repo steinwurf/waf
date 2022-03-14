@@ -153,6 +153,42 @@ class VirtualEnv(object):
             # The virtualenv already exists lets use that...
             return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
 
+        # Check if we need to install pip manually
+        try:
+            import ensurepip
+        except ImportError:
+            ensurepip_available = True
+        else:
+            ensurepip_available = False
+
+        # Use the venv package
+            cmd = [python, "-m", "venv", name]
+
+        if system_site_packages:
+            cmd += ["--system-site-packages"]
+
+        # Create virtualenv
+        ctx.cmd_and_log(cmd, cwd=cwd, env=env)
+
+        venv = VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
+
+        if ensurepip_available:
+
+            # ensurepip exists so we just run it
+            venv.run("python -m ensurepip")
+
+        else:
+
+            # ensurepip does not exist so we manually install pip
+            downloader = VirtualEnvDownload(
+                ctx=ctx, log=log, download_path=download_path
+            )
+            get_pip = downloader.download()
+
+            venv.run("python {}".format(get_pip))
+
+        return venv
+
         # Create the new virtualenv - requires the virtualenv module to
         # be available
         if download:
