@@ -74,7 +74,8 @@ def configure(conf):
 
     # Ensure that the waf-light program is available in the in the
     # waf folder. This is used to build the waf binary.
-    conf.find_program("waf-light", exts="", path_list=[conf.dependency_path("waf")])
+    conf.find_program("waf-light", exts="",
+                      path_list=[conf.dependency_path("waf")])
 
 
 def _build_waf_binary(bld):
@@ -150,10 +151,11 @@ def _pytest(bld):
         with bld.create_virtualenv() as venv:
             venv.run("python -m pip install pip-tools")
             venv.run(
-                f"pip-compile {requirements_in} " f"--output-file {requirements_txt}"
+                "pip-compile {} --output-file {}".format(
+                    requirements_in, requirements_txt)
             )
 
-    venv.run(f"python -m pip install -r {requirements_txt}")
+    venv.run("python -m pip install -r {}".format(requirements_txt))
 
     # Add our sources to the Python path
     python_path = [
