@@ -162,7 +162,7 @@ class VirtualEnv(object):
             ensurepip_available = False
 
         # Use the venv package
-            cmd = [python, "-m", "venv", name]
+        cmd = [python, "-m", "venv", name]
 
         if system_site_packages:
             cmd += ["--system-site-packages"]
