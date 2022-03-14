@@ -142,8 +142,6 @@ def build(bld):
 
 def _pytest(bld):
 
-    venv = bld.create_virtualenv(name="test-venv")
-
     requirements_txt = "test/requirements.txt"
     requirements_in = "test/requirements.in"
 
@@ -155,6 +153,7 @@ def _pytest(bld):
                     requirements_in, requirements_txt)
             )
 
+    venv = bld.create_virtualenv(name="test-venv")
     venv.run("python -m pip install -r {}".format(requirements_txt))
 
     # Add our sources to the Python path
