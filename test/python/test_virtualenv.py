@@ -50,7 +50,8 @@ def test_virtualenv_name(testdirectory):
     assert not testdirectory.contains_dir(name)
 
     ctx.cmd_and_log.assert_called_once_with(
-        [sys.executable, "-m", "venv", name, "--system-site-packages"],
+        [sys.executable, "-m", "venv", name,
+            "--without-pip", "--system-site-packages"],
         cwd=cwd,
         env=env,
     )
@@ -93,7 +94,7 @@ def test_virtualenv_system_site_packages(testdirectory):
     assert not testdirectory.contains_dir(name)
 
     ctx.cmd_and_log.assert_called_once_with(
-        [sys.executable, "-m", "venv", name], cwd=cwd, env=env
+        [sys.executable, "-m", "venv", name, "--without-pip"], cwd=cwd, env=env
     )
 
     venv.run("python -m pip install pytest")
