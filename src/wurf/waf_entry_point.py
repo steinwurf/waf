@@ -38,10 +38,7 @@ from . import waf_standalone_context
 # where they are defined:
 from . import waf_conf
 
-# Check Python support for system locale
-from . import compat
-
-# Silense pyflakes on unused imports
+# Silence pyflakes on unused imports
 # https://mail.python.org/pipermail/python-list/2013-May/646440.html
 assert waf_resolve_context
 assert waf_options_context
@@ -68,7 +65,4 @@ def _check_minimum_python_version(major, minor):
 
 # waf_entry_point is loaded first in every project,
 # therefore it is a good entry point to check the minimum Python version
-_check_minimum_python_version(3, 5)
-
-# Check we can handle Unicode properly - not sure we need this anymore
-# compat.check_locale_python3()
+_check_minimum_python_version(3, 4)

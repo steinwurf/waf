@@ -156,6 +156,9 @@ class VirtualEnv(object):
         # Check if we need to install pip manually
         try:
             import ensurepip
+
+            # Silence pyflakes on unused imports
+            assert ensurepip
         except ImportError:
             ensurepip_available = False
         else:
