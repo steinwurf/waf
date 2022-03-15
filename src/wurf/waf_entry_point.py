@@ -65,4 +65,4 @@ def _check_minimum_python_version(major, minor):
 
 # waf_entry_point is loaded first in every project,
 # therefore it is a good entry point to check the minimum Python version
-_check_minimum_python_version(3, 4)
+_check_minimum_python_version(3, 6)

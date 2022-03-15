@@ -14,7 +14,7 @@ from .git import Git
 # in the oldest Ubuntu LTS currently supported
 
 PYTHON_MAJOR_VERSION = 3
-PYTHON_MINOR_VERSION = 4
+PYTHON_MINOR_VERSION = 6
 
 URL = "https://github.com/pypa/get-pip"
 VERSION = "22.0.4"
