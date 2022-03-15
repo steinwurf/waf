@@ -7,7 +7,7 @@ from .git import Git
 
 # This scripts downloads the standalone zipapp version of virtualenv. This is
 # to make us independent of what is currently installed on the host OS. For
-# example Ubunutu and Debian does not ship with default capabilities to create
+# example Ubuntu and Debian does not ship with default capabilities to create
 # virtual environments.
 #
 # We pick the version that supports Python 3.5 since that is the default

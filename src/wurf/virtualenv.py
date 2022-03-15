@@ -6,7 +6,6 @@ import sys
 import hashlib
 
 from .directory import remove_directory
-from .virtualenv_download import VirtualEnvDownload
 
 
 class VirtualEnv(object):
@@ -160,57 +159,19 @@ class VirtualEnv(object):
             # Silence pyflakes on unused imports
             assert ensurepip
         except ImportError:
-            ensurepip_available = False
-        else:
-            ensurepip_available = True
+            ctx.fatal(
+                "Python installation is missing virtualenv full support. If "
+                "on Ubuntu/Debian virtualenv support can be added via apt "
+                "install python3-venv "
+            )
 
         # Use the venv package
-        cmd = [python, "-m", "venv", name, "--without-pip"]
+        cmd = [python, "-m", "venv", name]
 
         if system_site_packages:
             cmd += ["--system-site-packages"]
 
         # Create virtualenv
-        ctx.cmd_and_log(cmd, cwd=cwd, env=env)
-
-        venv = VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
-
-        if ensurepip_available:
-
-            # ensurepip exists so we just run it
-            venv.run("python -m ensurepip")
-
-        else:
-
-            # ensurepip does not exist so we manually install pip
-            downloader = VirtualEnvDownload(
-                ctx=ctx, log=log, download_path=download_path
-            )
-            get_pip = downloader.download()
-
-            venv.run("python {}".format(get_pip))
-
-        return venv
-
-        # Create the new virtualenv - requires the virtualenv module to
-        # be available
-        if download:
-            downloader = VirtualEnvDownload(
-                ctx=ctx, log=log, download_path=download_path
-            )
-            venv_path = downloader.download()
-
-            # Use the virtualenv zipapp
-            cmd = [python, venv_path, name]
-
-        else:
-            # Use the venv package
-            cmd = [python, "-m", "venv", name]
-
-        if system_site_packages:
-            cmd += ["--system-site-packages"]
-
-        # ctx.cmd_and_log(cmd, cwd=cwd, env=temp_env)
         ctx.cmd_and_log(cmd, cwd=cwd, env=env)
 
         return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
