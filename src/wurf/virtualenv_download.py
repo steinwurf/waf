@@ -14,7 +14,7 @@ from .git import Git
 # in the oldest Ubuntu LTS currently supported
 
 PYTHON_MAJOR_VERSION = 3
-PYTHON_MINOR_VERSION = 5
+PYTHON_MINOR_VERSION = 4
 
 URL = "https://github.com/pypa/get-pip"
 VERSION = "22.0.4"
@@ -65,8 +65,12 @@ class VirtualEnvDownload(object):
 
         self.log.debug("Using get-pip from {}".format(repo_path))
 
-        zipapp_path = os.path.join(repo_path, "public", "{}.{}".format(
-            PYTHON_MAJOR_VERSION, PYTHON_MINOR_VERSION), "get-pip.py")
+        zipapp_path = os.path.join(
+            repo_path,
+            "public",
+            "{}.{}".format(PYTHON_MAJOR_VERSION, PYTHON_MINOR_VERSION),
+            "get-pip.py",
+        )
 
         return zipapp_path
 
