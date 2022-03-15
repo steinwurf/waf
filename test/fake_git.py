@@ -62,8 +62,7 @@ class NoClonePathError(WurfError):
 
     def __init__(self, repository):
         super(NoClonePathError, self).__init__(
-            "cone_path.json available for repository {} found!".format(
-                repository)
+            "cone_path.json available for repository {} found!".format(repository)
         )
 
 
@@ -81,8 +80,7 @@ class FakeGit:
         for lib_repository, lib_directory in clone_path.items():
             if repository.endswith(lib_repository):
 
-                shutil.copytree(src=lib_directory,
-                                dst=dst_directory, symlinks=True)
+                shutil.copytree(src=lib_directory, dst=dst_directory, symlinks=True)
 
                 assert os.path.isdir(dst_directory), (
                     "We should have a valid " "path here!"
