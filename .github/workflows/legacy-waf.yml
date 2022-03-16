@@ -1,4 +1,4 @@
-name: Waf Python Tests
+name: Waf Legacy Tests
 on:
   workflow_dispatch:
   schedule:
@@ -6,21 +6,11 @@ on:
   push:
   pull_request:
 jobs:
-  waf-windows:
-    runs-on: [self-hosted, Windows]
-    name: Windows Waf
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Configure
-        run: python waf configure
-      - name: Build
-        run: python waf
-      - name: Test
-        run: python waf --run_tests -vv
-  waf-linux:
+  waf:
+    strategy:
+      fail-fast: false
     runs-on: [self-hosted, docker, builder]
-    name: Linux Waf
+    name: Docker Waf
     container:
       image: ghcr.io/steinwurf/waf:latest
       options: --user 0:0

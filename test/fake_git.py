@@ -158,7 +158,7 @@ class FakeGit:
             valid.append(tag)
             valid.append(self._to_sha1(data=tag))
 
-        assert branch in valid, f"branch = {branch}, cwd = {cwd}"
+        assert branch in valid, "branch = {}, cwd = {}".format(branch, cwd)
 
         git_info["is_detached_head"] = True
         git_info["checkout"] = branch

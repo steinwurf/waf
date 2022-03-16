@@ -49,20 +49,32 @@ def test_virtualenv_name(testdirectory):
     assert fnmatch.fnmatch(venv.path, os.path.join(cwd, name))
     assert not testdirectory.contains_dir(name)
 
-    ctx.cmd_and_log.assert_called_once_with(
-        [sys.executable, "-m", "venv", name, "--system-site-packages"],
-        cwd=cwd,
-        env=env,
+    ctx.cmd_and_log.has_calls(
+        [
+            mock.call(
+                sys.executable,
+                "-m",
+                "venv",
+                name,
+                "--without-pip",
+                "--system-site-packages",
+            )
+        ]
     )
 
     venv.run("python -m pip install pytest")
 
-    ctx.exec_command.assert_called_once_with(
-        "python -m pip install pytest",
-        cwd=venv.cwd,
-        env=venv.env,
-        stdout=None,
-        stderr=None,
+    ctx.exec_command.has_calls(
+        [
+            mock.ANY,
+            mock.call(
+                "python -m pip install pytest",
+                cwd=venv.cwd,
+                env=venv.env,
+                stdout=None,
+                stderr=None,
+            ),
+        ]
     )
 
 
@@ -92,16 +104,22 @@ def test_virtualenv_system_site_packages(testdirectory):
     assert fnmatch.fnmatch(venv.path, os.path.join(cwd, name))
     assert not testdirectory.contains_dir(name)
 
-    ctx.cmd_and_log.assert_called_once_with(
-        [sys.executable, "-m", "venv", name], cwd=cwd, env=env
+    ctx.cmd_and_log.has_calls(
+        [mock.call(sys.executable, "-m", "venv", name, "--without-pip")]
     )
 
     venv.run("python -m pip install pytest")
 
-    ctx.exec_command.assert_called_once_with(
-        "python -m pip install pytest",
-        cwd=venv.cwd,
-        env=venv.env,
-        stdout=None,
-        stderr=None,
+    ctx.exec_command.has_calls(
+        [
+            # Either "python -m ensurepip" or "python get-pip.py"
+            mock.ANY,
+            mock.call(
+                "python -m pip install pytest",
+                cwd=venv.cwd,
+                env=venv.env,
+                stdout=None,
+                stderr=None,
+            ),
+        ]
     )

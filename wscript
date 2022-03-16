@@ -141,8 +141,6 @@ def build(bld):
 
 def _pytest(bld):
 
-    venv = bld.create_virtualenv(name="test-venv")
-
     requirements_txt = "test/requirements.txt"
     requirements_in = "test/requirements.in"
 
@@ -150,10 +148,13 @@ def _pytest(bld):
         with bld.create_virtualenv() as venv:
             venv.run("python -m pip install pip-tools")
             venv.run(
-                f"pip-compile {requirements_in} " f"--output-file {requirements_txt}"
+                "pip-compile {} --output-file {}".format(
+                    requirements_in, requirements_txt
+                )
             )
 
-    venv.run(f"python -m pip install -r {requirements_txt}")
+    venv = bld.create_virtualenv(name="test-venv")
+    venv.run("python -m pip install -r {}".format(requirements_txt))
 
     # Add our sources to the Python path
     python_path = [
