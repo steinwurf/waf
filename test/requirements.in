@@ -5,3 +5,7 @@ pytest-testdirectory
 pycodestyle
 pyflakes
 schema
+
+# Pin multidict since they dropped support for python 3.6 which we still use
+# in some places. Try removing this from time to time :)
+multidict==5.2.0

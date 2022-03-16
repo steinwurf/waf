@@ -14,8 +14,10 @@ iniconfig==1.1.1
     # via pytest
 mock==4.0.3
     # via -r test/requirements.in
-multidict==6.0.2
-    # via yarl
+multidict==5.2.0
+    # via
+    #   -r test/requirements.in
+    #   yarl
 packaging==21.3
     # via pytest
 pluggy==1.0.0
@@ -28,7 +30,7 @@ pyflakes==2.4.0
     # via -r test/requirements.in
 pyparsing==3.0.7
     # via packaging
-pytest==7.0.1
+pytest==7.1.0
     # via
     #   -r test/requirements.in
     #   pytest-testdirectory
@@ -44,7 +46,7 @@ tomli==2.0.1
     # via pytest
 vcrpy==4.1.1
     # via -r test/requirements.in
-wrapt==1.13.3
+wrapt==1.14.0
     # via vcrpy
 yarl==1.7.2
     # via vcrpy

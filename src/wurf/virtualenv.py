@@ -6,7 +6,6 @@ import sys
 import hashlib
 
 from .directory import remove_directory
-from .virtualenv_download import VirtualEnvDownload
 
 
 class VirtualEnv(object):
@@ -172,7 +171,11 @@ class VirtualEnv(object):
             # it will not help since distutils is still missing and there is no
             # bootstrapping packages available for that.
 
-            ctx.fatal("Cannot create virtualenv due to missing Python support." "")
+            ctx.fatal(
+                "Cannot create virtualenv due to missing Python support. "
+                "If on Debian/Ubuntu virtualenv support can be added by "
+                "running 'apt install python3-venv'."
+            )
 
         else:
 
