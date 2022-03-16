@@ -63,12 +63,12 @@ class VirtualEnvDownload(object):
                 branch=VERSION,
             )
 
-        self.log.debug("Using get-virtualenv from {}".format(repo_path))
+        self.log.debug("Using virtualenv.pyz from {}".format(repo_path))
 
         zipapp_path = os.path.join(
             repo_path,
             "public",
-            "{}.{}".format(PYTHON_MAJOR_VERSION, PYTHON_MINOR_VERSION),
+            # "{}.{}".format(PYTHON_MAJOR_VERSION, PYTHON_MINOR_VERSION),
             "virtualenv.pyz",
         )
 
