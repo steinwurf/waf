@@ -12,6 +12,8 @@ from .git import Git
 #
 # We pick the version that supports Python 3.5 since that is the default
 # in the oldest Ubuntu LTS currently supported
+#
+# We cannot use the symlinks in the Python specific folders.
 
 PYTHON_MAJOR_VERSION = 3
 PYTHON_MINOR_VERSION = 5
@@ -65,12 +67,7 @@ class VirtualEnvDownload(object):
 
         self.log.debug("Using virtualenv.pyz from {}".format(repo_path))
 
-        zipapp_path = os.path.join(
-            repo_path,
-            "public",
-            # "{}.{}".format(PYTHON_MAJOR_VERSION, PYTHON_MINOR_VERSION),
-            "virtualenv.pyz",
-        )
+        zipapp_path = os.path.join(repo_path, "public", "virtualenv.pyz")
 
         return zipapp_path
 
