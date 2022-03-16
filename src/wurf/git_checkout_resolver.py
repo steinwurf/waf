@@ -64,6 +64,7 @@ class GitCheckoutResolver(object):
         if not os.path.isdir(checkout_path):
             try:
                 copy_directory(path=path, to_path=checkout_path)
+
                 self.git.checkout(branch=self.checkout, cwd=checkout_path)
             except Exception:
                 # The checkout_path must be removed if the checkout is not

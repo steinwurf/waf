@@ -4,10 +4,8 @@
 import os
 import sys
 import hashlib
-import copy
 
 from .directory import remove_directory
-from .virtualenv_download import VirtualEnvDownload
 
 
 class VirtualEnv(object):
@@ -154,25 +152,37 @@ class VirtualEnv(object):
             # The virtualenv already exists lets use that...
             return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
 
-        # Create the new virtualenv - requires the virtualenv module to
-        # be available
-        if download:
-            downloader = VirtualEnvDownload(
-                ctx=ctx, log=log, download_path=download_path
+        # Check if we need to install pip manually
+        try:
+            import ensurepip
+
+            # Silence pyflakes on unused imports
+            assert ensurepip
+        except ImportError:
+
+            # If virtualenv is not install it likely means that you are on a
+            # Debian based system (e.g. Ubuntu). The issue with Debian is that
+            # they decided to split Python into multiple sub-packages. Which
+            # means that it does not ship with a bunch of internal libraries
+            # e.g. venv support for ensurepip and distutils
+            #
+            # You may boostrap a virtualenv or pip by using pypi e.g. from here
+            # https://bootstrap.pypa.io/ or the github repositories. However,
+            # it will not help since distutils is still missing and there is no
+            # bootstrapping packages available for that.
+
+            ctx.fatal(
+                "Cannot create virtualenv due to missing Python support. "
+                "If on Debian/Ubuntu virtualenv support can be added by "
+                "running 'apt install python3-venv'."
             )
-            venv_path = downloader.download()
 
-            # Add to the PYTHONPATH
-            temp_env = copy.deepcopy(env)
-            temp_env.update({"PYTHONPATH": venv_path})
         else:
-            temp_env = env
 
-        cmd = [python, "-m", "virtualenv", name]
+            # Use the venv package
+            cmd = [python, "-m", "venv", name]
 
-        if system_site_packages:
-            cmd += ["--system-site-packages"]
-
-        ctx.cmd_and_log(cmd, cwd=cwd, env=temp_env)
+            # Create virtualenv
+            ctx.cmd_and_log(cmd, cwd=cwd, env=env)
 
         return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
