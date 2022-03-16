@@ -1,4 +1,6 @@
-pytest
+# Pin pytest since it does not support Python 3.6 which we still use in some
+# some places
+pytest==7.0.1
 mock
 vcrpy
 pytest-testdirectory
@@ -6,6 +8,6 @@ pycodestyle
 pyflakes
 schema
 
-# Pin multidict since they dropped support for python 3.6 which we still use
-# in some places. Try removing this from time to time :)
+# Pin multidict used by vcrpy since they dropped support for python 3.6 which we
+# still use in some places. Try removing this from time to time :)
 multidict==5.2.0
