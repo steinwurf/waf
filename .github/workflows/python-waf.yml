@@ -6,23 +6,32 @@ on:
   push:
   pull_request:
 jobs:
-  waf:
-    strategy:
-      matrix:
-        os: [Windows, Linux]
-        include:
-          - os: Windows
-            PYTHON: python
-          - os: Linux
-            PYTHON: python3
-    runs-on: [self-hosted, "${{ matrix.os }}"]
-    name: ${{ matrix.os }} Waf
+  waf-windows:
+    runs-on: [self-hosted, Windows]
+    name: Windows Waf
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Configure
-        run: ${{ matrix.PYTHON }} waf configure
+        run: python waf configure
       - name: Build
-        run: ${{ matrix.PYTHON }} waf
+        run: python waf
       - name: Test
-        run: ${{ matrix.PYTHON }} waf --run_tests -vv
+        run: python waf --run_tests -vv
+  waf-windows:
+    runs-on: [self-hosted, docker, builder]
+    name: Linux Waf
+    container:
+      image: ghcr.io/steinwurf/waf:latest
+      options: --user 0:0
+      volumes:
+        - /home/buildbot/.ssh:/root/.ssh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure
+        run: python3 waf configure
+      - name: Build
+        run: python3 waf
+      - name: Test
+        run: python3 waf --run_tests -vv
