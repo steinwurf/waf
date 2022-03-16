@@ -8,6 +8,8 @@ pycodestyle
 pyflakes
 schema
 
-# Pin multidict used by vcrpy since they dropped support for python 3.6 which we
-# still use in some places. Try removing this from time to time :)
+# Pin dependencies of our dependencies since they dropped support
+# for python 3.6 which we still use in some places. Try removing this from time
+# to time :)
 multidict==5.2.0
+tomli==1.2.3

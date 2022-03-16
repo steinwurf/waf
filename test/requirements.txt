@@ -42,8 +42,10 @@ schema==0.7.5
     # via -r test/requirements.in
 six==1.16.0
     # via vcrpy
-tomli==2.0.1
-    # via pytest
+tomli==1.2.3
+    # via
+    #   -r test/requirements.in
+    #   pytest
 vcrpy==4.1.1
     # via -r test/requirements.in
 wrapt==1.14.0
