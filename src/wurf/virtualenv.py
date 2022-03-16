@@ -161,19 +161,18 @@ class VirtualEnv(object):
             assert ensurepip
         except ImportError:
 
-            downloader = VirtualEnvDownload(
-                ctx=ctx, log=log, download_path=download_path
-            )
+            # If virtualenv is not install it likely means that you are on a
+            # Debian based system (e.g. Ubuntu). The issue with Debian is that
+            # they decided to split Python into multiple sub-packages. Which
+            # means that it does not ship with a bunch of internal libraries
+            # e.g. venv support for ensurepip and distutils
+            #
+            # You may boostrap a virtualenv or pip by using pypi e.g. from here
+            # https://bootstrap.pypa.io/ or the github repositories. However,
+            # it will not help since distutils is still missing and there is no
+            # bootstrapping packages available for that.
 
-            venv_path = downloader.download()
-
-            # Use the zipapp package, see issue:
-            # https://github.com/pypa/virtualenv/issues/2133#issuecomment-1003710125
-            # which is why we add -S
-            cmd = [python, "-S", venv_path, name]
-
-            # Create virtualenv
-            ctx.cmd_and_log(cmd, cwd=cwd, env=env)
+            ctx.fatal("Cannot create virtualenv due to missing Python support." "")
 
         else:
 

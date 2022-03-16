@@ -154,7 +154,7 @@ def _pytest(bld):
             )
 
     venv = bld.create_virtualenv(name="test-venv")
-    venv.run("python -m pip install -r {}".format(requirements_in))
+    venv.run("python -m pip install -r {}".format(requirements_txt))
 
     # Add our sources to the Python path
     python_path = [
