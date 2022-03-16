@@ -14,10 +14,10 @@ from .git import Git
 # in the oldest Ubuntu LTS currently supported
 
 PYTHON_MAJOR_VERSION = 3
-PYTHON_MINOR_VERSION = 6
+PYTHON_MINOR_VERSION = 5
 
-URL = "https://github.com/pypa/get-pip"
-VERSION = "22.0.4"
+URL = "https://github.com/pypa/get-virtualenv"
+VERSION = "20.13.3"
 
 
 class VirtualEnvDownload(object):
@@ -63,13 +63,13 @@ class VirtualEnvDownload(object):
                 branch=VERSION,
             )
 
-        self.log.debug("Using get-pip from {}".format(repo_path))
+        self.log.debug("Using get-virtualenv from {}".format(repo_path))
 
         zipapp_path = os.path.join(
             repo_path,
             "public",
             "{}.{}".format(PYTHON_MAJOR_VERSION, PYTHON_MINOR_VERSION),
-            "get-pip.py",
+            "virtualenv.pyz",
         )
 
         return zipapp_path
@@ -78,4 +78,4 @@ class VirtualEnvDownload(object):
 
         # https://stackoverflow.com/a/4028943
         home_path = os.path.join(os.path.expanduser("~"))
-        return os.path.join(home_path, ".waf-local-get-pip")
+        return os.path.join(home_path, ".waf-local-get-virtualenv")

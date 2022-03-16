@@ -6,6 +6,7 @@ import sys
 import hashlib
 
 from .directory import remove_directory
+from .virtualenv_download import VirtualEnvDownload
 
 
 class VirtualEnv(object):
@@ -159,19 +160,27 @@ class VirtualEnv(object):
             # Silence pyflakes on unused imports
             assert ensurepip
         except ImportError:
-            ctx.fatal(
-                "Python installation is missing virtualenv full support. If "
-                "on Ubuntu/Debian virtualenv support can be added via apt "
-                "install python3-venv "
+
+            downloader = VirtualEnvDownload(
+                ctx=ctx, log=log, download_path=download_path
             )
 
-        # Use the venv package
-        cmd = [python, "-m", "venv", name]
+            venv_path = downloader.download()
 
-        if system_site_packages:
-            cmd += ["--system-site-packages"]
+            # Use the zipapp package, see issue:
+            # https://github.com/pypa/virtualenv/issues/2133#issuecomment-1003710125
+            # which is why we add -S
+            cmd = [python, "-S", venv_path, name]
 
-        # Create virtualenv
-        ctx.cmd_and_log(cmd, cwd=cwd, env=env)
+            # Create virtualenv
+            ctx.cmd_and_log(cmd, cwd=cwd, env=env)
+
+        else:
+
+            # Use the venv package
+            cmd = [python, "-m", "venv", name]
+
+            # Create virtualenv
+            ctx.cmd_and_log(cmd, cwd=cwd, env=env)
 
         return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
