@@ -18,7 +18,7 @@ jobs:
         run: python waf
       - name: Test
         run: python waf --run_tests -vv
-  waf-windows:
+  waf-linux:
     runs-on: [self-hosted, docker, builder]
     name: Linux Waf
     container:
