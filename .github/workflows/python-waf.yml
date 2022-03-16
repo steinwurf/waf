@@ -35,3 +35,15 @@ jobs:
         run: python3 waf
       - name: Test
         run: python3 waf --run_tests -vv
+  waf-macos:
+    runs-on: [self-hosted, macOS]
+    name: Windows Waf
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure
+        run: python3 waf configure
+      - name: Build
+        run: python3 waf
+      - name: Test
+        run: python3 waf --run_tests -vv
