@@ -37,7 +37,7 @@ jobs:
         run: python3 waf --run_tests -vv
   waf-macos:
     runs-on: [self-hosted, macOS]
-    name: Windows Waf
+    name: macOS Waf
     steps:
       - name: Checkout
         uses: actions/checkout@v2
