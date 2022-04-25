@@ -80,7 +80,7 @@ class VirtualEnv(object):
         env=None,
         name=None,
         overwrite=True,
-        system_site_packages=False
+        system_site_packages=False,
     ):
         """Create a new virtual env.
 
