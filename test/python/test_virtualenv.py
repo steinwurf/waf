@@ -37,36 +37,26 @@ def test_virtualenv_name(testdirectory):
     assert testdirectory.contains_dir(name)
 
     venv = VirtualEnv.create(
-        log=log,
-        cwd=cwd,
-        env=env,
-        name=name,
-        ctx=ctx,
-        system_site_packages=True,
-        download=False,
+        log=log, cwd=cwd, env=env, name=name, ctx=ctx, system_site_packages=True
     )
 
     assert fnmatch.fnmatch(venv.path, os.path.join(cwd, name))
     assert not testdirectory.contains_dir(name)
 
-    ctx.cmd_and_log.has_calls(
+    ctx.cmd_and_log.assert_has_calls(
         [
             mock.call(
-                sys.executable,
-                "-m",
-                "venv",
-                name,
-                "--without-pip",
-                "--system-site-packages",
+                [sys.executable, "-m", "venv", name, "--system-site-packages"],
+                cwd=venv.cwd,
+                env=venv.env,
             )
         ]
     )
 
     venv.run("python -m pip install pytest")
 
-    ctx.exec_command.has_calls(
+    ctx.exec_command.assert_has_calls(
         [
-            mock.ANY,
             mock.call(
                 "python -m pip install pytest",
                 cwd=venv.cwd,
@@ -92,28 +82,21 @@ def test_virtualenv_system_site_packages(testdirectory):
     assert testdirectory.contains_dir(name)
 
     venv = VirtualEnv.create(
-        log=log,
-        cwd=cwd,
-        env=env,
-        name=name,
-        ctx=ctx,
-        system_site_packages=False,
-        download=False,
+        log=log, cwd=cwd, env=env, name=name, ctx=ctx, system_site_packages=False
     )
 
     assert fnmatch.fnmatch(venv.path, os.path.join(cwd, name))
     assert not testdirectory.contains_dir(name)
 
-    ctx.cmd_and_log.has_calls(
-        [mock.call(sys.executable, "-m", "venv", name, "--without-pip")]
+    ctx.cmd_and_log.assert_has_calls(
+        [mock.call([sys.executable, "-m", "venv", name], cwd=venv.cwd, env=venv.env)]
     )
 
     venv.run("python -m pip install pytest")
 
-    ctx.exec_command.has_calls(
+    ctx.exec_command.assert_has_calls(
         [
             # Either "python -m ensurepip" or "python get-pip.py"
-            mock.ANY,
             mock.call(
                 "python -m pip install pytest",
                 cwd=venv.cwd,

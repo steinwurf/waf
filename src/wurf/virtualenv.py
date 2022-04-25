@@ -81,8 +81,6 @@ class VirtualEnv(object):
         name=None,
         overwrite=True,
         system_site_packages=False,
-        download=True,
-        download_path=None,
     ):
         """Create a new virtual env.
 
@@ -93,7 +91,7 @@ class VirtualEnv(object):
         :param env: The environment to use during creation of the virtualenv,
             once created the PATH and PYTHONPATH variables will be cleared to
             reflect the virtualenv. You must make sure that the virtualenv
-            module is avilable. Either as a system package or by specifying the
+            module is available. Either as a system package or by specifying the
             PYTHONPATH variable.
         :param name: The name of the virtualenv, as a string. If None a default
             name will be used.
@@ -181,6 +179,9 @@ class VirtualEnv(object):
 
             # Use the venv package
             cmd = [python, "-m", "venv", name]
+
+            if system_site_packages:
+                cmd += ["--system-site-packages"]
 
             # Create virtualenv
             ctx.cmd_and_log(cmd, cwd=cwd, env=env)
