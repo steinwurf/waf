@@ -198,7 +198,7 @@ class VirtualEnv(object):
             # bootstrapping packages available for that.
 
             ctx.fatal(
-                "Cannot create virtualenv due to missing Python support. "
+                "Cannot create virtual environment due to missing Python support. "
                 "If on Debian/Ubuntu virtualenv support can be added by "
                 "running 'apt install python3-venv'."
             )
