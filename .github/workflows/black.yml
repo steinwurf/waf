@@ -7,4 +7,4 @@ on:
   pull_request:
 jobs:
   Black:
-    uses: steinwurf/black-action/.github/workflows/action.yml@1.0.0
+    uses: steinwurf/black-action/.github/workflows/action.yml@2.0.0
