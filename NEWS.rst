@@ -10,6 +10,7 @@ Latest
   resolve path.
 * Minor: Do not rewrite git protocol if fully specified
 * Minor: Fix Windows support
+* Patch: Fix bug when using virtualenv for virtual environments.
 
 6.0.0
 -----

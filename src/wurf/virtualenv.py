@@ -187,7 +187,7 @@ class VirtualEnv(object):
             # e.g. venv support for ensurepip and distutils
 
             # Use the virtualenv module
-            cmd = [python, "-m", "virtualenv", name]
+            cmd = [python, "-m", "virtualenv", "--python", python, name]
 
         else:
             # No virtualenv module available
