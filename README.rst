@@ -759,6 +759,12 @@ The requirements_txt will be re-generated in two cases:
 Creates a virtualenv in a specified folder.
 
 
+``ctx.ensure_build(...)``
+..............................
+
+Ensure that we've run the build step before running the current command.
+
+
 Future features
 ---------------
 
