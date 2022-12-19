@@ -146,7 +146,7 @@ def mkdir_libfoo(directory):
     with open(json_path, "w") as json_file:
         json.dump(git_info, json_file)
 
-    foo_dir.write_text(filename="ok.txt", data=u"hello world", encoding="utf-8")
+    foo_dir.write_text(filename="ok.txt", data="hello world", encoding="utf-8")
 
     return foo_dir
 
@@ -174,7 +174,7 @@ def mkdir_libfoo_json(directory):
     with open(json_path, "w") as json_file:
         json.dump(git_info, json_file)
 
-    foo_dir.write_text(filename="ok.txt", data=u"hello world", encoding="utf-8")
+    foo_dir.write_text(filename="ok.txt", data="hello world", encoding="utf-8")
     # commit_file(directory=foo_dir, filename="ok.txt", content=u"hello world")
 
     return foo_dir
@@ -205,7 +205,7 @@ def mkdir_libbar(directory):
 def mkdir_libqux(directory):
     # Add qux dir
     qux_dir = directory.mkdir("libqux")
-    qux_dir.write_text(filename="ok.txt", data=u"hello world", encoding="utf-8")
+    qux_dir.write_text(filename="ok.txt", data="hello world", encoding="utf-8")
 
     git_info = {
         "checkout": "master",

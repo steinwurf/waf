@@ -82,7 +82,7 @@ def commit_file(directory, filename, content):
 def mkdir_libqux(directory):
     # Add qux dir
     qux_dir = directory.mkdir("libqux")
-    qux_dir.write_text(filename="ok.txt", data=u"hello world", encoding="utf-8")
+    qux_dir.write_text(filename="ok.txt", data="hello world", encoding="utf-8")
 
     git_info = {
         "checkout": "master",
