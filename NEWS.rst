@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Adding ensure_build function to Waf's Context object.
 * Minor: Added a pip_compile helper function on Waf's Context object.
 * Minor: Added support for .wurf_config. This allows changing the default
   resolve path.

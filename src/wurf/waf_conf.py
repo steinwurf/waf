@@ -6,10 +6,13 @@
 # inside the configure(...) and build(...) functions defined in most
 # wscripts.
 
+import sys
+
 from waflib.Configure import conf
 from waflib.Errors import WafError
 from waflib import Logs
 from waflib import Context
+from waflib import Scripting
 
 from . import waf_resolve_context
 from . import virtualenv
@@ -137,6 +140,16 @@ def create_virtualenv(
 @extend_context
 def pip_compile(ctx, requirements_in, requirements_txt):
     pip_tools.compile(ctx, requirements_in, requirements_txt)
+
+
+@extend_context
+def ensure_build(ctx):
+    """
+    Ensure that we've run the build step before running the current command.
+    """
+
+    if "build" not in sys.argv:
+        Scripting.run_command("build")
 
 
 @conf
