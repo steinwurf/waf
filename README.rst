@@ -740,10 +740,10 @@ Context helpers
 We add various helpers to the Waf context objects. The following list is an
 incomplete list of the helpers that are added.
 
-``ctx.pip_compile(requirements_in, requirements_txt)``
-......................................................
+``ctx.pip_compile(...)``
+........................
 
-Compiles the ``requirements_in`` file to a ``requirements_txt`` file. The
+Compiles a ``requirements_in`` file to a ``requirements_txt`` file. The
 ``requirements_in`` file is hashed and the hash is stored in the
 ``requirements_txt``.
 
@@ -751,6 +751,12 @@ The requirements_txt will be re-generated in two cases:
 
 - The hash of the requirements_in file has changed.
 - The requirements_txt file does not exist.
+
+
+``ctx.create_virtualenv(...)``
+..............................
+
+Creates a virtualenv in a specified folder.
 
 
 Future features
