@@ -716,8 +716,9 @@ This makes it possible to easily create a standalone archive::
 
 Config file
 ...........
+
 Using the ``--resolve_path`` option whenever doing a resolve or configure can be
-cumbersome. 
+cumbersome.
 To combat this a config file can be used for overriding the default value for
 this option.
 
@@ -731,7 +732,32 @@ The following is an example of the content of a config file::
     resolve_path = ~/projects/dependencies
 
 This config file will will override the default value for the resolve_path with
-``~/projects/dependencies``. 
+``~/projects/dependencies``.
+
+Context helpers
+---------------
+
+We add various helpers to the Waf context objects. The following list is an
+incomplete list of the helpers that are added.
+
+``ctx.pip_compile(...)``
+........................
+
+Compiles a ``requirements_in`` file to a ``requirements_txt`` file. The
+``requirements_in`` file is hashed and the hash is stored in the
+``requirements_txt``.
+
+The requirements_txt will be re-generated in two cases:
+
+- The hash of the requirements_in file has changed.
+- The requirements_txt file does not exist.
+
+
+``ctx.create_virtualenv(...)``
+..............................
+
+Creates a virtualenv in a specified folder.
+
 
 Future features
 ---------------

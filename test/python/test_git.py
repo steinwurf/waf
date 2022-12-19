@@ -92,7 +92,7 @@ def test_git_has_submodules(testdirectory):
 
     assert git.has_submodules(cwd=cwd) is False
 
-    testdirectory.write_text(".gitmodules", u"not important", encoding="utf-8")
+    testdirectory.write_text(".gitmodules", "not important", encoding="utf-8")
 
     assert git.has_submodules(cwd=cwd) is True
 
@@ -144,7 +144,7 @@ def test_git_pull_submodules(testdirectory):
 
     ctx.cmd_and_log.assert_not_called()
 
-    testdirectory.write_text(".gitmodules", u"not important", encoding="utf-8")
+    testdirectory.write_text(".gitmodules", "not important", encoding="utf-8")
 
     def check_command(cmd, cwd):
         expected_cmd = check_command.commands.pop(0)

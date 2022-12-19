@@ -14,6 +14,7 @@ from waflib import Context
 from . import waf_resolve_context
 from . import virtualenv
 from . import rewrite
+from . import pip_tools
 
 
 def extend_context(f):
@@ -131,6 +132,11 @@ def create_virtualenv(
         overwrite=overwrite,
         system_site_packages=system_site_packages,
     )
+
+
+@extend_context
+def pip_compile(ctx, requirements_in, requirements_txt):
+    pip_tools.compile(ctx, requirements_in, requirements_txt)
 
 
 @conf

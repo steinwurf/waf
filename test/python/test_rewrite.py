@@ -5,14 +5,14 @@ import pytest
 from wurf.rewrite import rewrite_file
 
 
-data = u"""
+data = """
 Here is some data. And there is also
 a version number:
 VERSION = '1.0.0'
 hello hello
 """
 
-expected = u"""
+expected = """
 Here is some data. And there is also
 a version number:
 VERSION = '2.0.0'

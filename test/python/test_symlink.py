@@ -44,7 +44,7 @@ def test_symlink_file(testdirectory):
     sub1 = testdirectory.mkdir("sub1")
     sub2 = testdirectory.mkdir("sub2")
 
-    ok_path = sub1.write_text("ok.txt", u"hello_world", encoding="utf-8")
+    ok_path = sub1.write_text("ok.txt", "hello_world", encoding="utf-8")
 
     # Create a symlink to 'ok.txt' inside sub2
     link_path = os.path.join(sub2.path(), "ok.txt")
