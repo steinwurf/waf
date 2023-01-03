@@ -13,6 +13,8 @@ Latest
 * Minor: Do not rewrite git protocol if fully specified
 * Minor: Fix Windows support
 * Patch: Fix bug when using virtualenv for virtual environments.
+* Patch: Move the rewrite_file helper to all contexts (before it was only
+  available in the build context).
 
 6.0.0
 -----
