@@ -34,3 +34,4 @@ pip_packages
 *.log
 VSProjects
 *.pyproj
+.vscode
