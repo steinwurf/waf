@@ -120,6 +120,7 @@ def test_git_update_submodules():
         ["/bin/git_binary", "submodule", "update", "--recursive"], cwd="/tmp"
     )
 
+
 def test_git_update_submodules_init():
 
     ctx = mock.Mock()
