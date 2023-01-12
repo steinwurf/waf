@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Recursively pull submodules
 * Minor: Added support for .wurf_config. This allows changing the default
   resolve path.
 
