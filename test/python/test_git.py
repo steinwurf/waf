@@ -92,7 +92,7 @@ def test_git_has_submodules(testdirectory):
 
     assert git.has_submodules(cwd=cwd) is False
 
-    testdirectory.write_text(".gitmodules", u"not important", encoding="utf-8")
+    testdirectory.write_text(".gitmodules", "not important", encoding="utf-8")
 
     assert git.has_submodules(cwd=cwd) is True
 
@@ -105,19 +105,7 @@ def test_git_sync_submodules():
     git.sync_submodules(cwd="/tmp")
 
     ctx.cmd_and_log.assert_called_once_with(
-        ["/bin/git_binary", "submodule", "sync"], cwd="/tmp"
-    )
-
-
-def test_git_init_submodules():
-
-    ctx = mock.Mock()
-    git = Git("/bin/git_binary", ctx)
-
-    git.init_submodules(cwd="/tmp")
-
-    ctx.cmd_and_log.assert_called_once_with(
-        ["/bin/git_binary", "submodule", "init"], cwd="/tmp"
+        ["/bin/git_binary", "submodule", "sync", "--recursive"], cwd="/tmp"
     )
 
 
@@ -129,7 +117,18 @@ def test_git_update_submodules():
     git.update_submodules(cwd="/tmp")
 
     ctx.cmd_and_log.assert_called_once_with(
-        ["/bin/git_binary", "submodule", "update"], cwd="/tmp"
+        ["/bin/git_binary", "submodule", "update", "--recursive"], cwd="/tmp"
+    )
+
+def test_git_update_submodules_init():
+
+    ctx = mock.Mock()
+    git = Git("/bin/git_binary", ctx)
+
+    git.update_submodules(cwd="/tmp", init=True)
+
+    ctx.cmd_and_log.assert_called_once_with(
+        ["/bin/git_binary", "submodule", "update", "--recursive", "--init"], cwd="/tmp"
     )
 
 
@@ -144,13 +143,13 @@ def test_git_pull_submodules(testdirectory):
 
     ctx.cmd_and_log.assert_not_called()
 
-    testdirectory.write_text(".gitmodules", u"not important", encoding="utf-8")
+    testdirectory.write_text(".gitmodules", "not important", encoding="utf-8")
 
     def check_command(cmd, cwd):
         expected_cmd = check_command.commands.pop(0)
         assert expected_cmd == cmd[2]
 
-    check_command.commands = ["sync", "init", "update"]
+    check_command.commands = ["sync", "update"]
 
     ctx.cmd_and_log.side_effect = check_command
 
