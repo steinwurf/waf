@@ -117,18 +117,6 @@ def test_git_update_submodules():
     git.update_submodules(cwd="/tmp")
 
     ctx.cmd_and_log.assert_called_once_with(
-        ["/bin/git_binary", "submodule", "update", "--recursive"], cwd="/tmp"
-    )
-
-
-def test_git_update_submodules_init():
-
-    ctx = mock.Mock()
-    git = Git("/bin/git_binary", ctx)
-
-    git.update_submodules(cwd="/tmp", init=True)
-
-    ctx.cmd_and_log.assert_called_once_with(
         ["/bin/git_binary", "submodule", "update", "--recursive", "--init"], cwd="/tmp"
     )
 

@@ -165,20 +165,11 @@ class Git(object):
         args = [self.git_binary, "submodule", "sync", "--recursive"]
         self.ctx.cmd_and_log(args, cwd=cwd)
 
-    def init_submodules(self, cwd):
-        """
-        Runs 'git submodule init' in the directory cwd
-        """
-        args = [self.git_binary, "submodule", "init"]
-        self.ctx.cmd_and_log(args, cwd=cwd)
-
-    def update_submodules(self, cwd, init=False):
+    def update_submodules(self, cwd):
         """
         Runs 'git submodule update' in the directory cwd
         """
-        args = [self.git_binary, "submodule", "update", "--recursive"]
-        if init:
-            args.append("--init")
+        args = [self.git_binary, "submodule", "update", "--recursive", "--init"]
 
         self.ctx.cmd_and_log(args, cwd=cwd)
 
@@ -189,7 +180,7 @@ class Git(object):
         """
         if self.has_submodules(cwd=cwd):
             self.sync_submodules(cwd=cwd)
-            self.update_submodules(cwd=cwd, init=True)
+            self.update_submodules(cwd=cwd)
 
     def tags(self, cwd):
         """
