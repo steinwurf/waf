@@ -7,8 +7,15 @@ of every change, see the Git log.
 Latest
 ------
 * Minor: Recursively pull submodules
+* Minor: Adding ensure_build function to Waf's Context object.
+* Minor: Added a pip_compile helper function on Waf's Context object.
 * Minor: Added support for .wurf_config. This allows changing the default
   resolve path.
+* Minor: Do not rewrite git protocol if fully specified
+* Minor: Fix Windows support
+* Patch: Fix bug when using virtualenv for virtual environments.
+* Patch: Move the rewrite_file helper to all contexts (before it was only
+  available in the build context).
 
 6.0.0
 -----

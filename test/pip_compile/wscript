@@ -1,0 +1,12 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+APPNAME = "pip_compile"
+VERSION = "1.0.0"
+
+
+def build(bld):
+
+    bld.pip_compile(
+        requirements_in="requirements.in", requirements_txt="requirements.txt"
+    )

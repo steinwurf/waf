@@ -87,6 +87,7 @@ class UrlDownload(object):
                 chunk = response.read(CHUNK)
                 if not chunk:
                     break
+
                 f.write(chunk)
 
         return filepath

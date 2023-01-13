@@ -18,7 +18,7 @@ def resolve(ctx):
         resolver="git",
         method="checkout",
         checkout="waf-2.0.22",
-        sources=["gitlab.com/ita1024/waf.git"],
+        sources=["https://gitlab.com/ita1024/waf.git"],
     )
 
     ctx.add_dependency(
@@ -141,63 +141,67 @@ def build(bld):
 
 def _pytest(bld):
 
-    venv = bld.create_virtualenv()
+    requirements_txt = "test/requirements.txt"
+    requirements_in = "test/requirements.in"
 
-    with venv:
-
-        venv.run("python -m pip install pytest")
-        venv.run("python -m pip install mock")
-        venv.run("python -m pip install vcrpy")
-        venv.run("python -m pip install pytest-testdirectory==3.1.0")
-        venv.run("python -m pip install pycodestyle")
-        venv.run("python -m pip install pyflakes")
-
-        # Add our sources to the Python path
-        python_path = [
-            bld.dependency_path("python-semver"),
-            os.path.join(os.getcwd(), "src"),
-        ]
-
-        if "PYTHONPATH" in venv.env:
-            venv.env["PYTHONPATH"] = os.path.pathsep.join(
-                python_path + [venv.env["PYTHONPATH"]]
+    if not os.path.isfile(requirements_txt):
+        with bld.create_virtualenv() as venv:
+            venv.run("python -m pip install pip-tools")
+            venv.run(
+                "pip-compile {} --output-file {}".format(
+                    requirements_in, requirements_txt
+                )
             )
-        else:
-            venv.env["PYTHONPATH"] = os.path.pathsep.join(python_path)
 
-        # We override the pytest temp folder with the basetemp option,
-        # so the test folders will be available at the specified location
-        # on all platforms. The default location is the "pytest" local folder.
-        basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
+    venv = bld.create_virtualenv(name="test-venv")
+    venv.run("python -m pip install -r {}".format(requirements_txt))
 
-        # We need to manually remove the previously created basetemp folder,
-        # because pytest uses os.listdir in the removal process, and that fails
-        # if there are any broken symlinks in that folder.
-        if os.path.exists(basetemp):
-            waflib.extras.wurf.directory.remove_directory(path=basetemp)
+    # Add our sources to the Python path
+    python_path = [
+        bld.dependency_path("python-semver"),
+        os.path.join(os.getcwd(), "src"),
+    ]
 
-        # Make python not write any .pyc files. These may linger around
-        # in the file system and make some tests pass although their .py
-        # counter-part has been e.g. deleted
-        command = "python -B -m pytest test --basetemp " + basetemp
-
-        # Conditionally disable the tests that have the "networktest" marker
-        if bld.options.skip_network_tests:
-            command += ' -m "not networktest"'
-
-        # Adds the test filter if specified
-        if bld.options.test_filter:
-            command += ' -k "{}"'.format(bld.options.test_filter)
-
-        venv.run(command)
-
-        # Run PEP8 check
-        bld.msg("Running", "pycodestyle")
-        venv.run(
-            "python -m pycodestyle --max-line-length=88 --filename=*.py,wscript "
-            "src test wscript"
+    if "PYTHONPATH" in venv.env:
+        venv.env["PYTHONPATH"] = os.path.pathsep.join(
+            python_path + [venv.env["PYTHONPATH"]]
         )
+    else:
+        venv.env["PYTHONPATH"] = os.path.pathsep.join(python_path)
 
-        # Run pyflakes
-        bld.msg("Running", "pyflakes")
-        venv.run("python -m pyflakes src test")
+    # We override the pytest temp folder with the basetemp option,
+    # so the test folders will be available at the specified location
+    # on all platforms. The default location is the "pytest" local folder.
+    basetemp = os.path.abspath(os.path.expanduser(bld.options.pytest_basetemp))
+
+    # We need to manually remove the previously created basetemp folder,
+    # because pytest uses os.listdir in the removal process, and that fails
+    # if there are any broken symlinks in that folder.
+    if os.path.exists(basetemp):
+        waflib.extras.wurf.directory.remove_directory(path=basetemp)
+
+    # Make python not write any .pyc files. These may linger around
+    # in the file system and make some tests pass although their .py
+    # counter-part has been e.g. deleted
+    command = "python -B -m pytest test --basetemp " + basetemp
+
+    # Conditionally disable the tests that have the "networktest" marker
+    if bld.options.skip_network_tests:
+        command += ' -m "not networktest"'
+
+    # Adds the test filter if specified
+    if bld.options.test_filter:
+        command += ' -k "{}"'.format(bld.options.test_filter)
+
+    venv.run(command)
+
+    # Run PEP8 check
+    bld.msg("Running", "pycodestyle")
+    venv.run(
+        "python -m pycodestyle --max-line-length=88 --filename=*.py,wscript "
+        "src test wscript"
+    )
+
+    # Run pyflakes
+    bld.msg("Running", "pyflakes")
+    venv.run("python -m pyflakes src test")

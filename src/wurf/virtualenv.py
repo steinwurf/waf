@@ -4,10 +4,8 @@
 import os
 import sys
 import hashlib
-import copy
 
 from .directory import remove_directory
-from .virtualenv_download import VirtualEnvDownload
 
 
 class VirtualEnv(object):
@@ -75,6 +73,31 @@ class VirtualEnv(object):
         remove_directory(path=self.path)
 
     @staticmethod
+    def check_venv():
+        """Checks if the venv is available."""
+        try:
+            import ensurepip
+
+            # Silence pyflakes on unused imports
+            assert ensurepip
+
+            return True
+        except ImportError:
+            return False
+
+    @staticmethod
+    def check_virtualenv():
+        """Checks if the virtualenv is available."""
+        try:
+            import virtualenv
+
+            # Silence pyflakes on unused imports
+            assert virtualenv
+            return True
+        except ImportError:
+            return False
+
+    @staticmethod
     def create(
         ctx,
         log,
@@ -83,8 +106,6 @@ class VirtualEnv(object):
         name=None,
         overwrite=True,
         system_site_packages=False,
-        download=True,
-        download_path=None,
     ):
         """Create a new virtual env.
 
@@ -95,7 +116,7 @@ class VirtualEnv(object):
         :param env: The environment to use during creation of the virtualenv,
             once created the PATH and PYTHONPATH variables will be cleared to
             reflect the virtualenv. You must make sure that the virtualenv
-            module is avilable. Either as a system package or by specifying the
+            module is available. Either as a system package or by specifying the
             PYTHONPATH variable.
         :param name: The name of the virtualenv, as a string. If None a default
             name will be used.
@@ -154,25 +175,38 @@ class VirtualEnv(object):
             # The virtualenv already exists lets use that...
             return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)
 
-        # Create the new virtualenv - requires the virtualenv module to
-        # be available
-        if download:
-            downloader = VirtualEnvDownload(
-                ctx=ctx, log=log, download_path=download_path
-            )
-            venv_path = downloader.download()
+        if VirtualEnv.check_venv():
+            # Use the venv module
+            cmd = [python, "-m", "venv", name]
 
-            # Add to the PYTHONPATH
-            temp_env = copy.deepcopy(env)
-            temp_env.update({"PYTHONPATH": venv_path})
+        elif VirtualEnv.check_virtualenv():
+            # If virtualenv is not install it likely means that you are on a
+            # Debian based system (e.g. Ubuntu). The issue with Debian is that
+            # they decided to split Python into multiple sub-packages. Which
+            # means that it does not ship with a bunch of internal libraries
+            # e.g. venv support for ensurepip and distutils
+
+            # Use the virtualenv module
+            cmd = [python, "-m", "virtualenv", "--python", python, name]
+
         else:
-            temp_env = env
+            # No virtualenv module available
+            #
+            # You may boostrap a virtualenv or pip by using pypi e.g. from here
+            # https://bootstrap.pypa.io/ or the github repositories. However,
+            # it will not help since distutils is still missing and there is no
+            # bootstrapping packages available for that.
 
-        cmd = [python, "-m", "virtualenv", name]
+            ctx.fatal(
+                "Cannot create virtual environment due to missing Python support. "
+                "If on Debian/Ubuntu virtualenv support can be added by "
+                "running 'apt install python3-venv'."
+            )
 
         if system_site_packages:
             cmd += ["--system-site-packages"]
 
-        ctx.cmd_and_log(cmd, cwd=cwd, env=temp_env)
+        # Create virtual envionment
+        ctx.cmd_and_log(cmd, cwd=cwd, env=env)
 
         return VirtualEnv(env=env, path=path, cwd=cwd, ctx=ctx)

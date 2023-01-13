@@ -6,14 +6,18 @@
 # inside the configure(...) and build(...) functions defined in most
 # wscripts.
 
+import sys
+
 from waflib.Configure import conf
 from waflib.Errors import WafError
 from waflib import Logs
 from waflib import Context
+from waflib import Scripting
 
 from . import waf_resolve_context
 from . import virtualenv
 from . import rewrite
+from . import pip_tools
 
 
 def extend_context(f):
@@ -119,14 +123,7 @@ def recurse_dependencies(ctx):
 
 @extend_context
 def create_virtualenv(
-    ctx,
-    cwd=None,
-    env=None,
-    name=None,
-    overwrite=True,
-    system_site_packages=False,
-    download=True,
-    download_path=None,
+    ctx, cwd=None, env=None, name=None, overwrite=True, system_site_packages=False
 ):
 
     return virtualenv.VirtualEnv.create(
@@ -137,11 +134,24 @@ def create_virtualenv(
         name=name,
         overwrite=overwrite,
         system_site_packages=system_site_packages,
-        download=download,
-        download_path=download_path,
     )
 
 
-@conf
+@extend_context
+def pip_compile(ctx, requirements_in, requirements_txt):
+    pip_tools.compile(ctx, requirements_in, requirements_txt)
+
+
+@extend_context
+def ensure_build(ctx):
+    """
+    Ensure that we've run the build step before running the current command.
+    """
+
+    if "build" not in sys.argv:
+        Scripting.run_command("build")
+
+
+@extend_context
 def rewrite_file(ctx, filename):
     return rewrite.rewrite_file(filename=filename)
