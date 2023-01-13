@@ -69,7 +69,7 @@ def mkdir_libqux(directory):
     # Add bar dir
     qux_dir = directory.mkdir("libqux")
     qux_dir.run(["git", "init"])
-    commit_file(directory=qux_dir, filename="ok.txt", content=u"hello world")
+    commit_file(directory=qux_dir, filename="ok.txt", content="hello world")
 
     return qux_dir
 

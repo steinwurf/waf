@@ -177,7 +177,7 @@ class Git(object):
         Runs 'git submodule update' in the directory cwd
         """
         args = [self.git_binary, "submodule", "update", "--recursive"]
-        if (init):
+        if init:
             args.append("--init")
 
         self.ctx.cmd_and_log(args, cwd=cwd)

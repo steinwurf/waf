@@ -128,7 +128,7 @@ def mkdir_libfoo(directory):
     )
     foo_dir.run(["git", "tag", "1.3.3.7"])
 
-    commit_file(directory=foo_dir, filename="ok.txt", content=u"hello world")
+    commit_file(directory=foo_dir, filename="ok.txt", content="hello world")
 
     return foo_dir
 
@@ -160,7 +160,7 @@ def mkdir_libfoo_json(directory):
     )
     foo_dir.run(["git", "tag", "1.3.3.7"])
 
-    commit_file(directory=foo_dir, filename="ok.txt", content=u"hello world")
+    commit_file(directory=foo_dir, filename="ok.txt", content="hello world")
 
     return foo_dir
 
@@ -191,7 +191,7 @@ def mkdir_libqux(directory):
     # Add bar dir
     qux_dir = directory.mkdir("libqux")
     qux_dir.run(["git", "init"])
-    commit_file(directory=qux_dir, filename="ok.txt", content=u"hello world")
+    commit_file(directory=qux_dir, filename="ok.txt", content="hello world")
 
     return qux_dir
 
@@ -219,7 +219,7 @@ def mkdir_libbaz(directory, qux_dir):
     baz_dir.run(["git", "tag", "3.3.0"])
     baz_dir.run(["git", "tag", "3.3.1"])
 
-    commit_file(directory=baz_dir, filename="ok.txt", content=u"hello world")
+    commit_file(directory=baz_dir, filename="ok.txt", content="hello world")
 
     baz_dir.run(["git", "tag", "4.0.0"])
 
