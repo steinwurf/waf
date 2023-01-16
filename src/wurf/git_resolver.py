@@ -66,9 +66,9 @@ class GitResolver(object):
 
         assert os.path.isdir(master_path), "We should have a valid path here!"
 
-        # If the project contains submodules we also get those
-        if self.dependency.pull_submodules:
-            self.git.pull_submodules(cwd=master_path)
+        # # If the project contains submodules we also get those
+        # if self.dependency.pull_submodules:
+        #     self.git.pull_submodules(cwd=master_path)
 
         self.dependency.git_commit = self.git.current_commit(cwd=master_path)
 
