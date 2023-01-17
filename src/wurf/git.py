@@ -148,7 +148,7 @@ class Git(object):
         """
         Runs 'git checkout branch'
         """
-        args = [self.git_binary, "checkout", branch]
+        args = [self.git_binary, "checkout", "--force", branch]
         self.ctx.cmd_and_log(args, cwd=cwd)
 
     def has_submodules(ctx, cwd):

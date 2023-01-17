@@ -16,6 +16,7 @@ Latest
 * Patch: Fix bug when using virtualenv for virtual environments.
 * Patch: Move the rewrite_file helper to all contexts (before it was only
   available in the build context).
+* Patch: Added the '--force' flag to the git checkout command.
 
 6.0.0
 -----
