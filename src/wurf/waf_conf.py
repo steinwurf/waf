@@ -152,6 +152,6 @@ def ensure_build(ctx):
         Scripting.run_command("build")
 
 
-@conf
+@extend_context
 def rewrite_file(ctx, filename):
     return rewrite.rewrite_file(filename=filename)

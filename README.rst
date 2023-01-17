@@ -764,6 +764,11 @@ Creates a virtualenv in a specified folder.
 
 Ensure that we've run the build step before running the current command.
 
+``ctx.rewrite_file(...)``
+.........................
+
+Rewrites content of a file - useful for updating e.g. version numbers when
+doing a release.
 
 Future features
 ---------------
