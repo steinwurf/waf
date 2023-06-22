@@ -96,7 +96,7 @@ def _build_waf_binary(bld):
     # Run with ./waf --zones wurf to see the print
     waflib.Logs.debug("wurf: tools_dir={}".format(tools_dir))
 
-    waf_extras = ["clang_compilation_database"]
+    waf_extras = ["clang_compilation_database", "c_dumbpreproc"]
 
     # Get the absolute path to all the tools (passed as input to the task)
     tools = ",".join(tools_dir + waf_extras)

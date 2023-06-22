@@ -110,6 +110,7 @@ class DependencyManager(object):
         self.dependency_cache[dependency.name] = {
             "path": path,
             "recurse": dependency.recurse,
+            "added_by": self.ctx.path.abspath(),
         }
 
     def __skip_dependency(self, dependency):
@@ -149,11 +150,14 @@ class DependencyManager(object):
 
             if seen_dependency.sha1 != dependency.sha1:
 
+                current = self.ctx.path.abspath()
+                added_by = self.dependency_cache[dependency.name]["added_by"]
+
                 raise WurfError(
-                    "SHA1 mismatch when adding:\n{}\n"
-                    "the previous definition was:\n{}".format(
-                        dependency, seen_dependency
-                    )
+                    f"Adding {dependency.name} in {current}:\n"
+                    f"First added by {added_by}:\n"
+                    f"SHA1 mismatch:\n{dependency}\n"
+                    f"the previous definition was:\n{seen_dependency}"
                 )
 
             # If the current dependency is non-optional and we have already
