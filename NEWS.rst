@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Add better error messages for mismatched dependencies.
 * Minor: Recursively pull submodules
 * Minor: Adding ensure_build function to Waf's Context object.
 * Minor: Added a pip_compile helper function on Waf's Context object.
