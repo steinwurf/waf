@@ -1,6 +1,7 @@
 # Pin pytest since it does not support Python 3.6 which we still use in some
 # some places
-pytest==7.0.1
+#pytest#==7.0.1
+pytest
 mock
 vcrpy
 pytest-testdirectory
@@ -11,5 +12,5 @@ schema
 # Pin dependencies of our dependencies since they dropped support
 # for python 3.6 which we still use in some places. Try removing this from time
 # to time :)
-multidict==5.2.0
-tomli==1.2.3
+#multidict==5.2.0
+#tomli==1.2.3
