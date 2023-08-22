@@ -10,10 +10,12 @@ jobs:
     uses: steinwurf/flake8-action/.github/workflows/action.yml@2.0.0
     with:
       excluded_errors: F632
+
 # Cancel previous in-progress when pushing: https://stackoverflow.com/a/72408109
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
+
 
 
 
