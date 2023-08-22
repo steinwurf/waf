@@ -47,7 +47,9 @@ jobs:
         run: python3 waf
       - name: Test
         run: python3 waf --run_tests -vv
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
+
 
