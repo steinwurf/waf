@@ -1,60 +1,61 @@
-name: Waf Python Tests
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 1 * * *" # 3 AM CET
-  push:
-  pull_request:
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
 jobs:
-  waf-windows:
-    runs-on: [self-hosted, Windows]
-    name: Windows Waf
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Configure
-        run: python waf configure
-      - name: Build
-        run: python waf
-      - name: Test
-        run: python waf --run_tests -vv
   waf-linux:
-    runs-on: [self-hosted, docker, builder]
-    name: Linux Waf
     container:
       image: ghcr.io/steinwurf/waf:latest
       options: --user 0:0
       volumes:
-        - /home/buildbot/.ssh:/root/.ssh
+      - /home/buildbot/.ssh:/root/.ssh
+    name: Linux Waf
+    runs-on:
+    - self-hosted
+    - docker
+    - builder
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Configure
-        run: python3 waf configure
-      - name: Build
-        run: python3 waf
-      - name: Test
-        run: python3 waf --run_tests -vv
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure
+      run: python3 waf configure
+    - name: Build
+      run: python3 waf
+    - name: Test
+      run: python3 waf --run_tests -vv
   waf-macos:
-    runs-on: [self-hosted, macOS]
     name: macOS Waf
+    runs-on:
+    - self-hosted
+    - macOS
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Configure
-        run: python3 waf configure
-      - name: Build
-        run: python3 waf
-      - name: Test
-        run: python3 waf --run_tests -vv
-
-
-
-
-
-
-
-# Cancel previous in-progress when pushing: https://stackoverflow.com/a/72408109
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
-  cancel-in-progress: true
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure
+      run: python3 waf configure
+    - name: Build
+      run: python3 waf
+    - name: Test
+      run: python3 waf --run_tests -vv
+  waf-windows:
+    name: Windows Waf
+    runs-on:
+    - self-hosted
+    - Windows
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure
+      run: python waf configure
+    - name: Build
+      run: python waf
+    - name: Test
+      run: python waf --run_tests -vv
+name: Waf Python Tests
+'on':
+  pull_request: null
+  push:
+    branches:
+    - master
+  schedule:
+  - cron: 0 1 * * *
+  workflow_dispatch: null
