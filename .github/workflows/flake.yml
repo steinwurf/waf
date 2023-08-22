@@ -8,7 +8,7 @@ name: Flake8
   push:
     branches:
     - master
-  pull_request: null
+  pull_request:
 jobs:
   flake8:
     uses: steinwurf/flake8-action/.github/workflows/action.yml@2.0.0
