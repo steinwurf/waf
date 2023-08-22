@@ -8,10 +8,7 @@ name: Waf Python Tests
   push:
     branches:
     - master
-  pull_request:
-concurrency:
-  cancel-in-progress: true
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  pull_request: null
 jobs:
   waf-linux:
     container:
@@ -61,3 +58,6 @@ jobs:
       run: python waf
     - name: Test
       run: python waf --run_tests -vv
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
