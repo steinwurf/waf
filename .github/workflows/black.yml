@@ -9,9 +9,7 @@ jobs:
   Black:
     uses: steinwurf/black-action/.github/workflows/action.yml@2.0.0
 
-concurrency:
-  group: ${ github.workflow }-${ github.ref || github.run_id }
-  cancel-in-progress: true
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
