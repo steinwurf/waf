@@ -1,15 +1,17 @@
+name: Black
+'on':
+  workflow_dispatch:
+    inputs:
+      extra_resolve_options:
+        description: Extra Resolve Options
+        required: false
+  push:
+    branches:
+    - master
+  pull_request:
 concurrency:
   cancel-in-progress: true
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
 jobs:
   Black:
     uses: steinwurf/black-action/.github/workflows/action.yml@2.0.0
-name: Black
-'on':
-  pull_request: null
-  push:
-    branches:
-    - master
-  schedule:
-  - cron: 0 1 * * *
-  workflow_dispatch: null
