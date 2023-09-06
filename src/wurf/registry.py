@@ -9,38 +9,39 @@ import inspect
 import collections
 
 from .compat import IS_PY2
-from .git_resolver import GitResolver
-from .path_resolver import PathResolver
-from .context_msg_resolver import ContextMsgResolver
-from .dependency_manager import DependencyManager
+from .archive_resolver import ArchiveResolver
+from .check_lock_cache_resolver import CheckLockCacheResolver
 from .check_optional_resolver import CheckOptionalResolver
-from .on_active_store_path_resolver import OnActiveStorePathResolver
-from .on_passive_load_path_resolver import OnPassiveLoadPathResolver
-from .try_resolver import TryResolver
-from .list_resolver import ListResolver
-from .git_checkout_resolver import GitCheckoutResolver
+from .config_file import ConfigFile
+from .configuration import Configuration
+from .context_msg_resolver import ContextMsgResolver
+from .create_symlink_resolver import CreateSymlinkResolver
+from .dependency_manager import DependencyManager
 from .existing_checkout_resolver import ExistingCheckoutResolver
+from .existing_tag_resolver import ExistingTagResolver
+from .git import Git
+from .git_checkout_resolver import GitCheckoutResolver
+from .git_resolver import GitResolver
 from .git_semver_resolver import GitSemverResolver
 from .git_url_parser import GitUrlParser
 from .git_url_rewriter import GitUrlRewriter
-from .git import Git
-from .options import Options
-from .config_file import ConfigFile
+from .http_resolver import HttpResolver
+from .list_resolver import ListResolver
+from .lock_cache import LockCache
 from .mandatory_options import MandatoryOptions
 from .mandatory_resolver import MandatoryResolver
-from .create_symlink_resolver import CreateSymlinkResolver
-from .configuration import Configuration
+from .on_active_store_path_resolver import OnActiveStorePathResolver
+from .on_passive_load_path_resolver import OnPassiveLoadPathResolver
+from .options import Options
+from .path_resolver import PathResolver
+from .post_resolve_run import PostResolveRun
+from .semver_selector import SemverSelector
 from .store_lock_path_resolver import StoreLockPathResolver
 from .store_lock_version_resolver import StoreLockVersionResolver
-from .check_lock_cache_resolver import CheckLockCacheResolver
-from .lock_cache import LockCache
-from .semver_selector import SemverSelector
 from .tag_database import TagDatabase
-from .existing_tag_resolver import ExistingTagResolver
+from .try_resolver import TryResolver
 from .url_download import UrlDownload
-from .http_resolver import HttpResolver
-from .archive_resolver import ArchiveResolver
-from .post_resolve_run import PostResolveRun
+from .verify_file_hash_resolver import VerifyFileHashResolver
 
 from .error import WurfError
 
@@ -57,7 +58,6 @@ class RegistryProviderError(WurfError):
 
 class RegistryInjectError(WurfError):
     def __init__(self, provider_function, missing_provider):
-
         self.provider_function = provider_function
         self.missing_provider = missing_provider
 
@@ -70,7 +70,6 @@ class RegistryInjectError(WurfError):
 
 class RegistryCacheOnceError(WurfError):
     def __init__(self, provider_name, provider_function):
-
         self.provider_name = provider_name
         self.provider_function = provider_function
 
@@ -84,7 +83,6 @@ class RegistryCacheOnceError(WurfError):
 
 
 class Registry(object):
-
     # The TemporaryValue is used to provide temporary values though the
     # registry.
     #
@@ -145,8 +143,8 @@ class Registry(object):
 
         # Dictionary which contains cached values produced for the different
         # providers. The layout of the dictionary will be:
-        # { 'provider1': { argument_hash1: value1
-        #                  argument_hash2, value2},
+        # { 'provider1': { argument_hash1: value1,
+        #                  argument_hash2: value2 },
         #   'provider2': { argument_hash1: value1 },
         #   ....
         # }
@@ -154,7 +152,7 @@ class Registry(object):
         # Where the provider name is the key to a dictionary where cached
         # values are stored. The nested dict uses a hash of the arguments
         # passed to require(...) to find the right cached response.
-        self.cache = {}
+        self._cache = {}
 
         # Set which contains the name of features that should be cached
         if use_cache_providers:
@@ -171,13 +169,13 @@ class Registry(object):
 
         :param provider_name: The provider's name as a string
         """
-        assert provider_name not in self.cache
-        self.cache[provider_name] = Registry.CacheEntry(once=once)
+        assert provider_name not in self._cache
+        self._cache[provider_name] = Registry.CacheEntry(once=once)
 
     def purge_cache(self):
         """Empty the registry cache."""
-        for provider_name in self.cache:
-            self.cache[provider_name].data = {}
+        for provider_name in self._cache:
+            self._cache[provider_name].data = {}
 
     def __inject_arguments(self, provider_function):
         """Based on function signature prepare arguments.
@@ -201,7 +199,6 @@ class Registry(object):
             require_arguments = inspect.getfullargspec(provider_function)[0]
 
         for argument in require_arguments:
-
             if argument == "registry":
                 inject_arguments[argument] = self
                 continue
@@ -225,7 +222,6 @@ class Registry(object):
 
         hash_dict = {}
         for k, v in arguments.items():
-
             if isinstance(v, (list, tuple, dict, set)):
                 hash_dict[k] = hash(json.dumps(v, sort_keys=True))
             else:
@@ -249,21 +245,19 @@ class Registry(object):
             raise RegistryProviderError(provider_name)
 
         def call():
-
             inject_arguments = self.__inject_arguments(
                 provider_function=provider_function
             )
 
             # Did we already cache?
-            if provider_name in self.cache:
+            if provider_name in self._cache:
                 key = self.__hash_arguments(inject_arguments)
 
-                provider = self.cache[provider_name]
+                provider = self._cache[provider_name]
 
                 try:
                     return provider.data[key]
                 except KeyError:
-
                     if provider.once and len(provider.data) > 0:
                         raise RegistryCacheOnceError(provider_name, provider_function)
 
@@ -276,9 +270,9 @@ class Registry(object):
 
         self.registry[provider_name] = call
 
-        if provider_name in self.cache:
+        if provider_name in self._cache:
             # Clean the cache
-            self.cache[provider_name].data = {}
+            self._cache[provider_name].data = {}
 
     def provide_temporary(self):
         """:return: Temporary context which allows can be used to provide
@@ -318,8 +312,8 @@ class Registry(object):
         """
         :param provider_name: The name of the provider as a string
         """
-        if provider_name in self.cache:
-            del self.cache[provider_name]
+        if provider_name in self._cache:
+            del self._cache[provider_name]
 
         # The provider must exist in the registry
         del self.registry[provider_name]
@@ -379,7 +373,6 @@ def symlinks_path(mandatory_options, waf_utils):
 @Registry.cache
 @Registry.provide
 def dependency_path(git_url_rewriter, resolve_path, source, dependency, waf_utils):
-
     if dependency.resolver == "git":
         repo_url = git_url_rewriter.rewrite_url(url=source)
         repo_hash = hashlib.sha1(repo_url.encode("utf-8")).hexdigest()[:6]
@@ -433,7 +426,6 @@ def dependency_cache():
 @Registry.cache_once
 @Registry.provide
 def lock_cache(configuration, options, project_path):
-
     if configuration.resolver_chain() == Configuration.RESOLVE_AND_LOCK:
         return LockCache.create_empty(options=options)
     elif configuration.resolver_chain() == Configuration.RESOLVE_FROM_LOCK:
@@ -579,7 +571,6 @@ def post_resolve(registry, current_resolver, dependency):
 
 @Registry.provide
 def user_path_resolver(mandatory_options, dependency):
-
     path = mandatory_options.path(dependency=dependency)
 
     # Set the resolver method on the dependency
@@ -590,7 +581,6 @@ def user_path_resolver(mandatory_options, dependency):
 
 @Registry.provide
 def post_resolve_run(current_resolver, ctx, run_command, dependency_path):
-
     return PostResolveRun(
         resolver=current_resolver, ctx=ctx, run=run_command, cwd=dependency_path
     )
@@ -678,7 +668,13 @@ def git_semver_resolver(
 
 @Registry.provide
 def existing_tag_resolver(
-    ctx, dependency, semver_selector, tag_database, git_semver_resolver, dependency_path
+    ctx,
+    git,
+    dependency,
+    semver_selector,
+    tag_database,
+    git_semver_resolver,
+    dependency_path,
 ):
     """Builds a GitResolver instance.
 
@@ -686,6 +682,7 @@ def existing_tag_resolver(
     """
     return ExistingTagResolver(
         ctx=ctx,
+        git=git,
         dependency=dependency,
         semver_selector=semver_selector,
         tag_database=tag_database,
@@ -777,8 +774,7 @@ def resolve_git(registry, ctx, options, dependency):
     method_key = "resolve_git_{}".format(method)
     git_resolver = registry.require(method_key)
 
-    if options.fast_resolve():
-
+    if options.fast_resolve() or dependency.from_lock:
         # Set the resolver action on the dependency
         dependency.resolver_action = "fast/" + dependency.resolver_action
 
@@ -795,8 +791,22 @@ def resolve_git(registry, ctx, options, dependency):
         return ListResolver(resolvers=[fast_resolver, git_resolver])
 
     else:
-
         return git_resolver
+
+
+@Registry.cache
+@Registry.provide
+def resolve_from_lock_http(registry):
+    """Builds resolver that uses a checkout provided by the lock file.
+
+    :param registry: A Registry instance.
+    :param dependency: A Dependency instance.
+    """
+    with registry.provide_temporary() as temporary:
+        temporary.provide_value("method", "http")
+        resolver = registry.require("resolve_chain")
+
+    return resolver
 
 
 @Registry.cache
@@ -811,7 +821,6 @@ def resolve_from_lock_git(registry, lock_cache, dependency):
     checkout = lock_cache.checkout(dependency=dependency)
 
     with registry.provide_temporary() as temporary:
-
         temporary.provide_value("checkout", checkout)
         temporary.provide_value("method", "checkout")
 
@@ -836,8 +845,6 @@ def resolve_http(
     ctx,
     dependency_path,
 ):
-    """ """
-
     dependency.resolver_action = "http"
 
     resolver = HttpResolver(
@@ -852,7 +859,7 @@ def resolve_http(
             archive_extractor=archive_extractor, resolver=resolver, cwd=dependency_path
         )
 
-    if options.fast_resolve():
+    if options.fast_resolve() or dependency.from_lock:
         # Set the resolver action on the dependency
         dependency.resolver_action = "fast/" + dependency.resolver_action
 
@@ -868,12 +875,18 @@ def resolve_http(
 
         resolver = ListResolver(resolvers=[fast_resolver, resolver])
 
+        if dependency.from_lock:
+            # Check that the stored hash matches the file
+            lock_cache = registry.require("lock_cache")
+            resolver = VerifyFileHashResolver(
+                resolver=resolver, lock_cache=lock_cache, dependency=dependency
+            )
+
     return resolver
 
 
 @Registry.provide
 def resolve_from_lock_path(lock_cache, registry, dependency):
-
     with registry.provide_temporary() as temporary:
         temporary.provide_value("resolver", "lock_path")
         resolver = registry.require("resolve_chain")
@@ -887,7 +900,6 @@ def resolve_from_lock_path(lock_cache, registry, dependency):
 
 @Registry.provide
 def resolve_lock_path(lock_cache, dependency):
-
     path = lock_cache.path(dependency=dependency)
 
     # Set the resolver action on the dependency
@@ -898,7 +910,6 @@ def resolve_lock_path(lock_cache, dependency):
 
 @Registry.provide
 def help_chain(ctx, resolve_config_path, dependency):
-
     # Set the resolver action on the dependency
     dependency.resolver_chain = "Load"
     dependency.resolver_action = "help"
@@ -914,7 +925,6 @@ def help_chain(ctx, resolve_config_path, dependency):
 
 @Registry.provide
 def load_chain(ctx, resolve_config_path, dependency):
-
     # Set the resolver chain on the dependency
     dependency.resolver_chain = "Load"
 
@@ -947,7 +957,6 @@ def sources_resolver(ctx, registry, dependency):
                 resolver = registry.require("resolver")
             else:
                 resolver = dependency.resolver
-
             resolver_key = "resolve_{}".format(resolver)
             resolver = registry.require(resolver_key)
 
@@ -971,7 +980,6 @@ def sources_resolver(ctx, registry, dependency):
 def resolve_chain(
     ctx, options, registry, dependency, resolve_config_path, symlinks_path
 ):
-
     # Set the resolver chain on the dependency
     dependency.resolver_chain = "Resolve"
 
@@ -995,7 +1003,6 @@ def resolve_chain(
 
 @Registry.provide
 def resolve_and_lock_chain(registry, dependency, project_path, lock_cache):
-
     resolver = registry.require("resolve_chain")
 
     lock_type = lock_cache.type()
@@ -1019,10 +1026,10 @@ def resolve_and_lock_chain(registry, dependency, project_path, lock_cache):
 
 @Registry.provide
 def resolve_from_lock_chain(registry, dependency, lock_cache):
-
     lock_type = lock_cache.type()
-
     if lock_type == "versions":
+        # Mark the dependency as being resolved from a lock file
+        dependency.from_lock = True
         resolver_key = "resolve_from_lock_{}".format(dependency.resolver)
         resolver = registry.require(resolver_key)
 
@@ -1041,7 +1048,6 @@ def dependency_resolver(registry, ctx, configuration, dependency):
 
     # This is where we "wire" together the resolvers. Which actually do the
     # work of via some method obtaining a path to a dependency.
-
     resolver_key = "{}_chain".format(configuration.resolver_chain())
 
     resolver = registry.require(resolver_key)
@@ -1082,7 +1088,6 @@ def dependency_manager(registry):
 @Registry.provide
 def resolve_lock_action(lock_cache, project_path):
     def action():
-
         lock_path = os.path.join(project_path, Configuration.LOCK_FILE)
         lock_cache.write_to_file(lock_path)
 
@@ -1091,7 +1096,6 @@ def resolve_lock_action(lock_cache, project_path):
 
 @Registry.provide
 def post_resolver_actions(registry, configuration):
-
     actions = []
 
     if configuration.resolver_chain() == Configuration.RESOLVE_AND_LOCK:

@@ -27,15 +27,23 @@ class StoreLockVersionResolver(object):
 
         path = self.resolver.resolve()
 
-        checkout = None
+        if self.dependency.resolver == "git":
+            checkout = None
 
-        if self.dependency.git_tag:
-            checkout = self.dependency.git_tag
-        elif self.dependency.git_commit:
-            checkout = self.dependency.git_commit
+            if self.dependency.git_tag:
+                checkout = self.dependency.git_tag
+            elif self.dependency.git_commit:
+                checkout = self.dependency.git_commit
+            else:
+                raise WurfError("Not stable checkout information found.")
+
+            self.lock_cache.add_checkout(dependency=self.dependency, checkout=checkout)
+        elif self.dependency.resolver == "http":
+            print(self.dependency)
+            self.lock_cache.add_file_hash(
+                dependency=self.dependency, file_hash="TODO: implement me"
+            )
         else:
-            raise WurfError("Not stable checkout information found.")
-
-        self.lock_cache.add_checkout(dependency=self.dependency, checkout=checkout)
+            raise WurfError("Unknown resolver: {}".format(self.dependency.resolver))
 
         return path

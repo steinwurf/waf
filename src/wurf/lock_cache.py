@@ -17,10 +17,14 @@ class LockCache(object):
         return self.lock_cache["dependencies"][dependency.name]["path"]
 
     def checkout(self, dependency):
+        assert dependency.resolver == "git"
         return self.lock_cache["dependencies"][dependency.name]["checkout"]
 
-    def check_sha1(self, dependency):
+    def file_hash(self, dependency):
+        assert dependency.resolver == "http"
+        return self.lock_cache["dependencies"][dependency.name]["file_hash"]
 
+    def check_sha1(self, dependency):
         lock_sha1 = self.lock_cache["dependencies"][dependency.name]["sha1"]
 
         if dependency.sha1 != lock_sha1:
@@ -43,6 +47,12 @@ class LockCache(object):
         self.lock_cache["dependencies"][dependency.name] = {
             "sha1": dependency.sha1,
             "checkout": checkout,
+        }
+
+    def add_file_hash(self, dependency, file_hash):
+        self.lock_cache["dependencies"][dependency.name] = {
+            "sha1": dependency.sha1,
+            "file_hash": file_hash,
         }
 
     def __contains__(self, dependency):
