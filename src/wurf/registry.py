@@ -8,7 +8,6 @@ import hashlib
 import inspect
 import collections
 
-from .compat import IS_PY2
 from .archive_resolver import ArchiveResolver
 from .check_lock_cache_resolver import CheckLockCacheResolver
 from .check_optional_resolver import CheckOptionalResolver
@@ -190,12 +189,7 @@ class Registry(object):
         """
 
         inject_arguments = {}
-
-        if IS_PY2:
-            require_arguments = inspect.getargspec(provider_function)[0]
-
-        else:
-            require_arguments = inspect.getfullargspec(provider_function)[0]
+        require_arguments = inspect.getfullargspec(provider_function)[0]
 
         for argument in require_arguments:
             if argument == "registry":

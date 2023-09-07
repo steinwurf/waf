@@ -129,11 +129,7 @@ class Dependency(object):
         # integer hash?
         #
         # The sha1 is stored in config files describing a dependency, so it
-        # has to be stable. In the sense that if the config was written using
-        # e.g. python2.7 and then read under python3.3 the sha1 must stay the
-        # same for a given input.
-        #
-        # This is guaranteed by the SHA1 algorithm.
+        # has to be stable. This is guaranteed by the SHA1 algorithm.
         #
         # This guarantee does not seem (we are just not sure) to be implemented
         # for the in-built hash() function. Which could change it's

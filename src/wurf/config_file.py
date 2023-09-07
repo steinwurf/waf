@@ -1,12 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-try:
-    import configparser
-except ImportError:
-    # Support for python 2
-    import ConfigParser as configparser
-
+import configparser
 import os
 
 LOCAL_CONFIG_FILE = os.path.abspath(".wurf_config")
