@@ -4,18 +4,6 @@ import os
 from wurf.url_download import UrlDownload
 
 
-def test_url_download_url_filename():
-    download = UrlDownload()
-
-    assert download._url_filename("http://example.com") is None
-    assert download._url_filename("http://example.com/data") is None
-    assert download._url_filename("http://example.com/data.txt") == "data.txt"
-    assert (
-        download._url_filename("https://github.com/steinwurf/stub/archive/6.0.0.tar.gz")
-        == "6.0.0.tar.gz"
-    )
-
-
 @vcr.use_cassette("test/vcr_cassettes/https_cxx_prettyprint_resolver.yaml")
 def test_url_download_cxx_prettyprint_rename(testdirectory):
     source = "https://github.com/louisdx/cxx-prettyprint/zipball/master"

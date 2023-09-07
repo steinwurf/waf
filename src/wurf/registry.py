@@ -41,7 +41,6 @@ from .store_lock_version_resolver import StoreLockVersionResolver
 from .tag_database import TagDatabase
 from .try_resolver import TryResolver
 from .url_download import UrlDownload
-from .verify_file_hash_resolver import VerifyFileHashResolver
 
 from .error import WurfError
 
@@ -796,15 +795,21 @@ def resolve_git(registry, ctx, options, dependency):
 
 @Registry.cache
 @Registry.provide
-def resolve_from_lock_http(registry):
+def resolve_from_lock_http(registry, lock_cache, dependency):
     """Builds resolver that uses a checkout provided by the lock file.
 
     :param registry: A Registry instance.
+    :param lock_cache: A LockCache instance.
     :param dependency: A Dependency instance.
     """
+
     with registry.provide_temporary() as temporary:
         temporary.provide_value("method", "http")
         resolver = registry.require("resolve_chain")
+
+    resolver = CheckLockCacheResolver(
+        resolver=resolver, lock_cache=lock_cache, dependency=dependency
+    )
 
     return resolver
 
@@ -815,6 +820,7 @@ def resolve_from_lock_git(registry, lock_cache, dependency):
     """Builds resolver that uses a checkout provided by the lock file.
 
     :param registry: A Registry instance.
+    :param lock_cache: A LockCache instance.
     :param dependency: A Dependency instance.
     """
 
@@ -874,13 +880,6 @@ def resolve_http(
         )
 
         resolver = ListResolver(resolvers=[fast_resolver, resolver])
-
-        if dependency.from_lock:
-            # Check that the stored hash matches the file
-            lock_cache = registry.require("lock_cache")
-            resolver = VerifyFileHashResolver(
-                resolver=resolver, lock_cache=lock_cache, dependency=dependency
-            )
 
     return resolver
 
