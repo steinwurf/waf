@@ -8,7 +8,6 @@ from waflib.extras.wurf.error import WurfError
 
 
 def check_git_info(git_info):
-
     info_schema = schema.Schema(
         {
             "branches": list,
@@ -27,7 +26,6 @@ def check_git_info(git_info):
 
 
 def read_git_info(cwd):
-
     json_path = os.path.join(cwd, "git_info.json")
 
     with open(json_path) as json_file:
@@ -39,7 +37,6 @@ def read_git_info(cwd):
 
 
 def write_git_info(cwd, git_info):
-
     check_git_info(git_info=git_info)
 
     json_path = os.path.join(cwd, "git_info.json")
@@ -68,7 +65,6 @@ class NoClonePathError(WurfError):
 
 class FakeGit:
     def clone(self, repository, directory, cwd):
-
         if not os.path.isfile("clone_path.json"):
             raise NoClonePathError(repository=repository)
 
@@ -79,7 +75,6 @@ class FakeGit:
 
         for lib_repository, lib_directory in clone_path.items():
             if repository.endswith(lib_repository):
-
                 shutil.copytree(src=lib_directory, dst=dst_directory, symlinks=True)
 
                 assert os.path.isdir(dst_directory), (
@@ -99,7 +94,6 @@ class FakeGit:
             return
 
         for name, path in git_info["submodules"]:
-
             dst = os.path.join(cwd, name)
 
             if os.path.isdir(dst):
@@ -124,6 +118,16 @@ class FakeGit:
         # The current checkout must already be a commit so we just return
         # it
         return git_info["checkout"]
+
+    def current_tag(self, cwd):
+        """Fake the current tag of a repository"""
+
+        git_info = read_git_info(cwd=cwd)
+
+        if git_info["checkout"] in git_info["tags"]:
+            return git_info["checkout"]
+
+        return None
 
     def tags(self, cwd):
         """ " Fake what tags are in a repository"""
