@@ -38,7 +38,7 @@ class Dependency(object):
         sha1 attribute:
 
             # Access the sha1 attribute
-            print("Dependency hash {}".format(dependency.sha1))
+            print(f"Dependency hash {dependency.sha1}")
 
         Additional attributes may be added to the dependency during resolve.
         However, they cannot overwrite the existing attributes created at
@@ -176,11 +176,9 @@ class Dependency(object):
         """Deletes an info attribute."""
 
         if attribute not in self.info:
-            raise AttributeError(
-                "Cannot delete non existing attribute {}".format(attribute)
-            )
+            raise AttributeError(f"Cannot delete non existing attribute {attribute}")
 
-        audit = 'Deleting "{}". Reason: {}'.format(attribute, reason)
+        audit = f'Deleting "{attribute}". Reason: {reason}'
 
         del self.info[attribute]
         self.audit.append(audit)
@@ -188,7 +186,7 @@ class Dependency(object):
     def __create(self, attribute, value, reason):
         """Creates an info attribute."""
 
-        audit = 'Creating "{}" value "{}". Reason: {}'.format(attribute, value, reason)
+        audit = f'Creating "{attribute}" value "{value}". Reason: {reason}'
 
         self.audit.append(audit)
         self.info[attribute] = value
@@ -196,8 +194,9 @@ class Dependency(object):
     def __modify(self, attribute, value, reason):
         """Modifies an info attribute."""
 
-        audit = 'Modifying "{}" from "{}" to "{}". Reason: {}'.format(
-            attribute, self.info[attribute], value, reason
+        audit = (
+            f'Modifying "{attribute}" from "{self.info[attribute]}" '
+            f'to "{value}". Reason: {reason}'
         )
 
         self.audit.append(audit)
@@ -226,7 +225,7 @@ class Dependency(object):
         :param value: The value of the attribute
         """
         if attribute in self.info:
-            raise AttributeError("Attribute {} read-only.".format(attribute))
+            raise AttributeError(f"Attribute {attribute} read-only.")
         else:
             self.read_write[attribute] = value
 
@@ -239,10 +238,10 @@ class Dependency(object):
 
     def __str__(self):
         """:return: String representation of the dependency."""
-        return "Dependency info:\n{}\nread_write: {}\naudit: {}".format(
-            pprint.pformat(self.info, indent=2),
-            pprint.pformat(self.read_write, indent=2),
-            pprint.pformat(self.audit, indent=2),
+        return (
+            f"Dependency info:\n{pprint.pformat(self.info, indent=2)}\n"
+            f"read_write: {pprint.pformat(self.read_write, indent=2)}\n"
+            f"audit: {pprint.pformat(self.audit, indent=2)}"
         )
 
     def __hash__(self):

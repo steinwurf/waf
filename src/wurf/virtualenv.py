@@ -60,7 +60,7 @@ class VirtualEnv(object):
         )
 
         if ret != 0:
-            self.ctx.fatal('Exec command "{}" failed!'.format(cmd))
+            self.ctx.fatal(f'Exec command "{cmd}" failed!')
 
     def __enter__(self):
         """When used in a with statement the virtualenv will be automatically
@@ -158,11 +158,10 @@ class VirtualEnv(object):
             del env["PYTHONPATH"]
 
         if not name:
-
             # Make a unique virtualenv for different Python executables
             # (e.g. 2.x and 3.x)
             unique = hashlib.sha1(python.encode("utf-8")).hexdigest()[:6]
-            name = "virtualenv-{}".format(unique)
+            name = f"virtualenv-{unique}"
 
         path = os.path.join(cwd, name)
 

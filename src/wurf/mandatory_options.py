@@ -31,9 +31,7 @@ class MandatoryOptions(object):
             value = call(*args, **kwargs)
 
             if value is None:
-                raise RuntimeError(
-                    'Mandatory option "{}" was set to "None"'.format(name)
-                )
+                raise RuntimeError(f'Mandatory option "{name}" was set to "None"')
             return value
 
         return require

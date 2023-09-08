@@ -54,9 +54,7 @@ class GitCheckoutResolver(object):
         checkout_path = os.path.join(self.cwd, folder_name)
 
         self.ctx.to_log(
-            "wurf: GitCheckoutResolver name {} -> {}".format(
-                self.dependency.name, checkout_path
-            )
+            f"wurf: GitCheckoutResolver name {self.dependency.name} -> {checkout_path}"
         )
 
         # If the folder for the chosen version does not exist,

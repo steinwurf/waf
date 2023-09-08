@@ -46,8 +46,10 @@ class GitSemverResolver(object):
 
         if not tag:
             raise DependencyError(
-                msg="No tag found for major version {}, candidates "
-                "were {}".format(self.dependency.major, tags),
+                msg=(
+                    f"No tag found for major version {self.dependency.major}, "
+                    f"candidates were {tags}"
+                ),
                 dependency=self.dependency,
             )
 
@@ -59,9 +61,7 @@ class GitSemverResolver(object):
         tag_path = os.path.join(self.cwd, folder_name)
 
         self.ctx.to_log(
-            "wurf: GitSemverResolver name {} -> {}".format(
-                self.dependency.name, tag_path
-            )
+            f"wurf: GitSemverResolver name {self.dependency.name} -> {tag_path}"
         )
 
         # If the folder for the chosen tag does not exist,

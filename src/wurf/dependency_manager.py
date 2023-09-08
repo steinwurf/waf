@@ -61,7 +61,7 @@ class DependencyManager(object):
         if not os.path.isfile(resolve_path):
             if mandatory:
                 raise WurfError(
-                    "Mandatory resolve.json not found here: {}".format(resolve_path)
+                    f"Mandatory resolve.json not found here: {resolve_path}"
                 )
             else:
                 return
@@ -137,10 +137,8 @@ class DependencyManager(object):
 
             if dependency.override and not seen_dependency.override:
                 raise WurfError(
-                    "Overriding dependency:\n{}\n"
-                    "added after non overriding dependency:\n{}".format(
-                        dependency, seen_dependency
-                    )
+                    f"Overriding dependency:\n{dependency}\n"
+                    f"added after non overriding dependency:\n{seen_dependency}"
                 )
 
             # In this case either both or non of the dependencies are marked

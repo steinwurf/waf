@@ -45,10 +45,8 @@ def rewrite_file(filename):
 
             if count == 0:
                 raise RuntimeError(
-                    "Rewrite failed in {}. Pattern {} not "
-                    "found in file.\nContent:\n{}".format(
-                        filename, pattern, self.content
-                    )
+                    f"Rewrite failed in {filename}. Pattern {pattern} not "
+                    f"found in file.\nContent:\n{self.content}"
                 )
 
             self.content = updated

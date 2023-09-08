@@ -32,11 +32,9 @@ class ContextMsgResolver(object):
         :return: The path as a string.
         """
 
-        start_msg = '{} "{}"'.format(
-            self.dependency.resolver_chain, self.dependency.name
-        )
+        start_msg = f'{self.dependency.resolver_chain} "{self.dependency.name}"'
         if self.dependency.resolver_action:
-            start_msg += " ({})".format(self.dependency.resolver_action)
+            start_msg += f" ({self.dependency.resolver_action})"
         self.ctx.start_msg(start_msg)
 
         path = self.resolver.resolve()
@@ -47,7 +45,6 @@ class ContextMsgResolver(object):
             # print the status message and continue
             self.ctx.end_msg("Unavailable", color="RED")
         else:
-
             if self.dependency.is_symlink:
                 # We print the symlink path as a relative path if it is
                 # inside the project folder
@@ -57,7 +54,7 @@ class ContextMsgResolver(object):
                 if symlink_node.is_child_of(self.ctx.srcnode):
                     symlink_path = symlink_node.path_from(self.ctx.srcnode)
                 real_path = self.dependency.real_path
-                self.ctx.end_msg("{} => {}".format(symlink_path, real_path))
+                self.ctx.end_msg(f"{symlink_path} => {real_path}")
             else:
                 self.ctx.end_msg(path)
 

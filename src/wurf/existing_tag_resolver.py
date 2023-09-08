@@ -103,8 +103,8 @@ class ExistingTagResolver(object):
 
         if not os.path.isdir(path):
             self.ctx.to_log(
-                "resolve: {} {} contained invalid path {} for tag {}"
-                "- removing it".format(self.dependency.name, tags, path, most_recent)
+                f"resolve: {self.dependency.name} {tags} "
+                f"contained invalid path {path} for tag {most_recent} - removing it"
             )
 
             del tags[most_recent]
@@ -112,9 +112,7 @@ class ExistingTagResolver(object):
 
         else:
             self.ctx.to_log(
-                "resolve: ExistingTagResolver name {} -> {}".format(
-                    self.dependency.name, path
-                )
+                f"resolve: ExistingTagResolver name {self.dependency.name} -> {path}"
             )
 
             return most_recent, path

@@ -33,10 +33,8 @@ def compile(ctx, requirements_in, requirements_txt):
     signature_in = f"# Added by: github.com/steinwurf/waf pip-compile {sha1}\n"
 
     if os.path.isfile(requirements_txt):
-
         # Check if the requirements.txt is up to date
         with open(requirements_txt, "r") as f:
-
             signature_txt = f.readline()
 
             if signature_in == signature_txt:
@@ -48,9 +46,7 @@ def compile(ctx, requirements_in, requirements_txt):
     # Compile the requirements.txt
     with ctx.create_virtualenv() as venv:
         venv.run("python -m pip install pip-tools")
-        venv.run(
-            "pip-compile {} --output-file {}".format(requirements_in, requirements_txt)
-        )
+        venv.run(f"pip-compile {requirements_in} --output-file {requirements_txt}")
 
     # Add the signature to the requirements.txt
     with open(requirements_txt, "r+") as f:

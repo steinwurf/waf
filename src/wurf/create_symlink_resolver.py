@@ -49,10 +49,7 @@ class CreateSymlinkResolver(object):
         link_path = os.path.join(self.symlinks_path, self.dependency.name)
 
         try:
-
-            self.ctx.to_log(
-                "wurf: CreateSymlinkResolver {} -> {}".format(link_path, path)
-            )
+            self.ctx.to_log(f"wurf: CreateSymlinkResolver {link_path} -> {path}")
 
             try:
                 # We set overwrite True since We need to remove the symlink if it
@@ -62,7 +59,6 @@ class CreateSymlinkResolver(object):
                 )
 
             except RelativeSymlinkError:
-
                 self.ctx.to_log(
                     "wurf: Using relative symlink failed - fallback " "to absolute."
                 )
@@ -72,8 +68,7 @@ class CreateSymlinkResolver(object):
                 )
 
         except Exception as ex:
-
-            msg = "Symlink creation failed for: {}\n".format(self.dependency.name)
+            msg = f"Symlink creation failed for: {self.dependency.name}\n"
 
             # We also want to log the captured output if the command failed
             # with a CalledProcessError, the output would be lost otherwise

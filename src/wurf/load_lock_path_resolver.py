@@ -34,7 +34,7 @@ class LoadLockPathResolver(object):
         path = str(config["path"])
 
         if not os.path.isdir(path):
-            raise DependencyError('Invalid path: "{}"'.format(path), self.dependency)
+            raise DependencyError(f'Invalid path: "{path}"', self.dependency)
 
         return path
 

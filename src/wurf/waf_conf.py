@@ -85,16 +85,14 @@ def recurse_dependencies(ctx):
     # enumerated in the same order as they were defined in the wscripts
     # (waf-tools should be the first if it is defined)
     for name, dependency in waf_resolve_context.dependency_cache.items():
-
         if not dependency["recurse"]:
-
-            Logs.debug("resolve: Skipped recurse {} cmd={}".format(name, ctx.cmd))
+            Logs.debug(f"resolve: Skipped recurse {name} cmd={ctx.cmd}")
 
             continue
 
         path = dependency["path"]
 
-        Logs.debug("resolve: recurse {} cmd={}, path={}".format(name, ctx.cmd, path))
+        Logs.debug(f"resolve: recurse {name} cmd={ctx.cmd}, path={path}")
 
         try:
             # @todo mandatory is False here, which means that no wscript
@@ -110,13 +108,12 @@ def recurse_dependencies(ctx):
             # str() is needed as waf does not handle unicode in find_node
             ctx.recurse([str(path)], once=False, mandatory=False)
         except WafError as e:
-
-            msg = 'Recurse "{}" for "{}" failed with: {}'.format(name, ctx.cmd, e.msg)
+            msg = f'Recurse "{name}" for "{ctx.cmd}" failed with: {e.msg}'
 
             if logfile:
-                msg = "{}\n(complete log in {})".format(msg, logfile)
+                msg = f"{msg}\n(complete log in {logfile})"
             else:
-                msg = "{}\n(run with -v for more information)".format(msg)
+                msg = f"{msg}\n(run with -v for more information)"
 
             raise WafError(msg=msg, ex=e)
 
@@ -125,7 +122,6 @@ def recurse_dependencies(ctx):
 def create_virtualenv(
     ctx, cwd=None, env=None, name=None, overwrite=True, system_site_packages=False
 ):
-
     return virtualenv.VirtualEnv.create(
         ctx=ctx,
         log=Logs,

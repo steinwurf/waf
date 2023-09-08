@@ -17,9 +17,9 @@ class CmdAndLogError(WurfError):
         self.error = error
         msg = str(error)
         if hasattr(error, "stdout") and len(error.stdout):
-            msg += "\nstdout:\n{}".format(error.stdout)
+            msg += f"\nstdout:\n{error.stdout}"
         if hasattr(error, "stderr") and len(error.stderr):
-            msg += "\nstderr:\n{}".format(error.stderr)
+            msg += f"\nstderr:\n{error.stderr}"
         super(CmdAndLogError, self).__init__(msg)
 
 
@@ -44,7 +44,7 @@ class TopLevelError(WurfError):
 
 
 def help_message(dependency):
-    text = 'ERROR: the "{}" dependency is not available.'.format(dependency.name)
+    text = f'ERROR: the "{dependency.name}" dependency is not available.'
     if dependency.resolver == "git":
         steinwurf_sources = [
             "https://" + s for s in dependency.sources if "steinwurf" in s
@@ -53,7 +53,7 @@ def help_message(dependency):
             text += (
                 "\nPlease check that you have a valid Steinwurf "
                 "license and you can access the repository at: "
-                "{}".format(map(str, steinwurf_sources))
+                f"{map(str, steinwurf_sources)}"
             )
     return text
 

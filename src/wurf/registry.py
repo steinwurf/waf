@@ -50,7 +50,7 @@ class RegistryProviderError(WurfError):
     def __init__(self, name):
         self.name = name
         super(RegistryProviderError, self).__init__(
-            "Registry error: {} already added to registry".format(self.name)
+            f"Registry error: {self.name} already added to registry"
         )
 
 
@@ -60,9 +60,8 @@ class RegistryInjectError(WurfError):
         self.missing_provider = missing_provider
 
         super(RegistryInjectError, self).__init__(
-            'Fatal error provider "{}" requires "{}"'.format(
-                self.provider_function.__name__, self.missing_provider
-            )
+            f'Fatal error provider "{self.provider_function.__name__}" '
+            f'requires "{self.missing_provider}"'
         )
 
 
@@ -72,11 +71,9 @@ class RegistryCacheOnceError(WurfError):
         self.provider_function = provider_function
 
         super(RegistryCacheOnceError, self).__init__(
-            'Fatal error provider "{}" should only be cached once. The '
-            'provided values passed to "{}" have changed since the object was '
-            "initially cached.".format(
-                self.provider_name, self.provider_function.__name__
-            )
+            f'Fatal error provider "{self.provider_name}" should only be cached once. '
+            f'The provided values passed to "{self.provider_function.__name__}" '
+            f"have changed since the object was initially cached."
         )
 
 
@@ -426,9 +423,7 @@ def lock_cache(configuration, options, project_path):
         return LockCache.create_from_file(lock_path=lock_path)
     else:
         raise WurfError(
-            "Lock cache not available for {} chain".format(
-                configuration.resolver_chain()
-            )
+            f"Lock cache not available for {configuration.resolver_chain()} chain"
         )
 
 
@@ -501,7 +496,7 @@ def project_git_protocol(git, ctx, git_url_parser):
         parent_url = git.remote_origin_url(cwd=os.getcwd())
 
     except Exception as e:
-        ctx.to_log("Exception when executing git.remote_origin_url: {}".format(e))
+        ctx.to_log(f"Exception when executing git.remote_origin_url: {e}")
         return None
 
     try:
@@ -509,9 +504,7 @@ def project_git_protocol(git, ctx, git_url_parser):
         return url.protocol
 
     except Exception as e:
-        ctx.to_log(
-            "Exception could not parse git URL {} error: {}".format(parent_url, e)
-        )
+        ctx.to_log(f"Exception could not parse git URL {parent_url} error: {e}")
         return None
 
 
@@ -549,11 +542,9 @@ def post_resolve(registry, current_resolver, dependency):
 
     for resolve in dependency.post_resolve:
         with registry.provide_temporary() as temporary:
-            temporary.provide_value(
-                "{}_command".format(resolve["type"]), resolve["command"]
-            )
+            temporary.provide_value(f'{resolve["type"]}_command', resolve["command"])
 
-            resolver = registry.require("post_resolve_{}".format(resolve["type"]))
+            resolver = registry.require(f'post_resolve_{resolve["type"]}')
 
         registry.provide_value(
             provider_name="current_resolver", value=resolver, override=True
@@ -715,7 +706,7 @@ def resolve_git_user_checkout(registry, ctx, mandatory_options, dependency):
 
         resolver = MandatoryResolver(
             resolver=resolver,
-            msg="User checkout of '{}' failed.".format(checkout),
+            msg=f"User checkout of '{checkout}' failed.",
             dependency=dependency,
         )
 
@@ -764,7 +755,7 @@ def resolve_git(registry, ctx, options, dependency):
     else:
         method = dependency.method
 
-    method_key = "resolve_git_{}".format(method)
+    method_key = f"resolve_git_{method}"
     git_resolver = registry.require(method_key)
 
     if options.fast_resolve() or dependency.from_lock:
@@ -950,7 +941,7 @@ def sources_resolver(ctx, registry, dependency):
                 resolver = registry.require("resolver")
             else:
                 resolver = dependency.resolver
-            resolver_key = "resolve_{}".format(resolver)
+            resolver_key = f"resolve_{resolver}"
             resolver = registry.require(resolver_key)
 
             if "post_resolve" in dependency:
@@ -1014,7 +1005,7 @@ def resolve_and_lock_chain(registry, dependency, project_path, lock_cache):
         )
 
     else:
-        raise WurfError("Unknown lock type {}".format(lock_type))
+        raise WurfError(f"Unknown lock type {lock_type}")
 
 
 @Registry.provide
@@ -1023,14 +1014,14 @@ def resolve_from_lock_chain(registry, dependency, lock_cache):
     if lock_type == "versions":
         # Mark the dependency as being resolved from a lock file
         dependency.from_lock = True
-        resolver_key = "resolve_from_lock_{}".format(dependency.resolver)
+        resolver_key = f"resolve_from_lock_{dependency.resolver}"
         resolver = registry.require(resolver_key)
 
     elif lock_type == "paths":
         resolver = registry.require("resolve_from_lock_path")
 
     else:
-        raise WurfError("Unknown lock type {}".format(lock_type))
+        raise WurfError(f"Unknown lock type {lock_type}")
 
     return resolver
 
@@ -1041,7 +1032,7 @@ def dependency_resolver(registry, ctx, configuration, dependency):
 
     # This is where we "wire" together the resolvers. Which actually do the
     # work of via some method obtaining a path to a dependency.
-    resolver_key = "{}_chain".format(configuration.resolver_chain())
+    resolver_key = f"{configuration.resolver_chain()}_chain"
 
     resolver = registry.require(resolver_key)
 

@@ -27,7 +27,7 @@ class CheckLockCacheResolver(object):
 
         if self.dependency not in self.lock_cache:
             raise DependencyError(
-                msg="Not found in lock cache: {}".format(self.lock_cache),
+                msg=f"Not found in lock cache: {self.lock_cache}",
                 dependency=self.dependency,
             )
 

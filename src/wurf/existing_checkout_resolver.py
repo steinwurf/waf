@@ -65,7 +65,6 @@ class ExistingCheckoutResolver(object):
         return path
 
     def __load_commits_file(self):
-
         commit_path = os.path.join(self.cwd, self.dependency.name + ".commits.json")
 
         if not os.path.isfile(commit_path):
@@ -75,22 +74,20 @@ class ExistingCheckoutResolver(object):
             return json.load(commit_file)
 
     def __store_commits_file(self, commits):
-
         commit_path = os.path.join(self.cwd, self.dependency.name + ".commits.json")
 
         with open(commit_path, "w") as commit_file:
             return json.dump(commits, commit_file, indent=4)
 
     def __resolve_path(self, commits):
-
         # Check if the commit is the start of any of the stored commits
         for stored_commit in commits:
             if stored_commit.startswith(self.checkout):
                 break
         else:
             self.ctx.to_log(
-                "resolve: ExistingCheckoutResolver {} no stored checkout"
-                " for commit {}".format(self.dependency.name, self.checkout)
+                f"resolve: ExistingCheckoutResolver {self.dependency.name} "
+                f"no stored checkout for commit {self.checkout}"
             )
             return None
 
@@ -98,10 +95,9 @@ class ExistingCheckoutResolver(object):
 
         if not os.path.isdir(path):
             self.ctx.to_log(
-                "resolve: {} {} contained invalid path {} for commit {}"
-                "- removing it".format(
-                    self.dependency.name, commits, path, stored_commit
-                )
+                f"resolve: {self.dependency.name} {commits} "
+                f"contained invalid path {path} "
+                f"for commit {stored_commit} - removing it"
             )
 
             del commits[stored_commit]
@@ -109,9 +105,8 @@ class ExistingCheckoutResolver(object):
 
         else:
             self.ctx.to_log(
-                "resolve: ExistingCheckoutResolver name {} -> {}".format(
-                    self.dependency.name, path
-                )
+                f"resolve: ExistingCheckoutResolver name "
+                f"{self.dependency.name} -> {path}"
             )
 
             return path
