@@ -44,14 +44,12 @@ def test_waf_tools(testdirectory):
     # The cxx_default mkspec should be selected, and the output path should
     # be the same on all platforms
     output_path = os.path.join(root.path(), "build", "cxx_default")
-    assert r.stdout.match("*Setting out to*{}*".format(output_path))
+    assert r.stdout.match(f"*Setting out to*{output_path}*")
     assert r.stdout.match("*Using the mkspec*cxx_default*")
 
     assert r.stdout.match("*'msvs2012' finished successfully*")
     assert r.stdout.match("*MAIN PROGRAM FOUND:*")
-    assert r.stdout.match(
-        "*<task_gen 'waf-tools-tester' declared in {}>*".format(root.path())
-    )
+    assert r.stdout.match(f"*<task_gen 'waf-tools-tester' declared in {root.path()}>*")
     assert r.stdout.match("*OUTPUT PATH:*")
 
     # The build_current link should be created

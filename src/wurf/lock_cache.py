@@ -65,7 +65,7 @@ class LockCache(object):
                     f = os.path.join(root, file)
                     sha1.update(open(f, "rb").read())
         else:
-            raise WurfError("Unknown file type: {}".format(path))
+            raise WurfError(f"Unknown file type: {path}")
         return sha1.hexdigest()
 
     def __contains__(self, dependency):

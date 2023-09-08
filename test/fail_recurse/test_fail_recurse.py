@@ -6,7 +6,6 @@ from pytest_testdirectory.runresulterror import RunResultError
 
 
 def test_fail_recurse(testdirectory):
-
     # @todo I guess this should fail since there is no wscript in or
     # anything in the foo folder
 
@@ -17,7 +16,7 @@ def test_fail_recurse(testdirectory):
     testdirectory.copy_file("build/waf")
 
     r = testdirectory.run(
-        ["python", "waf", "configure", "--foo_path={}".format(foo_dir.path())]
+        ["python", "waf", "configure", f"--foo_path={foo_dir.path()}"]
     )
 
     assert r.stdout.match("*finished successfully*")
@@ -26,7 +25,6 @@ def test_fail_recurse(testdirectory):
 
 
 def test_fail_recurse_configure_python_error(testdirectory):
-
     foo_dir = testdirectory.mkdir("foo")
     foo_dir.copy_file(
         "test/fail_recurse/wscript_configure_python_error", rename_as="wscript"
@@ -38,7 +36,7 @@ def test_fail_recurse_configure_python_error(testdirectory):
 
     with pytest.raises(RunResultError) as excinfo:
         testdirectory.run(
-            ["python", "waf", "configure", "--foo_path={}".format(foo_dir.path())]
+            ["python", "waf", "configure", f"--foo_path={foo_dir.path()}"]
         )
 
     r = excinfo.value.runresult
@@ -47,7 +45,6 @@ def test_fail_recurse_configure_python_error(testdirectory):
 
 
 def test_fail_recurse_build_python_error(testdirectory):
-
     foo_dir = testdirectory.mkdir("foo")
     foo_dir.copy_file(
         "test/fail_recurse/wscript_build_python_error", rename_as="wscript"
@@ -58,7 +55,7 @@ def test_fail_recurse_build_python_error(testdirectory):
     testdirectory.copy_file("build/waf")
 
     r = testdirectory.run(
-        ["python", "waf", "configure", "--foo_path={}".format(foo_dir.path())]
+        ["python", "waf", "configure", f"--foo_path={foo_dir.path()}"]
     )
 
     with pytest.raises(RunResultError) as excinfo:
@@ -70,7 +67,6 @@ def test_fail_recurse_build_python_error(testdirectory):
 
 
 def test_fail_recurse_configure_waf_error(testdirectory):
-
     foo_dir = testdirectory.mkdir("foo")
     foo_dir.copy_file(
         "test/fail_recurse/wscript_configure_waf_error", rename_as="wscript"
@@ -82,7 +78,7 @@ def test_fail_recurse_configure_waf_error(testdirectory):
 
     with pytest.raises(RunResultError) as excinfo:
         testdirectory.run(
-            ["python", "waf", "configure", "--foo_path={}".format(foo_dir.path())]
+            ["python", "waf", "configure", f"--foo_path={foo_dir.path()}"]
         )
 
     r = excinfo.value.runresult
@@ -92,7 +88,6 @@ def test_fail_recurse_configure_waf_error(testdirectory):
 
 
 def test_fail_recurse_build_waf_error(testdirectory):
-
     foo_dir = testdirectory.mkdir("foo")
     foo_dir.copy_file("test/fail_recurse/wscript_build_waf_error", rename_as="wscript")
 
@@ -100,9 +95,7 @@ def test_fail_recurse_build_waf_error(testdirectory):
     testdirectory.copy_file("test/fail_recurse/resolve.json")
     testdirectory.copy_file("build/waf")
 
-    testdirectory.run(
-        ["python", "waf", "configure", "--foo_path={}".format(foo_dir.path())]
-    )
+    testdirectory.run(["python", "waf", "configure", f"--foo_path={foo_dir.path()}"])
 
     with pytest.raises(RunResultError) as excinfo:
         testdirectory.run(["python", "waf", "build"])

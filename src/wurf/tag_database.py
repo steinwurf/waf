@@ -33,13 +33,13 @@ class TagDatabase(object):
             req = Request(url)
             response = urlopen(req)
             tags_json = response.read()
-            self.ctx.to_log("Tags downloaded. File size: {}\n".format(len(tags_json)))
+            self.ctx.to_log(f"Tags downloaded. File size: {len(tags_json)}\n")
             self.tags = json.loads(tags_json)
         except Exception:
             self.tags = {}
             # Log the exception, including the traceback information
             self.ctx.logger.debug(
-                "Could not fetch tags.json from: {}".format(url), exc_info=True
+                f"Could not fetch tags.json from: {url}", exc_info=True
             )
 
     def project_tags(self, project_name):
@@ -51,14 +51,12 @@ class TagDatabase(object):
         # Download the tag info - this should be done only once!
         if self.tags is None:
             self.download_tags()
-
+        assert self.tags is not None
         if project_name in self.tags:
             self.ctx.to_log(
-                "Registered tags for {}:\n{}".format(
-                    project_name, self.tags[project_name]
-                )
+                f"Registered tags for {project_name}:\n{self.tags[project_name]}"
             )
             return self.tags[project_name]
         else:
-            self.ctx.to_log("No registered tags for {}.".format(project_name))
+            self.ctx.to_log(f"No registered tags for {project_name}.")
             return None

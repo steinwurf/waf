@@ -30,7 +30,7 @@ class PathResolver(object):
 
         if not os.path.isdir(self.path):
             raise DependencyError(
-                'Path error: "{}" is not a valid directory'.format(self.path),
+                f'Path error: "{self.path}" is not a valid directory',
                 dependency=self.dependency,
             )
 

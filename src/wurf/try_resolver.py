@@ -32,9 +32,7 @@ class TryResolver(object):
             # Waf is using the standard Python Logger so you can check the
             # docs here (read about the exc_info kwargs):
             # https://docs.python.org/2/library/logging.html
-            self.ctx.logger.debug(
-                "Resolve failed in {}:".format(self.resolver), exc_info=True
-            )
+            self.ctx.logger.debug(f"Resolve failed in {self.resolver}:", exc_info=True)
             # Also write the detailed dependency info to the log
             self.ctx.logger.debug(self.dependency)
 
@@ -43,9 +41,7 @@ class TryResolver(object):
             # e.g. when a non-optional dependency fails.
             error_message = ""
             if "current_source" in self.dependency:
-                error_message = "Current source: {}\n".format(
-                    self.dependency.current_source
-                )
+                error_message = f"Current source: {self.dependency.current_source}\n"
             # The first argument of the error contains the error message
             error_message += e.args[0]
             if not error_message.endswith("\n"):
@@ -61,5 +57,5 @@ class TryResolver(object):
         if path:
             assert os.path.isdir(path) or os.path.isfile(path)
         else:
-            self.ctx.logger.debug("No path returned by {}".format(self.resolver))
+            self.ctx.logger.debug(f"No path returned by {self.resolver}")
         return path

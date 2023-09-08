@@ -17,7 +17,6 @@ class WafConfigurationContext(ConfigurationContext):
         super(WafConfigurationContext, self).__init__(**kw)
 
     def init_dirs(self):
-
         # First call the configuration context init_dirs(..) function
         # which creates the actual folders.
 
@@ -38,8 +37,7 @@ class WafConfigurationContext(ConfigurationContext):
             # config.log is created after init_dirs(), so waf will print
             # the warning message to stderr
             Logs.warn(
-                "Could not create the 'build_current' symlink in "
-                "{}".format(self.path.abspath())
+                f"Could not create the 'build_current' symlink in {self.path.abspath()}"
             )
 
     def execute(self):
@@ -51,7 +49,6 @@ class WafConfigurationContext(ConfigurationContext):
         super(WafConfigurationContext, self).execute()
 
     def pre_recurse(self, node):
-
         super(WafConfigurationContext, self).pre_recurse(node)
 
         # Call configure() in all dependencies before executing configure()

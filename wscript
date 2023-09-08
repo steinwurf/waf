@@ -91,7 +91,7 @@ def _build_waf_binary(bld):
     cwd = bld.dependency_path("waf")
 
     # Run with ./waf --zones wurf to see the print
-    waflib.Logs.debug("wurf: tools_dir={}".format(tools_dir))
+    waflib.Logs.debug(f"wurf: tools_dir={tools_dir}")
 
     waf_extras = ["clang_compilation_database", "c_dumbpreproc"]
 
@@ -145,14 +145,10 @@ def _pytest(bld):
     if not os.path.isfile(requirements_txt):
         with bld.create_virtualenv() as venv:
             venv.run("python -m pip install pip-tools")
-            venv.run(
-                "pip-compile {} --output-file {}".format(
-                    requirements_in, requirements_txt
-                )
-            )
+            venv.run(f"pip-compile {requirements_in} --output-file {requirements_txt}")
 
     venv = bld.create_virtualenv(name="test-venv")
-    venv.run("python -m pip install -r {}".format(requirements_txt))
+    venv.run(f"python -m pip install -r {requirements_txt}")
 
     # Add our sources to the Python path
     python_path = [
@@ -189,7 +185,7 @@ def _pytest(bld):
 
     # Adds the test filter if specified
     if bld.options.test_filter:
-        command += ' -k "{}"'.format(bld.options.test_filter)
+        command += f' -k "{bld.options.test_filter}"'
 
     venv.run(command)
 

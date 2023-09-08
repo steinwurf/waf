@@ -50,7 +50,6 @@ class WafResolveContext(Context.Context):
         self.skip_internal = skip_internal
 
     def execute(self):
-
         if not self.resolve:
             # Skip out if we are should not execute - see __init__ for
             # explanation
@@ -103,9 +102,7 @@ class WafResolveContext(Context.Context):
         )
 
         self.logger = Logs.make_logger(path, "resolve")
-        self.logger.debug(
-            "wurf: Resolve execute {}".format(configuration.resolver_chain())
-        )
+        self.logger.debug(f"wurf: Resolve execute {configuration.resolver_chain()}")
 
         self.dependency_manager = self.registry.require("dependency_manager")
 
@@ -125,7 +122,7 @@ class WafResolveContext(Context.Context):
         global dependency_cache
         dependency_cache = self.registry.require("dependency_cache")
 
-        self.logger.debug("wurf: dependency_cache {}".format(dependency_cache))
+        self.logger.debug(f"wurf: dependency_cache {dependency_cache}")
 
         # If needed execute any actions which cannot run until after the
         # dependency resolution has completed
@@ -142,7 +139,6 @@ class WafResolveContext(Context.Context):
         # run custom code before the actual resolving starts.
 
         try:
-
             self.dependency_manager.load_dependencies(
                 self.path.abspath(), mandatory=False
             )
@@ -150,8 +146,8 @@ class WafResolveContext(Context.Context):
             # The ValueError is raised when the json is malformed. We
             # could potentially catch more errors here. But, we can
             # expand this if needed to catch more error types later..
-            msg = "Error in load dependencies (resolve.json) {}: {}".format(
-                self.path.abspath(), e
+            msg = (
+                f"Error in load dependencies (resolve.json) {self.path.abspath()}: {e}"
             )
             self.logger.debug(msg, exc_info=True)
             self.fatal(msg)

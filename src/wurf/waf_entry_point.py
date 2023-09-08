@@ -56,10 +56,8 @@ def _check_minimum_python_version(major, minor):
     """
     if sys.version_info[:2] < (major, minor):
         raise Errors.ConfigurationError(
-            "Python version not supported: {0}, "
-            "required minimum version: {1}.{2}".format(
-                sys.version_info[:3], major, minor
-            )
+            f"Python version not supported: {sys.version_info[:3]}, "
+            f"required minimum version: {major}.{minor}"
         )
 
 

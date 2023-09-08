@@ -50,7 +50,7 @@ class CloneError(WurfError):
 
     def __init__(self, repository):
         super(CloneError, self).__init__(
-            "No mapping for repository {} found!".format(repository)
+            f"No mapping for repository {repository} found!"
         )
 
 
@@ -59,7 +59,7 @@ class NoClonePathError(WurfError):
 
     def __init__(self, repository):
         super(NoClonePathError, self).__init__(
-            "cone_path.json available for repository {} found!".format(repository)
+            f"cone_path.json available for repository {repository} found!"
         )
 
 
@@ -162,7 +162,7 @@ class FakeGit:
             valid.append(tag)
             valid.append(self._to_sha1(data=tag))
 
-        assert branch in valid, "branch = {}, cwd = {}".format(branch, cwd)
+        assert branch in valid, f"branch = {branch}, cwd = {cwd}"
 
         git_info["is_detached_head"] = True
         git_info["checkout"] = branch

@@ -14,7 +14,6 @@ class Options(object):
         default_symlinks_path,
         supported_git_protocols,
     ):
-
         self.args = args
         self.parser = parser
 
@@ -32,7 +31,7 @@ class Options(object):
             default=default_resolve_path,
             type=non_empty_string,
             help="The folder where the resolved dependencies are downloaded. "
-            "[default: '{}']".format(default_resolve_path),
+            f"[default: '{default_resolve_path}']",
         )
 
         self.parser.add_argument(
@@ -40,7 +39,7 @@ class Options(object):
             dest="--git_protocol",
             type=non_empty_string,
             help="Use a specific git protocol to download dependencies. "
-            "Supported protocols: {}".format(supported_git_protocols),
+            f"Supported protocols: {supported_git_protocols}",
         )
 
         self.parser.add_argument(
@@ -49,7 +48,7 @@ class Options(object):
             default=default_symlinks_path,
             type=non_empty_string,
             help="The folder where the dependency symlinks are placed. "
-            "[default: '{}']".format(default_symlinks_path),
+            f"[default: '{default_symlinks_path}']",
         )
 
         self.parser.add_argument(
@@ -107,7 +106,6 @@ class Options(object):
         return self.known_args["--%s_checkout" % dependency.name]
 
     def __parse(self):
-
         known, unknown = self.parser.parse_known_args(args=self.args)
 
         self.known_args = vars(known)
@@ -117,33 +115,29 @@ class Options(object):
             raise WurfError("Incompatible options")
 
     def __add_path(self, dependency):
-
         option = "--%s_path" % dependency.name
 
         self.parser.add_argument(
             option,
             nargs="?",
             dest=option,
-            help="Manually specify path for {}.".format(dependency.name),
+            help=f"Manually specify path for {dependency.name}.",
         )
 
     def __add_checkout(self, dependency):
-
         option = "--%s_checkout" % dependency.name
 
         self.parser.add_argument(
             option,
             nargs="?",
             dest=option,
-            help="Manually specify Git checkout for {}.".format(dependency.name),
+            help=f"Manually specify Git checkout for {dependency.name}.",
         )
 
     def add_dependency(self, dependency):
-
         self.__add_path(dependency)
 
         if dependency.resolver == "git":
-
             self.__add_checkout(dependency)
 
         self.__parse()

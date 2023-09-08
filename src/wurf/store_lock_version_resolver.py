@@ -41,6 +41,6 @@ class StoreLockVersionResolver(object):
         elif self.dependency.resolver == "http":
             self.lock_cache.add_file(dependency=self.dependency, path=path)
         else:
-            raise WurfError("Unknown resolver: {}".format(self.dependency.resolver))
+            raise WurfError(f"Unknown resolver: {self.dependency.resolver}")
 
         return path

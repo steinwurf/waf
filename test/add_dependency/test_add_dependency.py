@@ -226,7 +226,6 @@ def mkdir_libqux(directory):
 
 
 def mkdir_libbaz(directory, qux_dir):
-
     # Add baz dir
     baz_dir = directory.copy_dir(directory="test/add_dependency/libbaz")
 
@@ -249,14 +248,13 @@ def mkdir_libbaz(directory, qux_dir):
 
 
 def run_commands(app_dir, git_dir):
-
     # Note that waf "climbs" directories to find a lock file in higher
     # directories, and this test is executed within a subfolder of the
     # project's main folder (that already has a lock file). To prevent this
     # behavior, we need to invoke help with the NOCLIMB variable.
     env = dict(os.environ)
 
-    print("PATH {}".format(env["PATH"]))
+    print(f'PATH {env["PATH"]}')
 
     env["NOCLIMB"] = "1"
     app_dir.run(["python", "waf", "--help"], env=env)
@@ -382,7 +380,7 @@ def run_commands(app_dir, git_dir):
 
     # foo should use the commit id in the lock file
     assert resolve_dir.contains_dir(
-        "foo-*", "{}-*".format(lock["dependencies"]["foo"]["checkout"])
+        "foo-*", f'{lock["dependencies"]["foo"]["checkout"]}-*'
     )
     # bar is locked to the same commit as the master so it will
     # skip the git checkout and just return the master path
@@ -490,7 +488,6 @@ def test_add_dependency(testdirectory):
 
 
 def test_add_dependency_path(testdirectory):
-
     app_dir = mkdir_app(directory=testdirectory)
 
     git_dir = testdirectory.mkdir(directory="git_dir")
@@ -523,7 +520,7 @@ def test_add_dependency_path(testdirectory):
             "waf",
             "configure",
             "-v",
-            "--baz_path={}".format(baz_dir.path()),
+            f"--baz_path={baz_dir.path()}",
             "--resolve_path",
             "resolved_dependencies",
         ]
@@ -549,7 +546,6 @@ def test_add_dependency_path(testdirectory):
 
 
 def test_create_standalone_archive(testdirectory):
-
     app_dir = mkdir_app(directory=testdirectory)
 
     git_dir = testdirectory.mkdir(directory="git_dir")
@@ -630,7 +626,6 @@ def test_override_json(testdirectory):
 
 
 def test_resolve_only(testdirectory):
-
     app_dir = mkdir_app(directory=testdirectory)
 
     git_dir = testdirectory.mkdir(directory="git_dir")
