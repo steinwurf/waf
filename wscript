@@ -10,7 +10,6 @@ top = "."
 
 
 def resolve(ctx):
-
     ctx.add_dependency(
         name="waf",
         recurse=False,
@@ -43,7 +42,6 @@ def resolve(ctx):
 
 
 def options(opt):
-
     opt.add_option(
         "--run_tests", default=False, action="store_true", help="Run all unit tests"
     )
@@ -71,7 +69,6 @@ def options(opt):
 
 
 def configure(conf):
-
     # Ensure that the waf-light program is available in the in the
     # waf folder. This is used to build the waf binary.
     conf.find_program("waf-light", exts="", path_list=[conf.dependency_path("waf")])
@@ -109,13 +106,16 @@ def _build_waf_binary(bld):
     intrepreter = "#!/usr/bin/env python3"
 
     # Build the command to execute
-    python = sys.executable
-    command = (
-        python + " waf-light configure build --make-waf "
-        '--prelude="{}" --tools={} --interpreter="{}"'.format(
-            prelude, tools, intrepreter
-        )
-    )
+    command = [
+        sys.executable,
+        "waf-light",
+        "configure",
+        "build",
+        "--make-waf",
+        f"--prelude={prelude}",
+        f"--tools={tools}",
+        f"--interpreter={intrepreter}",
+    ]
 
     bld.cmd_and_log(command, cwd=cwd)
 
@@ -128,7 +128,6 @@ def _build_waf_binary(bld):
 
 
 def build(bld):
-
     # Create a log file for the output
     path = os.path.join(bld.bldnode.abspath(), "build.log")
     bld.logger = waflib.Logs.make_logger(path, "cfg")
@@ -140,7 +139,6 @@ def build(bld):
 
 
 def _pytest(bld):
-
     requirements_txt = "test/requirements.txt"
     requirements_in = "test/requirements.in"
 
