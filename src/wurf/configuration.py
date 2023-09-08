@@ -5,24 +5,27 @@ import os
 
 
 class Configuration(object):
-
     # These are the main resolver chains/configurations:
     #
-    # 1. The "store" chain: This chain goes to the network and fetches stuff
+    # 1. The "resolve" chain: This chain goes to the network and fetches stuff
     # 2. The "load" or chain: This chain will load information
     #    from the file system.
     # 3. The "help" chain: This chain tries to interate though as many
     #    dependencies as possible to get all options.
-    # 4. The "store_lock" works like "store", but also write a lock file
+    # 4. The "resolve_lock" works like "resolve", but also write a lock file
     #    to the project directory - fixating a dependency to a specific
     #    version or path
-    # 5. The "store_from_lock" will load the dependency information from the
+    # 5. The "resolve_from_lock" will load the dependency information from the
     #    lock file and fetch dependencies.
     RESOLVE = "resolve"
     LOAD = "load"
     HELP = "help"
     RESOLVE_AND_LOCK = "resolve_and_lock"
     RESOLVE_FROM_LOCK = "resolve_from_lock"
+    RESOLVE_AND_LOCK_PATHS = "resolve_and_lock_paths"
+    RESOLVE_FROM_LOCK_PATHS = "resolve_from_lock_paths"
+    RESOLVE_AND_LOCK_VERSIONS = "resolve_and_lock_versions"
+    RESOLVE_FROM_LOCK_VERSIONS = "resolve_from_lock_versions"
 
     # The file name of the lock file used to fix dependencies to a specific
     # verions or path
@@ -48,7 +51,6 @@ class Configuration(object):
         self.waf_lock_file = waf_lock_file
 
     def resolver_chain(self):
-
         if self.choose_help():
             return Configuration.HELP
 
@@ -90,7 +92,6 @@ class Configuration(object):
         return False
 
     def choose_resolve_from_lock(self):
-
         if "configure" not in self.args:
             # We are not configuring
             return False
@@ -107,7 +108,6 @@ class Configuration(object):
         return True
 
     def choose_resolve_and_lock(self):
-
         if "configure" not in self.args:
             # We are not configuring
             return False
@@ -121,7 +121,6 @@ class Configuration(object):
         return False
 
     def choose_resolve(self):
-
         for command in ["configure", "resolve"]:
             if command in self.args:
                 # We should resolve

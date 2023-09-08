@@ -4,10 +4,11 @@
 import os
 
 from .error import WurfError
+from .lock_path_cache import LockPathCache
 
 
 class StoreLockPathResolver(object):
-    def __init__(self, resolver, lock_cache, project_path, dependency):
+    def __init__(self, resolver, lock_cache: LockPathCache, project_path, dependency):
         """Construct an instance.
 
         :param resolver: A resolver which will do the actual job
@@ -17,7 +18,7 @@ class StoreLockPathResolver(object):
         :param dependency: A Dependency instance.
         """
         self.resolver = resolver
-        self.lock_cache = lock_cache
+        self.lock_cache: LockPathCache = lock_cache
         self.project_path = project_path
         self.dependency = dependency
 
@@ -46,7 +47,6 @@ class StoreLockPathResolver(object):
         return path
 
     def __check_path(self, path):
-
         child = os.path.realpath(path)
         parent = os.path.realpath(self.project_path)
 

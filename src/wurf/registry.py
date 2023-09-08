@@ -419,8 +419,7 @@ def lock_cache(configuration, options, project_path):
     if configuration.resolver_chain() == Configuration.RESOLVE_AND_LOCK:
         return LockCache.create_empty(options=options)
     elif configuration.resolver_chain() == Configuration.RESOLVE_FROM_LOCK:
-        lock_path = os.path.join(project_path, Configuration.LOCK_FILE)
-        return LockCache.create_from_file(lock_path=lock_path)
+        return LockCache.create_from_file(cwd=project_path)
     else:
         raise WurfError(
             f"Lock cache not available for {configuration.resolver_chain()} chain"
@@ -737,7 +736,7 @@ def resolve_git_semver(registry, source, dependency):
 
 
 @Registry.provide
-def resolve_git(registry, ctx, options, dependency):
+def resolve_git(registry, ctx, git, options, dependency):
     """Builds git resolvers
 
     :param registry: A Registry instance.
@@ -765,7 +764,7 @@ def resolve_git(registry, ctx, options, dependency):
         resolve_config_path = registry.require("resolve_config_path")
 
         fast_resolver = OnPassiveLoadPathResolver(
-            dependency=dependency, resolve_config_path=resolve_config_path
+            git=git, dependency=dependency, resolve_config_path=resolve_config_path
         )
 
         fast_resolver = TryResolver(
@@ -814,7 +813,6 @@ def resolve_from_lock_git(registry, lock_cache, dependency):
     with registry.provide_temporary() as temporary:
         temporary.provide_value("checkout", checkout)
         temporary.provide_value("method", "checkout")
-
         resolver = registry.require("resolve_chain")
 
     resolver = CheckLockCacheResolver(
@@ -834,6 +832,7 @@ def resolve_http(
     dependency,
     source,
     ctx,
+    git,
     dependency_path,
 ):
     dependency.resolver_action = "http"
@@ -857,7 +856,7 @@ def resolve_http(
         resolve_config_path = registry.require("resolve_config_path")
 
         fast_resolver = OnPassiveLoadPathResolver(
-            dependency=dependency, resolve_config_path=resolve_config_path
+            git=git, dependency=dependency, resolve_config_path=resolve_config_path
         )
 
         fast_resolver = TryResolver(
@@ -893,13 +892,13 @@ def resolve_lock_path(lock_cache, dependency):
 
 
 @Registry.provide
-def help_chain(ctx, resolve_config_path, dependency):
+def help_chain(ctx, git, resolve_config_path, dependency):
     # Set the resolver action on the dependency
     dependency.resolver_chain = "Load"
     dependency.resolver_action = "help"
 
     resolver = OnPassiveLoadPathResolver(
-        dependency=dependency, resolve_config_path=resolve_config_path
+        git=git, dependency=dependency, resolve_config_path=resolve_config_path
     )
 
     resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
@@ -908,12 +907,12 @@ def help_chain(ctx, resolve_config_path, dependency):
 
 
 @Registry.provide
-def load_chain(ctx, resolve_config_path, dependency):
+def load_chain(ctx, git, resolve_config_path, dependency):
     # Set the resolver chain on the dependency
     dependency.resolver_chain = "Load"
 
     resolver = OnPassiveLoadPathResolver(
-        dependency=dependency, resolve_config_path=resolve_config_path
+        git=git, dependency=dependency, resolve_config_path=resolve_config_path
     )
 
     resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
@@ -1072,8 +1071,7 @@ def dependency_manager(registry):
 @Registry.provide
 def resolve_lock_action(lock_cache, project_path):
     def action():
-        lock_path = os.path.join(project_path, Configuration.LOCK_FILE)
-        lock_cache.write_to_file(lock_path)
+        lock_cache.write_to_file(cwd=project_path)
 
     return action
 

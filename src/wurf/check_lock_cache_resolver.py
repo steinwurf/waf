@@ -31,17 +31,22 @@ class CheckLockCacheResolver(object):
                 dependency=self.dependency,
             )
 
-        if self.dependency.resolver == "git":
-            if self.lock_cache.check_sha1(dependency=self.dependency):
-                raise DependencyError(
-                    msg="Locked SHA1 mismatch.",
-                    dependency=self.dependency,
-                )
+        if self.lock_cache.check_sha1(dependency=self.dependency):
+            raise DependencyError(
+                msg=(
+                    "Locked dependency inconsistent with the "
+                    "dependency specified in the project."
+                ),
+                dependency=self.dependency,
+            )
+
         path = self.resolver.resolve()
-        if self.dependency.resolver == "http":
-            if self.lock_cache.check_file_hash(dependency=self.dependency, path=path):
-                raise DependencyError(
-                    msg="Locked file hash mismatch.",
-                    dependency=self.dependency,
-                )
+        if self.lock_cache.check_content(dependency=self.dependency):
+            raise DependencyError(
+                msg=(
+                    "The content does not match the data "
+                    "when the dependency was locked."
+                ),
+                dependency=self.dependency,
+            )
         return path

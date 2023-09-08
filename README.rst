@@ -615,8 +615,8 @@ go and update the path in the IDE to the new location.
 
 Moreover, Waf fails to recognize changes in dependency include files
 if they are located outside the project root. This is very annoying if you
-are developing header-only projects side-by-side, because you need to rebuild
-the entire project if some header file changed. But if the dependencies
+are developing header-only projects side-by-side because you need to rebuild
+the entire project if some header files changed. But if the dependencies
 are accessed through a symlink within the project, then Waf will be able to
 track the changes in all the include files.
 
@@ -673,38 +673,39 @@ For example, we can manually set the path of the ``foo`` dependency and use
 The ``--lock_versions`` option
 ..............................
 
-The ``--lock_versions`` option will write ``lock_resolve.json`` to the project
-folder. This file will describe the exact version information about the
-project's dependencies.
+The ``--lock_versions`` option will write ``lock_resolve_versions.json``
+to the project folder. This file will describe the exact version information
+about the project's dependencies.
 
 The version information can be different for different resolvers:
 
 - ``git`` resolvers will store the SHA1 commit id of the dependency.
 - ``http`` resolvers will store the SHA1 sum of the downloaded dependency.
 
-If the ``lock_resolve.json`` is present, it will take precedence over all
+If the ``lock_resolve_versions.json`` is present, it will take precedence over all
 resolvers besides the user options such as manually specifying checkout or
 path.
 
-You can commit the ``lock_resolve.json`` file to git, e.g. when creating
+You can commit the ``lock_resolve_versions.json`` file to git, e.g. when creating
 a LTS (Long Term Support) release or similar where you want to pin the exact
 versions for each dependency
 
 As an example::
 
-    # Writes / overwrites an existing lock_resolve.json
+    # Writes / overwrites an existing lock_resolve_versions.json
     python waf configure --lock_versions
 
 The ``--lock_paths`` option
 ...........................
 
-The ``--lock_paths`` will write a ``lock_resolve.json`` file in the project
+The ``--lock_paths`` will write a ``lock_resolve_paths.json`` file in the project
 folder. It behaves differently from the ``--lock_versions`` option in that it
 will store the relative paths to the resolved dependencies. The typical
 use case for this is to download all dependencies into a folder stored within
-the project (default behavior) in order to make a standalone archive.
+the project (default behavior) to make a standalone archive.
 
-If the ``lock_resolve.json`` is present, it will take precedence over all
+If the ``lock_resolve_paths.json`` is present, it will take precedence over
+both the ``lock_resolve_versions.json`` and all other resolvers besides the user
 resolvers besides the user options, such as manually specifying checkout or
 path.
 
@@ -718,7 +719,7 @@ Config file
 
 Using the ``--resolve_path`` option whenever doing a resolve or configure can be
 cumbersome.
-To combat this a config file can be used for overriding the default value for
+To combat this a config file can be used to override the default value for
 this option.
 
 The config file must be called ``.wurf_config``, and must be located in either

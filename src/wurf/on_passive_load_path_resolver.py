@@ -8,13 +8,14 @@ from .error import DependencyError
 
 
 class OnPassiveLoadPathResolver(object):
-    def __init__(self, dependency, resolve_config_path):
+    def __init__(self, git, dependency, resolve_config_path):
         """Construct an instance.
 
         :param dependency: A Dependency instance.
         :param resolve_config_path: A string containing the path to where the
             dependencies config json files should be / is stored.
         """
+        self.git = git
         self.dependency = dependency
         self.resolve_config_path = resolve_config_path
 
@@ -32,7 +33,6 @@ class OnPassiveLoadPathResolver(object):
 
         if self.dependency.sha1 != config["sha1"]:
             raise DependencyError("Failed sha1 check", self.dependency)
-
         if config["is_symlink"]:
             self.dependency.is_symlink = config["is_symlink"]
             self.dependency.real_path = str(config["real_path"])
@@ -41,6 +41,10 @@ class OnPassiveLoadPathResolver(object):
 
         if not (os.path.isdir(path) or os.path.isfile(path)):
             raise DependencyError(f'Invalid path: "{path}"', self.dependency)
+
+        if self.dependency.resolver == "git":
+            self.dependency.git_tag = self.git.current_tag(cwd=path)
+            self.dependency.git_commit = self.git.current_commit(cwd=path)
 
         return path
 
