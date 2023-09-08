@@ -6,6 +6,9 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Fixed bug that caused the lock_resolve.json to not be used correctly.
+* Patch: Fixed bug that caused ``--lock_versions`` to fail when using in
+  combination with ``ExistingTagResolver``.
 * Minor: Add better error messages for mismatched dependencies.
 * Minor: Recursively pull submodules
 * Minor: Adding ensure_build function to Waf's Context object.

@@ -1,93 +1,43 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import cgi
 import os
-
-from .compat import IS_PY2
-
-if IS_PY2:
-
-    # Python 2
-    from urllib2 import urlopen
-    from urlparse import urlparse
-else:
-
-    # Python 3
-    from urllib.request import urlopen
-    from urllib.parse import urlparse
+import requests
+from urllib.parse import urlparse
 
 
 class UrlDownload(object):
-    def _url_filename(self, url):
-        """Based on the url return the filename it contains or None if no
-        filename is specified.
+    def download(self, source, cwd, filename=None):
+        assert os.path.exists(cwd)
 
-        URL with a filename:
-            http://example.com/file.txt
-        URL without a filename:
-            http://example.com
+        # Send an HTTP GET request to the URL
+        response = requests.get(source, stream=True)
+        response.raise_for_status()
 
-        :param url: The URL as a string
-        :return: The filename or None if no filename is in the URL.
-        """
-
-        parsed = urlparse(url)
-
-        if not parsed.path:
-            return None
-
-        filename = os.path.basename(parsed.path)
-
-        _, extension = os.path.splitext(filename)
-
-        if not extension:
-            return None
-        else:
-            return filename
-
-    def _response_filename(self, response):
-        """Returns the filename contained in the HTTP Content-Disposition
-        header.
-        """
-        # Try to get the file name from the headers
-        header = response.info().get("Content-Disposition", "")
-
-        if not header:
-            return None
-
-        _, params = cgi.parse_header(header)
-        return params.get("filename", None)
-
-    def download(self, cwd, source, filename=None):
-        """Download the file specified by the source.
-
-        :param cwd: The directory where to download the file.
-        :param source: The URL of the file to download.
-        :param filename: The filename to store the file under.
-        """
-
-        response = urlopen(url=source)
-
+        # If filename is not provided, try to extract it from the URL
         if not filename:
-            filename = self._url_filename(source)
+            parsed_url = urlparse(source)
 
+            basename = os.path.basename(parsed_url.path)
+            _, extension = os.path.splitext(basename)
+            if extension:
+                filename = basename
+
+        # If filename is still not available, try to extract it from the
+        # Content-Disposition header
         if not filename:
-            filename = self._response_filename(response)
+            content_disposition = response.headers.get("content-disposition")
+            if content_disposition:
+                filename = content_disposition.split("filename=")[1].strip('"')
 
+        # Check that a filename was found
         assert filename
-        assert os.path.isdir(cwd)
 
-        filepath = os.path.join(cwd, filename)
+        path = os.path.join(cwd, filename)
+        # Save the file
+        with open(path, "wb") as file:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    file.write(chunk)
 
-        # From http://stackoverflow.com/a/1517728
-        CHUNK = 16 * 1024
-        with open(filepath, "wb") as f:
-            while True:
-                chunk = response.read(CHUNK)
-                if not chunk:
-                    break
-
-                f.write(chunk)
-
-        return filepath
+        return path

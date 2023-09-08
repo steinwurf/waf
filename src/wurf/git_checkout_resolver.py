@@ -83,7 +83,6 @@ class GitCheckoutResolver(object):
                 # The blank "raise" re-raises the last exception
                 raise
         else:
-
             if not self.git.is_detached_head(cwd=checkout_path):
                 # If the checkout is a tag or a commit (we will be in detached
                 # HEAD state), then we cannot pull. On the other hand,
@@ -95,6 +94,10 @@ class GitCheckoutResolver(object):
             self.git.pull_submodules(cwd=checkout_path)
 
         # Record the commmit id of the current working copy
+        current_tag = self.git.current_tag(cwd=checkout_path)
+        if current_tag is not None:
+            self.dependency.git_tag = current_tag
+
         self.dependency.git_commit = self.git.current_commit(cwd=checkout_path)
 
         return checkout_path

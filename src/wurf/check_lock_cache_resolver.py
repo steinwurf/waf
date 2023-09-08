@@ -31,6 +31,17 @@ class CheckLockCacheResolver(object):
                 dependency=self.dependency,
             )
 
-        self.lock_cache.check_sha1(dependency=self.dependency)
-
-        return self.resolver.resolve()
+        if self.dependency.resolver == "git":
+            if self.lock_cache.check_sha1(dependency=self.dependency):
+                raise DependencyError(
+                    msg="Locked SHA1 mismatch.",
+                    dependency=self.dependency,
+                )
+        path = self.resolver.resolve()
+        if self.dependency.resolver == "http":
+            if self.lock_cache.check_file_hash(dependency=self.dependency, path=path):
+                raise DependencyError(
+                    msg="Locked file hash mismatch.",
+                    dependency=self.dependency,
+                )
+        return path

@@ -59,7 +59,6 @@ class DependencyManager(object):
         resolve_path = os.path.join(path, "resolve.json")
 
         if not os.path.isfile(resolve_path):
-
             if mandatory:
                 raise WurfError(
                     "Mandatory resolve.json not found here: {}".format(resolve_path)
@@ -129,7 +128,6 @@ class DependencyManager(object):
                 return True
 
         if dependency.name in self.seen_dependencies:
-
             seen_dependency = self.seen_dependencies[dependency.name]
 
             if not dependency.override and seen_dependency.override:
@@ -149,7 +147,6 @@ class DependencyManager(object):
             # override and we need to check the SHA1
 
             if seen_dependency.sha1 != dependency.sha1:
-
                 current = self.ctx.path.abspath()
                 added_by = self.dependency_cache[dependency.name]["added_by"]
 

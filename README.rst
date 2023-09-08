@@ -679,8 +679,7 @@ project's dependencies.
 
 The version information can be different for different resolvers:
 
-- ``git`` resolvers will store the SHA1 commit id or the semver tag of the
-  dependency.
+- ``git`` resolvers will store the SHA1 commit id of the dependency.
 - ``http`` resolvers will store the SHA1 sum of the downloaded dependency.
 
 If the ``lock_resolve.json`` is present, it will take precedence over all

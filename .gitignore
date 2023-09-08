@@ -22,6 +22,7 @@ pytest
 .pytest_cache
 pytest_environment_*
 pip_packages
+test-venv
 
 # Visual Studio ignore
 *.bat

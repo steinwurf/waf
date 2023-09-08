@@ -5,6 +5,7 @@ from wurf.existing_tag_resolver import ExistingTagResolver
 
 def test_existing_tag_resolver(testdirectory):
     ctx = mock.Mock()
+    git = mock.Mock()
 
     dependency = mock.Mock()
     dependency.name = "foo"
@@ -29,6 +30,7 @@ def test_existing_tag_resolver(testdirectory):
     # Run without any tags file
     resolver = ExistingTagResolver(
         ctx=ctx,
+        git=git,
         dependency=dependency,
         semver_selector=semver_selector,
         tag_database=tag_database,
@@ -47,6 +49,7 @@ def test_existing_tag_resolver(testdirectory):
     # Run with a tags file, we will not use the semver_resolver
     resolver = ExistingTagResolver(
         ctx=ctx,
+        git=git,
         dependency=dependency,
         semver_selector=semver_selector,
         tag_database=tag_database,
@@ -65,6 +68,7 @@ def test_existing_tag_resolver(testdirectory):
 
     resolver = ExistingTagResolver(
         ctx=ctx,
+        git=git,
         dependency=dependency,
         semver_selector=semver_selector,
         tag_database=tag_database,
