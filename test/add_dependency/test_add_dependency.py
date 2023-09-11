@@ -3,6 +3,8 @@
 
 import os
 import json
+from wurf.lock_version_cache import LockVersionCache
+from wurf.lock_path_cache import LockPathCache
 
 """ Integration testing of adding a dependency.
 
@@ -341,7 +343,7 @@ def run_commands(app_dir, git_dir):
             "resolved_dependencies",
         ]
     )
-    assert app_dir.contains_file("lock_resolve.json")
+    assert app_dir.contains_file(LockVersionCache.LOCK_FILE)
 
     # The symlinks should be available to all dependencies
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "foo"))
@@ -368,27 +370,25 @@ def run_commands(app_dir, git_dir):
 
     app_dir.run(["python", "waf", "build", "-v"])
 
-    lock_path = os.path.join(app_dir.path(), "lock_resolve.json")
+    lock_path = os.path.join(app_dir.path(), LockVersionCache.LOCK_FILE)
     with open(lock_path, "r") as lock_file:
         lock = json.load(lock_file)
 
     resolve_dir = app_dir.join("resolved_dependencies")
 
     # The content of resolved dependencies is intersting now :)
-    # We've just resolved from the lock_resolve.json file
+    # We've just resolved from the lock resolve file
     # containing the versions needed.
 
     # foo should use the commit id in the lock file
-    assert resolve_dir.contains_dir(
-        "foo-*", f'{lock["dependencies"]["foo"]["checkout"]}-*'
-    )
+    assert resolve_dir.contains_dir("foo-*", f'{lock["foo"]["checkout"]}-*')
     # bar is locked to the same commit as the master so it will
     # skip the git checkout and just return the master path
     assert resolve_dir.contains_dir("bar-*", "master-*")
     # baz has its tag in the lock file, so it will be available there
     assert resolve_dir.contains_dir("baz-*", "3.3.1-*")
 
-    app_dir.rmfile("lock_resolve.json")
+    app_dir.rmfile(LockVersionCache.LOCK_FILE)
     resolve_dir.rmdir()
 
     # Test the --lock_paths options
@@ -400,7 +400,7 @@ def run_commands(app_dir, git_dir):
     assert app_dir.contains_dir("resolve_symlinks", "baz")
     assert app_dir.contains_dir("resolve_symlinks", "bar")
 
-    assert app_dir.contains_file("lock_resolve.json")
+    assert app_dir.contains_file(LockPathCache.LOCK_FILE)
     app_dir.run(["python", "waf", "build", "-v"])
 
     # This configure should happen from the lock
@@ -413,6 +413,17 @@ def run_commands(app_dir, git_dir):
     assert app_dir.contains_dir("resolve_symlinks", "foo")
     assert app_dir.contains_dir("resolve_symlinks", "baz")
     assert app_dir.contains_dir("resolve_symlinks", "bar")
+
+    # We have the lock file so the resolve_path is not used.
+    assert not app_dir.contains_file("resolved_depdendencies")
+
+    lock_path = os.path.join(app_dir.path(), LockPathCache.LOCK_FILE)
+    with open(lock_path, "r") as lock_file:
+        lock = json.load(lock_file)
+
+    assert "locked" in lock["foo"]["path"]
+    assert "locked" in lock["bar"]["path"]
+    assert "locked" in lock["baz"]["path"]
 
     app_dir.run(["python", "waf", "build", "-v"])
 

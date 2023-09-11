@@ -56,17 +56,17 @@ class DependencyManager(object):
         :param mandatory: True if the resolve.json file must exist.
         """
 
-        resolve_path = os.path.join(path, "resolve.json")
+        resolve_json_path = os.path.join(path, "resolve.json")
 
-        if not os.path.isfile(resolve_path):
+        if not os.path.isfile(resolve_json_path):
             if mandatory:
                 raise WurfError(
-                    f"Mandatory resolve.json not found here: {resolve_path}"
+                    f"Mandatory resolve.json not found here: {resolve_json_path}"
                 )
             else:
                 return
 
-        with open(resolve_path, "r") as resolve_file:
+        with open(resolve_json_path, "r") as resolve_file:
             resolve_json = json.load(resolve_file)
 
         for dependency in resolve_json:

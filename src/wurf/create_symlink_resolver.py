@@ -33,7 +33,6 @@ class CreateSymlinkResolver(object):
 
         :return: The path to the newly created symlink.
         """
-
         path = self.resolver.resolve()
 
         if not path:
