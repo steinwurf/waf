@@ -41,9 +41,8 @@ class CreateSymlinkResolver(object):
 
         if self.dependency.is_symlink:
             # If the path returned is already a symlink, this is the case if the
-            # dependency is loaded from cache e.g. with fast-resolve. In this
-            # case the symlink resolve should use the real path as the target
-            # for the symlink
+            # dependency is loaded from cache. In this case the symlink resolve
+            # should use the real path as the target for the symlink
             path = self.dependency.real_path
 
         link_path = os.path.join(self.symlinks_path, self.dependency.name)

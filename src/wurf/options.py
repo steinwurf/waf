@@ -52,16 +52,6 @@ class Options(object):
         )
 
         self.parser.add_argument(
-            "--fast_resolve",
-            dest="--fast_resolve",
-            action="store_true",
-            default=False,
-            help="Load already resolved dependencies from file system. "
-            "Useful for running configure without resolving dependencies "
-            "again.",
-        )
-
-        self.parser.add_argument(
             "--lock_paths",
             dest="--lock_paths",
             action="store_true",
@@ -89,9 +79,6 @@ class Options(object):
 
     def git_protocol(self):
         return self.known_args["--git_protocol"]
-
-    def fast_resolve(self):
-        return self.known_args["--fast_resolve"]
 
     def lock_paths(self):
         return self.known_args["--lock_paths"]

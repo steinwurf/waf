@@ -7,7 +7,6 @@ from wurf.error import WurfError
 
 
 def test_resolve_path():
-
     default_path = "resolved_dependencies"
 
     # Test that if no resove path is specified the default
@@ -58,7 +57,6 @@ def test_resolve_path():
 
 
 def test_symlinks_path():
-
     default_path = "resolve_symlinks"
 
     parser = argparse.ArgumentParser()
@@ -89,7 +87,6 @@ def test_symlinks_path():
 
 
 def test_user_path_to_dependency():
-
     dependency = mock.Mock()
     dependency.name = "foo"
 
@@ -134,7 +131,6 @@ def test_user_path_to_dependency():
 
 
 def test_git_protocol():
-
     parser = argparse.ArgumentParser()
     args = ["--foo", "-b"]
 
@@ -162,37 +158,7 @@ def test_git_protocol():
     assert options.git_protocol() == "myproto://"
 
 
-def test_fast_resolve():
-
-    parser = argparse.ArgumentParser()
-    args = ["--foo", "-b"]
-
-    options = Options(
-        args=args,
-        parser=parser,
-        default_resolve_path="resolve_path",
-        default_symlinks_path="symlinks_path",
-        supported_git_protocols="",
-    )
-
-    assert options.fast_resolve() is False
-
-    parser = argparse.ArgumentParser()
-    args = ["--foo", "--fast_resolve", "-b"]
-
-    options = Options(
-        args=args,
-        parser=parser,
-        default_resolve_path="resolve_path",
-        default_symlinks_path="symlinks_path",
-        supported_git_protocols="",
-    )
-
-    assert options.fast_resolve() is True
-
-
 def test_exclusive_lock_options():
-
     # Test that the two options --lock_paths and --lock_versions
     # are mutually exclusive
 

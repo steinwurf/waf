@@ -291,18 +291,6 @@ def run_commands(app_dir, git_dir):
     )
 
     app_dir.run(["python", "waf", "build", "-v"])
-    app_dir.run(
-        [
-            "python",
-            "waf",
-            "configure",
-            "-v",
-            "--fast_resolve",
-            "--resolve_path",
-            "resolved_dependencies",
-        ]
-    )
-    app_dir.run(["python", "waf", "build", "-v"])
 
     # Test the zones print
     r = app_dir.run(["python", "waf", "build", "-v", "--zones=resolve"])
@@ -541,17 +529,6 @@ def test_add_dependency_path(testdirectory):
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "bar"))
 
     app_dir.run(["python", "waf", "build", "-v"])
-    app_dir.run(
-        [
-            "python",
-            "waf",
-            "configure",
-            "-v",
-            "--fast_resolve",
-            "--resolve_path",
-            "resolved_dependencies",
-        ]
-    )
 
 
 def test_create_standalone_archive(testdirectory):

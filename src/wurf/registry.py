@@ -774,36 +774,18 @@ def resolve_git(registry, ctx, git, options, dependency, resolve_path):
 
         resolve_config_path = registry.require("resolve_config_path")
 
-        fast_resolver = OnPassiveLoadPathResolver(
+        lock_resolver = OnPassiveLoadPathResolver(
             git=git,
             dependency=dependency,
             resolve_config_path=resolve_config_path,
             resolve_path=resolve_path,
         )
 
-        fast_resolver = TryResolver(
-            resolver=fast_resolver, ctx=ctx, dependency=dependency
+        lock_resolver = TryResolver(
+            resolver=lock_resolver, ctx=ctx, dependency=dependency
         )
 
-        return ListResolver(resolvers=[fast_resolver, git_resolver])
-    elif options.fast_resolve():
-        # Set the resolver action on the dependency
-        dependency.resolver_action = "fast/" + dependency.resolver_action
-
-        resolve_config_path = registry.require("resolve_config_path")
-
-        fast_resolver = OnPassiveLoadPathResolver(
-            git=git,
-            dependency=dependency,
-            resolve_config_path=resolve_config_path,
-            resolve_path=resolve_path,
-        )
-
-        fast_resolver = TryResolver(
-            resolver=fast_resolver, ctx=ctx, dependency=dependency
-        )
-
-        return ListResolver(resolvers=[fast_resolver, git_resolver])
+        return ListResolver(resolvers=[lock_resolver, git_resolver])
     else:
         return git_resolver
 
@@ -886,37 +868,18 @@ def resolve_http(
 
         resolve_config_path = registry.require("resolve_config_path")
 
-        fast_resolver = OnPassiveLoadPathResolver(
+        lock_resolver = OnPassiveLoadPathResolver(
             git=git,
             dependency=dependency,
             resolve_config_path=resolve_config_path,
             resolve_path=resolve_path,
         )
 
-        fast_resolver = TryResolver(
-            resolver=fast_resolver, ctx=ctx, dependency=dependency
+        lock_resolver = TryResolver(
+            resolver=lock_resolver, ctx=ctx, dependency=dependency
         )
 
-        resolver = ListResolver(resolvers=[fast_resolver, resolver])
-
-    elif options.fast_resolve():
-        # Set the resolver action on the dependency
-        dependency.resolver_action = "fast/" + dependency.resolver_action
-
-        resolve_config_path = registry.require("resolve_config_path")
-
-        fast_resolver = OnPassiveLoadPathResolver(
-            git=git,
-            dependency=dependency,
-            resolve_config_path=resolve_config_path,
-            resolve_path=resolve_path,
-        )
-
-        fast_resolver = TryResolver(
-            resolver=fast_resolver, ctx=ctx, dependency=dependency
-        )
-
-        resolver = ListResolver(resolvers=[fast_resolver, resolver])
+        resolver = ListResolver(resolvers=[lock_resolver, resolver])
 
     return resolver
 
