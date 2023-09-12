@@ -130,7 +130,7 @@ The modifications and additions to Waf are in the ``src/wurf`` folder. The
 main file included by Waf is the ``src/wurf/waf_entry_point.py``. This is a great
 place to start to understand our additions to ``Waf``.
 
-Waf will load this file automatically when starting up, which is acheived using
+Waf will load this file automatically when starting up, which is achieved using
 the ``--prelude`` option of Waf. Described in the Waf book:
 https://waf.io/book/#_customization_and_redistribution.
 

@@ -2,56 +2,88 @@ interactions:
 - request:
     body: null
     headers:
-      Connection: [close]
-      Host: [github.com]
-      User-Agent: [Python-urllib/2.7]
+      Connection:
+      - close
+      Host:
+      - github.com
+      User-Agent:
+      - Python-urllib/3.11
     method: GET
     uri: https://github.com/louisdx/cxx-prettyprint/zipball/master
   response:
-    body: {string: !!python/unicode '<html><body>You are being <a href="https://codeload.github.com/louisdx/cxx-prettyprint/legacy.zip/master">redirected</a>.</body></html>'}
+    body:
+      string: ''
     headers:
-      cache-control: [no-cache]
-      connection: [close]
-      content-security-policy: ['default-src ''none''; base-uri ''self''; block-all-mixed-content;
-          child-src render.githubusercontent.com; connect-src ''self'' uploads.github.com
-          status.github.com collector.githubapp.com api.github.com www.google-analytics.com
-          github-cloud.s3.amazonaws.com wss://live.github.com; font-src assets-cdn.github.com;
-          form-action ''self'' github.com gist.github.com; frame-ancestors ''none'';
-          img-src ''self'' data: assets-cdn.github.com identicons.github.com collector.githubapp.com
-          github-cloud.s3.amazonaws.com *.githubusercontent.com; media-src ''none'';
-          script-src assets-cdn.github.com; style-src ''unsafe-inline'' assets-cdn.github.com']
-      content-type: [text/html; charset=utf-8]
-      date: ['Wed, 12 Apr 2017 13:43:08 GMT']
-      location: ['https://codeload.github.com/louisdx/cxx-prettyprint/legacy.zip/master']
-      public-key-pins: [max-age=5184000; pin-sha256="WoiWRyIOVNa9ihaBciRSC7XHjliYS9VwUGOIud4PB18=";
-          pin-sha256="RRM1dGqnDFsCJXBTHky16vi1obOlCgFFn/yOhI/y+ho="; pin-sha256="k2v657xBsOVe1PQRwOsHsw3bsGT2VzIqz5K+59sNQws=";
-          pin-sha256="K87oWBWM9UZfyddvDfoxL+8lpNyoUB2ptGtn0fv6G2Q="; pin-sha256="IQBnNBEiFuhj+8x6X8XLgh01V9Ic5/V3IRQLNFFc7v4=";
-          pin-sha256="iie1VXtL7HzAMF+/PVPR9xzT80kQxdZeJ+zduCB3uj0="; pin-sha256="LvRiGEjRqfzurezaWuj8Wie2gyHMrW5Q06LspMnox7A=";
-          includeSubDomains]
-      server: [GitHub.com]
-      set-cookie: ['logged_in=no; domain=.github.com; path=/; expires=Sun, 12 Apr
-          2037 13:43:08 -0000; secure; HttpOnly', _gh_sess=eyJzZXNzaW9uX2lkIjoiYjM3ODMzODIzZGQ1NTNmZWE2MjcwNjM4Y2U0OGYyZDQiLCJzcHlfcmVwbyI6ImxvdWlzZHgvY3h4LXByZXR0eXByaW50Iiwic3B5X3JlcG9fYXQiOjE0OTIwMDQ1ODh9--07245b906ca444a84214dc4f63dd21c1fbdc031f;
-          path=/; secure; HttpOnly]
-      status: [302 Found]
-      strict-transport-security: [max-age=31536000; includeSubdomains; preload]
-      vary: [X-PJAX, Accept-Encoding]
-      x-content-type-options: [nosniff]
-      x-frame-options: [deny]
-      x-github-request-id: ['C5EE:7811:D9FF36:145DE6D:58EE2EEC']
-      x-request-id: [82890a96f5a2920a3f5fbaf85ecc6096]
-      x-runtime: ['0.041587']
-      x-served-by: [b437fa0c9608399c74bf50b5c3f52799]
-      x-ua-compatible: ['IE=Edge,chrome=1']
-      x-xss-protection: [1; mode=block]
-    status: {code: 302, message: Found}
+      Cache-Control:
+      - max-age=0, private
+      Content-Length:
+      - '0'
+      Content-Security-Policy:
+      - 'default-src ''none''; base-uri ''self''; child-src github.com/assets-cdn/worker/
+        gist.github.com/assets-cdn/worker/; connect-src ''self'' uploads.github.com
+        objects-origin.githubusercontent.com www.githubstatus.com collector.github.com
+        raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com
+        github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com
+        cdn.optimizely.com logx.optimizely.com/v1/events *.actions.githubusercontent.com
+        productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/
+        productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/
+        productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/
+        productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/
+        productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/
+        wss://*.actions.githubusercontent.com github-production-repository-image-32fea6.s3.amazonaws.com
+        github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com
+        wss://alive.github.com; font-src github.githubassets.com; form-action ''self''
+        github.com gist.github.com objects-origin.githubusercontent.com; frame-ancestors
+        ''none''; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com
+        support.github.com; img-src ''self'' data: github.githubassets.com media.githubusercontent.com
+        camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com
+        github-cloud.s3.amazonaws.com objects.githubusercontent.com objects-origin.githubusercontent.com
+        secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/
+        private-user-images.githubusercontent.com opengraph.githubassets.com github-production-user-asset-6210df.s3.amazonaws.com
+        customer-stories-feed.github.com spotlights-feed.github.com *.githubusercontent.com;
+        manifest-src ''self''; media-src github.com user-images.githubusercontent.com/
+        secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com;
+        script-src github.githubassets.com; style-src ''unsafe-inline'' github.githubassets.com;
+        upgrade-insecure-requests; worker-src github.com/assets-cdn/worker/ gist.github.com/assets-cdn/worker/'
+      Content-Type:
+      - text/html; charset=utf-8
+      Date:
+      - Tue, 12 Sep 2023 13:55:26 GMT
+      Location:
+      - https://codeload.github.com/louisdx/cxx-prettyprint/legacy.zip/refs/heads/master
+      Referrer-Policy:
+      - no-referrer-when-downgrade
+      Server:
+      - GitHub.com
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubdomains; preload
+      Vary:
+      - X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, Accept-Encoding, Accept,
+        X-Requested-With
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      X-GitHub-Request-Id:
+      - AA70:4556:C5344A0:C7C021F:65006DCE
+      X-XSS-Protection:
+      - '0'
+      connection:
+      - close
+    status:
+      code: 302
+      message: Found
 - request:
     body: null
     headers:
-      Connection: [close]
-      Host: [codeload.github.com]
-      User-Agent: [Python-urllib/2.7]
+      Connection:
+      - close
+      Host:
+      - codeload.github.com
+      User-Agent:
+      - Python-urllib/3.11
     method: GET
-    uri: https://codeload.github.com/louisdx/cxx-prettyprint/legacy.zip/master
+    uri: https://codeload.github.com/louisdx/cxx-prettyprint/legacy.zip/refs/heads/master
   response:
     body:
       string: !!binary |
@@ -327,19 +359,37 @@ interactions:
         AcfYJFdQSwUGAAAAAAgACAASAwAA2DgAACgAOWFiMjZkMjI4ZjI5NjBmNTBiMzhhZDM3ZmUwMTU5
         YjczODFmNzUzMw==
     headers:
-      access-control-allow-origin: ['https://render.githubusercontent.com']
-      connection: [close]
-      content-disposition: [attachment; filename=louisdx-cxx-prettyprint-9ab26d2.zip]
-      content-security-policy: [default-src 'none'; style-src 'unsafe-inline']
-      content-type: [application/zip]
-      date: ['Wed, 12 Apr 2017 13:43:08 GMT']
-      etag: ['"9ab26d228f2960f50b38ad37fe0159b7381f7533"']
-      strict-transport-security: [max-age=31536000]
-      vary: ['Authorization,Accept-Encoding']
-      x-content-type-options: [nosniff]
-      x-frame-options: [deny]
-      x-geo-block-list: ['']
-      x-github-request-id: ['A814:2B96:15918F:1DBFE3:58EE2EEC']
-      x-xss-protection: [1; mode=block]
-    status: {code: 200, message: OK}
+      Access-Control-Allow-Origin:
+      - https://render.githubusercontent.com
+      Content-Security-Policy:
+      - default-src 'none'; style-src 'unsafe-inline'; sandbox
+      Content-Type:
+      - application/zip
+      Date:
+      - Tue, 12 Sep 2023 13:55:26 GMT
+      ETag:
+      - '"acd54ba4145184dccb426fd703dfaca1dab13882d3dc4cc20484dc3af8b2465b"'
+      Strict-Transport-Security:
+      - max-age=31536000
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Authorization,Accept-Encoding,Origin
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      X-GitHub-Request-Id:
+      - C03A:10508:594F37:64C77C:65006DCE
+      X-XSS-Protection:
+      - 1; mode=block
+      connection:
+      - close
+      content-disposition:
+      - attachment; filename=louisdx-cxx-prettyprint-9ab26d2.zip
+      cross-origin-resource-policy:
+      - cross-origin
+    status:
+      code: 200
+      message: OK
 version: 1
