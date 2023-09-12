@@ -637,39 +637,6 @@ After re-running ``python waf configure ...``::
     total 0
     lrwxrwxrwx 1 usr usr 29 Feb 20 20:57 gtest -> /path/to/gtest-1.6.8-someh4sh
 
-The ExistingTagResolver and the ``--fast_resolve`` option
-.........................................................
-
-Running ``python waf configure`` can take a very long time if the project
-has a lot of dependencies. In the past, we had to endure a long delay when
-re-configuring even if the dependencies have not changed at all, or if we just
-wanted to change the compiler,
-
-To solve that problem, we implemented the ExistingTagResolver that checks
-if a newer, compatible version of a Steinwurf dependency project has been
-released using the tag database here:
-http://files.steinwurf.com/registry/tags.json
-
-If the latest compatible tag is already available in our
-``resolved_dependencies`` folder, then the resolver will use that tag without
-running any git operations, so the configure operation can be extremely fast.
-Moreover, if the same ``resolved_dependencies`` folder is used for multiple
-projects that have similar dependencies, then it is guaranteed that we download
-a new version of some dependency exactly once.
-
-The ExistingTagResolver is enabled by default.
-
-For an even faster experience, we also provide the ``--fast_resolve`` option
-that should only invoke the resolvers for dependencies that have not been
-downloaded. Already downloaded dependencies should be loaded from the cache.
-
-``--fast_resolve`` can also be combined with other resolver options.
-For example, we can manually set the path of the ``foo`` dependency and use
-``--fast_resolve`` to load all other dependencies from cache::
-
-    python waf configure --foo-path /tmp/foo --fast_resolve
-
-
 The ``--lock_versions`` option
 ..............................
 

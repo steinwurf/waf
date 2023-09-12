@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Removed fast-resolve option as this behavior should now be covered
+  by the use of lock files.
 * Minor: Allow locking the paths using the locked versions.
 * Major: Split ``lock_resolve.json`` into two separate lock files, one for
   versions and one for paths.
