@@ -739,7 +739,7 @@ def test_lock_versions_and_then_paths(testdirectory):
 
     # Because of the way the fake git works we need to remove the resolved_dependencies
     # folder to make sure that we actually resolve the dependencies again
-    app_dir.run(["rm", "-rf", "resolved_dependencies"])
+    app_dir.join("resolved_dependencies").rmdir()
 
     r = app_dir.run(
         [
@@ -759,7 +759,7 @@ def test_lock_versions_and_then_paths(testdirectory):
 
     # Because of the way the fake git works we need to remove the resolved_dependencies
     # folder to make sure that we actually resolve the dependencies again
-    app_dir.run(["rm", "-rf", "resolved_dependencies"])
+    app_dir.join("resolved_dependencies").rmdir()
 
     r = app_dir.run(
         [

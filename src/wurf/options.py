@@ -82,8 +82,7 @@ class Options(object):
         self.__parse()
 
     def resolve_path(self):
-        res = self.known_args["--resolve_path"]
-        return res
+        return self.known_args["--resolve_path"]
 
     def symlinks_path(self):
         return self.known_args["--symlinks_path"]
