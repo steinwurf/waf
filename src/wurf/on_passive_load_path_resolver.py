@@ -49,7 +49,7 @@ class OnPassiveLoadPathResolver(object):
             self.dependency.is_symlink = config["is_symlink"]
             self.dependency.real_path = str(config["real_path"])
 
-        if self.dependency.resolver == "git":
+        if self.dependency.resolver == "git" and self.git.is_git_repository(cwd=path):
             self.dependency.git_tag = self.git.current_tag(cwd=path)
             self.dependency.git_commit = self.git.current_commit(cwd=path)
 

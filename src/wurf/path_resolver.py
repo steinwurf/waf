@@ -27,11 +27,19 @@ class PathResolver(object):
         """
 
         self.path = os.path.abspath(os.path.expanduser(self.path))
-
-        if not os.path.exists(self.path):
-            raise DependencyError(
-                f'Path error: "{self.path}" does not exist.',
-                dependency=self.dependency,
-            )
+        if self.dependency.resolver == "http":
+            # When using http we may end up with a file rather than
+            # a directory
+            if not os.path.exists(self.path):
+                raise DependencyError(
+                    f'Path error: "{self.path}" does not exist.',
+                    dependency=self.dependency,
+                )
+        else:
+            if not os.path.isdir(self.path):
+                raise DependencyError(
+                    f'Path error: "{self.path}" is not a directory.',
+                    dependency=self.dependency,
+                )
 
         return self.path

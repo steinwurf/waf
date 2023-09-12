@@ -4,7 +4,6 @@ from wurf.semver_selector import SemverSelector
 
 
 def test_semver_selector():
-
     selector = SemverSelector(semver=semver)
 
     tags = [
