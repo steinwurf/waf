@@ -4,6 +4,6 @@
         "resolver": "git",
         "method": "semver",
         "major": 4,
-        "sources": ["github.com/steinwurf/waf-tools.git"]
+        "source": "github.com/steinwurf/waf-tools.git"
     }
 ]

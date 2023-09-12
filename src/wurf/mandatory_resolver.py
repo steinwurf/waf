@@ -10,8 +10,9 @@ class MandatoryResolver(object):
     def __init__(self, resolver, msg, dependency):
         """Construct an instance.
 
-        :param resolvers: A list of resolvers object for the available
-           sources
+        :param resolver: The resolver to use
+        :param msg: The error message to display if the dependency is not found
+        :param dependency: The dependency to resolve
         """
         self.resolver = resolver
         self.msg = msg

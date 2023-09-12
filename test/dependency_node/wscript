@@ -3,23 +3,18 @@
 
 from fake_url_download import FakeUrlDownload
 
-APPNAME = 'test_dependency_node'
-VERSION = '1.0.0'
+APPNAME = "test_dependency_node"
+VERSION = "1.0.0"
 
 
 def resolve(ctx):
-
     # Get the registry and replace the git builder
-    ctx.registry.provide_function('url_download', FakeUrlDownload.build,
-                                  override=True)
+    ctx.registry.provide_function("url_download", FakeUrlDownload.build, override=True)
 
     # Rebuild the dependency manager
-    ctx.dependency_manager = ctx.registry.require('dependency_manager')
+    ctx.dependency_manager = ctx.registry.require("dependency_manager")
 
-    ctx.add_dependency(
-        name='baz',
-        resolver='http',
-        sources=['http://bar.com/baz.zip'])
+    ctx.add_dependency(name="baz", resolver="http", source="http://bar.com/baz.zip")
 
 
 def options(opt):
@@ -27,7 +22,7 @@ def options(opt):
 
 
 def configure(conf):
-    node = conf.dependency_node('baz')
+    node = conf.dependency_node("baz")
     assert node
     assert node.abspath()
 

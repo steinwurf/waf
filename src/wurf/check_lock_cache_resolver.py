@@ -10,10 +10,9 @@ class CheckLockCacheResolver(object):
     def __init__(self, resolver, lock_cache_from, dependency):
         """Construct an instance.
 
-        :param resolvers: A list of resolvers object for the available
-           sources
-        :param lock_cache: A dict containing the lock cache information
-        :param dependency: A Dependency instance.
+        :param resolver: The resolver to use
+        :param lock_cache_from: The lock cache to use
+        :param dependency: The dependency to resolve
         """
         self.resolver = resolver
         self.lock_cache = lock_cache_from

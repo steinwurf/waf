@@ -46,14 +46,11 @@ class TopLevelError(WurfError):
 def help_message(dependency):
     text = f'ERROR: the "{dependency.name}" dependency is not available.'
     if dependency.resolver == "git":
-        steinwurf_sources = [
-            "https://" + s for s in dependency.sources if "steinwurf" in s
-        ]
-        if len(steinwurf_sources):
+        if "steinwurf" in dependency.source:
             text += (
                 "\nPlease check that you have a valid Steinwurf "
                 "license and you can access the repository at: "
-                f"{map(str, steinwurf_sources)}"
+                f"{dependency.source}"
             )
     return text
 

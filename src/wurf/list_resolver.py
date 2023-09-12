@@ -8,8 +8,7 @@ class ListResolver(object):
     def __init__(self, resolvers):
         """Construct an instance.
 
-        :param resolvers: A list of resolvers object for the available
-           sources
+        :param resolvers: A list of resolvers to use
         """
         self.resolvers = resolvers
 

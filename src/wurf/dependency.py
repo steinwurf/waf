@@ -4,6 +4,7 @@
 import hashlib
 import json
 import pprint
+import warnings
 
 
 class Dependency(object):
@@ -20,7 +21,7 @@ class Dependency(object):
                     'resolver': 'git',
                     'method': 'checkout',
                     'checkout': '1.3.3.7',
-                    'sources': ['github.com/acme-corp/foo.git']}
+                    'source': 'github.com/acme-corp/foo.git'}
 
             # Expand the dict as keyword arguments
             dependency = Dependency(**info)
@@ -46,7 +47,7 @@ class Dependency(object):
 
         So in the small example from before all the following attributes are
         not directly modifiable: name, recurse, optional, resolver, method,
-        checkout, sources and sha1. If these attributes needs to be modifid
+        checkout, source and sha1. If these attributes needs to be modifid
         e.g. to "customize" the way resolvers are constructed, this can be done
         using the rewrite(...) function.
 
@@ -86,6 +87,17 @@ class Dependency(object):
         :param kwargs: Keyword arguments containing options for the dependency.
         """
         assert "sha1" not in kwargs
+
+        if "sources" in kwargs:
+            if len(kwargs["sources"]) > 1:
+                warnings.warn(
+                    "The 'sources' attribute is deprecated", DeprecationWarning
+                )
+            # Support for multiple sources is deprecated.
+            # To ease the transition, the sources list is converted to a
+            # single source attribute by using the first element in the list.
+            kwargs["source"] = kwargs["sources"][0]
+            kwargs.pop("sources")
 
         # Set default values for some common attributes
         if "recurse" not in kwargs:

@@ -11,7 +11,7 @@ def test_dependency():
         "resolver": "git",
         "method": "checkout",
         "checkout": "somebranch",
-        "sources": ["gitrepo1.git", "gitrepo2.git"],
+        "source": "gitrepo.git",
     }
 
     w = Dependency(**dep)
@@ -22,7 +22,7 @@ def test_dependency():
     assert w.resolver == "git"
     assert w.method == "checkout"
     assert w.checkout == "somebranch"
-    assert w.sources == ["gitrepo1.git", "gitrepo2.git"]
+    assert w.source == "gitrepo.git"
 
     # Check there is a sha1 key
     assert "sha1" in w
@@ -53,7 +53,7 @@ def test_dependency_default_values():
         "name": "foo",
         "resolver": "git",
         "method": "checkout",
-        "sources": ["gitrepo1.git", "gitrepo2.git"],
+        "source": "gitrepo.git",
     }
 
     w = Dependency(**dep)
@@ -62,7 +62,7 @@ def test_dependency_default_values():
     assert w.name == "foo"
     assert w.resolver == "git"
     assert w.method == "checkout"
-    assert w.sources == ["gitrepo1.git", "gitrepo2.git"]
+    assert w.source == "gitrepo.git"
 
     # Check the default values
     assert w.recurse is True
