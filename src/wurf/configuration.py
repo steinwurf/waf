@@ -2,31 +2,28 @@
 # encoding: utf-8
 
 import os
+from .lock_path_cache import LockPathCache
+from .lock_version_cache import LockVersionCache
 
 
 class Configuration(object):
-
     # These are the main resolver chains/configurations:
     #
-    # 1. The "store" chain: This chain goes to the network and fetches stuff
+    # 1. The "resolve" chain: This chain goes to the network and fetches stuff
     # 2. The "load" or chain: This chain will load information
     #    from the file system.
     # 3. The "help" chain: This chain tries to interate though as many
     #    dependencies as possible to get all options.
-    # 4. The "store_lock" works like "store", but also write a lock file
+    # 4. The "resolve_lock" works like "resolve", but also write a lock file
     #    to the project directory - fixating a dependency to a specific
     #    version or path
-    # 5. The "store_from_lock" will load the dependency information from the
+    # 5. The "resolve_from_lock" will load the dependency information from the
     #    lock file and fetch dependencies.
     RESOLVE = "resolve"
     LOAD = "load"
     HELP = "help"
-    RESOLVE_AND_LOCK = "resolve_and_lock"
-    RESOLVE_FROM_LOCK = "resolve_from_lock"
-
-    # The file name of the lock file used to fix dependencies to a specific
-    # verions or path
-    LOCK_FILE = "lock_resolve.json"
+    RESOLVE_FROM_PATH_LOCK = "resolve_from_path_lock"
+    RESOLVE_FROM_VERSION_LOCK = "resolve_from_version_lock"
 
     def __init__(self, project_path, args, options, waf_lock_file):
         """Construct an instance.
@@ -48,15 +45,14 @@ class Configuration(object):
         self.waf_lock_file = waf_lock_file
 
     def resolver_chain(self):
-
         if self.choose_help():
             return Configuration.HELP
 
-        elif self.choose_resolve_and_lock():
-            return Configuration.RESOLVE_AND_LOCK
+        elif self.choose_resolve_from_path_lock():
+            return Configuration.RESOLVE_FROM_PATH_LOCK
 
-        elif self.choose_resolve_from_lock():
-            return Configuration.RESOLVE_FROM_LOCK
+        elif self.choose_resolve_from_version_lock():
+            return Configuration.RESOLVE_FROM_VERSION_LOCK
 
         elif self.choose_resolve():
             return Configuration.RESOLVE
@@ -89,42 +85,35 @@ class Configuration(object):
 
         return False
 
-    def choose_resolve_from_lock(self):
+    def lock_paths(self):
+        # Lock paths if configuring and the lock paths option was passed
+        return "configure" in self.args and self.options.lock_paths()
 
+    def lock_versions(self):
+        # Lock versions if configuring and the lock versions option was passed
+        return "configure" in self.args and self.options.lock_versions()
+
+    def choose_resolve_from_path_lock(self):
         if "configure" not in self.args:
             # We are not configuring
             return False
 
-        # We are not configuring, check for lock file
-        lock_file = os.path.join(self.project_path, "lock_resolve.json")
-
-        if not os.path.isfile(lock_file):
-            # No lock file
+        if self.options.lock_paths():
+            # We are not locking paths
             return False
 
-        # If all above checks out, we want to resolve the dependencies using
-        # the lock file
-        return True
+        # We are configuring, check for lock file
+        return os.path.exists(os.path.join(self.project_path, LockPathCache.LOCK_FILE))
 
-    def choose_resolve_and_lock(self):
-
+    def choose_resolve_from_version_lock(self):
         if "configure" not in self.args:
             # We are not configuring
             return False
 
-        # We are configuring
-        if self.options.lock_paths() or self.options.lock_versions():
-            # One of the lock options were passed, so we want to write the lock
-            # file rather than use it.
-            return True
-
-        return False
+        # We are configuring, check for lock file
+        return os.path.exists(
+            os.path.join(self.project_path, LockVersionCache.LOCK_FILE)
+        )
 
     def choose_resolve(self):
-
-        for command in ["configure", "resolve"]:
-            if command in self.args:
-                # We should resolve
-                return True
-
-        return False
+        return any([c in self.args for c in ["configure", "resolve"]])

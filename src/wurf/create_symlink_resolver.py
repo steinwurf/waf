@@ -60,7 +60,7 @@ class CreateSymlinkResolver(object):
 
             except RelativeSymlinkError:
                 self.ctx.to_log(
-                    "wurf: Using relative symlink failed - fallback " "to absolute."
+                    "wurf: Using relative symlink failed - fallback to absolute."
                 )
 
                 create_symlink(

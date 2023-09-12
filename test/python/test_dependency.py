@@ -4,7 +4,6 @@ from wurf.dependency import Dependency
 
 
 def test_dependency():
-
     dep = {
         "name": "waf",
         "optional": True,
@@ -50,7 +49,6 @@ def test_dependency():
 
 
 def test_dependency_default_values():
-
     dep = {
         "name": "foo",
         "resolver": "git",

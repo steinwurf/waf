@@ -1,19 +1,19 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-from .error import WurfError
+from .lock_version_cache import LockVersionCache
 
 
 class StoreLockVersionResolver(object):
-    def __init__(self, resolver, lock_cache, dependency):
+    def __init__(self, resolver, lock_cache_to: LockVersionCache, dependency):
         """Construct an instance.
 
         :param resolver: A resolver which will do the actual job
-        :param lock_cache: The lock cache to store the version information in.
+        :param lock_cache_to: The lock cache to store the version information in.
         :param dependency: A Dependency instance.
         """
         self.resolver = resolver
-        self.lock_cache = lock_cache
+        self.lock_cache_to = lock_cache_to
         self.dependency = dependency
 
     def resolve(self):
@@ -26,21 +26,5 @@ class StoreLockVersionResolver(object):
         """
 
         path = self.resolver.resolve()
-
-        if self.dependency.resolver == "git":
-            checkout = None
-
-            if self.dependency.git_tag:
-                checkout = self.dependency.git_tag
-            elif self.dependency.git_commit:
-                checkout = self.dependency.git_commit
-            else:
-                raise WurfError("Not stable checkout information found.")
-
-            self.lock_cache.add_checkout(dependency=self.dependency, checkout=checkout)
-        elif self.dependency.resolver == "http":
-            self.lock_cache.add_file(dependency=self.dependency, path=path)
-        else:
-            raise WurfError(f"Unknown resolver: {self.dependency.resolver}")
-
+        self.lock_cache_to.add_dependency(dependency=self.dependency)
         return path

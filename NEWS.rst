@@ -6,6 +6,9 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Allow locking the paths using the locked versions.
+* Major: Split ``lock_resolve.json`` into two separate lock files, one for
+  versions and one for paths.
 * Patch: Fixed bug that caused the lock_resolve.json to not be used correctly.
 * Patch: Fixed bug that caused ``--lock_versions`` to fail when using in
   combination with ``ExistingTagResolver``.

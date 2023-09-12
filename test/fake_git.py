@@ -20,8 +20,6 @@ def check_git_info(git_info):
         }
     )
 
-    print(git_info)
-
     info_schema.validate(git_info)
 
 
@@ -84,6 +82,9 @@ class FakeGit:
 
         else:
             raise CloneError(repository=repository)
+
+    def is_git_repository(self, cwd):
+        return os.path.isfile(os.path.join(cwd, "git_info.json"))
 
     def pull_submodules(self, cwd):
         """Fake a git pull submodule"""

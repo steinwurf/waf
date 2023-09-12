@@ -341,7 +341,7 @@ def run_commands(app_dir, git_dir):
             "resolved_dependencies",
         ]
     )
-    assert app_dir.contains_file("lock_resolve.json")
+    assert app_dir.contains_file("lock_version_resolve.json")
 
     # The symlinks should be available to all dependencies
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "foo"))
@@ -368,27 +368,25 @@ def run_commands(app_dir, git_dir):
 
     app_dir.run(["python", "waf", "build", "-v"])
 
-    lock_path = os.path.join(app_dir.path(), "lock_resolve.json")
+    lock_path = os.path.join(app_dir.path(), "lock_version_resolve.json")
     with open(lock_path, "r") as lock_file:
         lock = json.load(lock_file)
 
     resolve_dir = app_dir.join("resolved_dependencies")
 
     # The content of resolved dependencies is intersting now :)
-    # We've just resolved from the lock_resolve.json file
+    # We've just resolved from the lock resolve file
     # containing the versions needed.
 
     # foo should use the commit id in the lock file
-    assert resolve_dir.contains_dir(
-        "foo-*", f'{lock["dependencies"]["foo"]["checkout"]}-*'
-    )
+    assert resolve_dir.contains_dir("foo-*", f'{lock["foo"]["checkout"]}-*')
     # bar is locked to the same commit as the master so it will
     # skip the git checkout and just return the master path
     assert resolve_dir.contains_dir("bar-*", "master-*")
     # baz has its tag in the lock file, so it will be available there
     assert resolve_dir.contains_dir("baz-*", "3.3.1-*")
 
-    app_dir.rmfile("lock_resolve.json")
+    app_dir.rmfile("lock_version_resolve.json")
     resolve_dir.rmdir()
 
     # Test the --lock_paths options
@@ -400,7 +398,7 @@ def run_commands(app_dir, git_dir):
     assert app_dir.contains_dir("resolve_symlinks", "baz")
     assert app_dir.contains_dir("resolve_symlinks", "bar")
 
-    assert app_dir.contains_file("lock_resolve.json")
+    assert app_dir.contains_file("lock_path_resolve.json")
     app_dir.run(["python", "waf", "build", "-v"])
 
     # This configure should happen from the lock
@@ -413,6 +411,17 @@ def run_commands(app_dir, git_dir):
     assert app_dir.contains_dir("resolve_symlinks", "foo")
     assert app_dir.contains_dir("resolve_symlinks", "baz")
     assert app_dir.contains_dir("resolve_symlinks", "bar")
+
+    # We have the lock file so the resolve_path is not used.
+    assert not app_dir.contains_file("resolved_depdendencies")
+
+    lock_path = os.path.join(app_dir.path(), "lock_path_resolve.json")
+    with open(lock_path, "r") as lock_file:
+        lock = json.load(lock_file)
+
+    assert "locked" in lock["foo"]["path"]
+    assert "locked" in lock["bar"]["path"]
+    assert "locked" in lock["baz"]["path"]
 
     app_dir.run(["python", "waf", "build", "-v"])
 
@@ -659,3 +668,136 @@ def test_resolve_only(testdirectory):
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "foo"))
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "baz"))
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "bar"))
+
+
+def test_lock_versions_and_then_paths(testdirectory):
+    app_dir = mkdir_app_json(directory=testdirectory)
+
+    git_dir = testdirectory.mkdir(directory="git_dir")
+
+    qux_dir = mkdir_libqux(directory=git_dir)
+    foo_dir = mkdir_libfoo(directory=git_dir)
+    bar_dir = mkdir_libbar(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir, qux_dir=qux_dir)
+
+    # Instead of doing an actual Git clone - we fake it and use the paths in
+    # this mapping
+    clone_path = {
+        "acme-corp/foo.git": foo_dir.path(),
+        "acme-corp/bar.git": bar_dir.path(),
+        "acme/baz.git": baz_dir.path(),
+    }
+
+    with open(os.path.join(app_dir.path(), "clone_path.json"), "w") as json_file:
+        json.dump(clone_path, json_file)
+
+    app_dir.run(
+        [
+            "python",
+            "waf",
+            "configure",
+            "-v",
+            "--lock_versions",
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
+
+    assert app_dir.contains_file("lock_version_resolve.json")
+
+    with open(
+        os.path.join(app_dir.path(), "lock_version_resolve.json"), "r"
+    ) as json_file:
+        lock = json.load(json_file)
+        assert lock["foo"]["checkout"] == "1.3.3.7"
+        assert lock["bar"]["checkout"] == "someh4sh"
+        assert lock["baz"]["checkout"] == "3.3.1"
+
+    r = app_dir.run(
+        [
+            "python",
+            "waf",
+            "configure",
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
+
+    assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
+    assert r.stdout.match("*resolved_dependencies/baz-*/3.3.1-*")
+
+    # Create a new minor "release" of baz and check that we keep the old
+    # version
+
+    json_path = os.path.join(baz_dir.path(), "git_info.json")
+
+    with open(json_path, "r") as json_file:
+        git_info = json.load(json_file)
+        git_info["tags"].insert(git_info["tags"].index("3.3.1") + 1, "3.3.2")
+    with open(json_path, "w") as json_file:
+        json.dump(git_info, json_file)
+
+    # Because of the way the fake git works we need to remove the resolved_dependencies
+    # folder to make sure that we actually resolve the dependencies again
+    app_dir.join("resolved_dependencies").rmdir()
+
+    r = app_dir.run(
+        [
+            "python",
+            "waf",
+            "configure",
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
+
+    assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
+    assert r.stdout.match("*resolved_dependencies/baz-*/3.3.1-*")
+
+    # Check that if we remove the lock file, we get the new version
+    app_dir.rmfile("lock_version_resolve.json")
+
+    # Because of the way the fake git works we need to remove the resolved_dependencies
+    # folder to make sure that we actually resolve the dependencies again
+    app_dir.join("resolved_dependencies").rmdir()
+
+    r = app_dir.run(
+        [
+            "python",
+            "waf",
+            "-v",
+            "configure",
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
+
+    assert r.stdout.match('*Resolve "baz" (git semver)*')
+    assert r.stdout.match("*resolved_dependencies/baz-*/3.3.2-*")
+
+    app_dir.run(
+        [
+            "python",
+            "waf",
+            "configure",
+            "-v",
+            "--lock_versions",
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
+
+    app_dir.run(
+        [
+            "python",
+            "waf",
+            "configure",
+            "-v",
+            "--lock_path",
+            "--resolve_path",
+            "resolved_dependencies",
+        ]
+    )
+
+    assert app_dir.contains_file("lock_version_resolve.json")
+    assert app_dir.contains_file("lock_path_resolve.json")

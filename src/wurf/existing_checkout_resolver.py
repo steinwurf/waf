@@ -34,7 +34,6 @@ class ExistingCheckoutResolver(object):
 
         :return: The path to the existing commits, otherwise None.
         """
-
         commits = self.__load_commits_file()
 
         # Try to resolve path from commits file

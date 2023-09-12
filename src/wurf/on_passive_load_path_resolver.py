@@ -4,19 +4,21 @@
 import os
 import json
 
-from .error import DependencyError
+from .error import DependencyError, WurfError
 
 
 class OnPassiveLoadPathResolver(object):
-    def __init__(self, dependency, resolve_config_path):
+    def __init__(self, git, dependency, resolve_config_path, resolve_path):
         """Construct an instance.
 
         :param dependency: A Dependency instance.
         :param resolve_config_path: A string containing the path to where the
             dependencies config json files should be / is stored.
         """
+        self.git = git
         self.dependency = dependency
         self.resolve_config_path = resolve_config_path
+        self.resolve_path = resolve_path
 
     def resolve(self):
         """Resolve a path to a dependency.
@@ -33,14 +35,23 @@ class OnPassiveLoadPathResolver(object):
         if self.dependency.sha1 != config["sha1"]:
             raise DependencyError("Failed sha1 check", self.dependency)
 
-        if config["is_symlink"]:
-            self.dependency.is_symlink = config["is_symlink"]
-            self.dependency.real_path = str(config["real_path"])
-
         path = str(config["path"])
 
         if not (os.path.isdir(path) or os.path.isfile(path)):
             raise DependencyError(f'Invalid path: "{path}"', self.dependency)
+        if self.dependency.from_lock:
+            if config["is_symlink"]:
+                self.__check_path(config["real_path"])
+            else:
+                self.__check_path(path)
+
+        if config["is_symlink"]:
+            self.dependency.is_symlink = config["is_symlink"]
+            self.dependency.real_path = str(config["real_path"])
+
+        if self.dependency.resolver == "git" and self.git.is_git_repository(cwd=path):
+            self.dependency.git_tag = self.git.current_tag(cwd=path)
+            self.dependency.git_commit = self.git.current_commit(cwd=path)
 
         return path
 
@@ -56,3 +67,9 @@ class OnPassiveLoadPathResolver(object):
 
         with open(config_path, "r") as config_file:
             return json.load(config_file)
+
+    def __check_path(self, path):
+        child = os.path.realpath(path)
+        parent = os.path.realpath(self.resolve_path)
+        if not child.startswith(parent):
+            raise WurfError(f"Error: {child} is not within {parent}")

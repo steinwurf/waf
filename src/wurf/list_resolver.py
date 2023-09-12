@@ -20,7 +20,6 @@ class ListResolver(object):
         """
 
         for resolver in self.resolvers:
-
             path = resolver.resolve()
 
             if path:
