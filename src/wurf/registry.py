@@ -937,7 +937,7 @@ def resolve_lock_path(lock_cache_from: LockPathCache, dependency):
     path = lock_cache_from.path(dependency=dependency)
 
     # Set the resolver action on the dependency
-    dependency.resolver_action = "lock path"
+    dependency.resolver_action = "locked path"
 
     return PathResolver(dependency=dependency, path=path)
 
@@ -1087,7 +1087,13 @@ def dependency_resolver(registry, ctx, configuration: Configuration, dependency)
     elif configuration.lock_versions():
         if configuration.resolver_chain() == Configuration.RESOLVE_FROM_PATH_LOCK:
             raise WurfError(
-                "Locking to versions is not supported when resolving from paths"
+                "Locking versions is not supported when using locked paths. "
+                "Remove the lock_path_resolve.json file and try again."
+            )
+        if configuration.resolver_chain() == Configuration.RESOLVE_FROM_VERSION_LOCK:
+            raise WurfError(
+                "Locking versions is not supported when using locked versions. "
+                "Remove the lock_version_resolve.json file and try again."
             )
         with registry.provide_temporary() as temporary:
             temporary.provide_value("store_resolver", resolver)

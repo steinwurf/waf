@@ -20,8 +20,6 @@ def check_git_info(git_info):
         }
     )
 
-    print(git_info)
-
     info_schema.validate(git_info)
 
 
