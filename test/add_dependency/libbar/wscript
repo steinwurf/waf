@@ -1,32 +1,35 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-APPNAME = 'libbar'
-VERSION = '1.0.0'
+APPNAME = "libbar"
+VERSION = "1.0.0"
 
 
 def resolve(ctx):
     ctx.add_dependency(
-        name='baz',
+        name="baz",
         recurse=True,
         optional=False,
-        resolver='git',
-        method='semver',
+        resolver="git",
+        method="semver",
         major=3,
-        sources=['gitlab.com/acme/baz.git'])
+        source="gitlab.com/acme/baz.git",
+    )
 
 
 def options(opt):
-    opt.load('compiler_cxx')
+    opt.load("compiler_cxx")
 
 
 def configure(conf):
-    conf.load('compiler_cxx')
+    conf.load("compiler_cxx")
 
 
 def build(bld):
-    bld.stlib(features='cxx',
-              target='bar',
-              use=['baz'],
-              source='src/bar/bar.cpp',
-              export_includes='src')
+    bld.stlib(
+        features="cxx",
+        target="bar",
+        use=["baz"],
+        source="src/bar/bar.cpp",
+        export_includes="src",
+    )

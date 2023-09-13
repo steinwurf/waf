@@ -15,7 +15,7 @@ def resolve(ctx):
         resolver="http",
         extract=True,
         filename="endian-4.0.0.zip",
-        sources=["https://github.com/steinwurf/endian/archive/4.0.0.zip"],
+        source="https://github.com/steinwurf/endian/archive/4.0.0.zip",
     )
 
 

@@ -6,6 +6,9 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Removed support for multiple sources for the same dependency.
+  The support for sources is still there, but only the first source will be
+  used.
 * Major: Removed fast-resolve option as this behavior should now be covered
   by the use of lock files.
 * Minor: Allow locking the paths using the locked versions.

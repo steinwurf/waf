@@ -57,7 +57,7 @@ class NoClonePathError(WurfError):
 
     def __init__(self, repository):
         super(NoClonePathError, self).__init__(
-            f"cone_path.json available for repository {repository} found!"
+            f"No clone_path.json available for repository {repository} found!"
         )
 
 

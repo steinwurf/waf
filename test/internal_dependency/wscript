@@ -8,7 +8,6 @@ VERSION = "1.0.0"
 
 
 def resolve(ctx):
-
     # Get the registry and replace the git builder
     ctx.registry.provide_function("git", FakeGit, override=True)
 
@@ -21,7 +20,7 @@ def resolve(ctx):
         method="checkout",
         internal=True,
         checkout="1.3.3.7",
-        sources=["github.com/acme-corp/foo.git"],
+        source="github.com/acme-corp/foo.git",
     )
 
 

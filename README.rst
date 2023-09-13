@@ -130,7 +130,7 @@ The modifications and additions to Waf are in the ``src/wurf`` folder. The
 main file included by Waf is the ``src/wurf/waf_entry_point.py``. This is a great
 place to start to understand our additions to ``Waf``.
 
-Waf will load this file automatically when starting up, which is acheived using
+Waf will load this file automatically when starting up, which is achieved using
 the ``--prelude`` option of Waf. Described in the Waf book:
 https://waf.io/book/#_customization_and_redistribution.
 
@@ -342,10 +342,10 @@ If ``internal`` is not specified, it will default to ``false``.
 Internal dependencies can be skipped from the top-level resolve step by
 providing the ``--skip_internal`` option.
 
-Attribute ``sources`` (general)
+Attribute ``source`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
-The ``sources`` attribute is a list containing URLs for the dependency. The URL
+The ``source`` attribute contains the URL for the dependency. The URL
 format depends on the resolver.
 
 Example of attributes::
@@ -356,8 +356,14 @@ Example of attributes::
         "optional": true,
         "recurse": true,
         "internal": true,
-        "sources": ["github.com/myorg/mylib.git"]
+        "source": "github.com/myorg/mylib.git"
     }
+
+.. note::
+
+    The previous ``sources`` attribute has been deprecated and will be
+    removed in a future version.
+    Please use the ``source`` attribute instead.
 
 Attribute ``post_resolve`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -375,7 +381,7 @@ Example of attributes::
         "optional": true,
         "recurse": true,
         "internal": true,
-        "sources": ["github.com/myorg/mylib.git"],
+        "source": "github.com/myorg/mylib.git",
         "post_resolve": [
             { "type": "run", "command": "tar -xvj file.tar" }
         ]
@@ -423,7 +429,7 @@ To force a specific dependency we can use the ``override`` attribute (we use the
         "method": "checkout",
         "checkout": "v3.0.0",
         "override": true,
-        "sources": ["github.com/myorg/libfoo.git"]
+        "source": "github.com/myorg/libfoo.git"
         ...
     }
 
@@ -456,7 +462,7 @@ commit.::
         "resolver": "git",
         "method": "checkout",
         "checkout": "my-branch"
-        "sources": ["github.com/myorg/somelib.git"]
+        "source": "github.com/myorg/somelib.git"
         ...
     }
 
@@ -489,7 +495,7 @@ Attributes::
         "resolver": "git",
         "method": "semver",
         "major": 4,
-        "sources": ["github.com/myorg/someotherlib.git"]
+        "source": "github.com/myorg/someotherlib.git"
     }
 
 Attribute ``pull_submodules`` (``git`` resolver)
@@ -504,7 +510,7 @@ found. To avoid cloning/pulling a submodule set ``pull_submodules: false``::
         "resolver": "git",
         "method": "checkout",
         "checkout": "my-branch"
-        "sources": ["github.com/myorg/somelib.git"],
+        "source": "github.com/myorg/somelib.git",
         "pull_submodules": false
         ...
     }
@@ -523,7 +529,7 @@ Specify a filename of the downloaded dependency::
         "name": "myfile"
         "resolver": "http",
         "filename": "somefile.zip",
-        "sources": ["http://mydomain.com/myfile.zip"]
+        "source": "http://mydomain.com/myfile.zip"
     }
 
 The attribute is optional. If not specified the resolver will try to derive the
@@ -539,7 +545,7 @@ boolean specifies whether the archive should be extracted::
         "name": "myfile"
         "resolver": "http",
         "extract": true,
-        "sources": ["http://mydomain.com/myfile.zip"]
+        "source": "http://mydomain.com/myfile.zip"
     }
 
 If the ``extract`` attribute is not specified it defaults to ``false``.
@@ -564,7 +570,7 @@ dependency::
             "resolver": "git",
             "method": "semver",
             "major": 4,
-            "sources": ["github.com/steinwurf/waf-tools.git"]
+            "source": "github.com/steinwurf/waf-tools.git"
         }
     ]
 
@@ -591,7 +597,7 @@ project's wscript::
             resolver='git',
             method='semver',
             major=4,
-            sources=['github.com/steinwurf/waf-tools.git'])
+            source='github.com/steinwurf/waf-tools.git')
 
 Resolve symlinks
 ................

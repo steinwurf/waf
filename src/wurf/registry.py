@@ -943,37 +943,29 @@ def load_chain(ctx, git, resolve_config_path, dependency, resolve_path):
 
 
 @Registry.provide
-def sources_resolver(ctx, registry, dependency):
+def source_resolver(ctx, registry, dependency):
     """For each source in a dependency this builds up the resolver chain."""
 
-    resolvers = []
+    with registry.provide_temporary() as temporary:
+        temporary.provide_value("source", dependency.source)
 
-    for source in dependency.sources:
-        with registry.provide_temporary() as temporary:
-            temporary.provide_value("source", source)
+        # The resolver to be used for a dependency can be overridden
+        # and example of this is when resolving from a lock path.
+        # In that case the resolver is provided and the
+        # 'resolve_lock_path' will be used.
+        if "resolver" in registry:
+            resolver = registry.require("resolver")
+        else:
+            resolver = dependency.resolver
+        resolver_key = f"resolve_{resolver}"
+        resolver = registry.require(resolver_key)
 
-            # The resolver to be used for a dependency can be overridden
-            # and example of this is when resolving from a lock path.
-            # In that case the resolver is provided and the
-            # 'resolve_lock_path' will be used.
-            if "resolver" in registry:
-                resolver = registry.require("resolver")
-            else:
-                resolver = dependency.resolver
-            resolver_key = f"resolve_{resolver}"
-            resolver = registry.require(resolver_key)
+        if "post_resolve" in dependency:
+            # Add the post resolve
+            temporary.provide_value("current_resolver", resolver)
+            resolver = registry.require("post_resolve")
 
-            if "post_resolve" in dependency:
-                # Add the post resolve
-                temporary.provide_value("current_resolver", resolver)
-                resolver = registry.require("post_resolve")
-
-            resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
-
-            resolvers.append(resolver)
-
-    resolver = ListResolver(resolvers=resolvers)
-
+    resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
     resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
 
     return resolver
@@ -989,7 +981,7 @@ def resolve_chain(
     if options.path(dependency=dependency):
         resolver = registry.require("user_path_resolver")
     else:
-        resolver = registry.require("sources_resolver")
+        resolver = registry.require("source_resolver")
 
     resolver = CreateSymlinkResolver(
         resolver=resolver, dependency=dependency, symlinks_path=symlinks_path, ctx=ctx

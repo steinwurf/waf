@@ -2,17 +2,14 @@
 # encoding: utf-8
 
 import os
-import requests
+import shutil
 from urllib.parse import urlparse
+from urllib.request import urlopen
 
 
 class UrlDownload(object):
     def download(self, source, cwd, filename=None):
         assert os.path.exists(cwd)
-
-        # Send an HTTP GET request to the URL
-        response = requests.get(source, stream=True)
-        response.raise_for_status()
 
         # If filename is not provided, try to extract it from the URL
         if not filename:
@@ -23,21 +20,17 @@ class UrlDownload(object):
             if extension:
                 filename = basename
 
+        response = urlopen(source)
         # If filename is still not available, try to extract it from the
         # Content-Disposition header
         if not filename:
-            content_disposition = response.headers.get("content-disposition")
-            if content_disposition:
-                filename = content_disposition.split("filename=")[1].strip('"')
+            filename = response.info().get_filename()
 
         # Check that a filename was found
         assert filename
 
+        # Send an HTTP GET request to the URL and save the file
         path = os.path.join(cwd, filename)
-        # Save the file
-        with open(path, "wb") as file:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    file.write(chunk)
-
+        with open(path, "wb") as out_file:
+            shutil.copyfileobj(response, out_file)
         return path

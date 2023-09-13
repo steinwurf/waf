@@ -4,8 +4,6 @@
         "resolver": "git",
         "method": "semver",
         "major": 3,
-        "sources": [
-            "gitlab.com/acme/baz.git"
-        ]
+        "source": "gitlab.com/acme/baz.git"
     }
 ]

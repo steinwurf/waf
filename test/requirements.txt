@@ -4,16 +4,10 @@
 #
 #    pip-compile --output-file=test/requirements.txt test/requirements.in
 #
-certifi==2023.7.22
-    # via requests
-charset-normalizer==3.2.0
-    # via requests
 contextlib2==21.6.0
     # via schema
 idna==3.4
-    # via
-    #   requests
-    #   yarl
+    # via yarl
 iniconfig==2.0.0
     # via pytest
 mock==5.1.0
@@ -28,7 +22,7 @@ pycodestyle==2.11.0
     # via -r test/requirements.in
 pyflakes==3.1.0
     # via -r test/requirements.in
-pytest==7.4.1
+pytest==7.4.2
     # via
     #   -r test/requirements.in
     #   pytest-testdirectory
@@ -36,12 +30,8 @@ pytest-testdirectory==5.0.0
     # via -r test/requirements.in
 pyyaml==6.0.1
     # via vcrpy
-requests==2.31.0
-    # via -r test/requirements.in
 schema==0.7.5
     # via -r test/requirements.in
-urllib3==2.0.4
-    # via requests
 vcrpy==5.1.0
     # via -r test/requirements.in
 wrapt==1.15.0

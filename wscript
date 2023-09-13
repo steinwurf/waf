@@ -17,7 +17,7 @@ def resolve(ctx):
         resolver="git",
         method="checkout",
         checkout="waf-2.0.22",
-        sources=["https://gitlab.com/ita1024/waf.git"],
+        source="https://gitlab.com/ita1024/waf.git",
     )
 
     ctx.add_dependency(
@@ -27,7 +27,7 @@ def resolve(ctx):
         resolver="git",
         method="checkout",
         checkout="2.9.0",
-        sources=["github.com/python-semver/python-semver.git"],
+        source="github.com/python-semver/python-semver.git",
     )
 
     ctx.add_dependency(
@@ -37,7 +37,7 @@ def resolve(ctx):
         resolver="git",
         method="checkout",
         checkout="zipfile-perserve-permissions",
-        sources=["github.com/steinwurf/python-archive.git"],
+        source="github.com/steinwurf/python-archive.git",
     )
 
 
