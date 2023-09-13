@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Fixed issue where 'resolve' was not utilizing the lock paths or
+  versions file.
 * Major: Removed support for multiple sources for the same dependency.
   The support for sources is still there, but only the first source will be
   used.

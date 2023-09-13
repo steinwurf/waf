@@ -48,10 +48,10 @@ class Configuration(object):
         if self.choose_help():
             return Configuration.HELP
 
-        elif self.choose_resolve_from_path_lock():
+        elif self.choose_resolve_from_lock(LockPathCache.LOCK_FILE):
             return Configuration.RESOLVE_FROM_PATH_LOCK
 
-        elif self.choose_resolve_from_version_lock():
+        elif self.choose_resolve_from_lock(LockVersionCache.LOCK_FILE):
             return Configuration.RESOLVE_FROM_VERSION_LOCK
 
         elif self.choose_resolve():
@@ -93,27 +93,13 @@ class Configuration(object):
         # Lock versions if configuring and the lock versions option was passed
         return "configure" in self.args and self.options.lock_versions()
 
-    def choose_resolve_from_path_lock(self):
-        if "configure" not in self.args:
-            # We are not configuring
+    def choose_resolve_from_lock(self, lock_file):
+        if not self.choose_resolve():
+            # We are not configuring or resolving
             return False
 
-        if self.options.lock_paths():
-            # We are not locking paths
-            return False
-
-        # We are configuring, check for lock file
-        return os.path.exists(os.path.join(self.project_path, LockPathCache.LOCK_FILE))
-
-    def choose_resolve_from_version_lock(self):
-        if "configure" not in self.args:
-            # We are not configuring
-            return False
-
-        # We are configuring, check for lock file
-        return os.path.exists(
-            os.path.join(self.project_path, LockVersionCache.LOCK_FILE)
-        )
+        # Check for lock file
+        return os.path.exists(os.path.join(self.project_path, lock_file))
 
     def choose_resolve(self):
         return any([c in self.args for c in ["configure", "resolve"]])
