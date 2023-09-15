@@ -14,16 +14,6 @@ def resolve(ctx):
     # Rebuild the dependency manager
     ctx.dependency_manager = ctx.registry.require("dependency_manager")
 
-    ctx.add_dependency(
-        name="baz",
-        internal=False,
-        optional=False,
-        resolver="git",
-        method="semver",
-        major=3,
-        source="gitlab.com/acme/baz.git",
-    )
-
 
 def options(opt):
     opt.load("compiler_cxx")

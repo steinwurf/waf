@@ -3,6 +3,9 @@
 
 import os
 import json
+import pytest
+from pytest_testdirectory.runresulterror import RunResultError
+
 
 """ Integration testing of adding a dependency.
 
@@ -40,18 +43,6 @@ def mkdir_app(directory):
     app_dir = directory.mkdir("app")
     app_dir.copy_file("test/add_dependency/app/main.cpp")
     app_dir.copy_file("test/add_dependency/app/wscript")
-
-    app_dir.copy_file("test/fake_git.py")
-
-    app_dir.copy_file("build/waf")
-
-    return app_dir
-
-
-def mkdir_app_json(directory):
-    app_dir = directory.mkdir("app")
-    app_dir.copy_file("test/add_dependency/app/main.cpp")
-    app_dir.copy_file("test/add_dependency/app/wscript_json", rename_as="wscript")
     app_dir.copy_file("test/add_dependency/app/resolve.json")
 
     app_dir.copy_file("test/fake_git.py")
@@ -78,7 +69,7 @@ def mkdir_app_json(directory):
 def mkdir_app_override(directory):
     app_dir = directory.mkdir("app")
     app_dir.copy_file("test/add_dependency/app/main.cpp")
-    app_dir.copy_file("test/add_dependency/app/wscript_json", rename_as="wscript")
+    app_dir.copy_file("test/add_dependency/app/wscript")
     app_dir.copy_file(
         "test/add_dependency/app/resolve_override.json", rename_as="resolve.json"
     )
@@ -107,29 +98,9 @@ def mkdir_app_override(directory):
     return app_dir
 
 
-def commit_file(directory, filename, content):
-    directory.write_text(filename, content, encoding="utf-8")
-    directory.run(["git", "add", "."])
-    directory.run(
-        [
-            "git",
-            "-c",
-            "user.name=John",
-            "-c",
-            "user.email=doe@email.org",
-            "commit",
-            "-m",
-            "oki",
-        ]
-    )
-
-
 def mkdir_libfoo(directory):
     # Add foo dir
-    foo_dir = directory.mkdir("libfoo")
-    foo_dir.copy_file("test/add_dependency/libfoo/wscript")
-    foo_dir.copy_file("test/add_dependency/libfoo/some_repos_contain")
-    foo_dir.copy_dir(directory="test/add_dependency/libfoo/src")
+    foo_dir = directory.copy_dir(directory="test/add_dependency/libfoo")
 
     git_info = {
         "checkout": "master",
@@ -145,37 +116,6 @@ def mkdir_libfoo(directory):
 
     with open(json_path, "w") as json_file:
         json.dump(git_info, json_file)
-
-    foo_dir.write_text(filename="ok.txt", data="hello world", encoding="utf-8")
-
-    return foo_dir
-
-
-def mkdir_libfoo_json(directory):
-    # Add foo dir
-    foo_dir = directory.mkdir("libfoo")
-    foo_dir.copy_file("test/add_dependency/libfoo/wscript_json", rename_as="wscript")
-    foo_dir.copy_file("test/add_dependency/libfoo/some_repos_contain")
-    foo_dir.copy_file("test/add_dependency/libfoo/resolve.json")
-    foo_dir.copy_dir(directory="test/add_dependency/libfoo/src")
-
-    git_info = {
-        "checkout": "master",
-        "branches": ["master"],
-        "commits": [],
-        "remote_origin_url": "git@github.com/acme-corp/foo.git",
-        "is_detached_head": False,
-        "submodules": [],
-        "tags": ["1.3.3.7"],
-    }
-
-    json_path = os.path.join(foo_dir.path(), "git_info.json")
-
-    with open(json_path, "w") as json_file:
-        json.dump(git_info, json_file)
-
-    foo_dir.write_text(filename="ok.txt", data="hello world", encoding="utf-8")
-    # commit_file(directory=foo_dir, filename="ok.txt", content=u"hello world")
 
     return foo_dir
 
@@ -414,42 +354,7 @@ def run_commands(app_dir, git_dir):
     app_dir.run(["python", "waf", "build", "-v"])
 
 
-def test_resolve_json(testdirectory):
-    """Tests that dependencies declared in the wscript works. I.e. where we
-    call add_dependency(...) in the resolve function of the wscript.
-    """
-
-    app_dir = mkdir_app_json(directory=testdirectory)
-
-    # Make a directory where we place the libraries that we would have cloned
-    # if we had use the full waf resolve functionality.
-    #
-    # To avoid relying on network connectivity we simply place the
-    # libraries there and then fake the git clone step.
-    git_dir = testdirectory.mkdir(directory="git_dir")
-
-    qux_dir = mkdir_libqux(directory=git_dir)
-    foo_dir = mkdir_libfoo_json(directory=git_dir)
-    bar_dir = mkdir_libbar(directory=git_dir)
-    baz_dir = mkdir_libbaz(directory=git_dir, qux_dir=qux_dir)
-
-    # Instead of doing an actual Git clone - we fake it and use the paths in
-    # this mapping
-    clone_path = {
-        "acme-corp/foo.git": foo_dir.path(),
-        "acme-corp/bar.git": bar_dir.path(),
-        "acme/baz.git": baz_dir.path(),
-    }
-
-    json_path = os.path.join(app_dir.path(), "clone_path.json")
-
-    with open(json_path, "w") as json_file:
-        json.dump(clone_path, json_file)
-
-    run_commands(app_dir=app_dir, git_dir=git_dir)
-
-
-def test_add_dependency(testdirectory):
+def test_resolve(testdirectory):
     """Tests that dependencies declared in the wscript works. I.e. where we
     call add_dependency(...) in the resolve function of the wscript.
     """
@@ -569,7 +474,7 @@ def test_create_standalone_archive(testdirectory):
     assert app_dir.contains_file("test_add_dependency-1.0.0.zip")
 
 
-def test_override_json(testdirectory):
+def test_override(testdirectory):
     """Tests that dependencies marked as override works"""
 
     app_dir = mkdir_app_override(directory=testdirectory)
@@ -582,7 +487,7 @@ def test_override_json(testdirectory):
     git_dir = testdirectory.mkdir(directory="git_dir")
 
     qux_dir = mkdir_libqux(directory=git_dir)
-    foo_dir = mkdir_libfoo_json(directory=git_dir)
+    foo_dir = mkdir_libfoo(directory=git_dir)
     bar_dir = mkdir_libbar(directory=git_dir)
     baz_dir = mkdir_libbaz(directory=git_dir, qux_dir=qux_dir)
 
@@ -648,7 +553,7 @@ def test_resolve_only(testdirectory):
 
 
 def test_lock_versions_and_then_paths(testdirectory):
-    app_dir = mkdir_app_json(directory=testdirectory)
+    app_dir = mkdir_app(directory=testdirectory)
 
     git_dir = testdirectory.mkdir(directory="git_dir")
 
@@ -667,6 +572,50 @@ def test_lock_versions_and_then_paths(testdirectory):
 
     with open(os.path.join(app_dir.path(), "clone_path.json"), "w") as json_file:
         json.dump(clone_path, json_file)
+
+    # Check that we cannot run both lock_versions and lock_paths
+    with pytest.raises(RunResultError):
+        r = app_dir.run(
+            [
+                "python",
+                "waf",
+                "configure",
+                "-v",
+                "--lock_versions",
+                "--lock_paths",
+                "--resolve_path",
+                "resolved_dependencies",
+            ],
+        )
+        r.stderr.match("*Incompatible options*")
+
+    # Check that we cannot lock versions or paths while using --skip_internal
+    with pytest.raises(RunResultError):
+        r = app_dir.run(
+            [
+                "python",
+                "waf",
+                "configure",
+                "-v",
+                "--skip_internal",
+                "--lock_versions",
+                "resolved_dependencies",
+            ],
+        )
+        r.stderr.match("*Incompatible options*")
+    with pytest.raises(RunResultError):
+        r = app_dir.run(
+            [
+                "python",
+                "waf",
+                "configure",
+                "-v",
+                "--skip_internal",
+                "--lock_path",
+                "resolved_dependencies",
+            ],
+        )
+        r.stderr.match("*Incompatible options*")
 
     app_dir.run(
         [

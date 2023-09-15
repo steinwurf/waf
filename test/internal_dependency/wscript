@@ -14,15 +14,6 @@ def resolve(ctx):
     # Rebuild the dependency manager
     ctx.dependency_manager = ctx.registry.require("dependency_manager")
 
-    ctx.add_dependency(
-        name="foo",
-        resolver="git",
-        method="checkout",
-        internal=True,
-        checkout="1.3.3.7",
-        source="github.com/acme-corp/foo.git",
-    )
-
 
 def options(opt):
     pass

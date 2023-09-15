@@ -553,13 +553,7 @@ If the ``extract`` attribute is not specified it defaults to ``false``.
 Specifying dependencies (``resolve.json``)
 .........................................
 
-Providing third-party tooling to work with the dependencies, i.e. monitoring
-the dependencies and sending push notifications when new versions are available
-etc. is a lot easier if dependencies are stored outside the ``wscript`` in an
-easy to process data structure.
-
-It is therefore recommended that users specify dependencies using a
-``resolve.json`` file.
+Dependencies are specified using the ``resolve.json`` file.
 
 A simple example for a ``resolve.json`` file specifying a single git semver
 dependency::
@@ -574,30 +568,12 @@ dependency::
         }
     ]
 
-If needed it is still possible to define the ``resolve(...)`` function
-in the ``wscript``. This should only be used in situations where some information
-about a dependency is not known until runtime or when some computations are
-needed to determine some information regarding a dependency. In that case, the
-user can define the ``resolve(...)`` function in the ``wscript`` and write the
-needed Python code.
+All dependencies need to be specified in this way. In some situations where
+the need for a dependency relies on runtime information, it can be specified to
+be "toggleable" and then enabled or disabled in a user-defined ``resolve(...)``
+function in the ``wscript``.
 
 To support both these configuration methods, we define the following "rules":
-
-1. The user defined ``resolve(...)`` function will always be called before
-   loading a ``resolve.json`` file (if present).
-2. It is valid to mix both methods to define dependencies.
-
-Specifying the dependency from the example above in ``resolve(...)`` of the
-project's wscript::
-
-    def resolve(ctx):
-
-        ctx.add_dependency(
-            name='waf-tools',
-            resolver='git',
-            method='semver',
-            major=4,
-            source='github.com/steinwurf/waf-tools.git')
 
 Resolve symlinks
 ................

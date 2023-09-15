@@ -9,38 +9,6 @@ import waflib
 top = "."
 
 
-def resolve(ctx):
-    ctx.add_dependency(
-        name="waf",
-        recurse=False,
-        optional=False,
-        resolver="git",
-        method="checkout",
-        checkout="waf-2.0.22",
-        source="https://gitlab.com/ita1024/waf.git",
-    )
-
-    ctx.add_dependency(
-        name="python-semver",
-        recurse=False,
-        optional=False,
-        resolver="git",
-        method="checkout",
-        checkout="2.9.0",
-        source="github.com/python-semver/python-semver.git",
-    )
-
-    ctx.add_dependency(
-        name="python-archive",
-        recurse=False,
-        optional=False,
-        resolver="git",
-        method="checkout",
-        checkout="zipfile-perserve-permissions",
-        source="github.com/steinwurf/python-archive.git",
-    )
-
-
 def options(opt):
     opt.add_option(
         "--run_tests", default=False, action="store_true", help="Run all unit tests"

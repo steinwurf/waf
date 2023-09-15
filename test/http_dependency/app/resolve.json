@@ -1,0 +1,9 @@
+[
+    {
+        "name": "endian",
+        "resolver": "http",
+        "extract": true,
+        "filename": "endian-4.0.0.zip",
+        "source": "https://github.com/steinwurf/endian/archive/4.0.0.zip"
+    }
+]

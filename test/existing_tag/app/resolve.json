@@ -1,0 +1,9 @@
+[
+    {
+        "name": "baz",
+        "resolver": "git",
+        "method": "semver",
+        "major": 3,
+        "source": "gitlab.com/acme/baz.git"
+    }
+]

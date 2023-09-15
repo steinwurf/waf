@@ -9,6 +9,7 @@ def mkdir_app(directory):
     app_dir = directory.mkdir("app")
     app_dir.copy_file("test/existing_tag/app/main.cpp")
     app_dir.copy_file("test/existing_tag/app/wscript")
+    app_dir.copy_file("test/existing_tag/app/resolve.json")
 
     app_dir.copy_file("test/fake_git.py")
     app_dir.copy_file("build/waf")
@@ -54,7 +55,6 @@ def mkdir_libbaz(directory):
 
 
 def test_existing_tag(testdirectory):
-
     app_dir = mkdir_app(directory=testdirectory)
 
     # Make a directory where we place the libraries that we would have cloned

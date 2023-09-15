@@ -8,6 +8,7 @@ def mkdir_app(directory):
     app_dir = directory.mkdir("app")
     app_dir.copy_file("test/http_dependency/app/main.cpp")
     app_dir.copy_file("test/http_dependency/app/wscript")
+    app_dir.copy_file("test/http_dependency/app/resolve.json")
 
     app_dir.copy_file("build/waf")
 

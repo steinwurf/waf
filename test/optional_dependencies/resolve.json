@@ -1,0 +1,18 @@
+[
+    {
+        "name": "foo",
+        "resolver": "git",
+        "method": "checkout",
+        "optional": true,
+        "checkout": "1.3.3.7",
+        "source": "github.com/acme-corp/foo.git"
+    },
+    {
+        "name": "baz",
+        "resolver": "git",
+        "method": "semver",
+        "optional": true,
+        "major": 3,
+        "source": "gitlab.com/acme/baz.git"
+    }
+]
