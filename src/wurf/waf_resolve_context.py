@@ -170,6 +170,10 @@ class WafResolveContext(Context.Context):
         """
         return self.bldnode.abspath()
 
+    def enable_dependency(self, name):
+        """Enables a dependency."""
+        self.dependency_manager.enable_dependency(name)
+
     def cmd_and_log(self, cmd, **kwargs):
         # Seems the new waf needs the cwd to be a Node object. We do this
         # adaption here to avoid introducing additional Waf dependencies in the

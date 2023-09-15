@@ -49,6 +49,9 @@ class DependencyManager(object):
         # will only be invoked if the post_resolve(...) function is invoked.
         self.post_resolve_actions = []
 
+        # List of toggleable dependencies that have been marked as enabled
+        self.enabled_dependencies = {}
+
     def load_dependencies(self, path, mandatory=False):
         """Loads dependencies from a resolve.json file.
 
@@ -119,12 +122,14 @@ class DependencyManager(object):
         :return: True if the dependency should be skipped, otherwise False.
         """
         if dependency.internal:
-            if self.skip_internal:
-                return True
-
             if not self.ctx.is_toplevel():
                 # Internal dependencies should be skipped, if this is not the
                 # top-level wscript
+                return True
+
+            if self.skip_internal:
+                # Skip internal dependencies if the user has specified
+                # the --skip_internal option.
                 return True
 
         if dependency.name in self.seen_dependencies:
@@ -167,6 +172,9 @@ class DependencyManager(object):
                 # we should try to resolve it again as non-optional.
                 if dependency.name not in self.dependency_cache:
                     return False
+            if not self.__is_toggled_on(dependency):
+                # This dependency is not toggled on, so we should skip it
+                return True
 
             # This dependency is already in the seen_dependencies
             return True
@@ -183,3 +191,23 @@ class DependencyManager(object):
 
     def add_post_resolve_action(self, action):
         self.post_resolve_actions.append(action)
+
+    def __is_toggled_on(self, dependency):
+        if self.options.lock_paths() or self.options.lock_versions():
+            # Always enable toggled dependencies when locking paths or versions
+            return True
+
+        if not dependency.toggleable:
+            # Non-toggleable dependencies are always enabled
+            return True
+
+        if dependency.name not in self.enabled_dependencies:
+            return False
+
+        return self.enabled_dependencies[dependency.name]
+
+    def enable_dependency(self, name):
+        """Enables a dependency."""
+        if name in self.enabled_dependencies:
+            raise WurfError(f"Dependency already enabled: {name}")
+        self.enabled_dependencies[name] = True
