@@ -172,11 +172,12 @@ class DependencyManager(object):
                 # we should try to resolve it again as non-optional.
                 if dependency.name not in self.dependency_cache:
                     return False
-            if not self.__is_toggled_on(dependency):
-                # This dependency is not toggled on, so we should skip it
-                return True
 
             # This dependency is already in the seen_dependencies
+            return True
+
+        if not self.__is_toggled_on(dependency):
+            # This dependency is not toggled on, so we should skip it
             return True
 
         self.seen_dependencies[dependency.name] = dependency
