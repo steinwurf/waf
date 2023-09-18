@@ -104,8 +104,6 @@ class Dependency(object):
             kwargs["recurse"] = True
         if "optional" not in kwargs:
             kwargs["optional"] = False
-        if "toggleable" not in kwargs:
-            kwargs["toggleable"] = False
         if "internal" not in kwargs:
             kwargs["internal"] = False
         if "override" not in kwargs:

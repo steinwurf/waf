@@ -14,7 +14,7 @@ This test is a bit involved so lets try to explain what it does:
 We are setting up the following dependency graph:
 
            +--------------+
-           |     app      |---toggleable---+
+           |     app      |----optional----+
            +---+------+---+                |
                |      |               +----+-----+
                |      |               | libextra |
@@ -32,7 +32,7 @@ We are setting up the following dependency graph:
 
 The arrows indicate dependencies, so:
 
-- 'app' depends on 'libfoo' and 'libbaz'(internal & optional)
+- 'app' depends on 'libfoo' and 'libbaz'(internal)
 - 'libfoo' depends on 'libbar'
 - 'libbar' depends on 'libbaz'
 
@@ -767,7 +767,7 @@ def test_lock_versions_and_then_paths(testdirectory):
     assert app_dir.contains_file("lock_path_resolve.json")
 
 
-def test_toggleable(testdirectory):
+def test_optional(testdirectory):
     app_dir = mkdir_app(directory=testdirectory)
 
     git_dir = testdirectory.mkdir(directory="git_dir")

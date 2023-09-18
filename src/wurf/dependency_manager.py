@@ -49,8 +49,8 @@ class DependencyManager(object):
         # will only be invoked if the post_resolve(...) function is invoked.
         self.post_resolve_actions = []
 
-        # List of toggleable dependencies that have been marked as enabled
-        self.enabled_dependencies = {}
+        # Set of optional dependencies that have been marked as enabled
+        self.enabled_dependencies = set()
 
     def load_dependencies(self, path, mandatory=False):
         """Loads dependencies from a resolve.json file.
@@ -160,19 +160,6 @@ class DependencyManager(object):
                     f"the previous definition was:\n{seen_dependency}"
                 )
 
-            # If the current dependency is non-optional and we have already
-            # seen the same dependency as optional
-            if not dependency.optional and seen_dependency.optional:
-                # Store the non-optional version in seen_dependencies to
-                # avoid future checks
-                self.seen_dependencies[dependency.name] = dependency
-
-                # It is not safe to skip this dependency, if there is no
-                # valid path for it in the dependency_cache. In this case,
-                # we should try to resolve it again as non-optional.
-                if dependency.name not in self.dependency_cache:
-                    return False
-
             # This dependency is already in the seen_dependencies
             return True
 
@@ -198,17 +185,17 @@ class DependencyManager(object):
             # Always enable toggled dependencies when locking paths or versions
             return True
 
-        if not dependency.toggleable:
-            # Non-toggleable dependencies are always enabled
+        if not dependency.optional:
+            # Non-optional dependencies are always enabled
             return True
 
-        if dependency.name not in self.enabled_dependencies:
-            return False
+        if dependency.name in self.enabled_dependencies:
+            return True
 
-        return self.enabled_dependencies[dependency.name]
+        return False
 
     def enable_dependency(self, name):
         """Enables a dependency."""
         if name in self.enabled_dependencies:
             raise WurfError(f"Dependency already enabled: {name}")
-        self.enabled_dependencies[name] = True
+        self.enabled_dependencies.add(name)

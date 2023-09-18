@@ -10,7 +10,6 @@ import collections
 
 from .archive_resolver import ArchiveResolver
 from .check_lock_cache_resolver import CheckLockCacheResolver
-from .check_optional_resolver import CheckOptionalResolver
 from .config_file import ConfigFile
 from .configuration import Configuration
 from .context_msg_resolver import ContextMsgResolver
@@ -937,7 +936,9 @@ def load_chain(ctx, git, resolve_config_path, dependency, resolve_path):
 
     resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
 
-    resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
+    resolver = MandatoryResolver(
+        resolver=resolver, msg="Dependency failed.", dependency=dependency
+    )
 
     return resolver
 
@@ -966,7 +967,9 @@ def source_resolver(ctx, registry, dependency):
             resolver = registry.require("post_resolve")
 
     resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
-    resolver = CheckOptionalResolver(resolver=resolver, dependency=dependency)
+    resolver = MandatoryResolver(
+        resolver=resolver, msg="Dependency failed.", dependency=dependency
+    )
 
     return resolver
 

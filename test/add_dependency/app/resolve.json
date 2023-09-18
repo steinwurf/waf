@@ -2,7 +2,6 @@
     {
         "name": "baz",
         "internal": true,
-        "optional": true,
         "resolver": "git",
         "method": "semver",
         "major": 3,
@@ -17,7 +16,7 @@
     },
     {
         "name": "extra",
-        "toggleable": true,
+        "optional": true,
         "resolver": "git",
         "method": "semver",
         "major": 2,

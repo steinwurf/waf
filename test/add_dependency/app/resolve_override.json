@@ -16,7 +16,7 @@
     },
     {
         "name": "extra",
-        "toggleable": true,
+        "optional": true,
         "resolver": "git",
         "method": "semver",
         "major": 2,

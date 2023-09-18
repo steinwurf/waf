@@ -255,7 +255,7 @@ Attribute ``optional`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 The ``optional`` attribute is a boolean which specifies that a dependency
-is allowed to fail during the resolve step::
+needs to be enabled in the resolve step inside the wscript::
 
     {
         "name": "my-pet-library",
@@ -264,7 +264,21 @@ is allowed to fail during the resolve step::
         ...
     }
 
+In the wscript we can then conditionally enable the dependency by adding
+the following to the ``resolve(...)`` function::
+
+    def resolve(ctx):
+        if some_condition:
+            ctx.enable_dependency("my-pet-library")
+
+
 If ``optional`` is not specified, it will default to ``false``.
+
+.. note::
+    The ``resolve`` step is performed before the ``options`` step. This means
+    that if a dependency needs to be enabled based on a user option, one must
+    check for that option using ``sys.argv`` or similar rather than using the
+    ``ctx.options`` object.
 
 Attribute ``recurse`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -570,7 +584,7 @@ dependency::
 
 All dependencies need to be specified in this way. In some situations where
 the need for a dependency relies on runtime information, it can be specified to
-be "toggleable" and then enabled or disabled in a user-defined ``resolve(...)``
+be "optional" and then enabled or disabled in a user-defined ``resolve(...)``
 function in the ``wscript``.
 
 To support both these configuration methods, we define the following "rules":
