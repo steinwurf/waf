@@ -37,9 +37,10 @@ class ExistingCheckoutResolver(object):
         commits = self.__load_commits_file()
 
         # Try to resolve path from commits file
-        path = self.__resolve_path(commits=commits)
+        commit, path = self.__resolve_path(commits=commits)
 
         if path:
+            self.dependency.git_commit = commit
             return path
 
         # Fallback to the resolver
@@ -88,7 +89,7 @@ class ExistingCheckoutResolver(object):
                 f"resolve: ExistingCheckoutResolver {self.dependency.name} "
                 f"no stored checkout for commit {self.checkout}"
             )
-            return None
+            return None, None
 
         path = commits[stored_commit]
 
@@ -100,7 +101,7 @@ class ExistingCheckoutResolver(object):
             )
 
             del commits[stored_commit]
-            return None
+            return None, None
 
         else:
             self.ctx.to_log(
@@ -108,7 +109,7 @@ class ExistingCheckoutResolver(object):
                 f"{self.dependency.name} -> {path}"
             )
 
-            return path
+            return stored_commit, path
 
     def __repr__(self):
         """

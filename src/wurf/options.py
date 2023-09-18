@@ -87,10 +87,10 @@ class Options(object):
         return self.known_args["--lock_versions"]
 
     def path(self, dependency):
-        return self.known_args["--%s_path" % dependency.name]
+        return self.known_args[f"--{dependency.name}_path"]
 
     def checkout(self, dependency):
-        return self.known_args["--%s_checkout" % dependency.name]
+        return self.known_args[f"--{dependency.name}_checkout"]
 
     def __parse(self):
         known, unknown = self.parser.parse_known_args(args=self.args)
@@ -107,7 +107,7 @@ class Options(object):
             raise WurfError("Incompatible options")
 
     def __add_path(self, dependency):
-        option = "--%s_path" % dependency.name
+        option = f"--{dependency.name}_path"
 
         self.parser.add_argument(
             option,
@@ -117,7 +117,7 @@ class Options(object):
         )
 
     def __add_checkout(self, dependency):
-        option = "--%s_checkout" % dependency.name
+        option = f"--{dependency.name}_checkout"
 
         self.parser.add_argument(
             option,

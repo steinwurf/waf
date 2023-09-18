@@ -29,12 +29,14 @@ class LockVersionCache(object):
         # dependency
         if dependency.resolver == "git":
             checkout = self.checkout(dependency)
-            if "git_tag" in dependency:
+            if dependency.git_tag is not None:
                 return checkout != dependency.git_tag
-            elif "git_commit" in dependency:
+            elif dependency.git_commit is not None:
                 return checkout != dependency.git_commit
             else:
-                raise WurfError("Not stable checkout information found.")
+                raise WurfError(
+                    "Not stable checkout information found when checking content."
+                )
         elif dependency.resolver == "http":
             assert hasattr(
                 dependency, "real_path"
@@ -47,13 +49,14 @@ class LockVersionCache(object):
     def add_dependency(self, dependency):
         if dependency.resolver == "git":
             checkout = None
-
             if dependency.git_tag:
                 checkout = dependency.git_tag
             elif dependency.git_commit:
                 checkout = dependency.git_commit
             else:
-                raise WurfError("Not stable checkout information found.")
+                raise WurfError(
+                    "Not stable checkout information found when adding dependency."
+                )
 
             self.cache[dependency.name] = {
                 "sha1": dependency.sha1,

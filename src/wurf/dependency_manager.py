@@ -6,9 +6,12 @@ import json
 
 from .dependency import Dependency
 from .error import WurfError
+from .lock_version_cache import LockVersionCache
 
 
 class DependencyManager(object):
+    RESOLVE_FILE = "resolve.json"
+
     def __init__(self, registry, dependency_cache, ctx, options, skip_internal):
         """Construct an instance.
 
@@ -52,36 +55,44 @@ class DependencyManager(object):
         # Set of optional dependencies that have been marked as enabled
         self.enabled_dependencies = set()
 
-    def load_dependencies(self, path, mandatory=False):
+    def load_dependencies(self, path):
         """Loads dependencies from a resolve.json file.
 
         :param path: Location where resolve.json should be found.
         :param mandatory: True if the resolve.json file must exist.
         """
 
-        resolve_json_path = os.path.join(path, "resolve.json")
-
+        resolve_json_path = os.path.join(path, DependencyManager.RESOLVE_FILE)
         if not os.path.isfile(resolve_json_path):
-            if mandatory:
-                raise WurfError(
-                    f"Mandatory resolve.json not found here: {resolve_json_path}"
-                )
-            else:
-                return
+            return
 
         with open(resolve_json_path, "r") as resolve_file:
             resolve_json = json.load(resolve_file)
 
-        for dependency in resolve_json:
-            self.add_dependency(**dependency)
+        locked_versions = {}
+        resolve_lock_path = os.path.join(path, LockVersionCache.LOCK_FILE)
+        if os.path.isfile(resolve_lock_path):
+            with open(resolve_lock_path, "r") as f:
+                locked_versions = json.load(f)
+                print(f"Loaded locked versions from {resolve_lock_path}")
+                # print(locked_versions)
 
-    def add_dependency(self, **kwargs):
+        for dependency in resolve_json:
+            locked_version = locked_versions.get(dependency["name"], None)
+            self.add_dependency(
+                dependency_args=dependency, locked_version=locked_version
+            )
+
+    def add_dependency(self, dependency_args, locked_version):
         """Adds a dependency to the manager.
 
         :param kwargs: Keyword arguments containing options for the dependency.
         """
 
-        dependency = Dependency(**kwargs)
+        dependency = Dependency(**dependency_args)
+        if locked_version is not None:
+            print(f"Locked version: {dependency.name} {locked_version}")
+            dependency.locked_version = locked_version
 
         if self.__skip_dependency(dependency):
             return

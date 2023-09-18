@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Use lock files (if present) in dependencies when resolving.
 * Major: Removed the ``override`` attribute.
 * Major: Changed the ``optional`` attribute to mean that the dependency can
   be enabled or disabled by the user. This is useful for dependencies that

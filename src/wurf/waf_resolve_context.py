@@ -141,9 +141,7 @@ class WafResolveContext(Context.Context):
         # run custom code before the actual resolving starts.
 
         try:
-            self.dependency_manager.load_dependencies(
-                self.path.abspath(), mandatory=False
-            )
+            self.dependency_manager.load_dependencies(self.path.abspath())
         except ValueError as e:
             # The ValueError is raised when the json is malformed. We
             # could potentially catch more errors here. But, we can

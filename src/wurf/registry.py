@@ -289,10 +289,10 @@ class Registry(object):
     def require(self, provider_name):
         """
         :param provider_name: The name of the provider as a string
-        :param kwargs: Keyword arguments that should be passed to the provider
-            function.
         """
         if inspect.isclass(provider_name):
+            provider_name = provider_name.__name__
+        if inspect.isfunction(provider_name):
             provider_name = provider_name.__name__
 
         call = self.registry[provider_name]
@@ -549,11 +549,17 @@ def post_resolve(registry, current_resolver, dependency):
 
     resolver = current_resolver
 
-    for resolve in dependency.post_resolve:
+    for action in dependency.post_resolve:
         with registry.provide_temporary() as temporary:
-            temporary.provide_value(f'{resolve["type"]}_command', resolve["command"])
+            temporary.provide_value(f'{action["type"]}_command', action["command"])
 
-            resolver = registry.require(f'post_resolve_{resolve["type"]}')
+            if action["type"] != "run":
+                raise NotImplementedError(
+                    f"Post resolve action {action['type']} specified for "
+                    f"{dependency.name} not supported"
+                )
+
+            resolver = registry.require("post_resolve_run")
 
         registry.provide_value(
             provider_name="current_resolver", value=resolver, override=True
@@ -642,49 +648,6 @@ def existing_checkout_resolver(
 
 
 @Registry.provide
-def git_semver_resolver(
-    git, git_resolver, ctx, semver_selector, dependency, dependency_path
-):
-    """Builds a GitResolver instance.
-
-    :param registry: A Registry instance.
-    """
-    return GitSemverResolver(
-        git=git,
-        resolver=git_resolver,
-        ctx=ctx,
-        semver_selector=semver_selector,
-        dependency=dependency,
-        cwd=dependency_path,
-    )
-
-
-@Registry.provide
-def existing_tag_resolver(
-    ctx,
-    git,
-    dependency,
-    semver_selector,
-    tag_database,
-    git_semver_resolver,
-    dependency_path,
-):
-    """Builds a GitResolver instance.
-
-    :param registry: A Registry instance.
-    """
-    return ExistingTagResolver(
-        ctx=ctx,
-        git=git,
-        dependency=dependency,
-        semver_selector=semver_selector,
-        tag_database=tag_database,
-        resolver=git_semver_resolver,
-        cwd=dependency_path,
-    )
-
-
-@Registry.provide
 def resolve_git_checkout(existing_checkout_resolver, dependency):
     """Builds a WurfGitCheckoutResolver instance.
 
@@ -699,7 +662,7 @@ def resolve_git_checkout(existing_checkout_resolver, dependency):
 
 
 @Registry.provide
-def resolve_git_user_checkout(registry, ctx, mandatory_options, dependency):
+def resolve_git_user_checkout(registry, mandatory_options, dependency):
     """Builds resolver that uses a user specified checkout.
 
     :param registry: A Registry instance.
@@ -746,47 +709,74 @@ def resolve_git_semver(registry, source, dependency):
 
 
 @Registry.provide
-def resolve_git(registry, ctx, git, options, dependency, resolve_path):
+def git_semver_resolver(
+    git, git_resolver, ctx, semver_selector, dependency, dependency_path
+):
+    """Builds a GitResolver instance.
+
+    :param registry: A Registry instance.
+    """
+    return GitSemverResolver(
+        git=git,
+        resolver=git_resolver,
+        ctx=ctx,
+        semver_selector=semver_selector,
+        dependency=dependency,
+        cwd=dependency_path,
+    )
+
+
+@Registry.provide
+def existing_tag_resolver(
+    ctx,
+    git,
+    dependency,
+    semver_selector,
+    tag_database,
+    git_semver_resolver,
+    dependency_path,
+):
+    """Builds a GitResolver instance.
+
+    :param registry: A Registry instance.
+    """
+    return ExistingTagResolver(
+        ctx=ctx,
+        git=git,
+        dependency=dependency,
+        semver_selector=semver_selector,
+        tag_database=tag_database,
+        resolver=git_semver_resolver,
+        cwd=dependency_path,
+    )
+
+
+@Registry.provide
+def resolve_git(registry, options, dependency):
     """Builds git resolvers
 
     :param registry: A Registry instance.
     :param dependency: A WurfDependency instance.
     """
 
-    # If the user specified a checkout we should use that
     checkout = options.checkout(dependency=dependency)
     if checkout:
-        return registry.require("resolve_git_user_checkout")
-
-    # Otherwise we use the method specified
+        method = "user_checkout"
     if "method" in registry:
         method = registry.require("method")
     else:
         method = dependency.method
 
-    method_key = f"resolve_git_{method}"
-    git_resolver = registry.require(method_key)
+    resolver_keys = {
+        "checkout": "resolve_git_checkout",
+        "semver": "resolve_git_semver",
+        "user_checkout": "resolve_git_user_checkout",
+    }
+    resolver_key = resolver_keys.get(method, None)
+    if resolver_key is None:
+        raise WurfError(f"Unknown git resolver method {method}")
 
-    if dependency.from_lock:
-        # Set the resolver action on the dependency
-        dependency.resolver_action = "lock/" + dependency.resolver_action
-
-        resolve_config_path = registry.require("resolve_config_path")
-
-        lock_resolver = OnPassiveLoadPathResolver(
-            git=git,
-            dependency=dependency,
-            resolve_config_path=resolve_config_path,
-            resolve_path=resolve_path,
-        )
-
-        lock_resolver = TryResolver(
-            resolver=lock_resolver, ctx=ctx, dependency=dependency
-        )
-
-        return ListResolver(resolvers=[lock_resolver, git_resolver])
-    else:
-        return git_resolver
+    return registry.require(resolver_key)
 
 
 @Registry.cache
@@ -837,16 +827,11 @@ def resolve_from_lock_git(registry, lock_cache_from, dependency):
 @Registry.cache
 @Registry.provide
 def resolve_http(
-    options,
-    registry,
     archive_extractor,
     url_download,
     dependency,
     source,
-    ctx,
-    git,
     dependency_path,
-    resolve_path,
 ):
     dependency.resolver_action = "http"
 
@@ -861,37 +846,29 @@ def resolve_http(
         resolver = ArchiveResolver(
             archive_extractor=archive_extractor, resolver=resolver, cwd=dependency_path
         )
-    if dependency.from_lock:
-        # Set the resolver action on the dependency
-        dependency.resolver_action = "lock/" + dependency.resolver_action
-
-        resolve_config_path = registry.require("resolve_config_path")
-
-        lock_resolver = OnPassiveLoadPathResolver(
-            git=git,
-            dependency=dependency,
-            resolve_config_path=resolve_config_path,
-            resolve_path=resolve_path,
-        )
-
-        lock_resolver = TryResolver(
-            resolver=lock_resolver, ctx=ctx, dependency=dependency
-        )
-
-        resolver = ListResolver(resolvers=[lock_resolver, resolver])
 
     return resolver
 
 
 @Registry.provide
-def resolve_from_lock_path(lock_cache_from, registry, dependency):
-    with registry.provide_temporary() as temporary:
-        temporary.provide_value("resolver", "lock_path")
-        resolver = registry.require("resolve_chain")
+def resolve_lock_version(registry, git, ctx, dependency, resolve_path):
+    # Set the resolver action on the dependency
+    resolver = registry.require(f"resolve_{dependency.resolver}")
+    dependency.resolver_action = "lock/" + dependency.resolver_action
 
-    return CheckLockCacheResolver(
-        resolver=resolver, lock_cache_from=lock_cache_from, dependency=dependency
+    resolve_config_path = registry.require("resolve_config_path")
+
+    lock_resolver = OnPassiveLoadPathResolver(
+        git=git,
+        dependency=dependency,
+        resolve_config_path=resolve_config_path,
+        resolve_path=resolve_path,
     )
+    print(lock_resolver)
+    lock_resolver = TryResolver(resolver=lock_resolver, ctx=ctx, dependency=dependency)
+
+    resolver = ListResolver(resolvers=[lock_resolver, resolver])
+    return resolver
 
 
 @Registry.provide
@@ -952,16 +929,25 @@ def source_resolver(ctx, registry, dependency):
 
         # The resolver to be used for a dependency can be overridden
         # and example of this is when resolving from a lock path.
-        # In that case the resolver is provided and the
-        # 'resolve_lock_path' will be used.
         if "resolver" in registry:
             resolver = registry.require("resolver")
         else:
             resolver = dependency.resolver
-        resolver_key = f"resolve_{resolver}"
+
+        resolver_keys = {
+            "git": "resolve_git",
+            "http": "resolve_http",
+            "lock_path": "resolve_lock_path",
+            "lock_version": "resolve_lock_version",
+        }
+
+        resolver_key = resolver_keys.get(resolver, None)
+        if resolver_key is None:
+            raise WurfError(f"Unknown resolver {resolver}")
+
         resolver = registry.require(resolver_key)
 
-        if "post_resolve" in dependency:
+        if dependency.post_resolve is not None:
             # Add the post resolve
             temporary.provide_value("current_resolver", resolver)
             resolver = registry.require("post_resolve")
@@ -982,9 +968,20 @@ def resolve_chain(
     dependency.resolver_chain = "Resolve"
 
     if options.path(dependency=dependency):
+        if options.lock_versions():
+            raise WurfError(
+                f'A user path has been specified for "{dependency.name}". '
+                "Setting a user path is not supported when locking versions."
+            )
+
         resolver = registry.require("user_path_resolver")
     else:
-        resolver = registry.require("source_resolver")
+        with registry.provide_temporary() as temporary:
+            if dependency.locked_version is not None:
+                temporary.provide_value("locked_version", dependency.locked_version)
+                temporary.provide_value("resolver", "lock_version")
+
+            resolver = registry.require("source_resolver")
 
     resolver = CreateSymlinkResolver(
         resolver=resolver, dependency=dependency, symlinks_path=symlinks_path, ctx=ctx
@@ -1018,16 +1015,23 @@ def store_lock_path_resolver(store_resolver, dependency, project_path, lock_cach
 
 @Registry.provide
 def resolve_from_version_lock_chain(registry, dependency):
-    # Mark the dependency as being resolved from a lock file
-    # TODO: should the be called from_lock_version?
-    dependency.from_lock = True
-    resolver_key = f"resolve_from_lock_{dependency.resolver}"
-    return registry.require(resolver_key)
+    if dependency.resolver == "git":
+        return registry.require("resolve_from_lock_git")
+    elif dependency.resolver == "http":
+        return registry.require("resolve_from_lock_http")
+    else:
+        raise WurfError(f"Unknown resolver {dependency.resolver}")
 
 
 @Registry.provide
-def resolve_from_path_lock_chain(registry, dependency):
-    return registry.require("resolve_from_lock_path")
+def resolve_from_path_lock_chain(registry, lock_cache_from, dependency):
+    with registry.provide_temporary() as temporary:
+        temporary.provide_value("resolver", "lock_path")
+        resolver = registry.require("resolve_chain")
+
+    return CheckLockCacheResolver(
+        resolver=resolver, lock_cache_from=lock_cache_from, dependency=dependency
+    )
 
 
 @Registry.provide
@@ -1036,7 +1040,19 @@ def dependency_resolver(registry, ctx, configuration: Configuration, dependency)
 
     # This is where we "wire" together the resolvers. Which actually do the
     # work of via some method obtaining a path to a dependency.
-    resolver = registry.require(f"{configuration.resolver_chain()}_chain")
+    resolver_keys = {
+        Configuration.HELP: "help_chain",
+        Configuration.RESOLVE_FROM_PATH_LOCK: "resolve_from_path_lock_chain",
+        Configuration.RESOLVE_FROM_VERSION_LOCK: "resolve_from_version_lock_chain",
+        Configuration.RESOLVE: "resolve_chain",
+        Configuration.LOAD: "load_chain",
+    }
+
+    resolver_key = resolver_keys.get(configuration.resolver_chain(), None)
+    if resolver_key is None:
+        raise WurfError(f"Unknown resolver chain {configuration.resolver_chain()}")
+
+    resolver = registry.require(resolver_key)
 
     if configuration.lock_paths():
         with registry.provide_temporary() as temporary:

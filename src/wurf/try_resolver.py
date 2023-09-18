@@ -14,6 +14,7 @@ class TryResolver(object):
 
         :param resolver: A resolver instance
         """
+        assert resolver is not None
         self.resolver = resolver
         self.ctx = ctx
         self.dependency = dependency

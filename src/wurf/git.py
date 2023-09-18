@@ -69,10 +69,11 @@ class Git(object):
 
         output = self.ctx.cmd_and_log(args, cwd=cwd).strip()
 
-        if output:
-            return output
-        else:
+        if not output:
             return None
+        else:
+            # Return the first tag as a commit may have multiple tags
+            return output.splitlines()[0]
 
     def clone(self, repository, directory, cwd, branch=None, depth=None):
         """
