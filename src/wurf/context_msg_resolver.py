@@ -40,9 +40,10 @@ class ContextMsgResolver(object):
         path = self.resolver.resolve()
 
         if not path:
-            # An optional dependency might be unavailable if the user
-            # does not have a license to access the repository, so we just
+            # If a dependency is unavailable, we just
             # print the status message and continue
+            # If this was an error we would have thrown
+            # an exception
             self.ctx.end_msg("Unavailable", color="RED")
         else:
             if self.dependency.is_symlink:

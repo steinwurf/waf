@@ -4,29 +4,6 @@
 VERSION = "1.0.0"
 
 
-def resolve(ctx):
-    ctx.add_dependency(
-        name="bar",
-        recurse=True,
-        optional=False,
-        resolver="git",
-        method="checkout",
-        checkout="someh4sh",
-        source="bitbucket.com/acme-corp/bar.git",
-    )
-
-    # The following internal dependency does not exist, and it should be
-    # skipped when configuring the top-level "app"
-    ctx.add_dependency(
-        name="goo",
-        internal=True,
-        resolver="git",
-        method="semver",
-        major=5,
-        source="gitlab.com/acme/goo.git",
-    )
-
-
 def options(opt):
     opts = opt.add_option_group("Foo options")
     opts.add_option(

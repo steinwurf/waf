@@ -1,0 +1,7 @@
+[
+    {
+        "name": "baz",
+        "resolver": "http",
+        "source": "http://bar.com/baz.zip"
+    }
+]

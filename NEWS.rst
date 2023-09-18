@@ -6,6 +6,14 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Removed the ``override`` attribute.
+* Major: Changed the ``optional`` attribute to mean that the dependency can
+  be enabled or disabled by the user. This is useful for dependencies that
+  are only required for certain features or on certain platforms.
+* Patch: Fixed bug in UrlDownload where some file downloads would result in
+  a 403 error due to the user-agent not being set.
+* Major: Removed ``add_dependency`` from the context, as all dependencies
+  must now be added in the ``resolve.json`` file.
 * Patch: Fixed issue where 'resolve' was not utilizing the lock paths or
   versions file.
 * Major: Removed support for multiple sources for the same dependency.

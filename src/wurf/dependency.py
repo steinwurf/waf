@@ -54,12 +54,12 @@ class Dependency(object):
         Note on rewrite(...) and SHA1: One obvious question to raise is whether
         we should re-calculate the SHA1 after a rewrite. We currently do not do
         this. Reason for this is that the SHA1 is mainly used to check if the
-        user provided information, passed in e.g. add_dependency(...), has been
-        changed. If this happens the SHA1 will flag a mismatch, and the user
-        should do a reconfigure to continue. The fact that we rewrite(...) the
-        dependency information e.g. to use a user-defined git checkout does not
-        change this. In fact after having resolved the dependency we do not
-        really care how we got there.
+        user provided information, has been changed. If this happens the SHA1
+        will flag a mismatch, and the user should do a reconfigure to continue.
+        The fact that we rewrite(...) the dependency information e.g. to use
+        a user-defined git checkout does not change this.
+        In fact after having resolved the dependency we do not really care how
+        we got there.
 
         Any other attributes can be added and modified as needed. The following
         documents used attributes with reserved meaning:
@@ -99,6 +99,9 @@ class Dependency(object):
             kwargs["source"] = kwargs["sources"][0]
             kwargs.pop("sources")
 
+        if "override" in kwargs:
+            warnings.warn("The 'override' attribute is deprecated", DeprecationWarning)
+
         # Set default values for some common attributes
         if "recurse" not in kwargs:
             kwargs["recurse"] = True
@@ -106,8 +109,6 @@ class Dependency(object):
             kwargs["optional"] = False
         if "internal" not in kwargs:
             kwargs["internal"] = False
-        if "override" not in kwargs:
-            kwargs["override"] = False
 
         if "pull_submodules" not in kwargs and kwargs["resolver"] == "git":
             kwargs["pull_submodules"] = True
@@ -121,7 +122,6 @@ class Dependency(object):
         hash_attributes = kwargs.copy()
         hash_attributes.pop("optional", None)
         hash_attributes.pop("internal", None)
-        hash_attributes.pop("override", None)
 
         s = json.dumps(hash_attributes, sort_keys=True)
         sha1 = hashlib.sha1(s.encode("utf-8")).hexdigest()

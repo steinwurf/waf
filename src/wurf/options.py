@@ -101,6 +101,11 @@ class Options(object):
         if self.lock_versions() and self.lock_paths():
             raise WurfError("Incompatible options")
 
+        if (
+            self.lock_versions() or self.lock_paths()
+        ) and "--skip_internal" in self.args:
+            raise WurfError("Incompatible options")
+
     def __add_path(self, dependency):
         option = "--%s_path" % dependency.name
 

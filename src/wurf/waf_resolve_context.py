@@ -14,6 +14,7 @@ from waflib.Errors import WafError
 from . import registry
 from .error import CmdAndLogError
 from .error import WurfError
+from .dependency_manager import DependencyManager
 
 from waflib.extras import semver
 from waflib.extras import archive
@@ -104,12 +105,13 @@ class WafResolveContext(Context.Context):
         self.logger = Logs.make_logger(path, "resolve")
         self.logger.debug(f"wurf: Resolve execute {configuration.resolver_chain()}")
 
-        self.dependency_manager = self.registry.require("dependency_manager")
+        self.dependency_manager: DependencyManager = self.registry.require(
+            "dependency_manager"
+        )
 
         try:
             # Calling the context execute will call the resolve(...) functions
-            # in the wscripts. These will in turn call add_dependency(...)
-            # which will trigger loading the dependency.
+            # in the wscripts.
             super(WafResolveContext, self).execute()
 
         except WurfError as e:
@@ -168,9 +170,9 @@ class WafResolveContext(Context.Context):
         """
         return self.bldnode.abspath()
 
-    def add_dependency(self, **kwargs):
-        """Adds a dependency."""
-        self.dependency_manager.add_dependency(**kwargs)
+    def enable_dependency(self, name):
+        """Enables a dependency."""
+        self.dependency_manager.enable_dependency(name)
 
     def cmd_and_log(self, cmd, **kwargs):
         # Seems the new waf needs the cwd to be a Node object. We do this

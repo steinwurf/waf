@@ -16,6 +16,7 @@ def test_self_build(testdirectory):
     src_dir = root.mkdir("src")
     src_dir.copy_dir(directory="src/wurf")
     root.copy_file("wscript")
+    root.copy_file("resolve.json")
     root.copy_file("build/waf")
 
     r = root.run("python waf configure")

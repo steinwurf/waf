@@ -8,6 +8,7 @@ from pytest_testdirectory.runresulterror import RunResultError
 
 def test_internal_dependency(testdirectory):
     testdirectory.copy_file("test/internal_dependency/wscript")
+    testdirectory.copy_file("test/internal_dependency/resolve.json")
     testdirectory.copy_file("build/waf")
     testdirectory.copy_file("test/fake_git.py")
 

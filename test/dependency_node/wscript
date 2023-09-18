@@ -14,8 +14,6 @@ def resolve(ctx):
     # Rebuild the dependency manager
     ctx.dependency_manager = ctx.registry.require("dependency_manager")
 
-    ctx.add_dependency(name="baz", resolver="http", source="http://bar.com/baz.zip")
-
 
 def options(opt):
     pass

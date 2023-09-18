@@ -49,6 +49,9 @@ class DependencyManager(object):
         # will only be invoked if the post_resolve(...) function is invoked.
         self.post_resolve_actions = []
 
+        # Set of optional dependencies that have been marked as enabled
+        self.enabled_dependencies = set()
+
     def load_dependencies(self, path, mandatory=False):
         """Loads dependencies from a resolve.json file.
 
@@ -119,31 +122,21 @@ class DependencyManager(object):
         :return: True if the dependency should be skipped, otherwise False.
         """
         if dependency.internal:
-            if self.skip_internal:
-                return True
-
             if not self.ctx.is_toplevel():
                 # Internal dependencies should be skipped, if this is not the
                 # top-level wscript
                 return True
 
+            if self.skip_internal:
+                # Skip internal dependencies if the user has specified
+                # the --skip_internal option.
+                return True
+
         if dependency.name in self.seen_dependencies:
             seen_dependency = self.seen_dependencies[dependency.name]
 
-            if not dependency.override and seen_dependency.override:
-                # The seen dependency is marked override, so we should use that
-                # one.
-                return True
-
-            if dependency.override and not seen_dependency.override:
-                raise WurfError(
-                    f"Overriding dependency:\n{dependency}\n"
-                    f"added after non overriding dependency:\n{seen_dependency}"
-                )
-
-            # In this case either both or non of the dependencies are marked
-            # override and we need to check the SHA1
-
+            # We've seen this dependency before. We need to make sure they
+            # are specified identically by checking the SHA1
             if seen_dependency.sha1 != dependency.sha1:
                 current = self.ctx.path.abspath()
                 added_by = self.dependency_cache[dependency.name]["added_by"]
@@ -155,20 +148,11 @@ class DependencyManager(object):
                     f"the previous definition was:\n{seen_dependency}"
                 )
 
-            # If the current dependency is non-optional and we have already
-            # seen the same dependency as optional
-            if not dependency.optional and seen_dependency.optional:
-                # Store the non-optional version in seen_dependencies to
-                # avoid future checks
-                self.seen_dependencies[dependency.name] = dependency
-
-                # It is not safe to skip this dependency, if there is no
-                # valid path for it in the dependency_cache. In this case,
-                # we should try to resolve it again as non-optional.
-                if dependency.name not in self.dependency_cache:
-                    return False
-
             # This dependency is already in the seen_dependencies
+            return True
+
+        if not self.__is_toggled_on(dependency):
+            # This dependency is not toggled on, so we should skip it
             return True
 
         self.seen_dependencies[dependency.name] = dependency
@@ -183,3 +167,23 @@ class DependencyManager(object):
 
     def add_post_resolve_action(self, action):
         self.post_resolve_actions.append(action)
+
+    def __is_toggled_on(self, dependency):
+        if self.options.lock_paths() or self.options.lock_versions():
+            # Always enable toggled dependencies when locking paths or versions
+            return True
+
+        if not dependency.optional:
+            # Non-optional dependencies are always enabled
+            return True
+
+        if dependency.name in self.enabled_dependencies:
+            return True
+
+        return False
+
+    def enable_dependency(self, name):
+        """Enables a dependency."""
+        if name in self.enabled_dependencies:
+            raise WurfError(f"Dependency already enabled: {name}")
+        self.enabled_dependencies.add(name)

@@ -1,0 +1,17 @@
+[
+    {
+        "name": "baz",
+        "resolver": "http",
+        "source": "http://bar.com/baz.zip",
+        "post_resolve": [
+            {
+                "type": "run",
+                "command": [
+                    "python",
+                    "-c",
+                    "f = open('ok.txt', 'w'); f.write('ok')"
+                ]
+            }
+        ]
+    }
+]

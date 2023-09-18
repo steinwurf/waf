@@ -1,0 +1,26 @@
+[
+    {
+        "name": "waf",
+        "recurse": false,
+        "resolver": "git",
+        "method": "checkout",
+        "checkout": "waf-2.0.22",
+        "source": "https://gitlab.com/ita1024/waf.git"
+    },
+    {
+        "name": "python-semver",
+        "recurse": false,
+        "resolver": "git",
+        "method": "checkout",
+        "checkout": "2.9.0",
+        "source": "github.com/python-semver/python-semver.git"
+    },
+    {
+        "name": "python-archive",
+        "recurse": false,
+        "resolver": "git",
+        "method": "checkout",
+        "checkout": "zipfile-perserve-permissions",
+        "source": "github.com/steinwurf/python-archive.git"
+    }
+]

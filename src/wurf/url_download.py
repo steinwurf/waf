@@ -4,7 +4,9 @@
 import os
 import shutil
 from urllib.parse import urlparse
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
+
+from .error import WurfError
 
 
 class UrlDownload(object):
@@ -20,7 +22,10 @@ class UrlDownload(object):
             if extension:
                 filename = basename
 
-        response = urlopen(source)
+        try:
+            response = urlopen(Request(source, headers={"User-Agent": "Mozilla"}))
+        except Exception as e:
+            raise WurfError(f"Failed to download: {source}\n{str(e)}") from e
         # If filename is still not available, try to extract it from the
         # Content-Disposition header
         if not filename:
