@@ -15,7 +15,7 @@ We use Waf as our build tool. However, before adding the Waf
 file to the individual projects we first add some additional
 tools to Waf.
 
-These help us to handle / resolve library dependencies. The goal is to
+These help us to handle/resolve library dependencies. The goal is to
 add functionality to Waf such that it can clone and download needed dependencies
 automatically.
 
@@ -73,14 +73,14 @@ filter to pytest. The pytest test filter can be passed using the
 
     python waf --test_filter="test_git"
 
-The ``--test_filter`` string will by passed to the pytest ``-k``
+The ``--test_filter`` string will bypassed to the pytest ``-k``
 option. See more information in the pytest documentation:
 https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests
 
 Running ``pytest --help`` will produce the following description of the
 ``-k`` option::
 
-    -k EXPRESSION         only run tests which match the given substring
+    -k EXPRESSION         only run tests that match the given substring
                            expression. An expression is a python evaluable
                            expression where all names are substring-matched
                            against test names and their parent classes. Example:
@@ -89,7 +89,7 @@ Running ``pytest --help`` will produce the following description of the
                            'test_method' or 'test_other'. Additionally keywords
                            are matched to classes and functions containing extra
                            names in their 'extra_keyword_matches' set, as well as
-                           functions which have names assigned directly to them.
+                           functions that have names assigned directly to them.
 
 Fixing unit tests
 .................
@@ -107,12 +107,12 @@ subfolder matching the test function name. For example, if you have a test
 function called ``test_empty_wscript(testdirectory)``, then the first invocation
 of that test will happen inside ``pytest/test_empty_wscript0``.
 
-Log output / debugging
-......................
+Log output/debugging
+....................
 
 We use the logging system provided by waf. If you have an issue with the
 resolve functionality, you can add the ``-v`` verbose flag (or ``-vvv``
-to see all debug information). Alternatively you can use the
+to see all debug information). Alternatively, you can use the
 ``--zones`` filter to see the resolver debug messages only::
 
     python waf configure -v --zones=resolve
@@ -131,7 +131,7 @@ main file included by Waf is the ``src/wurf/waf_entry_point.py``. This is a grea
 place to start to understand our additions to ``Waf``.
 
 Waf will load this file automatically when starting up, which is achieved using
-the ``--prelude`` option of Waf. Described in the Waf book:
+the ``--prelude`` option of Waf. As described in the Waf book:
 https://waf.io/book/#_customization_and_redistribution.
 
 The location of the source files is a bit tricky, as Waf will move these files
@@ -145,7 +145,7 @@ this::
 Waf specific code
 .................
 
-Code that uses/imports code from core Waf are prefixed with ``waf_``. This
+Code that uses/imports code from core Waf is prefixed with ``waf_``. This
 makes it easy to see which files are pure Python and which provide the
 integration points with Waf.
 
@@ -153,8 +153,8 @@ integration points with Waf.
 High-level overview
 ...................
 
-The main modification added to the standard Waf flow of control, is the addition
-of the `ResolveContext`. At a high-level this looks as follows::
+The main modification added to the standard Waf flow of control is the addition
+of the `ResolveContext`. At a high level this looks as follows::
 
     ./waf ....
 
@@ -176,7 +176,7 @@ of the `ResolveContext`. At a high-level this looks as follows::
     | ....            |
     +-----------------+
 
-Lets outline the different steps:
+Let's outline the different steps:
 
 1. The user invokes the waf binary in the project folder, internally Waf will
    create the ``OptionsContext`` to recurse out in user's ``wscript`` files and collect
@@ -188,10 +188,10 @@ Lets outline the different steps:
    other ways. In the "load" mode we expect dependencies to have already been
    resolved and made available on our local file system (and we just load
    information about where they are located). Roughly speaking we
-   will be in "resolve" mode when the users uses the "configure" command i.e.
+   will be in "resolve" mode when the users use the "configure" command i.e.
    ``python waf configure ...`` and otherwise in the "load" mode.
 3. In both cases the ``ResolveContext`` makes a dependency available by producing
-   a path to that dependency. That can later be used on other contexts etc. E.g.
+   a path to that dependency. That can later be used in other contexts etc. E.g.
    If the dependency declares that it is recursable, we will automatically
    recurse it for options, configure and build.
 4. After having executed the ``OptionsContext`` and collected all options etc.
@@ -227,7 +227,7 @@ defines the general dependency attributes:
 Attribute ``name`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
-The ``name`` attribute is a string the assigns a human readable name to the
+The ``name`` attribute is a string that assigns a human-readable name to the
 dependency::
 
     {
@@ -288,7 +288,7 @@ This attribute specifies whether Waf should recurse into the dependency folder.
 This is useful if the dependency is itself a Waf project. When recursing into
 a folder Waf will look for a wscript in the folder and execute its commands.
 
-Currently we will automatically (if recurse is ``true``), recurse into and execute
+Currently, we will automatically (if recurse is ``true``), recurse into and execute
 following Waf commands: (``resolve``, ``options``, ``configure``, ``build``)
 
 As we also recurse into ``resolve`` it also enables us to recursively to resolve
@@ -300,7 +300,7 @@ waf command, say ``upload``, then add the following to your wscript's
 
     def upload(ctx):
         ... your code
-        # Now lets recurse and execute the upload functions in dependencies
+        # Now let's recurse and execute the upload functions in dependencies
         # wscripts.
 
         import waflib.extras.wurf.waf_resolve_context
@@ -324,7 +324,7 @@ Attribute ``internal`` (general)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 The ``internal`` attribute is a boolean whether the dependency is internal to
-the specific project. Lets make a small example, say we have two libraries
+the specific project. Let's make a small example, say we have two libraries
 ``libfoo`` which depends on ``libbar``. ``libbar`` has a dependency on ``gtest``
 for running unit-tests etc. However, when resolving dependencies of ``libfoo``
 we only get ``libbar`` because ``gtest`` is marked as ``internal`` to ``libbar``.
@@ -438,7 +438,7 @@ commit.::
 
 The ``semver`` method will use Semantic Versioning (www.semver.org) to select
 the correct version (based on the available git tags). Using the ``major``
-attribute we specific which major version of a dependency to use.  Example::
+attribute we specify which major version of a dependency to use.  Example::
 
     On first resolve         Second resolve
     +-----------------------+-----------------------+
@@ -451,9 +451,9 @@ attribute we specific which major version of a dependency to use.  Example::
                             |
                             +
 
-On the initial resolve the newest available tag with major version 4 is
-``4.1.1``. At a later point in time a we re-run resolve, this time new
-versions of our dependency has been released and the newest is now ``4.2.0``.
+On the initial resolve, the newest available tag with major version 4 is
+``4.1.1``. At a later point in time, we re-run resolve, this time new
+versions of our dependency have been released and the newest is now ``4.2.0``.
 
 Attributes::
 
@@ -562,18 +562,18 @@ version.
 This is problematic e.g. for IDE configurations where the user needs to manually
 go and update the path in the IDE to the new location.
 
-Moreover, Waf fails to recognize changes in dependency include files
+Moreover, Waf fails to recognize changes in dependency including files
 if they are located outside the project root. This is very annoying if you
 are developing header-only projects side-by-side because you need to rebuild
-the entire project if some header files changed. But if the dependencies
+the entire project if some header files change. But if the dependencies
 are accessed through a symlink within the project, then Waf will be able to
-track the changes in all the include files.
+track the changes in all the included files.
 
 To avoid these problems, we created the ``resolve_symlinks`` local folder in
 the project root that contains symlinks to the resolved dependencies. The
 path can be changed with the ``--symlinks_path`` option.
 
-For the previous example we would see the following in the ``resolve_symlinks``
+For the previous example, we would see the following in the ``resolve_symlinks``
 folder::
 
     $ ls -la resolve_symlinks/
@@ -639,8 +639,8 @@ To combat this a config file can be used to override the default value for
 this option.
 
 The config file must be called ``.wurf_config``, and must be located in either
-the project's directory or the user's directory. Note, the former takes priority
-over the latter.
+the project's directory or the user's directory. Note, that the former takes
+priority over the latter.
 
 The following is an example of the content of a config file::
 
@@ -696,7 +696,7 @@ Add ``--force-resolve`` option
 ..............................
 
 Certain resolvers utilize "shortcuts" such as using cached information about
-dependencies to speed the resolve step. Providing this option should by-pass
+dependencies to speed up the resolve step. Providing this option should by-pass
 such optimizations and do a full resolve - not relying on any form of cached
 data.
 
@@ -706,13 +706,13 @@ Print full log file on failure
 To make error messages user-friendly the default is to redirect full tracebacks
 (showing where an error originated), to the log files. However, if running on
 a build system it is convenient to have the full traceback printed to the
-terminal, this avoid us having to log into the machine an manually retrieve the
-log file.
+terminal, this avoids us having to log into the machine and manually retrieve
+the log file.
 
-Dump resolved dependencies information to json.
-...............................................
+Dump resolved dependencies information to JSON
+..............................................
 
-To support third party tooling working with information about an already
+To support third-party tooling working with information about an already
 resolved dependency we implement the ``--dump-resolved-dependencies`` option.
 
 This will write out information about resolved dependencies such as semver tag
