@@ -66,38 +66,6 @@ def mkdir_app(directory):
     return app_dir
 
 
-def mkdir_app_override(directory):
-    app_dir = directory.mkdir("app")
-    app_dir.copy_file("test/add_dependency/app/main.cpp")
-    app_dir.copy_file("test/add_dependency/app/wscript")
-    app_dir.copy_file(
-        "test/add_dependency/app/resolve_override.json", rename_as="resolve.json"
-    )
-
-    app_dir.copy_file("test/fake_git.py")
-    app_dir.copy_file("build/waf")
-    # Note: waf will call "git config --get remote.origin.url" in this folder,
-    # so "git init" is required if the pytest temp folder is located within
-    # the main waf folder
-
-    git_info = {
-        "checkout": "master",
-        "branches": ["master"],
-        "commits": [],
-        "remote_origin_url": "git@github.com/acme-corp/app.git",
-        "is_detached_head": False,
-        "submodules": [],
-        "tags": [],
-    }
-
-    json_path = os.path.join(app_dir.path(), "git_info.json")
-
-    with open(json_path, "w") as json_file:
-        json.dump(git_info, json_file)
-
-    return app_dir
-
-
 def mkdir_libfoo(directory):
     # Add foo dir
     foo_dir = directory.copy_dir(directory="test/add_dependency/libfoo")
@@ -502,50 +470,6 @@ def test_create_standalone_archive(testdirectory):
     )
     app_dir.run(["python", "waf", "-v", "standalone"])
     assert app_dir.contains_file("test_add_dependency-1.0.0.zip")
-
-
-def test_override(testdirectory):
-    """Tests that dependencies marked as override works"""
-
-    app_dir = mkdir_app_override(directory=testdirectory)
-
-    # Make a directory where we place the libraries that we would have cloned
-    # if we had use the full waf resolve functionality.
-    #
-    # To avoid relying on network connectivity we simply place the
-    # libraries there and then fake the git clone step.
-    git_dir = testdirectory.mkdir(directory="git_dir")
-
-    qux_dir = mkdir_libqux(directory=git_dir)
-    foo_dir = mkdir_libfoo(directory=git_dir)
-    bar_dir = mkdir_libbar(directory=git_dir)
-    baz_dir = mkdir_libbaz(directory=git_dir, qux_dir=qux_dir)
-    extra_dir = mkdir_libextra(directory=git_dir)
-
-    # Instead of doing an actual Git clone - we fake it and use the paths in
-    # this mapping
-    clone_path = {
-        "acme-corp/foo.git": foo_dir.path(),
-        "acme-corp/bar.git": bar_dir.path(),
-        "acme/baz.git": baz_dir.path(),
-        "acme-corp/extra.git": extra_dir.path(),
-    }
-
-    json_path = os.path.join(app_dir.path(), "clone_path.json")
-
-    with open(json_path, "w") as json_file:
-        json.dump(clone_path, json_file)
-
-    # Try the use checkout
-    app_dir.run(
-        ["python", "waf", "configure", "-v", "--resolve_path", "resolved_dependencies"]
-    )
-    app_dir.run(["python", "waf", "build", "-v"])
-
-    resolve_dir = app_dir.join("resolved_dependencies")
-    assert resolve_dir.contains_dir("foo-*", "1.3.3.7-*")
-    assert resolve_dir.contains_dir("baz-*", "4.0.0-*")
-    assert resolve_dir.contains_dir("bar-*", "someh4sh-*")
 
 
 def test_resolve_only(testdirectory):

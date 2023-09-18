@@ -135,20 +135,8 @@ class DependencyManager(object):
         if dependency.name in self.seen_dependencies:
             seen_dependency = self.seen_dependencies[dependency.name]
 
-            if not dependency.override and seen_dependency.override:
-                # The seen dependency is marked override, so we should use that
-                # one.
-                return True
-
-            if dependency.override and not seen_dependency.override:
-                raise WurfError(
-                    f"Overriding dependency:\n{dependency}\n"
-                    f"added after non overriding dependency:\n{seen_dependency}"
-                )
-
-            # In this case either both or non of the dependencies are marked
-            # override and we need to check the SHA1
-
+            # We've seen this dependency before. We need to make sure they
+            # are specified identically by checking the SHA1
             if seen_dependency.sha1 != dependency.sha1:
                 current = self.ctx.path.abspath()
                 added_by = self.dependency_cache[dependency.name]["added_by"]

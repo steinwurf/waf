@@ -99,6 +99,9 @@ class Dependency(object):
             kwargs["source"] = kwargs["sources"][0]
             kwargs.pop("sources")
 
+        if "override" in kwargs:
+            warnings.warn("The 'override' attribute is deprecated", DeprecationWarning)
+
         # Set default values for some common attributes
         if "recurse" not in kwargs:
             kwargs["recurse"] = True
@@ -106,8 +109,6 @@ class Dependency(object):
             kwargs["optional"] = False
         if "internal" not in kwargs:
             kwargs["internal"] = False
-        if "override" not in kwargs:
-            kwargs["override"] = False
 
         if "pull_submodules" not in kwargs and kwargs["resolver"] == "git":
             kwargs["pull_submodules"] = True
@@ -121,7 +122,6 @@ class Dependency(object):
         hash_attributes = kwargs.copy()
         hash_attributes.pop("optional", None)
         hash_attributes.pop("internal", None)
-        hash_attributes.pop("override", None)
 
         s = json.dumps(hash_attributes, sort_keys=True)
         sha1 = hashlib.sha1(s.encode("utf-8")).hexdigest()
