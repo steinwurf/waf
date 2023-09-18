@@ -97,6 +97,7 @@ class DependencyManager(object):
         if self.__skip_dependency(dependency):
             return
 
+        self.seen_dependencies[dependency.name] = dependency
         self.options.add_dependency(dependency)
 
         with self.registry.provide_temporary() as tmp:
@@ -165,8 +166,6 @@ class DependencyManager(object):
         if not self.__is_toggled_on(dependency):
             # This dependency is not toggled on, so we should skip it
             return True
-
-        self.seen_dependencies[dependency.name] = dependency
 
         return False
 
