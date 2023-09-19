@@ -864,7 +864,6 @@ def resolve_lock_version(registry, git, ctx, dependency, resolve_path):
         resolve_config_path=resolve_config_path,
         resolve_path=resolve_path,
     )
-    print(lock_resolver)
     lock_resolver = TryResolver(resolver=lock_resolver, ctx=ctx, dependency=dependency)
 
     resolver = ListResolver(resolvers=[lock_resolver, resolver])
@@ -978,7 +977,6 @@ def resolve_chain(
     else:
         with registry.provide_temporary() as temporary:
             if dependency.locked_version is not None:
-                temporary.provide_value("locked_version", dependency.locked_version)
                 temporary.provide_value("resolver", "lock_version")
 
             resolver = registry.require("source_resolver")
