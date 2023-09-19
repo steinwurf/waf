@@ -6,16 +6,17 @@ from wurf.dependency_manager import DependencyManager
 
 
 def test_dependency_manager():
-
     registry = mock.Mock()
     dependency_cache = OrderedDict()
     ctx = mock.Mock()
+    git = mock.Mock()
     options = mock.Mock()
 
     DependencyManager(
         registry=registry,
         dependency_cache=dependency_cache,
         ctx=ctx,
+        git=git,
         options=options,
         skip_internal=False,
     )

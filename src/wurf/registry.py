@@ -1093,6 +1093,7 @@ def dependency_manager(registry):
     registry.purge_cache()
 
     ctx = registry.require("ctx")
+    git = registry.require("git")
     dependency_cache = registry.require("dependency_cache")
     options = registry.require("options")
     skip_internal = registry.require("skip_internal")
@@ -1101,6 +1102,7 @@ def dependency_manager(registry):
         registry=registry,
         dependency_cache=dependency_cache,
         ctx=ctx,
+        git=git,
         options=options,
         skip_internal=skip_internal,
     )
