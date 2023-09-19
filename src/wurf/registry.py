@@ -15,7 +15,6 @@ from .configuration import Configuration
 from .context_msg_resolver import ContextMsgResolver
 from .create_symlink_resolver import CreateSymlinkResolver
 from .dependency_manager import DependencyManager
-from .existing_tag_resolver import ExistingTagResolver
 from .existing_checkout_resolver import ExistingCheckoutResolver
 from .git import Git
 from .git_checkout_resolver import GitCheckoutResolver
@@ -37,7 +36,6 @@ from .post_resolve_run import PostResolveRun
 from .semver_selector import SemverSelector
 from .store_lock_path_resolver import StoreLockPathResolver
 from .store_lock_version_resolver import StoreLockVersionResolver
-from .tag_database import TagDatabase
 from .try_resolver import TryResolver
 from .url_download import UrlDownload
 
@@ -362,13 +360,13 @@ def symlinks_path(mandatory_options, waf_utils):
 
 @Registry.cache
 @Registry.provide
-def dependency_path(git_url_rewriter, resolve_path, source, dependency, waf_utils):
+def dependency_path(git_url_rewriter, resolve_path, dependency, waf_utils):
     if dependency.resolver == "git":
-        repo_url = git_url_rewriter.rewrite_url(url=source)
+        repo_url = git_url_rewriter.rewrite_url(url=dependency.source)
         repo_hash = hashlib.sha1(repo_url.encode("utf-8")).hexdigest()[:6]
         name = dependency.name + "-" + repo_hash
     else:
-        source_hash = hashlib.sha1(source.encode("utf-8")).hexdigest()[:6]
+        source_hash = hashlib.sha1(dependency.source.encode("utf-8")).hexdigest()[:6]
         name = dependency.name + "-" + source_hash
 
     dependency_path = os.path.join(resolve_path, name)
@@ -482,13 +480,6 @@ def semver_selector(semver):
 
 @Registry.cache_once
 @Registry.provide
-def tag_database(ctx):
-    """Return the TagDatabase provider."""
-    return TagDatabase(ctx=ctx)
-
-
-@Registry.cache_once
-@Registry.provide
 def url_download():
     """Return the UrlDownload provider."""
     return UrlDownload()
@@ -586,7 +577,7 @@ def post_resolve_run(current_resolver, ctx, run_command, dependency_path):
 
 
 @Registry.provide
-def git_resolver(git, ctx, dependency, source, git_url_rewriter, dependency_path):
+def git_resolver(git, ctx, dependency, git_url_rewriter, dependency_path):
     """Builds a GitResolver instance.
 
     :param registry: A Registry instance.
@@ -595,7 +586,6 @@ def git_resolver(git, ctx, dependency, source, git_url_rewriter, dependency_path
         git=git,
         ctx=ctx,
         dependency=dependency,
-        source=source,
         git_url_rewriter=git_url_rewriter,
         cwd=dependency_path,
     )
@@ -689,18 +679,12 @@ def resolve_git_user_checkout(registry, mandatory_options, dependency):
 
 
 @Registry.provide
-def resolve_git_semver(registry, source, dependency):
+def resolve_git_semver(registry, dependency):
     """Builds a GitSemverResolver instance.
     :param registry: A Registry instance.
     :param dependency: A WurfDependency instance.
     """
-
-    # The ExistingTagResolver should only be used for Steinwurf projects,
-    # since the tag database only contains information about those projects
-    if "steinwurf" in source:
-        resolver = registry.require("existing_tag_resolver")
-    else:
-        resolver = registry.require("git_semver_resolver")
+    resolver = registry.require("git_semver_resolver")
 
     # Set the resolver action on the dependency
     dependency.resolver_action = "git semver"
@@ -722,31 +706,6 @@ def git_semver_resolver(
         ctx=ctx,
         semver_selector=semver_selector,
         dependency=dependency,
-        cwd=dependency_path,
-    )
-
-
-@Registry.provide
-def existing_tag_resolver(
-    ctx,
-    git,
-    dependency,
-    semver_selector,
-    tag_database,
-    git_semver_resolver,
-    dependency_path,
-):
-    """Builds a GitResolver instance.
-
-    :param registry: A Registry instance.
-    """
-    return ExistingTagResolver(
-        ctx=ctx,
-        git=git,
-        dependency=dependency,
-        semver_selector=semver_selector,
-        tag_database=tag_database,
-        resolver=git_semver_resolver,
         cwd=dependency_path,
     )
 
@@ -830,7 +789,6 @@ def resolve_http(
     archive_extractor,
     url_download,
     dependency,
-    source,
     dependency_path,
 ):
     dependency.resolver_action = "http"
@@ -838,7 +796,6 @@ def resolve_http(
     resolver = HttpResolver(
         url_download=url_download,
         dependency=dependency,
-        source=source,
         cwd=dependency_path,
     )
 
@@ -921,11 +878,7 @@ def load_chain(ctx, git, resolve_config_path, dependency, resolve_path):
 
 @Registry.provide
 def source_resolver(ctx, registry, dependency):
-    """For each source in a dependency this builds up the resolver chain."""
-
     with registry.provide_temporary() as temporary:
-        temporary.provide_value("source", dependency.source)
-
         # The resolver to be used for a dependency can be overridden
         # and example of this is when resolving from a lock path.
         if "resolver" in registry:

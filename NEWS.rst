@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Major: Removed tag database and by extension the ``ExistingTagResolver``.
 * Major: Use lock files (if present) in dependencies when resolving.
 * Major: Removed the ``override`` attribute.
 * Major: Changed the ``optional`` attribute to mean that the dependency can

@@ -17,7 +17,6 @@ class GitCheckoutResolver(object):
         """Construct an instance.
 
         :param git: A Git instance
-        :param resolver: A GitResolver instance.
         :param ctx: A Waf Context instance.
         :param dependency: Dependency instance.
         :param checkout: The branch, tag, or sha1 as a string.

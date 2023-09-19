@@ -5,10 +5,8 @@ from wurf.git_resolver import GitResolver
 
 
 def test_git_resolver(testdirectory):
-
     ctx = mock.Mock()
     git = mock.Mock()
-    source = "gitlab.com/steinwurf/links.git"
     url = "https://gitlab.com/steinwurf/links.git"
 
     git_url_rewriter = mock.Mock()
@@ -25,13 +23,13 @@ def test_git_resolver(testdirectory):
 
     dependency = mock.Mock()
     dependency.name = "links"
+    dependency.source = "gitlab.com/steinwurf/links.git"
 
     resolver = GitResolver(
         git=git,
         ctx=ctx,
         dependency=dependency,
         git_url_rewriter=git_url_rewriter,
-        source=source,
         cwd=cwd,
     )
 

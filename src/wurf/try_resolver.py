@@ -40,11 +40,9 @@ class TryResolver(object):
             # We also store the error message in the dependency object.
             # This will be displayed later if a TopLevelError is triggered,
             # e.g. when a dependency fails.
-            error_message = ""
-            if "current_source" in self.dependency:
-                error_message = f"Current source: {self.dependency.current_source}\n"
+
             # The first argument of the error contains the error message
-            error_message += e.args[0]
+            error_message = e.args[0]
             if not error_message.endswith("\n"):
                 error_message += "\n"
             self.dependency.error_messages.append(error_message)

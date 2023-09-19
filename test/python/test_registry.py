@@ -11,7 +11,6 @@ class Point(object):
 
 
 def test_registry():
-
     registry = Registry()
 
     def build_point(registry, x):
@@ -85,18 +84,17 @@ def test_registry():
     assert p.x == 0
     assert p.y == 0
 
-    source = "www.steinwurf.com"
+    value = "www.steinwurf.com"
 
     with registry.provide_temporary() as tmp:
-        tmp.provide_value("current_source", source)
-        assert "current_source" in registry
-        assert registry.require("current_source") == "www.steinwurf.com"
+        tmp.provide_value("some_value", value)
+        assert "some_value" in registry
+        assert registry.require("some_value") == "www.steinwurf.com"
 
-    assert "current_source" not in registry
+    assert "some_value" not in registry
 
 
 def test_registry_inject():
-
     registry = Registry()
 
     # No arguments
@@ -159,7 +157,6 @@ def test_registry_inject():
 
 
 def test_registry_cache():
-
     registry = Registry()
 
     class Foo(object):
