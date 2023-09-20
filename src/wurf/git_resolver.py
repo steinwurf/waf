@@ -2,6 +2,8 @@
 # encoding: utf-8
 
 import os
+import tempfile
+import shutil
 
 
 class GitResolver(object):
@@ -33,35 +35,51 @@ class GitResolver(object):
         """
         repo_url = self.git_url_rewriter.rewrite_url(self.dependency.source)
 
-        # The folder for storing the default branch of this repository
-        folder_name = "master-branch"
-        master_path = os.path.join(self.cwd, folder_name)
-
-        # If the master folder does not exist, do a git clone first
-        if not os.path.isdir(master_path):
-            self.git.clone(repository=repo_url, directory=folder_name, cwd=self.cwd)
+        expected_default_branches = ["master", "main"]
+        for default_branch in expected_default_branches:
+            folder_name = f"branch-{default_branch}"
+            default_repo_path = os.path.join(self.cwd, folder_name)
+            if os.path.isdir(default_repo_path):
+                # We only want to pull if we haven't just cloned. This avoids
+                # having to type in the username and password twice when using
+                # https as a git protocol.
+                try:
+                    # git pull will fail if the repository is unavailable
+                    # This is not a problem if we have already downloaded
+                    # the required version for this dependency
+                    self.git.pull(cwd=default_repo_path)
+                except Exception as e:
+                    self.ctx.to_log("Exception when executing git pull:")
+                    self.ctx.to_log(e)
+                break
         else:
-            # We only want to pull if we haven't just cloned. This avoids
-            # having to type in the username and password twice when using
-            # https as a git protocol.
-            try:
-                # git pull will fail if the repository is unavailable
-                # This is not a problem if we have already downloaded
-                # the required version for this dependency
-                self.git.pull(cwd=master_path)
-            except Exception as e:
-                self.ctx.to_log("Exception when executing git pull:")
-                self.ctx.to_log(e)
+            # clone the repo to a temporary folder and move it to a
+            # folder named after the default branch
+            with tempfile.TemporaryDirectory() as tmpdir:
+                tmp_repo_dir = os.path.join(tmpdir, "repo")
+                self.git.clone(
+                    repository=repo_url,
+                    directory=tmp_repo_dir,
+                    cwd=self.cwd,
+                )
 
-        assert os.path.isdir(master_path), "We should have a valid path here!"
+                default_repo_path = os.path.join(
+                    self.cwd,
+                    f"branch-{self.git.default_branch(cwd=tmp_repo_dir)}",
+                )
+                shutil.move(tmp_repo_dir, default_repo_path)
+
+        assert os.path.isdir(default_repo_path), "Path not valid!"
 
         # If the project contains submodules we also get those
         if self.dependency.pull_submodules:
-            self.git.pull_submodules(cwd=master_path)
+            self.git.pull_submodules(cwd=default_repo_path)
 
-        self.dependency.git_commit = self.git.current_commit(cwd=master_path)
+        self.dependency.git_commit = self.git.current_commit(
+            cwd=default_repo_path,
+        )
 
-        return master_path
+        return default_repo_path
 
     def __repr__(self):
         """

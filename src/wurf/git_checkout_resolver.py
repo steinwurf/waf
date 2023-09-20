@@ -47,7 +47,10 @@ class GitCheckoutResolver(object):
             # folder name, as the branch may be updated later.
             folder_name = f"branch-{self.checkout}"
         else:
-            commit_id = self.git.checkout_to_commit_id(cwd=path, checkout=self.checkout)
+            commit_id = self.git.checkout_to_commit_id(
+                cwd=path,
+                checkout=self.checkout,
+            )
             folder_name = commit_id[:10]
 
         # The folder for storing the requested checkout

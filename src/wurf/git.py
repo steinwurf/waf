@@ -227,3 +227,19 @@ class Git(object):
         output = self.ctx.cmd_and_log(args, cwd=cwd)
 
         return output.strip()
+
+    def default_branch(self, cwd):
+        """
+        Returns the default branch of the repository in directory cwd.
+
+        :param cwd: The current working directory as a string
+        """
+        args = [
+            self.git_binary,
+            "symbolic-ref",
+            "refs/remotes/origin/HEAD",
+            "--short",
+        ]
+        output = self.ctx.cmd_and_log(args, cwd=cwd)
+
+        return output.strip().split("/")[-1]

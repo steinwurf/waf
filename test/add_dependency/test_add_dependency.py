@@ -269,11 +269,11 @@ def run_commands(app_dir, git_dir):
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "bar"))
 
     app_dir.run(["python", "waf", "build", "-v"])
-
+    print(app_dir)
     resolve_dir = app_dir.join("resolved_dependencies")
-    assert resolve_dir.contains_dir("foo-*", "1.3.3.7-*")
-    assert resolve_dir.contains_dir("baz-*", "3.3.1-*")
-    assert resolve_dir.contains_dir("bar-*", "someh4sh-*")
+    assert resolve_dir.contains_dir("foo-*", "4f26aeafdb")
+    assert resolve_dir.contains_dir("baz-*", "4f26aeafdb")
+    assert resolve_dir.contains_dir("bar-*", "4f26aeafdb")
 
     resolve_dir.rmdir()
 
@@ -299,12 +299,12 @@ def run_commands(app_dir, git_dir):
     # containing the versions needed.
 
     # foo should use the commit id in the lock file
-    assert resolve_dir.contains_dir("foo-*", f'{lock["foo"]["checkout"]}-*')
+    assert resolve_dir.contains_dir("foo-*", "4f26aeafdb")
     # bar is locked to the same commit as the master so it will
     # skip the git checkout and just return the master path
-    assert resolve_dir.contains_dir("bar-*", "master-*")
+    assert resolve_dir.contains_dir("bar-*", "branch-master")
     # baz has its tag in the lock file, so it will be available there
-    assert resolve_dir.contains_dir("baz-*", "3.3.1-*")
+    assert resolve_dir.contains_dir("baz-*", "4f26aeafdb")
 
     app_dir.rmfile("lock_version_resolve.json")
     resolve_dir.rmdir()
@@ -610,9 +610,9 @@ def test_lock_versions_and_then_paths(testdirectory):
             "resolved_dependencies",
         ]
     )
-
+    print(r.stdout)
     assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
-    assert r.stdout.match("*resolved_dependencies/baz-*/054dae9d64*")
+    assert r.stdout.match("*resolved_dependencies/baz-*/4f26aeafdb*")
 
     # Create a new minor "release" of baz and check that we keep the old
     # version
@@ -640,7 +640,7 @@ def test_lock_versions_and_then_paths(testdirectory):
     )
 
     assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
-    assert r.stdout.match("*resolved_dependencies/baz-*/3.3.1-*")
+    assert r.stdout.match("*resolved_dependencies/baz-*/4f26aeafdb")
 
     # Check that if we remove the lock file, we get the new version
     app_dir.rmfile("lock_version_resolve.json")

@@ -205,6 +205,12 @@ class FakeGit:
 
         return git_info["is_detached_head"]
 
+    def default_branch(self, cwd):
+        """Fake the default branch of a repository"""
+
+        git_info = read_git_info(cwd=cwd)
+        return git_info.get("default_branch", "master")
+
     def _to_sha1(self, data):
         """Small private helper to calculate SHA1"""
         return hashlib.sha1(data.encode("utf-8")).hexdigest()
