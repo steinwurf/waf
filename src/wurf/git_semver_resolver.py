@@ -53,11 +53,10 @@ class GitSemverResolver(object):
                 dependency=self.dependency,
             )
 
-        # Use the path returned to create a unique location for this checkout
-        repo_hash = hashlib.sha1(path.encode("utf-8")).hexdigest()[:6]
+        commit_id = self.git.checkout_to_commit_id(cwd=path, checkout=tag)
 
         # The folder for storing the requested tag
-        folder_name = tag + "-" + repo_hash
+        folder_name = commit_id[:10]
         tag_path = os.path.join(self.cwd, folder_name)
 
         self.ctx.to_log(
@@ -70,12 +69,12 @@ class GitSemverResolver(object):
             shutil.copytree(src=path, dst=tag_path, symlinks=True)
             self.git.checkout(branch=tag, cwd=tag_path)
 
-        # If the project contains submodules, we also get those
-        if self.dependency.pull_submodules:
-            self.git.pull_submodules(cwd=tag_path)
+            # If the project contains submodules, we also get those
+            if self.dependency.pull_submodules:
+                self.git.pull_submodules(cwd=tag_path)
 
         # Record the commmit id of the current working copy
-        self.dependency.git_commit = self.git.current_commit(cwd=tag_path)
+        self.dependency.git_commit = commit_id
         self.dependency.git_tag = tag
 
         return tag_path

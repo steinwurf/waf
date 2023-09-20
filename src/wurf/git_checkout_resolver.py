@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import hashlib
 import os
 import shutil
 
@@ -42,14 +41,16 @@ class GitCheckoutResolver(object):
         if self.git.current_branch(cwd=path) == self.checkout:
             return path
 
-        if self.git.current_commit(cwd=path) == self.checkout:
-            return path
-
-        # Use the path returned to create a unique location for this checkout
-        repo_hash = hashlib.sha1(path.encode("utf-8")).hexdigest()[:6]
+        is_branch = self.checkout in self.git.branches(cwd=path)
+        if is_branch:
+            # If the checkout is a branch, we cannot use the commit id as
+            # folder name, as the branch may be updated later.
+            folder_name = f"branch-{self.checkout}"
+        else:
+            commit_id = self.git.checkout_to_commit_id(cwd=path, checkout=self.checkout)
+            folder_name = commit_id[:10]
 
         # The folder for storing the requested checkout
-        folder_name = self.checkout + "-" + repo_hash
         checkout_path = os.path.join(self.cwd, folder_name)
 
         self.ctx.to_log(

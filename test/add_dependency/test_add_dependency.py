@@ -612,7 +612,7 @@ def test_lock_versions_and_then_paths(testdirectory):
     )
 
     assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
-    assert r.stdout.match("*resolved_dependencies/baz-*/3.3.1-*")
+    assert r.stdout.match("*resolved_dependencies/baz-*/054dae9d64*")
 
     # Create a new minor "release" of baz and check that we keep the old
     # version

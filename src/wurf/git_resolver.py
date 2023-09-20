@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 import os
-import hashlib
 
 
 class GitResolver(object):
@@ -34,12 +33,8 @@ class GitResolver(object):
         """
         repo_url = self.git_url_rewriter.rewrite_url(self.dependency.source)
 
-        # Use the first 6 characters of the SHA1 hash of the repository url
-        # to uniquely identify the repository
-        repo_hash = hashlib.sha1(repo_url.encode("utf-8")).hexdigest()[:6]
-
-        # The folder for storing the master branch of this repository
-        folder_name = "master-" + repo_hash
+        # The folder for storing the default branch of this repository
+        folder_name = "master-branch"
         master_path = os.path.join(self.cwd, folder_name)
 
         # If the master folder does not exist, do a git clone first

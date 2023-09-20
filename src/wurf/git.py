@@ -122,6 +122,14 @@ class Git(object):
 
         return current, others
 
+    def branches(self, cwd):
+        """
+        Runs 'git branch' and returns a list of branches
+        """
+        current, branches = self.branch(cwd=cwd)
+        branches.append(current)
+        return branches
+
     def current_branch(self, cwd):
         """
         Uses git.branch(...) but only returns the current one
@@ -203,6 +211,19 @@ class Git(object):
         :param cwd: The current working directory as a string
         """
         args = [self.git_binary, "config", "--get", "remote.origin.url"]
+        output = self.ctx.cmd_and_log(args, cwd=cwd)
+
+        return output.strip()
+
+    def checkout_to_commit_id(self, cwd, checkout):
+        """
+        Runs 'git rev-list -n 1 <tag>' in the directory cwd and returns the
+        commit id of the checkout as a string.
+
+        :param cwd: The current working directory as a string
+        :param checkout: The checkout as a string
+        """
+        args = [self.git_binary, "rev-list", "-1", checkout]
         output = self.ctx.cmd_and_log(args, cwd=cwd)
 
         return output.strip()

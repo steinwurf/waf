@@ -130,11 +130,30 @@ class FakeGit:
 
         return None
 
+    def checkout_to_commit_id(self, cwd, checkout):
+        """Fake the commit id from a checkout"""
+
+        git_info = read_git_info(cwd=cwd)
+
+        if git_info["checkout"] in git_info["branches"]:
+            return self._to_sha1(data=git_info["checkout"])
+
+        if git_info["checkout"] in git_info["tags"]:
+            return self._to_sha1(data=git_info["checkout"])
+
+        raise Exception(f"Unknown checkout {checkout}")
+
     def tags(self, cwd):
-        """ " Fake what tags are in a repository"""
+        """Fake what tags are in a repository"""
 
         git_info = read_git_info(cwd=cwd)
         return git_info["tags"]
+
+    def branches(self, cwd):
+        """Fake what branches are in a repository"""
+
+        git_info = read_git_info(cwd=cwd)
+        return git_info["branches"]
 
     def current_branch(self, cwd):
         """ " Fake the current branch of a repository"""
