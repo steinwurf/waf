@@ -7,25 +7,10 @@ import os
 
 
 def copy_directory(path, to_path):
-
-    # In Python2 convert to unicode
-    try:
-        path = unicode(path)
-        to_path = unicode(to_path)
-    except NameError:
-        pass
-
     shutil.copytree(src=path, dst=to_path, symlinks=True)
 
 
 def remove_directory(path):
-
-    # In Python2 convert to unicode
-    try:
-        path = unicode(path)
-    except NameError:
-        pass
-
     # Note that shutil.rmtree fails if there are any broken symlinks in that
     # folder, so we use os.walk to traverse the directory tree from the bottom
     # up as recommended here:

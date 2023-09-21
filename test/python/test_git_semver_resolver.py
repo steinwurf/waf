@@ -17,6 +17,7 @@ def test_git_semver_resolver(testdirectory):
     dependency = mock.Mock()
     dependency.name = "links"
     dependency.major = 5
+    dependency.resolver_action = "some action"
     selected_tag = "5.1.0"
 
     git_resolver = mock.Mock()

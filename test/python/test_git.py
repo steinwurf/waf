@@ -4,7 +4,6 @@ from wurf.git import Git
 
 
 def test_git_version():
-
     ctx = mock.Mock()
     ctx.cmd_and_log.return_value = "git version 1.8.1.msysgit.1"
 
@@ -19,7 +18,6 @@ def test_git_version():
 
 
 def test_git_current_commit():
-
     ctx = mock.Mock()
     ctx.cmd_and_log.return_value = """044d59505f3b63645c7fb7dec145154b8e518086"""
 
@@ -32,15 +30,12 @@ def test_git_current_commit():
 
 
 def test_git_current_tag(testdirectory):
-
     ctx = mock.Mock()
     ctx.cmd_and_log.side_effect = ["044d59505f3b63645c7fb7dec145154b8e518086", "2.0.0"]
 
     git = Git("/bin/git_binary", ctx)
 
     assert git.current_tag(cwd="/tmp") == "2.0.0"
-
-    print(ctx.cmd_and_log.call_args_list)
 
     ctx.cmd_and_log.assert_has_calls(
         [
@@ -59,7 +54,6 @@ def test_git_current_tag(testdirectory):
 
 
 def test_git_clone():
-
     ctx = mock.Mock()
     git = Git("/bin/git_binary", ctx)
 
@@ -74,7 +68,6 @@ def test_git_clone():
 
 
 def test_git_pull():
-
     ctx = mock.Mock()
     git = Git("/bin/git_binary", ctx)
 
@@ -84,7 +77,6 @@ def test_git_pull():
 
 
 def test_git_has_submodules(testdirectory):
-
     ctx = mock.Mock()
     git = Git("/bin/git_binary", ctx)
 
@@ -98,7 +90,6 @@ def test_git_has_submodules(testdirectory):
 
 
 def test_git_sync_submodules():
-
     ctx = mock.Mock()
     git = Git("/bin/git_binary", ctx)
 
@@ -110,7 +101,6 @@ def test_git_sync_submodules():
 
 
 def test_git_update_submodules():
-
     ctx = mock.Mock()
     git = Git("/bin/git_binary", ctx)
 
@@ -122,7 +112,6 @@ def test_git_update_submodules():
 
 
 def test_git_pull_submodules(testdirectory):
-
     ctx = mock.Mock()
     git = Git("/bin/git_binary", ctx)
 

@@ -413,23 +413,23 @@ def dependency_cache():
 
 @Registry.cache_once
 @Registry.provide
-def lock_cache_from(configuration, project_path):
+def lock_cache_from(git, configuration, project_path):
     resolver_chain = configuration.resolver_chain()
     if resolver_chain == Configuration.RESOLVE_FROM_PATH_LOCK:
         return LockPathCache.create_from_file(cwd=project_path)
     elif resolver_chain == Configuration.RESOLVE_FROM_VERSION_LOCK:
-        return LockVersionCache.create_from_file(cwd=project_path)
+        return LockVersionCache.create_from_file(git=git, cwd=project_path)
     else:
         raise WurfError(f"Lock cache not available for {resolver_chain} chain")
 
 
 @Registry.cache_once
 @Registry.provide
-def lock_cache_to(configuration: Configuration):
+def lock_cache_to(git, configuration: Configuration):
     if configuration.lock_paths():
         return LockPathCache.create_empty()
     elif configuration.lock_versions():
-        return LockVersionCache.create_empty()
+        return LockVersionCache.create_empty(git=git)
     else:
         raise WurfError("Lock cache not available")
 
@@ -616,7 +616,7 @@ def git_checkout_resolver(
 
 @Registry.provide
 def existing_checkout_resolver(
-    registry, ctx, dependency, git_checkout_resolver, dependency_path
+    registry, ctx, git, dependency, git_checkout_resolver, dependency_path
 ):
     """Builds a GitResolver instance.
 
@@ -630,6 +630,7 @@ def existing_checkout_resolver(
 
     return ExistingCheckoutResolver(
         ctx=ctx,
+        git=git,
         dependency=dependency,
         resolver=git_checkout_resolver,
         checkout=checkout,
@@ -701,9 +702,9 @@ def git_semver_resolver(
     :param registry: A Registry instance.
     """
     return GitSemverResolver(
+        ctx=ctx,
         git=git,
         resolver=git_resolver,
-        ctx=ctx,
         semver_selector=semver_selector,
         dependency=dependency,
         cwd=dependency_path,
@@ -811,7 +812,7 @@ def resolve_http(
 def resolve_lock_version(registry, git, ctx, dependency, resolve_path):
     # Set the resolver action on the dependency
     resolver = registry.require(f"resolve_{dependency.resolver}")
-    dependency.resolver_action = "lock/" + dependency.resolver_action
+    dependency.resolver_action = f"lock/{dependency.resolver_action}"
 
     resolve_config_path = registry.require("resolve_config_path")
 

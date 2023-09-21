@@ -41,7 +41,7 @@ class CheckLockCacheResolver(object):
         # We need to call resolve before checking the content as we need to know
         # where the content is located.
         path = self.resolver.resolve()
-        if self.lock_cache.check_content(dependency=self.dependency):
+        if self.lock_cache.check_content(dependency=self.dependency, path=path):
             raise DependencyError(
                 msg=(
                     "The content does not match the data "

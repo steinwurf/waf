@@ -231,10 +231,12 @@ class Git(object):
         """
         Runs 'git rev-list -n 1 <tag>' in the directory cwd and returns the
         commit id of the checkout as a string.
+        This does not work for branches.
 
         :param cwd: The current working directory as a string
         :param checkout: The checkout as a string
         """
+
         args = [self.git_binary, "rev-list", "-1", checkout]
         output = self.ctx.cmd_and_log(args, cwd=cwd)
 

@@ -2,8 +2,8 @@
 # encoding: utf-8
 
 import os
-import json
-from .error import DependencyError
+from .git_resolver import GitResolver
+from .git_checkout_resolver import GitCheckoutResolver
 
 
 class ExistingCheckoutResolver(object):
@@ -12,12 +12,11 @@ class ExistingCheckoutResolver(object):
     out.
     """
 
-    VERSION = 1
-
-    def __init__(self, ctx, dependency, resolver, checkout, cwd):
+    def __init__(self, ctx, git, dependency, resolver, checkout, cwd):
         """Construct a new ExistingCheckoutResolver instance.
 
         :param ctx: A Waf Context instance.
+        :param git: A Git instance
         :param dependency: The Dependency object.
         :param resolver: A resolver instance.
         :param checkout: The branch, tag, or sha1 as a string.
@@ -25,6 +24,7 @@ class ExistingCheckoutResolver(object):
             where we should create new folders etc.
         """
         self.ctx = ctx
+        self.git = git
         self.dependency = dependency
         self.resolver = resolver
         self.checkout = checkout
@@ -36,95 +36,47 @@ class ExistingCheckoutResolver(object):
 
         :return: The path to the existing commits, otherwise None.
         """
-        commits = self.__load_commits_file()
-
         # Try to resolve path from commits file
-        commit, path = self.__resolve_path(commits=commits)
+        path = self.__resolve_path()
 
         if path:
-            self.dependency.git_commit = commit
             return path
 
-        # Fallback to the resolver
-        path = self.resolver.resolve()
+        return self.resolver.resolve()
 
-        if not path:
+    def __resolve_path(self):
+        default_branch_cwd = os.path.join(self.cwd, GitResolver.DEFAULT_BRANCH)
+        if not os.path.isdir(default_branch_cwd):
+            # No default branch, so no cached checkouts
             return None
+        checkout_path = os.path.join(
+            self.cwd, GitCheckoutResolver.branch_folder_name(self.checkout)
+        )
+        if os.path.isdir(checkout_path):
+            # Checkout is a branch, pull any changes and return path
+            self.git.pull(cwd=checkout_path)
+            self.dependency.resolve_info = self.checkout
+            return checkout_path
 
-        assert os.path.isdir(path)
+        # Checkout is a commit, check if it is cached
+        commit_id = self.git.checkout_to_commit_id(
+            cwd=default_branch_cwd, checkout=self.checkout
+        )
+        checkout_path = os.path.join(
+            self.cwd, GitCheckoutResolver.commit_folder_name(commit_id)
+        )
 
-        if "git_commit" in self.dependency:
-            # We can only store this if we are asking for a specific commit and
-            # not a branch.
-            if self.dependency.git_commit.startswith(self.checkout):
-                commits[self.dependency.git_commit] = path
-        else:
-            raise DependencyError(
-                msg="No git commit id available", dependency=self.dependency
-            )
+        if os.path.isdir(checkout_path):
+            # Commit is cached, return path
+            self.dependency.resolve_info = self.checkout
+            return checkout_path
 
-        self.__store_commits_file(commits=commits)
-        return path
-
-    def __load_commits_file(self):
-        commit_path = os.path.join(self.cwd, self.dependency.name + ".commits.json")
-
-        if not os.path.isfile(commit_path):
-            return {}
-
-        with open(commit_path, "r") as commit_file:
-            result = json.load(commit_file)
-
-        if not isinstance(result, dict):
-            return {}
-
-        if "version" not in result:
-            return {}
-
-        if result["version"] != self.VERSION:
-            return {}
-
-        return result["commits"]
-
-    def __store_commits_file(self, commits):
-        commit_path = os.path.join(self.cwd, self.dependency.name + ".commits.json")
-
-        with open(commit_path, "w") as commit_file:
-            return json.dump(
-                {"version": self.VERSION, "commits": commits}, commit_file, indent=4
-            )
-
-    def __resolve_path(self, commits):
-        # Check if the commit is the start of any of the stored commits
-        for stored_commit in commits:
-            if stored_commit.startswith(self.checkout):
-                break
-        else:
-            self.ctx.to_log(
-                f"resolve: ExistingCheckoutResolver {self.dependency.name} "
-                f"no stored checkout for commit {self.checkout}"
-            )
-            return None, None
-
-        path = commits[stored_commit]
-
-        if not os.path.isdir(path):
-            self.ctx.to_log(
-                f"resolve: {self.dependency.name} {commits} "
-                f"contained invalid path {path} "
-                f"for commit {stored_commit} - removing it"
-            )
-
-            del commits[stored_commit]
-            return None, None
-
-        else:
-            self.ctx.to_log(
-                f"resolve: ExistingCheckoutResolver name "
-                f"{self.dependency.name} -> {path}"
-            )
-
-            return stored_commit, path
+        # Checkout not cached
+        self.ctx.to_log(
+            f"resolve: ExistingCheckoutResolver {self.dependency.name} "
+            f"no stored checkout for {self.checkout}"
+        )
+        return None
 
     def __repr__(self):
         """
