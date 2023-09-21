@@ -21,17 +21,20 @@ def test_self_build(testdirectory):
 
     r = root.run("python waf configure")
 
+    print(r.stdout)
     assert r.returncode == 0
     assert r.stdout.match("*finished successfully*")
 
     # Configure again with an existing "resolved_dependencies" folder
     r = root.run("python waf configure")
 
+    print(r.stdout)
     assert r.returncode == 0
     assert r.stdout.match("*finished successfully*")
 
     r = root.run("python waf build")
 
+    print(r.stdout)
     assert r.returncode == 0
 
     waf_path = os.path.join(root.path(), "build", "waf")

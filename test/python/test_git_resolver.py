@@ -25,6 +25,8 @@ def test_git_resolver(testdirectory):
     dependency.name = "links"
     dependency.source = "gitlab.com/steinwurf/links.git"
 
+    git.default_branch = mock.Mock(return_value="master")
+
     resolver = GitResolver(
         git=git,
         ctx=ctx,
@@ -36,11 +38,12 @@ def test_git_resolver(testdirectory):
     path = resolver.resolve()
 
     repo_name = os.path.basename(os.path.normpath(path))
-    assert repo_name.startswith("master-")
+    assert repo_name == "branch-master"
     repo_folder = os.path.dirname(os.path.normpath(path))
 
+    # We clone in a tmp folder, so we need to check that the correct
     git.clone.assert_called_once_with(
-        repository=url, directory=repo_name, cwd=repo_folder
+        repository=url, directory=mock.ANY, cwd=repo_folder
     )
 
     git.pull_submodules.assert_called_once_with(cwd=path)

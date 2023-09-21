@@ -12,6 +12,8 @@ class ExistingCheckoutResolver(object):
     out.
     """
 
+    VERSION = 1
+
     def __init__(self, ctx, dependency, resolver, checkout, cwd):
         """Construct a new ExistingCheckoutResolver instance.
 
@@ -71,13 +73,26 @@ class ExistingCheckoutResolver(object):
             return {}
 
         with open(commit_path, "r") as commit_file:
-            return json.load(commit_file)
+            result = json.load(commit_file)
+
+        if not isinstance(result, dict):
+            return {}
+
+        if "version" not in result:
+            return {}
+
+        if result["version"] != self.VERSION:
+            return {}
+
+        return result["commits"]
 
     def __store_commits_file(self, commits):
         commit_path = os.path.join(self.cwd, self.dependency.name + ".commits.json")
 
         with open(commit_path, "w") as commit_file:
-            return json.dump(commits, commit_file, indent=4)
+            return json.dump(
+                {"version": self.VERSION, "commits": commits}, commit_file, indent=4
+            )
 
     def __resolve_path(self, commits):
         # Check if the commit is the start of any of the stored commits

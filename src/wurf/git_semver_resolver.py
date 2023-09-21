@@ -3,7 +3,6 @@
 
 import os
 import shutil
-import hashlib
 
 from .error import DependencyError
 

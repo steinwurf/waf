@@ -120,6 +120,18 @@ class Git(object):
         if current == "":
             self.ctx.fatal("Failed to locate current branch")
 
+        # include remote branches
+        args = [self.git_binary, "branch", "-r"]
+        o = self.ctx.cmd_and_log(args, cwd=cwd)
+
+        lines = o.split("\n")
+        for line in lines:
+            if line.startswith("origin/HEAD"):
+                continue
+            branch = line.strip().split("/")[-1]
+            if branch not in others and branch != current:
+                others.append(branch)
+
         return current, others
 
     def branches(self, cwd):

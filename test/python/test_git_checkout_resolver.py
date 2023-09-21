@@ -5,7 +5,6 @@ from wurf.git_checkout_resolver import GitCheckoutResolver
 
 
 def test_git_checkout_resolver(testdirectory):
-
     ctx = mock.Mock()
     git = mock.Mock()
     dependency = mock.Mock()
@@ -21,6 +20,8 @@ def test_git_checkout_resolver(testdirectory):
 
     dependency.name = "links"
     checkout = "my-branch"
+
+    git.branches = mock.Mock(return_value=["master", checkout])
 
     resolver = GitCheckoutResolver(
         git=git,

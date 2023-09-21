@@ -5,7 +5,6 @@ from wurf.git_semver_resolver import GitSemverResolver
 
 
 def test_git_semver_resolver(testdirectory):
-
     ctx = mock.Mock()
     git = mock.Mock()
     cwd = testdirectory.path()
@@ -25,6 +24,9 @@ def test_git_semver_resolver(testdirectory):
 
     semver_selector = mock.Mock()
     semver_selector.select_tag.return_value = selected_tag
+
+    # Set the return value to a random git sha1
+    git.checkout_to_commit_id = mock.Mock(return_value="8z3f8z3f8z3f8z3f8z3f")
 
     resolver = GitSemverResolver(
         git=git,

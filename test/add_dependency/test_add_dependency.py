@@ -186,8 +186,6 @@ def run_commands(app_dir, git_dir):
     # behavior, we need to invoke help with the NOCLIMB variable.
     env = dict(os.environ)
 
-    print(f'PATH {env["PATH"]}')
-
     env["NOCLIMB"] = "1"
     app_dir.run(["python", "waf", "--help"], env=env)
 
@@ -269,7 +267,7 @@ def run_commands(app_dir, git_dir):
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "bar"))
 
     app_dir.run(["python", "waf", "build", "-v"])
-    print(app_dir)
+
     resolve_dir = app_dir.join("resolved_dependencies")
     assert resolve_dir.contains_dir("foo-*", "4f26aeafdb")
     assert resolve_dir.contains_dir("baz-*", "4f26aeafdb")
@@ -610,7 +608,7 @@ def test_lock_versions_and_then_paths(testdirectory):
             "resolved_dependencies",
         ]
     )
-    print(r.stdout)
+
     assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
     assert r.stdout.match("*resolved_dependencies/baz-*/4f26aeafdb*")
 
@@ -640,7 +638,7 @@ def test_lock_versions_and_then_paths(testdirectory):
     )
 
     assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
-    assert r.stdout.match("*resolved_dependencies/baz-*/4f26aeafdb")
+    assert r.stdout.match("*resolved_dependencies/baz-*/4f26aeafdb*")
 
     # Check that if we remove the lock file, we get the new version
     app_dir.rmfile("lock_version_resolve.json")
@@ -661,7 +659,7 @@ def test_lock_versions_and_then_paths(testdirectory):
     )
 
     assert r.stdout.match('*Resolve "baz" (git semver)*')
-    assert r.stdout.match("*resolved_dependencies/baz-*/3.3.2-*")
+    assert r.stdout.match("*resolved_dependencies/baz-*/4f26aeafdb*")
 
     app_dir.run(
         [
