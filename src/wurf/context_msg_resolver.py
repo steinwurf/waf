@@ -47,8 +47,8 @@ class ContextMsgResolver(object):
             self.ctx.end_msg("Unavailable", color="RED")
         else:
             message = ""
-            if self.dependency.resolve_info is not None:
-                message += f"{self.dependency.resolve_info} "
+            if self.dependency.resolver_info is not None:
+                message += f"{self.dependency.resolver_info} "
 
             if self.dependency.is_symlink:
                 # We print the symlink path as a relative path if it is

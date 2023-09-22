@@ -300,7 +300,7 @@ def run_commands(app_dir, git_dir):
     assert resolve_dir.contains_dir("foo-*", "4f26aeafdb")
     # bar is locked to the same commit as the master so it will
     # skip the git checkout and just return the master path
-    print(resolve_dir)
+
     assert resolve_dir.contains_dir("bar-*", "branch-master")
     # baz has its tag in the lock file, so it will be available there
     assert resolve_dir.contains_dir("baz-*", "4f26aeafdb")

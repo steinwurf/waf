@@ -38,12 +38,13 @@ class CheckLockCacheResolver(object):
                 ),
                 dependency=self.dependency,
             )
+
         # We need to call resolve before checking the content as we need to know
         # where the content is located.
         path = self.resolver.resolve()
 
         # restore the resolver info
-        self.dependency.resolve_info = self.lock_cache.resolver_info(
+        self.dependency.resolver_info = self.lock_cache.resolver_info(
             dependency=self.dependency
         )
 

@@ -823,7 +823,7 @@ def load_chain(ctx, git, resolve_config_path, dependency, resolve_path):
     resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
 
     return MandatoryResolver(
-        resolver=resolver, msg="Dependency failed.", dependency=dependency
+        resolver=resolver, msg="Dependency failed to load.", dependency=dependency
     )
 
 

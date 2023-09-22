@@ -236,7 +236,6 @@ class Git(object):
         :param cwd: The current working directory as a string
         :param checkout: The checkout as a string
         """
-
         args = [self.git_binary, "rev-list", "-1", checkout]
         output = self.ctx.cmd_and_log(args, cwd=cwd)
 

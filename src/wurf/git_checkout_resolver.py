@@ -111,14 +111,14 @@ class GitCheckoutResolver(object):
         self.dependency.commit_id = self.git.current_commit(cwd=checkout_path)
 
         if is_branch:
-            self.dependency.resolve_info = self.checkout
+            self.dependency.resolver_info = self.checkout
             return checkout_path
 
         current_tag = self.git.current_tag(cwd=checkout_path)
         if current_tag is not None:
-            self.dependency.resolve_info = current_tag
+            self.dependency.resolver_info = current_tag
         else:
-            self.dependency.resolve_info = self.dependency.commit_id[:10]
+            self.dependency.resolver_info = self.dependency.commit_id[:10]
         return checkout_path
 
     def __repr__(self):

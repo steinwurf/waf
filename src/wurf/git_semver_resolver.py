@@ -58,7 +58,7 @@ class GitSemverResolver(object):
         # Get commit id of tag
         commit_id = self.git.checkout_to_commit_id(cwd=path, checkout=tag)
 
-        self.dependency.resolve_info = tag
+        self.dependency.resolver_info = tag
 
         # The folder for storing the requested tag
         folder_name = GitCheckoutResolver.commit_folder_name(commit_id)

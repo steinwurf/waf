@@ -42,7 +42,8 @@ class HttpResolver(object):
         file_path = self.url_download.download(
             cwd=folder_path, source=self.dependency.source, filename=filename
         )
-
         assert os.path.isfile(file_path), "We should have a valid path here!"
+
+        self.dependency.resolver_info = os.path.basename(file_path)
 
         return file_path

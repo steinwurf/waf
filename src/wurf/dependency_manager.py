@@ -97,6 +97,7 @@ class DependencyManager(object):
             return
         if locked_version is not None:
             dependency.locked_version = locked_version
+            dependency.resolver_info = locked_version.get("resolver_info", None)
 
         self.locked_versions[dependency.name] = locked_version
 
@@ -172,19 +173,27 @@ class DependencyManager(object):
             if seen_version is None:
                 # A dependency previously added did not have a locked version
                 seen_version = {"sha1": seen_dependency.sha1}
-                p = self.dependency_cache[seen_dependency.name]["path"]
-                tag = self.git.current_tag(p)
-                if tag is not None:
-                    seen_version["checkout"] = tag
-                else:
-                    seen_version["checkout"] = self.git.current_commit(p)
+                if seen_dependency.resolver == "git":
+                    p = self.dependency_cache[seen_dependency.name]["path"]
+                    seen_version["commit_id"] = self.git.current_commit(p)
+                    seen_version["resolver_info"] = seen_dependency.resolver_info
             if locked_version is None:
                 # The current dependency does not have a locked version
                 # this is fine as long as the two dependencies have the same
                 # sha1
                 return True
 
-            if seen_version != locked_version:
+            seen_version.pop("resolver_info", None)
+            locked_version.pop("resolver_info", None)
+
+            def compare_versions(a, b):
+                a = a.copy()
+                b = b.copy()
+                a.pop("resolver_info", None)
+                b.pop("resolver_info", None)
+                return a != b
+
+            if compare_versions(seen_version, locked_version):
                 raise WurfError(
                     f"Lock entry mismatch!\n"
                     f"Adding {dependency.name} "

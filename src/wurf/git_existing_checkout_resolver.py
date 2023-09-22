@@ -55,20 +55,29 @@ class GitExistingCheckoutResolver(object):
         if os.path.isdir(checkout_path):
             # Checkout is a branch, pull any changes and return path
             self.git.pull(cwd=checkout_path)
-            self.dependency.resolve_info = self.checkout
+            self.dependency.resolver_info = self.checkout
             return checkout_path
 
         # Checkout is a commit, check if it is cached
-        commit_id = self.git.checkout_to_commit_id(
-            cwd=default_branch_cwd, checkout=self.checkout
-        )
+        try:
+            commit_id = self.git.checkout_to_commit_id(
+                cwd=default_branch_cwd, checkout=self.checkout
+            )
+        except Exception as e:
+            # Checkout is not a valid branch or commit, we may need to pull
+            self.ctx.to_log(
+                f"resolve: GitExistingCheckoutResolver {self.dependency.name} "
+                f"failed to resolve {self.checkout} to commit id: {e}"
+            )
+            return None
+
         checkout_path = os.path.join(
             self.cwd, GitCheckoutResolver.commit_folder_name(commit_id)
         )
 
         if os.path.isdir(checkout_path):
             # Commit is cached, return path
-            self.dependency.resolve_info = self.checkout
+            self.dependency.resolver_info = self.checkout
             return checkout_path
 
         # Checkout not cached
