@@ -24,6 +24,9 @@ class LockPathCache(object):
     def check_content(self, **kwargs):
         return False
 
+    def resolver_info(self, **kwargs):
+        return None
+
     def add_path(self, dependency: Dependency, path: str):
         self.cache[dependency.name] = {
             "sha1": dependency.sha1,

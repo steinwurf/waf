@@ -59,6 +59,10 @@ class GitResolver(object):
                 self.ctx.to_log("Exception when executing git pull:")
                 self.ctx.to_log(e)
 
+        # If the dependency contains submodules, we also get those
+        if self.dependency.pull_submodules:
+            self.git.pull_submodules(cwd=default_repo_path)
+
         return default_repo_path
 
     def __create_symlink_to_default_branch(self, default_repo_path):
@@ -75,7 +79,7 @@ class GitResolver(object):
                 # We set overwrite True since We need to remove the symlink if it
                 # already exists since it may point to an incorrect folder
                 create_symlink(
-                    from_path=default_branch,
+                    from_path=default_repo_path,
                     to_path=link_path,
                     overwrite=True,
                     relative=True,
@@ -85,7 +89,7 @@ class GitResolver(object):
                     "wurf: Using relative symlink failed - fallback to absolute."
                 )
                 create_symlink(
-                    from_path=default_branch,
+                    from_path=default_repo_path,
                     to_path=link_path,
                     overwrite=True,
                     relative=False,

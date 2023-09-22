@@ -38,7 +38,7 @@ def test_git_resolver(testdirectory):
     path = resolver.resolve()
 
     repo_name = os.path.basename(os.path.normpath(path))
-    assert repo_name == "branch-master"
+    assert repo_name == GitResolver.DEFAULT_BRANCH
     repo_folder = os.path.dirname(os.path.normpath(path))
 
     # We clone in a tmp folder, so we need to check that the correct

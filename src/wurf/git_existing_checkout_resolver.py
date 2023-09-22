@@ -6,14 +6,14 @@ from .git_resolver import GitResolver
 from .git_checkout_resolver import GitCheckoutResolver
 
 
-class ExistingCheckoutResolver(object):
+class GitExistingCheckoutResolver(object):
     """
     Resolves a specific checkout if a compatible checkout is already checked
     out.
     """
 
     def __init__(self, ctx, git, dependency, resolver, checkout, cwd):
-        """Construct a new ExistingCheckoutResolver instance.
+        """Construct a new GitExistingCheckoutResolver instance.
 
         :param ctx: A Waf Context instance.
         :param git: A Git instance
@@ -73,7 +73,7 @@ class ExistingCheckoutResolver(object):
 
         # Checkout not cached
         self.ctx.to_log(
-            f"resolve: ExistingCheckoutResolver {self.dependency.name} "
+            f"resolve: GitExistingCheckoutResolver {self.dependency.name} "
             f"no stored checkout for {self.checkout}"
         )
         return None

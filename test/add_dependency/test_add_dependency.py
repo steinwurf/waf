@@ -300,6 +300,7 @@ def run_commands(app_dir, git_dir):
     assert resolve_dir.contains_dir("foo-*", "4f26aeafdb")
     # bar is locked to the same commit as the master so it will
     # skip the git checkout and just return the master path
+    print(resolve_dir)
     assert resolve_dir.contains_dir("bar-*", "branch-master")
     # baz has its tag in the lock file, so it will be available there
     assert resolve_dir.contains_dir("baz-*", "4f26aeafdb")
@@ -595,9 +596,9 @@ def test_lock_versions_and_then_paths(testdirectory):
         os.path.join(app_dir.path(), "lock_version_resolve.json"), "r"
     ) as json_file:
         lock = json.load(json_file)
-        assert lock["foo"]["checkout"] == "1.3.3.7"
-        assert lock["bar"]["checkout"] == "someh4sh"
-        assert lock["baz"]["checkout"] == "3.3.1"
+        assert lock["foo"]["commit_id"] == "415853e8a299655e4812302d498cd29057ee59eb"
+        assert lock["bar"]["commit_id"] == "5c61688e452eb3fe906353541640e5817e6583d0"
+        assert lock["baz"]["commit_id"] == "054dae9d64c38d76a066c981fbdab975b1abbf53"
 
     r = app_dir.run(
         [

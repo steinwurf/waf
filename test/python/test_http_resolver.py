@@ -27,7 +27,7 @@ def test_http_resolver(testdirectory):
     path = resolver.resolve()
     assert os.path.isfile(path)
 
-    assert testdirectory.contains_file("http-*/file.zip")
+    assert testdirectory.contains_file("download/file.zip")
 
 
 def test_http_resolver_filename(testdirectory):
@@ -54,4 +54,4 @@ def test_http_resolver_filename(testdirectory):
     path = resolver.resolve()
     assert os.path.isfile(path)
 
-    assert testdirectory.contains_file("http-*/foo.zip")
+    assert testdirectory.contains_file("download/foo.zip")
