@@ -46,10 +46,6 @@ class ContextMsgResolver(object):
             # an exception
             self.ctx.end_msg("Unavailable", color="RED")
         else:
-            message = ""
-            if self.dependency.resolver_info is not None:
-                message += f"{self.dependency.resolver_info} "
-
             if self.dependency.is_symlink:
                 # We print the symlink path as a relative path if it is
                 # inside the project folder
@@ -59,10 +55,20 @@ class ContextMsgResolver(object):
                 if symlink_node.is_child_of(self.ctx.srcnode):
                     symlink_path = symlink_node.path_from(self.ctx.srcnode)
                 real_path = self.dependency.real_path
-                message += f"({symlink_path} => {real_path})"
+                detail = f"{symlink_path} => {real_path}"
             else:
-                message += f"({path})"
+                detail = path
 
-            self.ctx.end_msg(message)
+            if self.dependency.resolver_info is not None:
+                info = self.dependency.resolver_info
+                # limit or extend info to 10 chars
+                # if above replace the last 3 chars with "..."
+                if len(info) > 10:
+                    info = info[:7] + "..."
+                else:
+                    info = info.ljust(10)
 
+                self.ctx.end_msg(f"{info} ({detail})")
+            else:
+                self.ctx.end_msg(f"{detail}")
         return path

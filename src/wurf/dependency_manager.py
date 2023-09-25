@@ -49,6 +49,9 @@ class DependencyManager(object):
         # purposes).
         self.seen_dependencies = {}
 
+        # Dict where we store the locked versions of dependencies
+        self.seen_versions = {}
+
         # Actions to be executed once all dependencies have been resolved
         # will only be invoked if the post_resolve(...) function is invoked.
         self.post_resolve_actions = []
@@ -56,7 +59,7 @@ class DependencyManager(object):
         # Set of optional dependencies that have been marked as enabled
         self.enabled_dependencies = set()
 
-        # Dict where we store the locked versions of dependencies
+        self.top_level_lock_versions = {}
         self.locked_versions = {}
 
     def load_dependencies(self, path):
@@ -73,14 +76,31 @@ class DependencyManager(object):
         with open(resolve_json_path, "r") as resolve_file:
             resolve_json = json.load(resolve_file)
 
-        locked_versions = {}
-        resolve_lock_path = os.path.join(path, LockVersionCache.LOCK_FILE)
-        if os.path.isfile(resolve_lock_path):
-            with open(resolve_lock_path, "r") as f:
-                locked_versions = json.load(f)
+        local_locked_versions = {}
+        resolve_lock_version = os.path.join(path, LockVersionCache.LOCK_FILE)
+
+        if os.path.isfile(resolve_lock_version):
+            with open(resolve_lock_version, "r") as f:
+                local_locked_versions = json.load(f)
+
+        for name in local_locked_versions:
+            if name in resolve_json:
+                if resolve_json[name].get("internal", False):
+                    continue
+            if name in self.locked_versions:
+                if self.locked_versions[name] != local_locked_versions[name]:
+                    raise WurfError(
+                        f"Lock entry mismatch!\n"
+                        f"Lock entry for {name} in {path}:\n"
+                        f"{local_locked_versions[name]}\n"
+                        f"Lock entry for {name} in {self.locked_versions[name]}:\n"
+                    )
+            else:
+                self.locked_versions[name] = local_locked_versions[name]
 
         for dependency in resolve_json:
-            locked_version = locked_versions.get(dependency["name"], None)
+            locked_version = self.locked_versions.get(dependency["name"], None)
+
             self.add_dependency(
                 dependency_args=dependency, locked_version=locked_version
             )
@@ -99,7 +119,7 @@ class DependencyManager(object):
             dependency.locked_version = locked_version
             dependency.resolver_info = locked_version.get("resolver_info", None)
 
-        self.locked_versions[dependency.name] = locked_version
+        self.seen_versions[dependency.name] = locked_version
 
         self.seen_dependencies[dependency.name] = dependency
         self.options.add_dependency(dependency)
@@ -164,27 +184,26 @@ class DependencyManager(object):
                 )
 
             # Check if we have a version mismatch
-            seen_version = self.locked_versions.get(dependency.name, None)
+            seen_version = self.seen_versions.get(dependency.name, None)
 
             if seen_version is None and locked_version is None:
                 # Both versions are None, so we are good
                 return True
 
-            if seen_version is None:
-                # A dependency previously added did not have a locked version
-                seen_version = {"sha1": seen_dependency.sha1}
-                if seen_dependency.resolver == "git":
-                    p = self.dependency_cache[seen_dependency.name]["path"]
-                    seen_version["commit_id"] = self.git.current_commit(p)
-                    seen_version["resolver_info"] = seen_dependency.resolver_info
             if locked_version is None:
                 # The current dependency does not have a locked version
                 # this is fine as long as the two dependencies have the same
                 # sha1
                 return True
 
-            seen_version.pop("resolver_info", None)
-            locked_version.pop("resolver_info", None)
+            if seen_version is None:
+                # A dependency previously added did not have a locked version
+                seen_version = {"sha1": seen_dependency.sha1}
+                p = self.dependency_cache[seen_dependency.name]["path"]
+                if seen_dependency.resolver == "git":
+                    seen_version["commit_id"] = self.git.current_commit(p)
+                elif seen_dependency.resolver == "http":
+                    seen_version["file_hash"] = LockVersionCache.calculate_file_hash(p)
 
             def compare_versions(a, b):
                 a = a.copy()

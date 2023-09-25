@@ -878,7 +878,11 @@ def resolve_chain(
         resolver = registry.require("user_path_resolver")
     else:
         with registry.provide_temporary() as temporary:
-            if dependency.locked_version is not None:
+            # If the dependency has a locked version we change the resolver
+            # to use the locked version.
+            # Unless a custom resolver has already been specified. This could
+            # be the case when resolving from a locked path.
+            if dependency.locked_version is not None and "resolver" not in registry:
                 temporary.provide_value("resolver", "locked_version")
 
             resolver = registry.require("source_resolver")

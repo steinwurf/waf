@@ -13,6 +13,34 @@ class LockVersionCache(object):
     # verions or path
     LOCK_FILE = "lock_version_resolve.json"
 
+    @staticmethod
+    def create_empty(git):
+        return LockVersionCache(git=git, cache={})
+
+    @staticmethod
+    def create_from_file(git, cwd):
+        assert os.path.exists(cwd)
+        with open(os.path.join(cwd, LockVersionCache.LOCK_FILE), "r") as lock_file:
+            cache = json.load(lock_file)
+
+        return LockVersionCache(git=git, cache=cache)
+
+    @staticmethod
+    def calculate_file_hash(path):
+        assert os.path.exists(path)
+        sha1 = hashlib.sha1()
+        if os.path.isfile(path):
+            sha1.update(open(path, "rb").read())
+        elif os.path.isdir(path):
+            # Calculate the hash of all files in the directory
+            for root, _, files in os.walk(path):
+                for file in files:
+                    f = os.path.join(root, file)
+                    sha1.update(open(f, "rb").read())
+        else:
+            raise WurfError(f"Unknown file type: {path}")
+        return sha1.hexdigest()
+
     def __init__(self, git, cache):
         self.git = git
         self.cache = cache
@@ -41,7 +69,7 @@ class LockVersionCache(object):
             assert hasattr(
                 dependency, "real_path"
             ), "Dependency must have a real_path attribute"
-            return self.__calculate_file_hash(path) != self.file_hash(dependency)
+            return self.calculate_file_hash(path) != self.file_hash(dependency)
 
     def add_dependency(self, dependency):
         entry = {"sha1": dependency.sha1}
@@ -55,7 +83,7 @@ class LockVersionCache(object):
             assert hasattr(
                 dependency, "real_path"
             ), "Dependency must have a real_path attribute"
-            entry["file_hash"] = self.__calculate_file_hash(dependency.real_path)
+            entry["file_hash"] = self.calculate_file_hash(dependency.real_path)
         else:
             raise WurfError(f"Unknown resolver: {dependency.resolver}")
 
@@ -66,36 +94,9 @@ class LockVersionCache(object):
         with open(os.path.join(cwd, LockVersionCache.LOCK_FILE), "w") as lock_file:
             json.dump(self.cache, lock_file, indent=4, sort_keys=True)
 
-    def __calculate_file_hash(self, path):
-        assert os.path.exists(path)
-        sha1 = hashlib.sha1()
-        if os.path.isfile(path):
-            sha1.update(open(path, "rb").read())
-        elif os.path.isdir(path):
-            # Calculate the hash of all files in the directory
-            for root, _, files in os.walk(path):
-                for file in files:
-                    f = os.path.join(root, file)
-                    sha1.update(open(f, "rb").read())
-        else:
-            raise WurfError(f"Unknown file type: {path}")
-        return sha1.hexdigest()
-
     def __contains__(self, dependency):
         """
         :param dependency: The Dependency instance
         :return: True if the dependency is in the cache
         """
         return dependency.name in self.cache
-
-    @staticmethod
-    def create_empty(git):
-        return LockVersionCache(git=git, cache={})
-
-    @staticmethod
-    def create_from_file(git, cwd):
-        assert os.path.exists(cwd)
-        with open(os.path.join(cwd, LockVersionCache.LOCK_FILE), "r") as lock_file:
-            cache = json.load(lock_file)
-
-        return LockVersionCache(git=git, cache=cache)
