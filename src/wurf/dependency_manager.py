@@ -59,7 +59,7 @@ class DependencyManager(object):
         # Set of optional dependencies that have been marked as enabled
         self.enabled_dependencies = set()
 
-        self.top_level_lock_versions = {}
+        # Dict where we store the locked versions of dependencies
         self.locked_versions = {}
 
     def load_dependencies(self, path):
@@ -75,32 +75,17 @@ class DependencyManager(object):
 
         with open(resolve_json_path, "r") as resolve_file:
             resolve_json = json.load(resolve_file)
-
-        local_locked_versions = {}
-        resolve_lock_version = os.path.join(path, LockVersionCache.LOCK_FILE)
-
-        if os.path.isfile(resolve_lock_version):
-            with open(resolve_lock_version, "r") as f:
-                local_locked_versions = json.load(f)
-
-        for name in local_locked_versions:
-            if name in resolve_json:
-                if resolve_json[name].get("internal", False):
-                    continue
-            if name in self.locked_versions:
-                if self.locked_versions[name] != local_locked_versions[name]:
-                    raise WurfError(
-                        f"Lock entry mismatch!\n"
-                        f"Lock entry for {name} in {path}:\n"
-                        f"{local_locked_versions[name]}\n"
-                        f"Lock entry for {name} in {self.locked_versions[name]}:\n"
-                    )
-            else:
-                self.locked_versions[name] = local_locked_versions[name]
+        resolve_lock_version_path = None
+        if self.ctx.is_toplevel():
+            # We only load the lock file if we are at the top-level
+            # Any lock files found in dependencies will be ignored
+            resolve_lock_version_path = os.path.join(path, LockVersionCache.LOCK_FILE)
+            if os.path.isfile(resolve_lock_version_path):
+                with open(resolve_lock_version_path, "r") as f:
+                    self.locked_versions = json.load(f)
 
         for dependency in resolve_json:
             locked_version = self.locked_versions.get(dependency["name"], None)
-
             self.add_dependency(
                 dependency_args=dependency, locked_version=locked_version
             )
