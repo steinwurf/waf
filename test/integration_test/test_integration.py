@@ -7,8 +7,15 @@ import pytest
 
 @pytest.mark.networktest
 def test_kodok_standalone(testdirectory):
-    root = testdirectory
+    # Only run on linux
+    if os.name != "posix":
+        pytest.skip("Only run on linux")
 
+    # check that the unzip command is available
+    if not testdirectory.run("which unzip").returncode == 0:
+        pytest.skip("Unzip command not available")
+
+    root = testdirectory
     try:
         root.run("git clone git@github.com:steinwurf/kodok.git")
     except Exception:
@@ -54,5 +61,5 @@ def test_kodok_standalone(testdirectory):
     # check that all dependencies are resolved from the paths we specified
     # in the configure step
     for line in r.stdout.output:
-        if line.startswith("Resolve "):
-            assert "(locked path)" in line
+        if line.startswith("Load "):
+            assert " => resolved_dependencies/" in line
