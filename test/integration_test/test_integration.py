@@ -12,7 +12,10 @@ def test_kodok_standalone(testdirectory):
         pytest.skip("Only run on linux")
 
     # check that the unzip command is available
-    if not testdirectory.run("which unzip").returncode == 0:
+    try:
+        if not testdirectory.run("which unzip").returncode == 0:
+            pytest.skip("Unzip command not available")
+    except Exception:
         pytest.skip("Unzip command not available")
 
     root = testdirectory
