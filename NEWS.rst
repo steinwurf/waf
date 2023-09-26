@@ -6,6 +6,14 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Changed configure output to make it easier to see what version
+  is being used.
+* Minor: Changed Git to also return remote branches when listing branches.
+* Major: Changed how dependencies are resolved. All git repositories will
+  contain a folder called default which will point to the default branch.
+  Branches will be stored in branch-[branch-name] folders.
+  All other checkouts will be the commit id of the checkout limited to 10
+  characters.
 * Major: Removed tag database and by extension the ``ExistingTagResolver``.
 * Major: Use lock files (if present) in dependencies when resolving.
 * Major: Removed the ``override`` attribute.

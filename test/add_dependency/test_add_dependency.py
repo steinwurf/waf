@@ -598,8 +598,11 @@ def test_lock_versions_and_then_paths(testdirectory):
     ) as json_file:
         lock = json.load(json_file)
         assert lock["foo"]["commit_id"] == "e2f4c001b49d634a12ba9935bef63fe08c52eca0"
+        assert lock["foo"]["resolver_info"] == "1.3.3.7"
         assert lock["bar"]["commit_id"] == "be27614cf9f9e62d9bb2be34977c4b4bd62887f2"
+        assert lock["bar"]["resolver_info"] == "someh4sh"
         assert lock["baz"]["commit_id"] == "44cc31e0869eef797570d45d03718eedfe0800ac"
+        assert lock["baz"]["resolver_info"] == "3.3.1"
 
     r = app_dir.run(
         [
@@ -610,9 +613,7 @@ def test_lock_versions_and_then_paths(testdirectory):
             "resolved_dependencies",
         ]
     )
-
-    assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
-    assert r.stdout.match("*resolved_dependencies/baz-*/44cc31e086*")
+    assert r.stdout.match('Resolve "baz" (lock/git checkout)*: 3.3.1*')
 
     # Create a new minor "release" of baz and check that we keep the old
     # version
@@ -639,8 +640,7 @@ def test_lock_versions_and_then_paths(testdirectory):
         ]
     )
 
-    assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
-    assert r.stdout.match("*resolved_dependencies/baz-*/20b89c94c7*")
+    assert r.stdout.match('Resolve "baz" (lock/git checkout)*: 3.3.1*')
 
     # Check that if we remove the lock file, we get the new version
     app_dir.rmfile("lock_version_resolve.json")
@@ -659,9 +659,8 @@ def test_lock_versions_and_then_paths(testdirectory):
             "resolved_dependencies",
         ]
     )
-
-    assert r.stdout.match('*Resolve "baz" (git semver)*')
-    assert r.stdout.match("*resolved_dependencies/baz-*/d8ea1c47f3*")
+    print(r.stdout)
+    assert r.stdout.match('Resolve "baz" (git semver)*: 3.3.2*')
 
     app_dir.run(
         [
