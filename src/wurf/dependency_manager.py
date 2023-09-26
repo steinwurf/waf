@@ -73,19 +73,17 @@ class DependencyManager(object):
         with open(resolve_json_path, "r") as resolve_file:
             resolve_json = json.load(resolve_file)
 
-        locked_versions = {}
-        resolve_lock_path = os.path.join(path, LockVersionCache.LOCK_FILE)
-        if os.path.isfile(resolve_lock_path):
-            with open(resolve_lock_path, "r") as f:
-                locked_versions = json.load(f)
+        resolve_lock_version_path = os.path.join(path, LockVersionCache.LOCK_FILE)
+        if self.ctx.is_toplevel() and os.path.isfile(resolve_lock_version_path):
+            # We only load the lock file if we are at the top-level
+            # Any lock files found in dependencies will be ignored
+            with open(resolve_lock_version_path, "r") as f:
+                self.locked_versions = json.load(f)
 
         for dependency in resolve_json:
-            locked_version = locked_versions.get(dependency["name"], None)
-            self.add_dependency(
-                dependency_args=dependency, locked_version=locked_version
-            )
+            self.add_dependency(dependency_args=dependency)
 
-    def add_dependency(self, dependency_args, locked_version):
+    def add_dependency(self, dependency_args):
         """Adds a dependency to the manager.
 
         :param kwargs: Keyword arguments containing options for the dependency.
@@ -93,12 +91,12 @@ class DependencyManager(object):
 
         dependency = Dependency(**dependency_args)
 
-        if self.__skip_dependency(dependency, locked_version):
+        if self.__skip_dependency(dependency):
             return
+        locked_version = self.locked_versions.get(dependency.name, None)
         if locked_version is not None:
             dependency.locked_version = locked_version
-
-        self.locked_versions[dependency.name] = locked_version
+            dependency.resolver_info = locked_version.get("resolver_info", None)
 
         self.seen_dependencies[dependency.name] = dependency
         self.options.add_dependency(dependency)
@@ -130,7 +128,7 @@ class DependencyManager(object):
             "added_by": self.ctx.path.abspath(),
         }
 
-    def __skip_dependency(self, dependency, locked_version):
+    def __skip_dependency(self, dependency):
         """Checks if we should skip the dependency.
 
         :param dependency: A WurfDependency instance.
@@ -160,36 +158,6 @@ class DependencyManager(object):
                     f"First added by {added_by}:\n"
                     f"SHA1 mismatch:\n{dependency}\n"
                     f"the previous definition was:\n{seen_dependency}"
-                )
-
-            # Check if we have a version mismatch
-            seen_version = self.locked_versions.get(dependency.name, None)
-
-            if seen_version is None and locked_version is None:
-                # Both versions are None, so we are good
-                return True
-
-            if seen_version is None:
-                # A dependency previously added did not have a locked version
-                seen_version = {"sha1": seen_dependency.sha1}
-                p = self.dependency_cache[seen_dependency.name]["path"]
-                tag = self.git.current_tag(p)
-                if tag is not None:
-                    seen_version["checkout"] = tag
-                else:
-                    seen_version["checkout"] = self.git.current_commit(p)
-            if locked_version is None:
-                # The current dependency does not have a locked version
-                # this is fine as long as the two dependencies have the same
-                # sha1
-                return True
-
-            if seen_version != locked_version:
-                raise WurfError(
-                    f"Lock entry mismatch!\n"
-                    f"Adding {dependency.name} "
-                    f"({locked_version or 'unlocked'}) in {current}:\n"
-                    f"First added by {added_by} ({seen_version or 'unlocked'})."
                 )
 
             # This dependency is already in the seen_dependencies

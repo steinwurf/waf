@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import hashlib
 import os
 import shutil
 
@@ -12,6 +11,24 @@ class GitCheckoutResolver(object):
     """
     Git Commit Resolver functionality. Checks out a specific commit.
     """
+
+    @staticmethod
+    def commit_folder_name(commit_id):
+        """Return a folder name for a commit.
+
+        :param commit_id: The commit id as a string.
+        :return: The folder name as a string.
+        """
+        return "%s" % commit_id[:10]
+
+    @staticmethod
+    def branch_folder_name(branch):
+        """Return a folder name for a branch.
+
+        :param branch: The branch name as a string.
+        :return: The folder name as a string.
+        """
+        return "branch-%s" % branch
 
     def __init__(self, git, resolver, ctx, dependency, checkout, cwd):
         """Construct an instance.
@@ -39,17 +56,19 @@ class GitCheckoutResolver(object):
 
         assert os.path.isdir(path)
 
-        if self.git.current_branch(cwd=path) == self.checkout:
-            return path
-
-        if self.git.current_commit(cwd=path) == self.checkout:
-            return path
-
-        # Use the path returned to create a unique location for this checkout
-        repo_hash = hashlib.sha1(path.encode("utf-8")).hexdigest()[:6]
+        is_branch = self.checkout in self.git.branches(cwd=path)
+        if is_branch:
+            # If the checkout is a branch, we cannot use the commit id as
+            # folder name, as the branch may be updated later.
+            folder_name = GitCheckoutResolver.branch_folder_name(self.checkout)
+        else:
+            commit_id = self.git.checkout_to_commit_id(
+                cwd=path,
+                checkout=self.checkout,
+            )
+            folder_name = GitCheckoutResolver.commit_folder_name(commit_id)
 
         # The folder for storing the requested checkout
-        folder_name = self.checkout + "-" + repo_hash
         checkout_path = os.path.join(self.cwd, folder_name)
 
         self.ctx.to_log(
@@ -61,7 +80,6 @@ class GitCheckoutResolver(object):
         if not os.path.isdir(checkout_path):
             try:
                 copy_directory(path=path, to_path=checkout_path)
-
                 self.git.checkout(branch=self.checkout, cwd=checkout_path)
             except Exception:
                 # The checkout_path must be removed if the checkout is not
@@ -79,24 +97,28 @@ class GitCheckoutResolver(object):
                 shutil.rmtree(checkout_path, onerror=onerror)
                 # The blank "raise" re-raises the last exception
                 raise
-        else:
-            if not self.git.is_detached_head(cwd=checkout_path):
-                # If the checkout is a tag or a commit (we will be in detached
-                # HEAD state), then we cannot pull. On the other hand,
-                # the pull operation should be executed to update a branch.
-                self.git.pull(cwd=checkout_path)
+        elif not self.git.is_detached_head(cwd=checkout_path):
+            # If the checkout is a tag or a commit (we will be in detached
+            # HEAD state), then we cannot pull. On the other hand,
+            # the pull operation should be executed to update a branch.
+            self.git.pull(cwd=checkout_path)
 
-        # If the project contains submodules, we also get those
+        # If the dependency contains submodules, we also get those
         if self.dependency.pull_submodules:
             self.git.pull_submodules(cwd=checkout_path)
 
         # Record the commmit id of the current working copy
+        self.dependency.commit_id = self.git.current_commit(cwd=checkout_path)
+
+        if is_branch:
+            self.dependency.resolver_info = self.checkout
+            return checkout_path
+
         current_tag = self.git.current_tag(cwd=checkout_path)
         if current_tag is not None:
-            self.dependency.git_tag = current_tag
-
-        self.dependency.git_commit = self.git.current_commit(cwd=checkout_path)
-
+            self.dependency.resolver_info = current_tag
+        else:
+            self.dependency.resolver_info = self.dependency.commit_id[:10]
         return checkout_path
 
     def __repr__(self):

@@ -186,8 +186,6 @@ def run_commands(app_dir, git_dir):
     # behavior, we need to invoke help with the NOCLIMB variable.
     env = dict(os.environ)
 
-    print(f'PATH {env["PATH"]}')
-
     env["NOCLIMB"] = "1"
     app_dir.run(["python", "waf", "--help"], env=env)
 
@@ -271,9 +269,9 @@ def run_commands(app_dir, git_dir):
     app_dir.run(["python", "waf", "build", "-v"])
 
     resolve_dir = app_dir.join("resolved_dependencies")
-    assert resolve_dir.contains_dir("foo-*", "1.3.3.7-*")
-    assert resolve_dir.contains_dir("baz-*", "3.3.1-*")
-    assert resolve_dir.contains_dir("bar-*", "someh4sh-*")
+    assert resolve_dir.contains_dir("foo-*", "e2f4c001b4")
+    assert resolve_dir.contains_dir("baz-*", "44cc31e086")
+    assert resolve_dir.contains_dir("bar-*", "be27614cf9")
 
     resolve_dir.rmdir()
 
@@ -299,12 +297,14 @@ def run_commands(app_dir, git_dir):
     # containing the versions needed.
 
     # foo should use the commit id in the lock file
-    assert resolve_dir.contains_dir("foo-*", f'{lock["foo"]["checkout"]}-*')
+    assert resolve_dir.contains_dir("foo-*", "95d94bdfa6")
+
     # bar is locked to the same commit as the master so it will
     # skip the git checkout and just return the master path
-    assert resolve_dir.contains_dir("bar-*", "master-*")
+    assert resolve_dir.contains_dir("bar-*", "branch-master")
+
     # baz has its tag in the lock file, so it will be available there
-    assert resolve_dir.contains_dir("baz-*", "3.3.1-*")
+    assert resolve_dir.contains_dir("baz-*", "20b89c94c7")
 
     app_dir.rmfile("lock_version_resolve.json")
     resolve_dir.rmdir()
@@ -597,9 +597,12 @@ def test_lock_versions_and_then_paths(testdirectory):
         os.path.join(app_dir.path(), "lock_version_resolve.json"), "r"
     ) as json_file:
         lock = json.load(json_file)
-        assert lock["foo"]["checkout"] == "1.3.3.7"
-        assert lock["bar"]["checkout"] == "someh4sh"
-        assert lock["baz"]["checkout"] == "3.3.1"
+        assert lock["foo"]["commit_id"] == "e2f4c001b49d634a12ba9935bef63fe08c52eca0"
+        assert lock["foo"]["resolver_info"] == "1.3.3.7"
+        assert lock["bar"]["commit_id"] == "be27614cf9f9e62d9bb2be34977c4b4bd62887f2"
+        assert lock["bar"]["resolver_info"] == "someh4sh"
+        assert lock["baz"]["commit_id"] == "44cc31e0869eef797570d45d03718eedfe0800ac"
+        assert lock["baz"]["resolver_info"] == "3.3.1"
 
     r = app_dir.run(
         [
@@ -610,9 +613,7 @@ def test_lock_versions_and_then_paths(testdirectory):
             "resolved_dependencies",
         ]
     )
-
-    assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
-    assert r.stdout.match("*resolved_dependencies/baz-*/3.3.1-*")
+    assert r.stdout.match('Resolve "baz" (lock/git checkout)*: 3.3.1*')
 
     # Create a new minor "release" of baz and check that we keep the old
     # version
@@ -639,8 +640,7 @@ def test_lock_versions_and_then_paths(testdirectory):
         ]
     )
 
-    assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
-    assert r.stdout.match("*resolved_dependencies/baz-*/3.3.1-*")
+    assert r.stdout.match('Resolve "baz" (lock/git checkout)*: 3.3.1*')
 
     # Check that if we remove the lock file, we get the new version
     app_dir.rmfile("lock_version_resolve.json")
@@ -659,9 +659,8 @@ def test_lock_versions_and_then_paths(testdirectory):
             "resolved_dependencies",
         ]
     )
-
-    assert r.stdout.match('*Resolve "baz" (git semver)*')
-    assert r.stdout.match("*resolved_dependencies/baz-*/3.3.2-*")
+    print(r.stdout)
+    assert r.stdout.match('Resolve "baz" (git semver)*: 3.3.2*')
 
     app_dir.run(
         [

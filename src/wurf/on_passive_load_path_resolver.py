@@ -4,6 +4,8 @@
 import os
 import json
 
+from .on_active_store_path_resolver import OnActiveStorePathResolver
+
 from .error import DependencyError, WurfError
 
 
@@ -49,10 +51,6 @@ class OnPassiveLoadPathResolver(object):
             self.dependency.is_symlink = config["is_symlink"]
             self.dependency.real_path = str(config["real_path"])
 
-        if self.dependency.resolver == "git" and self.git.is_git_repository(cwd=path):
-            self.dependency.git_tag = self.git.current_tag(cwd=path)
-            self.dependency.git_commit = self.git.current_commit(cwd=path)
-
         return path
 
     def __read_config(self):
@@ -66,7 +64,17 @@ class OnPassiveLoadPathResolver(object):
             raise DependencyError("No config - re-run configure", self.dependency)
 
         with open(config_path, "r") as config_file:
-            return json.load(config_file)
+            config = json.load(config_file)
+
+        if (
+            "version" not in config
+            or config["version"] != OnActiveStorePathResolver.VERSION
+        ):
+            raise DependencyError(
+                "Config incorrect version - re-run configure", self.dependency
+            )
+
+        return config
 
     def __check_path(self, path):
         child = os.path.realpath(path)

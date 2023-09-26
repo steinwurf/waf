@@ -54,9 +54,26 @@ class ContextMsgResolver(object):
 
                 if symlink_node.is_child_of(self.ctx.srcnode):
                     symlink_path = symlink_node.path_from(self.ctx.srcnode)
-                real_path = self.dependency.real_path
-                self.ctx.end_msg(f"{symlink_path} => {real_path}")
-            else:
-                self.ctx.end_msg(path)
 
+                real_path = self.dependency.real_path
+                real_node = self.ctx.root.find_node(str(real_path))
+                if real_node.is_child_of(self.ctx.srcnode):
+                    real_path = real_node.path_from(self.ctx.srcnode)
+
+                detail = f"{symlink_path} => {real_path}"
+            else:
+                detail = path
+
+            if self.dependency.resolver_info is not None:
+                info = self.dependency.resolver_info
+                # limit or extend info to 10 chars
+                # if above replace the last 3 chars with "..."
+                if len(info) > 10:
+                    info = info[:7] + "..."
+                else:
+                    info = info.ljust(10)
+
+                self.ctx.end_msg(f"{info} ({detail})")
+            else:
+                self.ctx.end_msg(f"{detail}")
         return path

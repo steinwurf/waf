@@ -6,6 +6,8 @@ import json
 
 
 class OnActiveStorePathResolver(object):
+    VERSION = 1
+
     def __init__(self, resolver, dependency, resolve_config_path):
         """Construct an instance.
 
@@ -44,6 +46,7 @@ class OnActiveStorePathResolver(object):
         )
 
         config = {
+            "version": self.VERSION,
             "sha1": self.dependency.sha1,
             "path": path,
             "is_symlink": self.dependency.is_symlink,

@@ -78,10 +78,7 @@ class Dependency(object):
           specific action taken to resolve the dependency. For example:
           "git checkout", "user path" etc.
 
-        - "git_tag": This attribute is specified if the dependency is
-          resolved to a specific git tag.
-
-        - "git_commit" If specified this attribute contains a specific git
+        - "commit_id" If specified this attribute contains a specific git
           commit id (SHA1) where the dependency has been resolved.
 
         :param kwargs: Keyword arguments containing options for the dependency.

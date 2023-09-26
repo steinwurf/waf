@@ -111,10 +111,10 @@ class FakeGit:
         git_info = read_git_info(cwd=cwd)
 
         if git_info["checkout"] in git_info["branches"]:
-            return self._to_sha1(data=git_info["checkout"])
+            return self.checkout_to_commit_id(cwd, git_info["checkout"])
 
         if git_info["checkout"] in git_info["tags"]:
-            return self._to_sha1(data=git_info["checkout"])
+            return self.checkout_to_commit_id(cwd, git_info["checkout"])
 
         # The current checkout must already be a commit so we just return
         # it
@@ -130,11 +130,22 @@ class FakeGit:
 
         return None
 
+    def checkout_to_commit_id(self, cwd, checkout):
+        """Fake the commit id from a checkout"""
+        git_info = read_git_info(cwd=cwd)
+        return self._to_sha1(data=checkout + git_info["remote_origin_url"])
+
     def tags(self, cwd):
-        """ " Fake what tags are in a repository"""
+        """Fake what tags are in a repository"""
 
         git_info = read_git_info(cwd=cwd)
         return git_info["tags"]
+
+    def branches(self, cwd):
+        """Fake what branches are in a repository"""
+
+        git_info = read_git_info(cwd=cwd)
+        return git_info["branches"]
 
     def current_branch(self, cwd):
         """ " Fake the current branch of a repository"""
@@ -161,7 +172,7 @@ class FakeGit:
         valid = []
         for tag in git_info["tags"]:
             valid.append(tag)
-            valid.append(self._to_sha1(data=tag))
+            valid.append(self._to_sha1(data=tag + git_info["remote_origin_url"]))
 
         assert branch in valid, f"branch = {branch}, cwd = {cwd}"
 
@@ -185,6 +196,12 @@ class FakeGit:
         git_info = read_git_info(cwd=cwd)
 
         return git_info["is_detached_head"]
+
+    def default_branch(self, cwd):
+        """Fake the default branch of a repository"""
+
+        git_info = read_git_info(cwd=cwd)
+        return git_info.get("default_branch", "master")
 
     def _to_sha1(self, data):
         """Small private helper to calculate SHA1"""

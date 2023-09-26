@@ -9,7 +9,7 @@ from wurf.error import WurfError
 def test_resolve_path():
     default_path = "resolved_dependencies"
 
-    # Test that if no resove path is specified the default
+    # Test that if no resolve path is specified the default
     # is returned
     parser = argparse.ArgumentParser()
     args = ["--foo", "-b"]

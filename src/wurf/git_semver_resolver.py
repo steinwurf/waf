@@ -2,10 +2,10 @@
 # encoding: utf-8
 
 import os
-import shutil
-import hashlib
 
 from .error import DependencyError
+from .directory import copy_directory
+from .git_checkout_resolver import GitCheckoutResolver
 
 
 class GitSemverResolver(object):
@@ -19,7 +19,7 @@ class GitSemverResolver(object):
         """Construct an instance.
 
         :param git: A WurfGit instance
-        :param url_resolver: A WurfGitResolver instance.
+        :param resolver: A WurfGitResolver instance.
         :param ctx: A Waf Context instance.
         :param semver_selector: A SemverSelector instance.
         :param dependency: The dependency instance.
@@ -37,6 +37,8 @@ class GitSemverResolver(object):
         """Fetches the dependency if necessary.
         :return: The path to the resolved dependency as a string.
         """
+        # We need to start by resolivng the "master" so that we can
+        # check if any new tags have been added
         path = self.git_resolver.resolve()
 
         assert os.path.isdir(path)
@@ -53,11 +55,13 @@ class GitSemverResolver(object):
                 dependency=self.dependency,
             )
 
-        # Use the path returned to create a unique location for this checkout
-        repo_hash = hashlib.sha1(path.encode("utf-8")).hexdigest()[:6]
+        # Get commit id of tag
+        commit_id = self.git.checkout_to_commit_id(cwd=path, checkout=tag)
+
+        self.dependency.resolver_info = tag
 
         # The folder for storing the requested tag
-        folder_name = tag + "-" + repo_hash
+        folder_name = GitCheckoutResolver.commit_folder_name(commit_id)
         tag_path = os.path.join(self.cwd, folder_name)
 
         self.ctx.to_log(
@@ -67,16 +71,12 @@ class GitSemverResolver(object):
         # If the folder for the chosen tag does not exist,
         # then copy the master and checkout the tag
         if not os.path.isdir(tag_path):
-            shutil.copytree(src=path, dst=tag_path, symlinks=True)
+            copy_directory(path=path, to_path=tag_path)
             self.git.checkout(branch=tag, cwd=tag_path)
 
-        # If the project contains submodules, we also get those
-        if self.dependency.pull_submodules:
-            self.git.pull_submodules(cwd=tag_path)
-
-        # Record the commmit id of the current working copy
-        self.dependency.git_commit = self.git.current_commit(cwd=tag_path)
-        self.dependency.git_tag = tag
+            # If the project contains submodules, we also get those
+            if self.dependency.pull_submodules:
+                self.git.pull_submodules(cwd=tag_path)
 
         return tag_path
 

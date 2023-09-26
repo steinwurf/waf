@@ -120,7 +120,27 @@ class Git(object):
         if current == "":
             self.ctx.fatal("Failed to locate current branch")
 
+        # include remote branches
+        args = [self.git_binary, "branch", "-r"]
+        o = self.ctx.cmd_and_log(args, cwd=cwd)
+
+        lines = o.split("\n")
+        for line in lines:
+            if line.startswith("origin/HEAD"):
+                continue
+            branch = line.strip().split("/")[-1]
+            if branch not in others and branch != current:
+                others.append(branch)
+
         return current, others
+
+    def branches(self, cwd):
+        """
+        Runs 'git branch' and returns a list of branches
+        """
+        current, branches = self.branch(cwd=cwd)
+        branches.append(current)
+        return branches
 
     def current_branch(self, cwd):
         """
@@ -206,3 +226,33 @@ class Git(object):
         output = self.ctx.cmd_and_log(args, cwd=cwd)
 
         return output.strip()
+
+    def checkout_to_commit_id(self, cwd, checkout):
+        """
+        Runs 'git rev-list -n 1 <tag>' in the directory cwd and returns the
+        commit id of the checkout as a string.
+        This does not work for branches.
+
+        :param cwd: The current working directory as a string
+        :param checkout: The checkout as a string
+        """
+        args = [self.git_binary, "rev-list", "-1", checkout]
+        output = self.ctx.cmd_and_log(args, cwd=cwd)
+
+        return output.strip()
+
+    def default_branch(self, cwd):
+        """
+        Returns the default branch of the repository in directory cwd.
+
+        :param cwd: The current working directory as a string
+        """
+        args = [
+            self.git_binary,
+            "symbolic-ref",
+            "refs/remotes/origin/HEAD",
+            "--short",
+        ]
+        output = self.ctx.cmd_and_log(args, cwd=cwd)
+
+        return output.strip().split("/")[-1]
