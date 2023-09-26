@@ -111,10 +111,10 @@ class FakeGit:
         git_info = read_git_info(cwd=cwd)
 
         if git_info["checkout"] in git_info["branches"]:
-            return self._to_sha1(data=git_info["checkout"])
+            return self.checkout_to_commit_id(cwd, git_info["checkout"])
 
         if git_info["checkout"] in git_info["tags"]:
-            return self._to_sha1(data=git_info["checkout"])
+            return self.checkout_to_commit_id(cwd, git_info["checkout"])
 
         # The current checkout must already be a commit so we just return
         # it
@@ -132,16 +132,8 @@ class FakeGit:
 
     def checkout_to_commit_id(self, cwd, checkout):
         """Fake the commit id from a checkout"""
-
         git_info = read_git_info(cwd=cwd)
-
-        if git_info["checkout"] in git_info["branches"]:
-            return self._to_sha1(data=git_info["checkout"])
-
-        if git_info["checkout"] in git_info["tags"]:
-            return self._to_sha1(data=git_info["checkout"])
-
-        raise Exception(f"Unknown checkout {checkout}")
+        return self._to_sha1(data=checkout + git_info["remote_origin_url"])
 
     def tags(self, cwd):
         """Fake what tags are in a repository"""
@@ -180,7 +172,7 @@ class FakeGit:
         valid = []
         for tag in git_info["tags"]:
             valid.append(tag)
-            valid.append(self._to_sha1(data=tag))
+            valid.append(self._to_sha1(data=tag + git_info["remote_origin_url"]))
 
         assert branch in valid, f"branch = {branch}, cwd = {cwd}"
 
