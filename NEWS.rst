@@ -6,7 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
-* Patch: Fixed file hashing fuction.
+* Patch: Fixed file hashing function.
 * Minor: Changed configure output to make it easier to see what version
   is being used.
 * Minor: Changed Git to also return remote branches when listing branches.
