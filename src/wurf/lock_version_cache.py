@@ -33,9 +33,13 @@ class LockVersionCache(object):
             sha1.update(open(path, "rb").read())
         elif os.path.isdir(path):
             # Calculate the hash of all files in the directory
-            for root, _, files in os.walk(path):
-                for file in files:
+            for root, paths, files in os.walk(path):
+                for path in sorted(paths):
+                    sha1.update(path.encode("utf-8"))
+
+                for file in sorted(files):
                     f = os.path.join(root, file)
+                    sha1.update(file.encode("utf-8"))
                     sha1.update(open(f, "rb").read())
         else:
             raise WurfError(f"Unknown file type: {path}")

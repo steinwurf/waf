@@ -829,27 +829,27 @@ def load_chain(ctx, git, resolve_config_path, dependency, resolve_path):
 
 @Registry.provide
 def source_resolver(ctx, registry, dependency):
+    # The resolver to be used for a dependency can be overridden
+    # and example of this is when resolving from a lock path.
+    if "resolver" in registry:
+        resolver = registry.require("resolver")
+    else:
+        resolver = dependency.resolver
+
+    resolver_keys = {
+        "git": "resolve_git",
+        "http": "resolve_http",
+        "locked_path": "resolve_locked_path",
+        "locked_version": "resolve_locked_version",
+    }
+
+    resolver_key = resolver_keys.get(resolver, None)
+    if resolver_key is None:
+        raise WurfError(f"Unknown resolver {resolver}")
+
+    resolver = registry.require(resolver_key)
+
     with registry.provide_temporary() as temporary:
-        # The resolver to be used for a dependency can be overridden
-        # and example of this is when resolving from a lock path.
-        if "resolver" in registry:
-            resolver = registry.require("resolver")
-        else:
-            resolver = dependency.resolver
-
-        resolver_keys = {
-            "git": "resolve_git",
-            "http": "resolve_http",
-            "locked_path": "resolve_locked_path",
-            "locked_version": "resolve_locked_version",
-        }
-
-        resolver_key = resolver_keys.get(resolver, None)
-        if resolver_key is None:
-            raise WurfError(f"Unknown resolver {resolver}")
-
-        resolver = registry.require(resolver_key)
-
         if dependency.post_resolve is not None:
             # Add the post resolve
             temporary.provide_value("current_resolver", resolver)

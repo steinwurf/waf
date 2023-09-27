@@ -146,8 +146,8 @@ def _pytest(bld):
     # in the file system and make some tests pass although their .py
     # counter-part has been e.g. deleted
     command = "python -B -m pytest test --basetemp " + basetemp
-    if bld.options.verbose:
-        command += " -s -x"
+    # if bld.options.verbose:
+    #     command += " -s -x"
 
     # Conditionally disable the tests that have the "networktest" marker
     if bld.options.skip_network_tests:
