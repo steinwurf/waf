@@ -34,10 +34,10 @@ class LockVersionCache(object):
         elif os.path.isdir(path):
             # Calculate the hash of all files in the directory
             for root, paths, files in os.walk(path):
-                for path in paths:
+                for path in sorted(paths):
                     sha1.update(path.encode("utf-8"))
 
-                for file in files:
+                for file in sorted(files):
                     f = os.path.join(root, file)
                     sha1.update(file.encode("utf-8"))
                     sha1.update(open(f, "rb").read())

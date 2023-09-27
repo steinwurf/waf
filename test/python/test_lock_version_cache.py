@@ -1,47 +1,5 @@
 from wurf.lock_version_cache import LockVersionCache
 
-import hashlib
-import os
-
-
-def test_sha1():
-    assert (
-        hashlib.sha1(b"hello_world").hexdigest()
-        == "e4ecd6fc11898565af24977e992cea0c9c7b7025"
-    )
-
-    hash = hashlib.sha1()
-    hash.update(b"hello")
-    hash.update(b"_")
-    hash.update(b"world")
-
-    assert hash.hexdigest() == "e4ecd6fc11898565af24977e992cea0c9c7b7025"
-
-
-def test_os_walk(testdirectory):
-    testdirectory.write_text("a.txt", "a")
-    testdirectory.write_text("b.txt", "b")
-    testdirectory.write_text("c.txt", "c")
-    testdirectory.write_text("d.txt", "d")
-    nested = testdirectory.mkdir("nested")
-    nested.write_text("e.txt", "e")
-    nested.write_text("f.txt", "f")
-
-    items = []
-    for _, _, files in os.walk(testdirectory.path()):
-        for file in files:
-            items.append(file)
-
-    assert len(items) == 6, "Should be 5 files"
-
-    # check the order
-    assert items[0].endswith("b.txt")
-    assert items[1].endswith("d.txt")
-    assert items[2].endswith("a.txt")
-    assert items[3].endswith("c.txt")
-    assert items[4].endswith("f.txt")
-    assert items[5].endswith("e.txt")
-
 
 def test_calculate_file_hash(testdirectory):
     one = testdirectory.mkdir("one")
@@ -112,4 +70,4 @@ def test_file_hash_persistency(testdirectory):
 
     hash = LockVersionCache.calculate_file_hash(testdirectory.path())
 
-    assert hash == "15476f1e51243782d38505beacf37e1e5ae1572b", "Hash should match"
+    assert hash == "f2a6105558ea3baad7aed7a10fd55cacd7b65e1c", "Hash should match"
