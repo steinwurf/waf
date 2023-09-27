@@ -1,5 +1,7 @@
 from wurf.lock_version_cache import LockVersionCache
 
+import hashlib
+
 
 def test_calculate_file_hash(testdirectory):
     one = testdirectory.mkdir("one")
@@ -58,6 +60,20 @@ def test_calculate_file_hash(testdirectory):
     nested_two.write_text("file1.txt", "hello_world1")
 
     assert check_hash(), "Hash should be the same again"
+
+
+def test_sha1():
+    assert (
+        hashlib.sha1(b"hello_world").hexdigest()
+        == "e4ecd6fc11898565af24977e992cea0c9c7b7025"
+    )
+
+    hash = hashlib.sha1()
+    hash.update(b"hello")
+    hash.update(b"_")
+    hash.update(b"world")
+
+    assert hash.hexdigest() == "e4ecd6fc11898565af24977e992cea0c9c7b7025"
 
 
 def test_file_hash_persistency(testdirectory):
