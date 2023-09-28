@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Fix bug where setting the user path would persist and cause
+  later calls to configure to fail.
 * Patch: Fixed file hashing function.
 * Minor: Changed configure output to make it easier to see what version
   is being used.

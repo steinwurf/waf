@@ -6,7 +6,7 @@ import json
 
 from .on_active_store_path_resolver import OnActiveStorePathResolver
 
-from .error import DependencyError, WurfError
+from .error import DependencyError
 
 
 class OnPassiveLoadPathResolver(object):
@@ -41,11 +41,6 @@ class OnPassiveLoadPathResolver(object):
 
         if not (os.path.isdir(path) or os.path.isfile(path)):
             raise DependencyError(f'Invalid path: "{path}"', self.dependency)
-        if self.dependency.from_lock:
-            if config["is_symlink"]:
-                self.__check_path(config["real_path"])
-            else:
-                self.__check_path(path)
 
         if config["is_symlink"]:
             self.dependency.is_symlink = config["is_symlink"]
@@ -75,9 +70,3 @@ class OnPassiveLoadPathResolver(object):
             )
 
         return config
-
-    def __check_path(self, path):
-        child = os.path.realpath(path)
-        parent = os.path.realpath(self.resolve_path)
-        if not child.startswith(parent):
-            raise WurfError(f"Error: {child} is not within {parent}")

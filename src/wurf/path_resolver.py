@@ -41,5 +41,5 @@ class PathResolver(object):
                     f'Path error: "{self.path}" is not a directory.',
                     dependency=self.dependency,
                 )
-
+        self.dependency.resolver_info = "path"
         return self.path

@@ -10,10 +10,10 @@ class ArchiveResolver(object):
     Extracts an archive
     """
 
-    def __init__(self, archive_extractor, resolver, cwd):
-
+    def __init__(self, ctx, archive_extractor, resolver, cwd):
         """Construct a new instance.
 
+        :param ctx: A Waf Context instance.
         :param archive_extractor: An archive (zip, tar, etc.) extractor
             function.
         :param resolver: The parent resolver responsible for downloading the
@@ -21,6 +21,7 @@ class ArchiveResolver(object):
         :param cwd: Current working directory as a string. This is the place
             where we should create new folders etc.
         """
+        self.ctx = ctx
         self.archive_extractor = archive_extractor
         self.resolver = resolver
         self.cwd = cwd
@@ -40,6 +41,13 @@ class ArchiveResolver(object):
         extract_folder = "extract-" + extract_hash
 
         extract_path = os.path.join(self.cwd, extract_folder)
+        if os.path.exists(extract_path) and len(os.listdir(extract_path)) != 0:
+            self.ctx.to_log(
+                f"wurf: ArchiveResolver: {extract_path} is not empty. "
+                "Skipping extraction."
+            )
+
+            return extract_path
 
         self.archive_extractor(path=path, to_path=extract_path)
 

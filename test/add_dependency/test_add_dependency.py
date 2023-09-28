@@ -659,7 +659,7 @@ def test_lock_versions_and_then_paths(testdirectory):
             "resolved_dependencies",
         ]
     )
-    print(r.stdout)
+
     assert r.stdout.match('Resolve "baz" (git semver)*: 3.3.2*')
 
     app_dir.run(
