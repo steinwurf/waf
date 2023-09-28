@@ -7,6 +7,7 @@ from wurf.http_resolver import HttpResolver
 def test_http_resolver(testdirectory):
     url_download = mock.Mock()
     dependency = mock.Mock()
+    ctx = mock.Mock()
     dependency.filename = None
     dependency.source = "http://example.com/file.zip"
     cwd = testdirectory.path()
@@ -22,7 +23,9 @@ def test_http_resolver(testdirectory):
 
     url_download.download.side_effect = create_file
 
-    resolver = HttpResolver(url_download=url_download, dependency=dependency, cwd=cwd)
+    resolver = HttpResolver(
+        ctx=ctx, url_download=url_download, dependency=dependency, cwd=cwd
+    )
 
     path = resolver.resolve()
     assert os.path.isfile(path)
@@ -33,6 +36,7 @@ def test_http_resolver(testdirectory):
 def test_http_resolver_filename(testdirectory):
     url_download = mock.Mock()
     dependency = mock.Mock()
+    ctx = mock.Mock()
     dependency.filename = "foo.zip"
 
     dependency.source = "http://example.com/file.zip"
@@ -49,7 +53,9 @@ def test_http_resolver_filename(testdirectory):
 
     url_download.download.side_effect = create_file
 
-    resolver = HttpResolver(url_download=url_download, dependency=dependency, cwd=cwd)
+    resolver = HttpResolver(
+        ctx=ctx, url_download=url_download, dependency=dependency, cwd=cwd
+    )
 
     path = resolver.resolve()
     assert os.path.isfile(path)

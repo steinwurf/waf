@@ -23,7 +23,6 @@ from .git_semver_resolver import GitSemverResolver
 from .git_url_parser import GitUrlParser
 from .git_url_rewriter import GitUrlRewriter
 from .http_resolver import HttpResolver
-from .list_resolver import ListResolver
 from .lock_path_cache import LockPathCache
 from .lock_version_cache import LockVersionCache
 from .mandatory_options import MandatoryOptions
@@ -742,6 +741,7 @@ def resolve_git(registry, options, dependency):
 @Registry.cache
 @Registry.provide
 def resolve_http(
+    ctx,
     archive_extractor,
     url_download,
     dependency,
@@ -750,6 +750,7 @@ def resolve_http(
     dependency.resolver_action = "http"
 
     resolver = HttpResolver(
+        ctx,
         url_download=url_download,
         dependency=dependency,
         cwd=dependency_path,
@@ -757,29 +758,22 @@ def resolve_http(
 
     if dependency.extract:
         resolver = ArchiveResolver(
-            archive_extractor=archive_extractor, resolver=resolver, cwd=dependency_path
+            ctx,
+            archive_extractor=archive_extractor,
+            resolver=resolver,
+            cwd=dependency_path,
         )
 
     return resolver
 
 
 @Registry.provide
-def resolve_locked_version(registry, git, ctx, dependency, resolve_path):
+def resolve_locked_version(registry, dependency):
     # Set the resolver action on the dependency
     resolver = registry.require(f"resolve_{dependency.resolver}")
     dependency.resolver_action = f"lock/{dependency.resolver_action}"
 
-    resolve_config_path = registry.require("resolve_config_path")
-
-    lock_resolver = OnPassiveLoadPathResolver(
-        git=git,
-        dependency=dependency,
-        resolve_config_path=resolve_config_path,
-        resolve_path=resolve_path,
-    )
-    lock_resolver = TryResolver(resolver=lock_resolver, ctx=ctx, dependency=dependency)
-
-    return ListResolver(resolvers=[lock_resolver, resolver])
+    return resolver
 
 
 @Registry.provide
@@ -793,11 +787,9 @@ def resolve_locked_path(lock_cache_from: LockPathCache, dependency):
 
 
 @Registry.provide
-def help_chain(ctx, git, resolve_config_path, dependency, resolve_path):
-    # Set the resolver action on the dependency
-    dependency.resolver_chain = "Load"
-    dependency.resolver_action = "help"
-
+def on_passive_load_path_resolver(
+    ctx, git, resolve_config_path, dependency, resolve_path
+):
     resolver = OnPassiveLoadPathResolver(
         git=git,
         dependency=dependency,
@@ -805,25 +797,30 @@ def help_chain(ctx, git, resolve_config_path, dependency, resolve_path):
         resolve_path=resolve_path,
     )
 
-    return TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
+    return TryResolver(
+        resolver=resolver,
+        ctx=ctx,
+        dependency=dependency,
+    )
 
 
 @Registry.provide
-def load_chain(ctx, git, resolve_config_path, dependency, resolve_path):
-    # Set the resolver chain on the dependency
+def help_chain(dependency, on_passive_load_path_resolver):
     dependency.resolver_chain = "Load"
+    dependency.resolver_action = "help"
 
-    resolver = OnPassiveLoadPathResolver(
-        git=git,
-        dependency=dependency,
-        resolve_config_path=resolve_config_path,
-        resolve_path=resolve_path,
-    )
+    return on_passive_load_path_resolver
 
-    resolver = TryResolver(resolver=resolver, ctx=ctx, dependency=dependency)
+
+@Registry.provide
+def load_chain(dependency, on_passive_load_path_resolver):
+    dependency.resolver_chain = "Load"
+    dependency.resolver_action = "load"
 
     return MandatoryResolver(
-        resolver=resolver, msg="Dependency failed to load.", dependency=dependency
+        resolver=on_passive_load_path_resolver,
+        msg="Dependency failed to load.",
+        dependency=dependency,
     )
 
 
@@ -874,7 +871,7 @@ def resolve_chain(
                 f'A user path has been specified for "{dependency.name}". '
                 "Setting a user path is not supported when locking versions."
             )
-
+        dependency.from_lock = False
         resolver = registry.require("user_path_resolver")
     else:
         with registry.provide_temporary() as temporary:
@@ -886,6 +883,12 @@ def resolve_chain(
                 temporary.provide_value("resolver", "locked_version")
 
             resolver = registry.require("source_resolver")
+
+    if "from_lock" in dependency and dependency.from_lock:
+        lock_cache_from = registry.require("lock_cache_from")
+        resolver = CheckLockCacheResolver(
+            resolver=resolver, lock_cache_from=lock_cache_from, dependency=dependency
+        )
 
     resolver = CreateSymlinkResolver(
         resolver=resolver, dependency=dependency, symlinks_path=symlinks_path, ctx=ctx
@@ -919,6 +922,7 @@ def store_lock_path_resolver(store_resolver, dependency, project_path, lock_cach
 
 @Registry.provide
 def resolve_from_version_lock_chain(registry, lock_cache_from, dependency):
+    dependency.from_lock = True
     with registry.provide_temporary() as temporary:
         if dependency.resolver == "git":
             commit_id = lock_cache_from.commit_id(dependency=dependency)
@@ -926,20 +930,18 @@ def resolve_from_version_lock_chain(registry, lock_cache_from, dependency):
             temporary.provide_value("method", "checkout")
         resolver = registry.require("resolve_chain")
 
-    return CheckLockCacheResolver(
-        resolver=resolver, lock_cache_from=lock_cache_from, dependency=dependency
-    )
+    return resolver
 
 
 @Registry.provide
 def resolve_from_path_lock_chain(registry, lock_cache_from, dependency):
+    dependency.from_lock = True
     with registry.provide_temporary() as temporary:
         temporary.provide_value("resolver", "locked_path")
+        temporary.provide_value("from_lock_cache", True)
         resolver = registry.require("resolve_chain")
 
-    return CheckLockCacheResolver(
-        resolver=resolver, lock_cache_from=lock_cache_from, dependency=dependency
-    )
+    return resolver
 
 
 @Registry.provide
