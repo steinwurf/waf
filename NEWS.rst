@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Change output so that the resolve path is printed instead of the
+  default resolve path.
 * Patch: Fix bug where setting the user path would persist and cause
   later calls to configure to fail.
 * Patch: Fixed file hashing function.
