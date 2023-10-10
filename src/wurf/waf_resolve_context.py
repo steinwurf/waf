@@ -22,7 +22,7 @@ from waflib.extras import archive
 
 # To create the tree. https://gist.github.com/hrldcpr/2012250
 
-dependency_cache = {}
+dependency_cache = None
 """Dictionary that stores the dependencies resolved.
 
 The dictionary will be initialized by the WafResolveContext and can be

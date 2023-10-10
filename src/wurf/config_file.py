@@ -36,8 +36,4 @@ class ConfigFile(object):
         if log:
             self.ctx.end_msg(config_file)
 
-        if config.has_option("DEFAULT", "resolve_path"):
-            self.default_resolve_path = config.get("DEFAULT", "resolve_path")
-
-            if log:
-                self.ctx.msg("Default resolve path", self.default_resolve_path)
+        self.default_resolve_path = config.get("DEFAULT", "resolve_path", fallback=None)

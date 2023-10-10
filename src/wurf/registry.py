@@ -435,7 +435,9 @@ def lock_cache_to(git, configuration: Configuration):
 
 @Registry.cache_once
 @Registry.provide
-def options(parser, args, default_resolve_path, default_symlinks_path, config_file):
+def options(
+    ctx, parser, args, default_resolve_path, default_symlinks_path, config_file
+):
     """Return the Options provider."""
 
     # We support the protocols we know how to rewrite
@@ -446,13 +448,18 @@ def options(parser, args, default_resolve_path, default_symlinks_path, config_fi
     else:
         resolve_path = default_resolve_path
 
-    return Options(
+    options = Options(
         args=args,
         parser=parser,
         default_resolve_path=resolve_path,
         default_symlinks_path=default_symlinks_path,
         supported_git_protocols=supported_git_protocols,
     )
+
+    if ctx.logger is not None:
+        ctx.msg("Resolve path", options.resolve_path())
+
+    return options
 
 
 @Registry.cache_once
