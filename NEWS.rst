@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Added dependency paths for resolve conflicts.
 * Patch: Fix ``--no_resolve`` option.
 * Minor: Change output so that the resolve path is printed instead of the
   default resolve path.

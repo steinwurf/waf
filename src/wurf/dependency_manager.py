@@ -156,8 +156,9 @@ class DependencyManager(object):
                 raise WurfError(
                     f"Adding {dependency.name} in {current}:\n"
                     f"First added by {added_by}:\n"
-                    f"SHA1 mismatch:\n{dependency}\n"
-                    f"the previous definition was:\n{seen_dependency}"
+                    f"SHA1 mismatch\n"
+                    f"As seen in {current}\n:{dependency}\n"
+                    f"the previous definition from {added_by} was:\n{seen_dependency}"
                 )
 
             # This dependency is already in the seen_dependencies
