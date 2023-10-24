@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Fix ``--no_resolve`` option.
 * Minor: Change output so that the resolve path is printed instead of the
   default resolve path.
 * Patch: Fix bug where setting the user path would persist and cause
