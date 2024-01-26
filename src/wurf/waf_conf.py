@@ -19,6 +19,7 @@ from . import waf_resolve_context
 from . import virtualenv
 from . import rewrite
 from . import pip_tools
+from . import error
 from .registry import Registry
 
 
@@ -219,6 +220,6 @@ def project_version(ctx):
         version = "-".join(version)
 
         return version
-    except Exception as e:
+    except error.CmdAndLogError as e:
         ctx.logger.debug(f"wurf: project version failed: {e}")
         return None
