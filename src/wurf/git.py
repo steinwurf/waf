@@ -256,3 +256,12 @@ class Git(object):
         output = self.ctx.cmd_and_log(args, cwd=cwd)
 
         return output.strip().split("/")[-1]
+
+    def is_dirty(self, cwd):
+        """
+        Returns True if the repository in directory cwd has uncommitted changes.
+        """
+        args = [self.git_binary, "status", "--porcelain"]
+        output = self.ctx.cmd_and_log(args, cwd=cwd)
+
+        return output != ""
