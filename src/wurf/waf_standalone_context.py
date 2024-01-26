@@ -6,7 +6,6 @@ from waflib import Options
 
 
 def options(opt):
-
     opts = opt.add_option_group("Standalone archive options")
 
     opts.add_option(
@@ -62,3 +61,8 @@ class WafStandaloneContext(Dist):
         )
 
         return self.base_path.ant_glob("**/*", dir=True, excl=excludes.split())
+
+
+WafStandaloneContext.__doc__ = (
+    "creates a standalone archive that contains all dependencies"
+)

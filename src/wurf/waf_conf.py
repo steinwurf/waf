@@ -7,6 +7,7 @@
 # wscripts.
 
 import sys
+import os
 
 from waflib.Configure import conf
 from waflib.Errors import WafError
@@ -18,6 +19,8 @@ from . import waf_resolve_context
 from . import virtualenv
 from . import rewrite
 from . import pip_tools
+from . import error
+from .registry import Registry
 
 
 def extend_context(f):
@@ -151,3 +154,72 @@ def ensure_build(ctx):
 @extend_context
 def rewrite_file(ctx, filename):
     return rewrite.rewrite_file(filename=filename)
+
+
+@extend_context
+def project_version(ctx):
+    """
+    Return the project version. If the project is not a git repository
+    None is returned. If the project is a git repository the version
+    is constructed as follows:
+
+    1. If the current commit matches a tag the tag is used as the version.
+    2. If the current commit does not match a tag the latest tag and
+       current commit is used as the version.
+    3. If the repository contains uncommitted changes "-dirty" is appended.
+
+    Examples:
+
+        gc0b0b0b
+        gc0b0b0b-dirty
+        1.0.0
+        1.0.0-dirty
+        1.0.0-gc0b0b0b
+        1.0.0-gc0b0b0b-dirty # all together now
+
+    :param ctx: A Waf Context instance.
+    """
+
+    # To avoid logs going to stdout create an logger
+    bldnode = ctx.path.make_node("build")
+    bldnode.mkdir()
+
+    log_path = os.path.join(bldnode.abspath(), "version.log")
+
+    ctx.logger = Logs.make_logger(path=log_path, name="version")
+    ctx.logger.debug("wurf: project version execute")
+
+    registry = Registry()
+    registry.provide_value("ctx", ctx)
+    registry.provide_value("git_binary", "git")
+    git = registry.require("git")
+
+    try:
+        # Build the registry
+        cwd = ctx.path.abspath()
+        if not git.is_git_repository(cwd):
+            return None
+
+        commit = git.current_commit(cwd)
+        tag = ([None] + git.tags(cwd))[-1]
+        if tag is not None:
+            tag = tag.rstrip()
+            tag_commit = git.checkout_to_commit_id(cwd, tag)
+            if tag_commit == commit:
+                commit = None
+        dirty = git.is_dirty(cwd)
+
+        # Build the version slug
+        version = []
+        if tag is not None:
+            version.append(tag)
+        if commit is not None:
+            version.append(commit[:7])
+        if dirty:
+            version.append("dirty")
+        version = "-".join(version)
+
+        return version
+    except error.CmdAndLogError as e:
+        ctx.logger.debug(f"wurf: project version failed: {e}")
+        return None

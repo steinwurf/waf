@@ -206,3 +206,7 @@ class FakeGit:
     def _to_sha1(self, data):
         """Small private helper to calculate SHA1"""
         return hashlib.sha1(data.encode("utf-8")).hexdigest()
+
+    def is_dirty(self, cwd):
+        """Fake whether the repository has uncommitted changes"""
+        return False

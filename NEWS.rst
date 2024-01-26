@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Added project_version as a function on the Context object.
 * Patch: Added dependency paths for resolve conflicts.
 * Patch: Fix ``--no_resolve`` option.
 * Minor: Change output so that the resolve path is printed instead of the

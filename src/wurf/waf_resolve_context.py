@@ -105,6 +105,11 @@ class WafResolveContext(Context.Context):
         self.logger = Logs.make_logger(path, "resolve")
         self.logger.debug(f"wurf: Resolve execute {configuration.resolver_chain()}")
 
+        # Print the project version
+        self.start_msg("Project version")
+        version = self.project_version()
+        self.end_msg(version or "unknown", color="GREEN" if version else "YELLOW")
+
         self.dependency_manager: DependencyManager = self.registry.require(
             "dependency_manager"
         )
@@ -189,3 +194,8 @@ class WafResolveContext(Context.Context):
             raise CmdAndLogError(error=e)
         except Exception:
             raise
+
+
+WafResolveContext.__doc__ = (
+    "resolves the dependencies specified in the wscript's resolve function"
+)
