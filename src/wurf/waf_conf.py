@@ -186,6 +186,7 @@ def project_version(ctx):
 
     log_path = os.path.join(bldnode.abspath(), "version.log")
 
+    old_logger = ctx.logger
     ctx.logger = Logs.make_logger(path=log_path, name="version")
     ctx.logger.debug("wurf: project version execute")
 
@@ -223,3 +224,5 @@ def project_version(ctx):
     except error.CmdAndLogError as e:
         ctx.logger.debug(f"wurf: project version failed: {e}")
         return None
+    finally:
+        ctx.logger = old_logger
