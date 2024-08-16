@@ -87,11 +87,19 @@ class Configuration(object):
 
     def lock_paths(self):
         # Lock paths if configuring and the lock paths option was passed
-        return "configure" in self.args and self.options.lock_paths()
+        if "configure" in self.args and self.options.lock_paths():
+            return True
+        elif "resolve" in self.args and self.options.lock_paths():
+            return True
+        return False
 
     def lock_versions(self):
         # Lock versions if configuring and the lock versions option was passed
-        return "configure" in self.args and self.options.lock_versions()
+        if "configure" in self.args and self.options.lock_versions():
+            return True
+        elif "resolve" in self.args and self.options.lock_versions():
+            return True
+        return False
 
     def choose_resolve_from_lock(self, lock_file):
         if not self.choose_resolve():
