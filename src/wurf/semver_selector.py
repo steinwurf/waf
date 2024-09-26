@@ -17,6 +17,7 @@ BASEVERSION = re.compile(
     re.VERBOSE,
 )
 
+
 class SemverSelector(object):
     """
     Selects the most recent tag for a semver major version.
@@ -90,7 +91,8 @@ class SemverSelector(object):
             return None
 
         ver = {
-            key: 0 if value is None else int(value) for key, value in match.groupdict().items()
+            key: 0 if value is None else int(value)
+            for key, value in match.groupdict().items()
         }
         return self.semver.VersionInfo(**ver)
 

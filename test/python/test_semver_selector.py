@@ -17,7 +17,7 @@ def test_semver_selector():
         "3.0.0",
         "3.0.0-lts.0",
         "3.0.0-lts.1",
-        "backups/3.1.0-lts.0", # Do not match non-toplevel tags.
+        "backups/3.1.0-lts.0",  # Do not match non-toplevel tags.
         "4.0.0",
         "v4.0.1",
         "5.0.0",
