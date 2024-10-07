@@ -69,6 +69,14 @@ class Options(object):
             "the specific versions of all resolved dependencies.",
         )
 
+        self.parser.add_argument(
+            "--skip_recurse",
+            dest="--skip_recurse",
+            action="store_true",
+            default=False,
+            help="Skip recursing dependencies in build.",
+        )
+
         self.__parse()
 
     def resolve_path(self):
@@ -91,6 +99,9 @@ class Options(object):
 
     def checkout(self, dependency):
         return self.known_args[f"--{dependency.name}_checkout"]
+
+    def skip_recurse(self):
+        return self.known_args["--skip_recurse"]
 
     def __parse(self):
         known, unknown = self.parser.parse_known_args(args=self.args)

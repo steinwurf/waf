@@ -10,6 +10,7 @@ class WafBuildContext(BuildContext):
         # Call build() in all dependencies before executing build()
         # in the top-level wscript: this allows us to define all build tasks
         # from the dependencies before reaching the main project
-        self.recurse_dependencies()
+        if not self.has_tool_option("--skip_recurse"):
+            self.recurse_dependencies()
 
         super(WafBuildContext, self).execute_build()
