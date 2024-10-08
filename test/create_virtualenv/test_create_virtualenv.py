@@ -3,8 +3,13 @@
 import pytest
 from pytest_testdirectory.runresulterror import RunResultError
 
+import platform
+
 
 def test_create_virtualenv(testdirectory):
+    # do not run on windows
+    if platform.system() == "Windows":
+        return
     testdirectory.copy_file("test/create_virtualenv/wscript")
     testdirectory.copy_file("build/waf")
 

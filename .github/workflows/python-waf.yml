@@ -25,7 +25,7 @@ jobs:
     - builder
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Configure
       run: python3 waf configure
     - name: Build
@@ -39,7 +39,7 @@ jobs:
     - macOS
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Configure
       run: python3 waf configure
     - name: Build
@@ -53,7 +53,7 @@ jobs:
     - Windows
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Configure
       run: python waf configure
     - name: Build
