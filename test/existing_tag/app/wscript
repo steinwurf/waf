@@ -6,6 +6,8 @@ from fake_git import FakeGit
 APPNAME = "test_add_dependency"
 VERSION = "1.0.0"
 
+NO_RECURSE = False
+
 
 def resolve(ctx):
     # Get the registry and replace the git builder

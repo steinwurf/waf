@@ -14,7 +14,7 @@ name: Waf Python Tests
 jobs:
   waf-linux:
     container:
-      image: ghcr.io/steinwurf/waf:latest
+      image: python:3.12
       options: --user 0:0
       volumes:
       - /home/buildbot/.ssh:/root/.ssh

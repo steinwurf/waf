@@ -1,8 +1,10 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-APPNAME = 'libbaz'
-VERSION = '1.0.0'
+APPNAME = "libbaz"
+VERSION = "1.0.0"
+
+NO_RECURSE = False
 
 
 def resolve(ctx):
@@ -10,15 +12,14 @@ def resolve(ctx):
 
 
 def options(opt):
-    opt.load('compiler_cxx')
+    opt.load("compiler_cxx")
 
 
 def configure(conf):
-    conf.load('compiler_cxx')
+    conf.load("compiler_cxx")
 
 
 def build(bld):
-    bld.stlib(features='cxx',
-              target='baz',
-              source='src/baz/baz.cpp',
-              export_includes='src')
+    bld.stlib(
+        features="cxx", target="baz", source="src/baz/baz.cpp", export_includes="src"
+    )

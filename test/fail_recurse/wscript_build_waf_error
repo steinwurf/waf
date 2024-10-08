@@ -3,11 +3,16 @@
 
 import waflib
 
-APPNAME = 'foo'
-VERSION = '1.0.0'
+APPNAME = "foo"
+VERSION = "1.0.0"
+
+
+NO_RECURSE = False
+
 
 def configure(conf):
     pass
+
 
 def build(bld):
     raise waflib.Errors.WafError("Oh no!")
