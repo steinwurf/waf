@@ -3,6 +3,8 @@
 
 VERSION = "1.0.0"
 
+NO_RECURSE = False
+
 
 def build(bld):
     bld(export_includes="./src", name="extra")

@@ -15,7 +15,6 @@ class PostResolveRun(object):
     """
 
     def __init__(self, resolver, ctx, run, cwd):
-
         """Construct a new instance.
 
         :param resolver: A resolver instance.

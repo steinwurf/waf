@@ -14,7 +14,7 @@ name: Waf Python Tests
 jobs:
   waf-linux:
     container:
-      image: ghcr.io/steinwurf/waf:latest
+      image: python:3.12
       options: --user 0:0
       volumes:
       - /home/buildbot/.ssh:/root/.ssh
@@ -25,7 +25,7 @@ jobs:
     - builder
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Configure
       run: python3 waf configure
     - name: Build
@@ -39,7 +39,7 @@ jobs:
     - macOS
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Configure
       run: python3 waf configure
     - name: Build
@@ -53,7 +53,7 @@ jobs:
     - Windows
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Configure
       run: python waf configure
     - name: Build

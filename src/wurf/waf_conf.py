@@ -202,8 +202,14 @@ def project_version(ctx):
             return None
 
         commit = git.current_commit(cwd)
-        sorted_semver_tags = sorted(git.tags(cwd), key=lambda x: tuple(map(int, x.split(".")))
-                      if all(map(str.isdigit, x.split("."))) else x)
+        sorted_semver_tags = sorted(
+            git.tags(cwd),
+            key=lambda x: (
+                tuple(map(int, x.split(".")))
+                if all(map(str.isdigit, x.split(".")))
+                else x
+            ),
+        )
         tag = ([None] + sorted_semver_tags)[-1]
         if tag is not None:
             tag = tag.rstrip()

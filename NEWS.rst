@@ -58,6 +58,9 @@ Latest
 * Patch: Move the rewrite_file helper to all contexts (before it was only
   available in the build context).
 * Patch: Added the '--force' flag to the git checkout command.
+* Major: Made recursion of build dependencies optional using a variable set in
+  the wscript file, ``NO_RECURSE``. This is ``True`` by default, and can be
+  overridden by setting it to ``False`` in the wscript file.
 
 6.0.0
 -----

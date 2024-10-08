@@ -33,7 +33,6 @@ def options(opt):
 
 
 class WafStandaloneContext(Dist):
-
     """creates a standalone archive that contains all dependencies"""
 
     cmd = "standalone"
