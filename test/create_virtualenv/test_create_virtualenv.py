@@ -9,7 +9,7 @@ import platform
 def test_create_virtualenv(testdirectory):
     # do not run on windows
     if platform.system() == "Windows":
-        return
+        pytest.skip("Skipping test on Windows")
     testdirectory.copy_file("test/create_virtualenv/wscript")
     testdirectory.copy_file("build/waf")
 
