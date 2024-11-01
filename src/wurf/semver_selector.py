@@ -77,7 +77,7 @@ class SemverSelector(object):
             set to zero to obtain a valid semver version.
 
         Copyright (c) 2013, Konstantine Rybnikov
-        Original: https://github.com/python-semver/python-semver/blob/master/docs/advanced/coerce.py
+        https://github.com/python-semver/python-semver/
 
         :param str version: the version string to convert
         :return: a :class:`Version` instance (or ``None`` if it's not a version)
