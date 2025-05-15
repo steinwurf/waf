@@ -23,6 +23,10 @@ def options(ctx):
         help="Enable verbose output for CMake configure and build",
     )
 
+    ctx.add_option(
+        "--run-tests", action="store_true", default=False, help="Run tests after build"
+    )
+
 
 def configure(ctx):
 
@@ -77,6 +81,20 @@ def build(ctx):
         cmake_build_cmd.append("--verbose")
 
     ctx.run_command(cmake_build_cmd, stdout=None, stderr=None)
+
+    if ctx.options.run_tests:
+
+        # Run the tests using CTest
+        ctest_cmd = [
+            "ctest",
+            "--test-dir",
+            ctx.env.BUILD_DIR,
+        ]
+
+        if not ctx.options.cmake_verbose:
+            ctest_cmd.append("--output-on-failure")
+
+        ctx.run_command(ctest_cmd, stdout=None, stderr=None)
 
 
 class Clean(waflib.Context.Context):
