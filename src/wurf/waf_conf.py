@@ -157,6 +157,22 @@ def rewrite_file(ctx, filename):
 
 
 @extend_context
+def run_command(ctx, cmd, **kwargs):
+    """
+    Run a command in the context of the current environment.
+    :param ctx: A Waf Context instance.
+    :param cmd: The command to run.
+
+    """
+    print(f"Running command: {cmd}")
+
+    ret = ctx.exec_command(cmd, **kwargs)
+
+    if ret != 0:
+        ctx.fatal(f"Command failed with exit code {ret} with {kwargs}")
+
+
+@extend_context
 def project_version(ctx):
     """
     Return the project version. If the project is not a git repository
