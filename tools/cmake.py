@@ -7,6 +7,81 @@ import sys
 import waflib
 
 
+class CMake:
+
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    def configure(self):
+        # Check if the CMake executable is available
+        self.ctx.find_program("cmake", mandatory=True)
+
+        self.ctx.env.BUILD_DIR = self.ctx.path.get_bld().abspath()
+
+        if not self.ctx.is_toplevel():
+            return
+
+        cmake_cmd = [
+            "cmake",
+            "-S",
+            self.ctx.path.abspath(),
+            "-B",
+            self.ctx.env.BUILD_DIR,
+            f"-DCMAKE_BUILD_TYPE={self.ctx.options.cmake_build_type}",
+            "-DCMAKE_POLICY_VERSION_MINIMUM=3.5",
+            # Make sure we don't resolve dependencies twice
+            "-DSTEINWURF_RESOLVE="
+            + os.path.join(self.ctx.path.abspath(), "resolve_symlinks"),
+        ]
+
+        # Add any additional CMake flags specified by the user in the CMAKE_ARGS
+        if self.ctx.env.CMAKE_ARGS:
+            cmake_cmd.extend(self.ctx.env.CMAKE_ARGS)
+
+        if self.ctx.options.cmake_toolchain:
+            cmake_cmd.append(
+                f"-DCMAKE_TOOLCHAIN_FILE={self.ctx.options.cmake_toolchain}"
+            )
+
+        if self.ctx.options.cmake_verbose:
+            cmake_cmd.append("-DCMAKE_VERBOSE_MAKEFILE=ON")
+
+        self.ctx.run_command(cmake_cmd, stdout=None, stderr=None)
+
+    def build(self):
+
+        if not self.ctx.is_toplevel():
+            return
+
+        jobs = str(self.ctx.options.jobs) if hasattr(self.ctx.options, "jobs") else "1"
+        cmake_build_cmd = [
+            "cmake",
+            "--build",
+            self.ctx.env.BUILD_DIR,
+            "--parallel",
+            jobs,
+        ]
+
+        if self.ctx.options.cmake_verbose:
+            cmake_build_cmd.append("--verbose")
+
+        self.ctx.run_command(cmake_build_cmd, stdout=None, stderr=None)
+
+        if self.ctx.options.run_tests:
+
+            # Run the tests using CTest
+            ctest_cmd = [
+                "ctest",
+                "--test-dir",
+                self.ctx.env.BUILD_DIR,
+            ]
+
+            if not self.ctx.options.cmake_verbose:
+                ctest_cmd.append("--output-on-failure")
+
+            self.ctx.run_command(ctest_cmd, stdout=None, stderr=None)
+
+
 def options(ctx):
 
     ctx.add_option(
@@ -28,7 +103,17 @@ def options(ctx):
     )
 
 
+def _cmake_configure(ctx):
+
+    # Run the CMake configure command
+    ctx.run_command(ctx.env.CMAKE_CONFIGURE, stdout=None, stderr=None)
+
+
 def configure(ctx):
+    # Here we set up the environment for the CMake configure
+    # The user can override this if needed. To run the conigure step call
+    # use the cmake_configure function added to the configure context
+    setattr(ctx, "cmake_configure", _cmake_configure)
 
     # Check if the CMake executable is available
     ctx.find_program("cmake", mandatory=True)
@@ -50,17 +135,13 @@ def configure(ctx):
         "-DSTEINWURF_RESOLVE=" + os.path.join(ctx.path.abspath(), "resolve_symlinks"),
     ]
 
-    # Add any additional CMake flags specified by the user in the CMAKE_ARGS
-    if ctx.env.CMAKE_ARGS:
-        cmake_cmd.extend(ctx.env.CMAKE_ARGS)
-
     if ctx.options.cmake_toolchain:
         cmake_cmd.append(f"-DCMAKE_TOOLCHAIN_FILE={ctx.options.cmake_toolchain}")
 
     if ctx.options.cmake_verbose:
         cmake_cmd.append("-DCMAKE_VERBOSE_MAKEFILE=ON")
 
-    ctx.run_command(cmake_cmd, stdout=None, stderr=None)
+    ctx.env.CMAKE_CONFIGURE = cmake_cmd
 
 
 def build(ctx):
