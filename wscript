@@ -83,7 +83,7 @@ def _build_waf_binary(bld):
         "--make-waf",
         f"--prelude={prelude}",
         f"--tools={tools}",
-        f"--interpreter={intrepreter}",
+        # f"--interpreter={intrepreter}",
     ]
 
     bld.cmd_and_log(command, cwd=cwd)

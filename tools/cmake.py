@@ -5,81 +5,38 @@ import os
 import shutil
 import sys
 import waflib
+import platform
+import types
 
 
-class CMake:
+def _limit_jobs_based_on_memory(default_jobs=1):
+    """
+    Calculate the number of jobs based on total system memory (Linux only).
+    If unable to determine memory or not on Linux, return the default value.
+    """
+    if platform.system() != "Linux":
+        # Not on Linux, return the default value
+        return default_jobs
 
-    def __init__(self, ctx):
-        self.ctx = ctx
+    meminfo_path = "/proc/meminfo"
+    if not os.path.exists(meminfo_path):
+        # /proc/meminfo not found, return the default value
+        return default_jobs
 
-    def configure(self):
-        # Check if the CMake executable is available
-        self.ctx.find_program("cmake", mandatory=True)
-
-        self.ctx.env.BUILD_DIR = self.ctx.path.get_bld().abspath()
-
-        if not self.ctx.is_toplevel():
-            return
-
-        cmake_cmd = [
-            "cmake",
-            "-S",
-            self.ctx.path.abspath(),
-            "-B",
-            self.ctx.env.BUILD_DIR,
-            f"-DCMAKE_BUILD_TYPE={self.ctx.options.cmake_build_type}",
-            "-DCMAKE_POLICY_VERSION_MINIMUM=3.5",
-            # Make sure we don't resolve dependencies twice
-            "-DSTEINWURF_RESOLVE="
-            + os.path.join(self.ctx.path.abspath(), "resolve_symlinks"),
-        ]
-
-        # Add any additional CMake flags specified by the user in the CMAKE_ARGS
-        if self.ctx.env.CMAKE_ARGS:
-            cmake_cmd.extend(self.ctx.env.CMAKE_ARGS)
-
-        if self.ctx.options.cmake_toolchain:
-            cmake_cmd.append(
-                f"-DCMAKE_TOOLCHAIN_FILE={self.ctx.options.cmake_toolchain}"
-            )
-
-        if self.ctx.options.cmake_verbose:
-            cmake_cmd.append("-DCMAKE_VERBOSE_MAKEFILE=ON")
-
-        self.ctx.run_command(cmake_cmd, stdout=None, stderr=None)
-
-    def build(self):
-
-        if not self.ctx.is_toplevel():
-            return
-
-        jobs = str(self.ctx.options.jobs) if hasattr(self.ctx.options, "jobs") else "1"
-        cmake_build_cmd = [
-            "cmake",
-            "--build",
-            self.ctx.env.BUILD_DIR,
-            "--parallel",
-            jobs,
-        ]
-
-        if self.ctx.options.cmake_verbose:
-            cmake_build_cmd.append("--verbose")
-
-        self.ctx.run_command(cmake_build_cmd, stdout=None, stderr=None)
-
-        if self.ctx.options.run_tests:
-
-            # Run the tests using CTest
-            ctest_cmd = [
-                "ctest",
-                "--test-dir",
-                self.ctx.env.BUILD_DIR,
-            ]
-
-            if not self.ctx.options.cmake_verbose:
-                ctest_cmd.append("--output-on-failure")
-
-            self.ctx.run_command(ctest_cmd, stdout=None, stderr=None)
+    try:
+        with open(meminfo_path, "r") as meminfo:
+            for line in meminfo:
+                if line.startswith("MemAvailable"):
+                    # MemAvailable is memory a new application can use in kB
+                    # without swapping MemTotal is in kB, convert to GB
+                    total_memory_kb = int(line.split()[1])
+                    total_memory_gb = total_memory_kb / (1024**2)
+                    # Return jobs calculated as total_memory_gb / 2, minimum 1
+                    return max(1, int(total_memory_gb / 2))
+    except Exception as e:
+        # Fallback to default if any error occurs
+        print(f"Error reading memory info: {e}")
+        return default_jobs
 
 
 def options(ctx):
@@ -99,6 +56,12 @@ def options(ctx):
     )
 
     ctx.add_option(
+        "--cmake-jobs",
+        default=_limit_jobs_based_on_memory(),
+        help="Number of jobs for CMake build",
+    )
+
+    ctx.add_option(
         "--run-tests", action="store_true", default=False, help="Run tests after build"
     )
 
@@ -110,18 +73,20 @@ def _cmake_configure(ctx):
 
 
 def configure(ctx):
+    if not ctx.is_toplevel():
+        return
+
     # Here we set up the environment for the CMake configure
     # The user can override this if needed. To run the conigure step call
     # use the cmake_configure function added to the configure context
-    setattr(ctx, "cmake_configure", _cmake_configure)
+
+    # Bind _cmake_configure as a method to ctx
+    ctx.cmake_configure = types.MethodType(_cmake_configure, ctx)
 
     # Check if the CMake executable is available
     ctx.find_program("cmake", mandatory=True)
 
     ctx.env.BUILD_DIR = ctx.path.get_bld().abspath()
-
-    if not ctx.is_toplevel():
-        return
 
     cmake_cmd = [
         "cmake",
@@ -133,6 +98,7 @@ def configure(ctx):
         "-DCMAKE_POLICY_VERSION_MINIMUM=3.5",
         # Make sure we don't resolve dependencies twice
         "-DSTEINWURF_RESOLVE=" + os.path.join(ctx.path.abspath(), "resolve_symlinks"),
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
     ]
 
     if ctx.options.cmake_toolchain:
@@ -144,24 +110,10 @@ def configure(ctx):
     ctx.env.CMAKE_CONFIGURE = cmake_cmd
 
 
-def build(ctx):
+def _cmake_build(ctx):
 
-    if not ctx.is_toplevel():
-        return
-
-    jobs = str(ctx.options.jobs) if hasattr(ctx.options, "jobs") else "1"
-    cmake_build_cmd = [
-        "cmake",
-        "--build",
-        ctx.env.BUILD_DIR,
-        "--parallel",
-        jobs,
-    ]
-
-    if ctx.options.cmake_verbose:
-        cmake_build_cmd.append("--verbose")
-
-    ctx.run_command(cmake_build_cmd, stdout=None, stderr=None)
+    # Run the CMake build command
+    ctx.run_command(ctx.env.CMAKE_BUILD, stdout=None, stderr=None)
 
     if ctx.options.run_tests:
 
@@ -176,6 +128,29 @@ def build(ctx):
             ctest_cmd.append("--output-on-failure")
 
         ctx.run_command(ctest_cmd, stdout=None, stderr=None)
+
+
+def build(ctx):
+
+    if not ctx.is_toplevel():
+        return
+
+    # Bind _cmake_build as a method to ctx
+    ctx.cmake_build = types.MethodType(_cmake_build, ctx)
+
+    jobs = str(ctx.options.cmake_jobs)
+    cmake_build_cmd = [
+        "cmake",
+        "--build",
+        ctx.env.BUILD_DIR,
+        "--parallel",
+        jobs,
+    ]
+
+    if ctx.options.cmake_verbose:
+        cmake_build_cmd.append("--verbose")
+
+    ctx.env.CMAKE_BUILD = cmake_build_cmd
 
 
 class Clean(waflib.Context.Context):
@@ -193,9 +168,7 @@ class Clean(waflib.Context.Context):
         # Create a log file for the output
         self.logger = waflib.Logs.make_logger("/tmp/waf_clean.log", "cfg")
 
-        paths = getattr(self, "clean_paths", [])
-        if not paths:
-            self.fatal("No paths to clean")
+        paths = getattr(self, "clean_paths", ["build", "build_current"])
 
         for path in paths:
 
@@ -207,5 +180,9 @@ class Clean(waflib.Context.Context):
             if os.path.isdir(path):
                 shutil.rmtree(path)
                 self.end_msg("Removed")
+            # Check for symlink
+            elif os.path.islink(path):
+                os.unlink(path)
+                self.end_msg("Removed symlink")
             else:
                 self.end_msg("Not found", color="YELLOW")
