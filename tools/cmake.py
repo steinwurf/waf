@@ -65,14 +65,58 @@ def options(ctx):
         "--run-tests", action="store_true", default=False, help="Run tests after build"
     )
 
+    ctx.add_option(
+        "--cmake-generator",
+        default="",
+        help="CMake generator to use (e.g., Ninja, Unix Makefiles, etc.)",
+    )
 
-def _cmake_configure(ctx):
+
+def _cmake_configure(ctx, **kwargs):
+
+    if "CMAKE_BUILD_DIR" not in ctx.env:
+        ctx.env.CMAKE_BUILD_DIR = ctx.path.get_bld().abspath()
+
+    if "CMAKE_SRC_DIR" not in ctx.env:
+        ctx.env.CMAKE_SRC_DIR = ctx.path.abspath()
+
+    ctx.env.CMAKE_CONFIGURE = [
+        "cmake",
+        "-S",
+        ctx.env.CMAKE_SRC_DIR,
+        "-B",
+        ctx.env.CMAKE_BUILD_DIR,
+    ]
+
+    # Add the generator if specified
+    if ctx.options.cmake_generator:
+        ctx.env.CMAKE_CONFIGURE.append(f"-G{ctx.options.cmake_generator}")
+
+    ctx.env.CMAKE_CONFIGURE_ARGS += [
+        f"-DCMAKE_BUILD_TYPE={ctx.options.cmake_build_type}",
+        # Make sure we don't resolve dependencies twice
+        "-DSTEINWURF_RESOLVE=" + os.path.join(ctx.path.abspath(), "resolve_symlinks"),
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+    ]
+
+    if ctx.options.cmake_toolchain:
+        ctx.env.CMAKE_CONFIGURE_ARGS.append(
+            f"-DCMAKE_TOOLCHAIN_FILE={ctx.options.cmake_toolchain}"
+        )
+
+    if ctx.options.cmake_verbose:
+        ctx.env.CMAKE_CONFIGURE_ARGS.append("-DCMAKE_VERBOSE_MAKEFILE=ON")
 
     # Run the CMake configure command
-    ctx.run_command(ctx.env.CMAKE_CONFIGURE, stdout=None, stderr=None)
+    ctx.run_exectuable(ctx.env.CMAKE_CONFIGURE + ctx.env.CMAKE_CONFIGURE_ARGS, **kwargs)
 
 
 def configure(ctx):
+
+    # Add CMAKE_CONFIGURE_ARGS to the environment if it does not exist
+    if not hasattr(ctx.env, "CMAKE_CONFIGURE_ARGS"):
+        ctx.env.CMAKE_CONFIGURE_ARGS = []
+
     if not ctx.is_toplevel():
         return
 
@@ -86,48 +130,25 @@ def configure(ctx):
     # Check if the CMake executable is available
     ctx.find_program("cmake", mandatory=True)
 
-    ctx.env.BUILD_DIR = ctx.path.get_bld().abspath()
 
-    cmake_cmd = [
-        "cmake",
-        "-S",
-        ctx.path.abspath(),
-        "-B",
-        ctx.env.BUILD_DIR,
-        f"-DCMAKE_BUILD_TYPE={ctx.options.cmake_build_type}",
-        "-DCMAKE_POLICY_VERSION_MINIMUM=3.5",
-        # Make sure we don't resolve dependencies twice
-        "-DSTEINWURF_RESOLVE=" + os.path.join(ctx.path.abspath(), "resolve_symlinks"),
-        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-    ]
-
-    if ctx.options.cmake_toolchain:
-        cmake_cmd.append(f"-DCMAKE_TOOLCHAIN_FILE={ctx.options.cmake_toolchain}")
-
-    if ctx.options.cmake_verbose:
-        cmake_cmd.append("-DCMAKE_VERBOSE_MAKEFILE=ON")
-
-    ctx.env.CMAKE_CONFIGURE = cmake_cmd
-
-
-def _cmake_build(ctx):
+def _cmake_build(ctx, **kwargs):
 
     # Run the CMake build command
-    ctx.run_command(ctx.env.CMAKE_BUILD, stdout=None, stderr=None)
+    ctx.run_exectuable(ctx.env.CMAKE_BUILD, **kwargs)
 
     if ctx.options.run_tests:
 
         # Run the tests using CTest
+        # - How to use valgrind?
+        # - gtest_filters?
         ctest_cmd = [
             "ctest",
+            "-VV",  # verbose output
             "--test-dir",
-            ctx.env.BUILD_DIR,
+            ctx.env.CMAKE_BUILD_DIR,
         ]
 
-        if not ctx.options.cmake_verbose:
-            ctest_cmd.append("--output-on-failure")
-
-        ctx.run_command(ctest_cmd, stdout=None, stderr=None)
+        ctx.run_exectuable(ctest_cmd, **kwargs)
 
 
 def build(ctx):
@@ -142,7 +163,7 @@ def build(ctx):
     cmake_build_cmd = [
         "cmake",
         "--build",
-        ctx.env.BUILD_DIR,
+        ctx.env.CMAKE_BUILD_DIR,
         "--parallel",
         jobs,
     ]

@@ -4,7 +4,7 @@
         "recurse": false,
         "resolver": "git",
         "method": "checkout",
-        "checkout": "waf-2.1.5",
+        "checkout": "waf-2.0.26",
         "source": "https://gitlab.com/ita1024/waf.git"
     },
     {
