@@ -7,6 +7,7 @@ import sys
 import waflib
 import platform
 import types
+import tempfile
 
 
 def _limit_jobs_based_on_memory(default_jobs=1):
@@ -187,12 +188,12 @@ class Clean(waflib.Context.Context):
         super(Clean, self).execute()
 
         # Create a log file for the output
-        self.logger = waflib.Logs.make_logger("/tmp/waf_clean.log", "cfg")
+        log_path = os.path.join(tempfile.gettempdir(), "waf_clean.log")
+        self.logger = waflib.Logs.make_logger(log_path, "cfg")
 
         paths = getattr(self, "clean_paths", ["build", "build_current"])
 
         for path in paths:
-
             # If relative path, make it absolute
             if not os.path.isabs(path):
                 path = os.path.join(self.path.abspath(), path)
@@ -205,5 +206,8 @@ class Clean(waflib.Context.Context):
             elif os.path.islink(path):
                 os.unlink(path)
                 self.end_msg("Removed symlink")
+            elif os.path.exists(path):
+                os.remove(path)
+                self.end_msg("Removed file")
             else:
                 self.end_msg("Not found", color="YELLOW")
