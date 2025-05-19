@@ -8,9 +8,10 @@ import waflib
 import platform
 import types
 import tempfile
+import multiprocessing
 
 
-def _limit_jobs_based_on_memory(default_jobs=1):
+def _limit_jobs_linux(default_jobs=1):
     """
     Calculate the number of jobs based on total system memory (Linux only).
     If unable to determine memory or not on Linux, return the default value.
@@ -40,6 +41,28 @@ def _limit_jobs_based_on_memory(default_jobs=1):
         return default_jobs
 
 
+def _limit_jobs_generic(default_jobs=1):
+    """
+    Calculate the number of jobs based on available CPU cores (Windows only).
+    Returns half the available cores, minimum 1. If not on Windows or error, returns default.
+    """
+
+    try:
+        cores = multiprocessing.cpu_count()
+        return max(1, int(cores / 2))
+    except Exception as e:
+        print(f"Error reading CPU core count: {e}")
+        return default_jobs
+
+
+def _limit_jobs(default_jobs=1):
+    if platform.system() == "Linux":
+        return _limit_jobs_linux(default_jobs)
+    else:
+        # For other platforms, return the default value
+        return _limit_jobs_generic(default_jobs)
+
+
 def options(ctx):
 
     ctx.add_option(
@@ -58,7 +81,7 @@ def options(ctx):
 
     ctx.add_option(
         "--cmake-jobs",
-        default=_limit_jobs_based_on_memory(),
+        default=_limit_jobs(),
         help="Number of jobs for CMake build",
     )
 
