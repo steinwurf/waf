@@ -237,6 +237,7 @@ def project_version(ctx):
         ctx.logger.debug(f"wurf: project version failed: {e}")
         return None
     finally:
+        Logs.free_logger(ctx.logger)
         ctx.logger = old_logger
 
 
