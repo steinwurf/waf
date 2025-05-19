@@ -44,7 +44,7 @@ def options(ctx):
 
     ctx.add_option(
         "--cmake-build-type",
-        default="Release",
+        default="Debug",
         help="CMake build type (Release, Debug, RelWithDebInfo, etc.)",
     )
     ctx.add_option("--cmake-toolchain", default="", help="Path to CMake toolchain file")
