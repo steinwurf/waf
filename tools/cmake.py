@@ -66,31 +66,31 @@ def _limit_jobs(default_jobs=1):
 def options(ctx):
 
     ctx.add_option(
-        "--cmake-build-type",
+        "--cmake_build_type",
         default="Debug",
         help="CMake build type (Release, Debug, RelWithDebInfo, etc.)",
     )
-    ctx.add_option("--cmake-toolchain", default="", help="Path to CMake toolchain file")
+    ctx.add_option("--cmake_toolchain", default="", help="Path to CMake toolchain file")
 
     ctx.add_option(
-        "--cmake-verbose",
+        "--cmake_verbose",
         action="store_true",
         default=False,
         help="Enable verbose output for CMake configure and build",
     )
 
     ctx.add_option(
-        "--cmake-jobs",
+        "--cmake_jobs",
         default=_limit_jobs(),
         help="Number of jobs for CMake build",
     )
 
     ctx.add_option(
-        "--run-tests", action="store_true", default=False, help="Run tests after build"
+        "--run_tests", action="store_true", default=False, help="Run tests after build"
     )
 
     ctx.add_option(
-        "--cmake-generator",
+        "--cmake_generator",
         default="",
         help="CMake generator to use (e.g., Ninja, Unix Makefiles, etc.)",
     )
