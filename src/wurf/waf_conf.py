@@ -327,7 +327,7 @@ def search_executable(ctx, program, path_list=None):
             ctx.fatal(f"Multiple matches for {program} found: {result}")
 
     # If not found, return None
-    ctx.fatal(f"Executable {program} not found in path {path_list}")
+    return None
 
 
 @extend_context
@@ -365,7 +365,7 @@ def search_file(ctx, filename, path_list=None):
             ctx.fatal(f"Multiple matches for {filename} found: {result}")
 
     # If not found, return None
-    ctx.fatal(f"File {filename} not found in paths {path_list}")
+    return None
 
 
 @extend_context
