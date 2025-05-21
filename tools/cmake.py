@@ -95,6 +95,13 @@ def options(ctx):
         help="CMake generator to use (e.g., Ninja, Unix Makefiles, etc.)",
     )
 
+    ctx.add_option(
+        "--ctest_valgrind",
+        action="store_true",
+        default=False,
+        help="Run tests with Valgrind",
+    )
+
 
 def _cmake_configure(ctx, **kwargs):
 
@@ -112,12 +119,14 @@ def _cmake_configure(ctx, **kwargs):
         ctx.env.CMAKE_BUILD_DIR,
     ]
 
+    ctx.env.CMAKE_BUILD_TYPE = ctx.options.cmake_build_type
+
     # Add the generator if specified
     if ctx.options.cmake_generator:
         ctx.env.CMAKE_CONFIGURE.append(f"-G{ctx.options.cmake_generator}")
 
     ctx.env.CMAKE_CONFIGURE_ARGS += [
-        f"-DCMAKE_BUILD_TYPE={ctx.options.cmake_build_type}",
+        f"-DCMAKE_BUILD_TYPE={ctx.env.CMAKE_BUILD_TYPE}",
         # Make sure we don't resolve dependencies twice
         "-DSTEINWURF_RESOLVE=" + os.path.join(ctx.path.abspath(), "resolve_symlinks"),
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
@@ -160,19 +169,34 @@ def _cmake_build(ctx, **kwargs):
     # Run the CMake build command
     ctx.run_exectuable(ctx.env.CMAKE_BUILD, **kwargs)
 
-    if ctx.options.run_tests:
+    if not ctx.options.run_tests:
+        return
 
-        # Run the tests using CTest
-        # - How to use valgrind?
-        # - gtest_filters?
-        ctest_cmd = [
-            "ctest",
-            "-VV",  # verbose output
-            "--test-dir",
-            ctx.env.CMAKE_BUILD_DIR,
+    # Run the tests using CTest
+    # - How to use valgrind?
+    # - gtest_filters?
+    ctest_cmd = [
+        "ctest",
+        "-VV",  # verbose output
+        "--no-tests=error",
+        "-C",
+        ctx.env.CMAKE_BUILD_TYPE,
+        "--test-dir",
+        ctx.env.CMAKE_BUILD_DIR,
+    ]
+
+    if ctx.options.ctest_valgrind:
+        valgrind = ctx.search_executable("valgrind")
+        ctest_cmd += [
+            "--overwrite",
+            f"MemoryCheckCommand={valgrind}",
+            "--overwrite",
+            "MemoryCheckCommandOptions=--error-exitcode=1 --tool=memcheck --leak-check=full",
+            "-T",
+            "memcheck",
         ]
 
-        ctx.run_exectuable(ctest_cmd, **kwargs)
+    ctx.run_exectuable(ctest_cmd, **kwargs)
 
 
 def build(ctx):
