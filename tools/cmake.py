@@ -89,9 +89,15 @@ def options(ctx):
         "--run_tests", action="store_true", default=False, help="Run tests after build"
     )
 
+    # Make Ninja the default generator on Linux, but allow it to be overridden
+    if platform.system() == "Linux":
+        default_generator = "Ninja"
+    else:
+        default_generator = ""
+
     ctx.add_option(
         "--cmake_generator",
-        default="",
+        default=default_generator,
         help="CMake generator to use (e.g., Ninja, Unix Makefiles, etc.)",
     )
 
