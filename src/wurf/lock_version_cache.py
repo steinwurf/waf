@@ -91,6 +91,8 @@ class LockVersionCache(object):
         else:
             raise WurfError(f"Unknown resolver: {dependency.resolver}")
 
+        entry["source"] = dependency.source
+
         self.cache[dependency.name] = entry
 
     def write_to_file(self, cwd):
