@@ -110,7 +110,17 @@ def options(ctx):
 
 
 def _cmake_configure(ctx, **kwargs):
+    # Run the CMake configure command
+    ctx.run_exectuable(ctx.env.CMAKE_CONFIGURE + ctx.env.CMAKE_CONFIGURE_ARGS, **kwargs)
 
+
+def configure(ctx):
+    # Add CMAKE_CONFIGURE_ARGS to the environment if it does not exist
+    if not hasattr(ctx.env, "CMAKE_CONFIGURE_ARGS"):
+        ctx.env.CMAKE_CONFIGURE_ARGS = []
+    
+
+    # set the default build optionas and flags, these can be overridden by the user in between load and configure
     if "CMAKE_BUILD_DIR" not in ctx.env:
         ctx.env.CMAKE_BUILD_DIR = ctx.path.get_bld().abspath()
 
@@ -146,16 +156,6 @@ def _cmake_configure(ctx, **kwargs):
     if ctx.options.cmake_verbose:
         ctx.env.CMAKE_CONFIGURE_ARGS.append("-DCMAKE_VERBOSE_MAKEFILE=ON")
 
-    # Run the CMake configure command
-    ctx.run_exectuable(ctx.env.CMAKE_CONFIGURE + ctx.env.CMAKE_CONFIGURE_ARGS, **kwargs)
-
-
-def configure(ctx):
-
-    # Add CMAKE_CONFIGURE_ARGS to the environment if it does not exist
-    if not hasattr(ctx.env, "CMAKE_CONFIGURE_ARGS"):
-        ctx.env.CMAKE_CONFIGURE_ARGS = []
-
     if not ctx.is_toplevel():
         return
 
@@ -178,10 +178,19 @@ def _cmake_build(ctx, **kwargs):
     if not ctx.options.run_tests:
         return
 
+    ctx.run_exectuable(ctx.env.CMAKE_TEST_ARGS, **kwargs)
+
+
+def build(ctx):
+
+    # Add CMAKE_BUILD_ARGS to the environment if it does not exist
+    if not hasattr(ctx.env, "CMAKE_TEST_ARGS"):
+        ctx.env.CMAKE_TEST_ARGS = []
+    
     # Run the tests using CTest
     # - How to use valgrind?
     # - gtest_filters?
-    ctest_cmd = [
+    ctx.env.CMAKE_TEST_ARGS += [
         "ctest",
         "-VV",  # verbose output
         "--no-tests=error",
@@ -193,7 +202,7 @@ def _cmake_build(ctx, **kwargs):
 
     if ctx.options.ctest_valgrind:
         valgrind = ctx.search_executable("valgrind")
-        ctest_cmd += [
+        ctx.env.CMAKE_TEST_ARGS += [
             "--overwrite",
             f"MemoryCheckCommand={valgrind}",
             "--overwrite",
@@ -201,11 +210,6 @@ def _cmake_build(ctx, **kwargs):
             "-T",
             "memcheck",
         ]
-
-    ctx.run_exectuable(ctest_cmd, **kwargs)
-
-
-def build(ctx):
 
     if not ctx.is_toplevel():
         return
