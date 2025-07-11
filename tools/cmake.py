@@ -9,6 +9,7 @@ import platform
 import types
 import tempfile
 import multiprocessing
+from pathlib import Path
 
 
 def _limit_jobs_linux(default_jobs=1):
@@ -149,8 +150,16 @@ def configure(ctx):
     ]
 
     if ctx.options.cmake_toolchain:
+        # Expand ~, turn into absolute, resolve .. and symlinks
+        toolchain_path = Path(ctx.options.cmake_toolchain).expanduser().resolve()
+
+        # Check for existence
+        if not toolchain_path.exists():
+            ctx.fatal(f"CMAKE_TOOLCHAIN_FILE not found: {toolchain_path}")
+
+        # Append the fully-normalized path
         ctx.env.CMAKE_CONFIGURE_ARGS.append(
-            f"-DCMAKE_TOOLCHAIN_FILE={ctx.options.cmake_toolchain}"
+            f"-DCMAKE_TOOLCHAIN_FILE={toolchain_path}"
         )
 
     if ctx.options.cmake_verbose:
