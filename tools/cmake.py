@@ -113,7 +113,7 @@ def options(ctx):
 def _cmake_configure(ctx, **kwargs):
     # Run the CMake configure command
     ctx.run_exectuable(ctx.env.CMAKE_CONFIGURE + ctx.env.CMAKE_CONFIGURE_ARGS, **kwargs)
-
+    
 
 def configure(ctx):
     # Add CMAKE_CONFIGURE_ARGS to the environment if it does not exist
@@ -122,11 +122,12 @@ def configure(ctx):
     
 
     # set the default build optionas and flags, these can be overridden by the user in between load and configure
-    if "CMAKE_BUILD_DIR" not in ctx.env:
-        ctx.env.CMAKE_BUILD_DIR = ctx.path.get_bld().abspath()
+    if ctx.is_toplevel():
+        if "CMAKE_BUILD_DIR" not in ctx.env:
+            ctx.env.CMAKE_BUILD_DIR = ctx.path.get_bld().abspath()
 
-    if "CMAKE_SRC_DIR" not in ctx.env:
-        ctx.env.CMAKE_SRC_DIR = ctx.path.abspath()
+        if "CMAKE_SRC_DIR" not in ctx.env:
+            ctx.env.CMAKE_SRC_DIR = ctx.path.abspath()
 
     ctx.env.CMAKE_CONFIGURE = [
         "cmake",
