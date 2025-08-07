@@ -242,7 +242,7 @@ def project_version(ctx):
 
 
 @extend_context
-def run_exectuable(ctx, cmd, **kwargs):
+def run_executable(ctx, cmd, **kwargs):
     """
     Run a command in the context of the current environment.
     :param ctx: A Waf Context instance.
