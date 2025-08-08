@@ -90,8 +90,8 @@ def options(ctx):
         "--run_tests", action="store_true", default=False, help="Run tests after build"
     )
 
-    # Make Ninja the default generator on Linux, but allow it to be overridden
-    if platform.system() == "Linux":
+    # Make Ninja the default generator on Linux and Darwin, but allow it to be overridden
+    if platform.system() == "Linux" or platform.system() == "Darwin":
         default_generator = "Ninja"
     else:
         default_generator = ""
