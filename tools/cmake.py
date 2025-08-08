@@ -112,7 +112,7 @@ def options(ctx):
 
 def _cmake_configure(ctx, **kwargs):
     # Run the CMake configure command
-    ctx.run_exectuable(ctx.env.CMAKE_CONFIGURE + ctx.env.CMAKE_CONFIGURE_ARGS, **kwargs)
+    ctx.run_executable(ctx.env.CMAKE_CONFIGURE + ctx.env.CMAKE_CONFIGURE_ARGS, **kwargs)
     
 
 def configure(ctx):
@@ -183,12 +183,12 @@ def configure(ctx):
 def _cmake_build(ctx, **kwargs):
 
     # Run the CMake build command
-    ctx.run_exectuable(ctx.env.CMAKE_BUILD, **kwargs)
+    ctx.run_executable(ctx.env.CMAKE_BUILD, **kwargs)
 
     if not ctx.options.run_tests:
         return
 
-    ctx.run_exectuable(ctx.env.CMAKE_TEST_ARGS, **kwargs)
+    ctx.run_executable(ctx.env.CMAKE_TEST_ARGS, **kwargs)
 
 
 def build(ctx):
