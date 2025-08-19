@@ -91,7 +91,7 @@ def options(ctx):
     )
 
     # Make Ninja the default generator on Linux and Darwin, but allow it to be overridden
-    if platform.system() == "Linux" or platform.system() == "Darwin":
+    if platform.system() == "Linux":
         default_generator = "Ninja"
     else:
         default_generator = ""
@@ -258,7 +258,7 @@ class Clean(waflib.Context.Context):
         log_path = os.path.join(tempfile.gettempdir(), "waf_clean.log")
         self.logger = waflib.Logs.make_logger(log_path, "cfg")
 
-        paths = getattr(self, "clean_paths", ["build", "build_current"])
+        paths = getattr(self, "clean_paths", ["build"])
 
         for path in paths:
             # If relative path, make it absolute
