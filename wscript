@@ -48,6 +48,7 @@ def _build_waf_binary(bld):
     tools_dir = [
         os.path.join(bld.dependency_path("python-semver"), "semver.py"),
         os.path.join(bld.dependency_path("python-archive"), "archive"),
+        "tools/cmake.py",
         "src/wurf",
     ]
 

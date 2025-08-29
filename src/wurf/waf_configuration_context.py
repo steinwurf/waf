@@ -19,26 +19,7 @@ class WafConfigurationContext(ConfigurationContext):
     def init_dirs(self):
         # First call the configuration context init_dirs(..) function
         # which creates the actual folders.
-
         super(WafConfigurationContext, self).init_dirs()
-
-        # Now create the symlink to where the build directory is. This gives
-        # us a stable point in the filesystem from where we can always find
-        # the bldnode directory.
-        link_path = os.path.join(self.path.abspath(), "build_current")
-
-        try:
-            # This command may fail when the user does not have sufficient
-            # permissions to create symlinks (e.g. non-admin user on Windows)
-            create_symlink(
-                from_path=self.bldnode.abspath(), to_path=link_path, overwrite=True
-            )
-        except Exception:
-            # config.log is created after init_dirs(), so waf will print
-            # the warning message to stderr
-            Logs.warn(
-                f"Could not create the 'build_current' symlink in {self.path.abspath()}"
-            )
 
     def execute(self):
         # If the main wscript has no "configure" function, bind it to an

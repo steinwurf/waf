@@ -35,7 +35,11 @@ class OnPassiveLoadPathResolver(object):
         config = self.__read_config()
 
         if self.dependency.sha1 != config["sha1"]:
-            raise DependencyError("Failed sha1 check", self.dependency)
+            sha1 = config["sha1"]
+            raise DependencyError(
+                f"Failed sha1 check {self.dependency.sha1} != {sha1}",
+                self.dependency,
+            )
 
         path = str(config["path"])
 
@@ -56,7 +60,10 @@ class OnPassiveLoadPathResolver(object):
         )
 
         if not os.path.isfile(config_path):
-            raise DependencyError("No config - re-run configure", self.dependency)
+            raise DependencyError(
+                f"No config - re-run configure {config_path}, {self.resolve_config_path}, {self.dependency.name}",
+                self.dependency,
+            )
 
         with open(config_path, "r") as config_file:
             config = json.load(config_file)

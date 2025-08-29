@@ -8,12 +8,16 @@
 
 import sys
 import os
+import pathlib
+import glob
+
 
 from waflib.Configure import conf
 from waflib.Errors import WafError
 from waflib import Logs
 from waflib import Context
 from waflib import Scripting
+from waflib import ConfigSet
 
 from . import waf_resolve_context
 from . import virtualenv
@@ -233,4 +237,161 @@ def project_version(ctx):
         ctx.logger.debug(f"wurf: project version failed: {e}")
         return None
     finally:
+        Logs.free_logger(ctx.logger)
         ctx.logger = old_logger
+
+
+@extend_context
+def run_executable(ctx, cmd, **kwargs):
+    """
+    Run a command in the context of the current environment.
+    :param ctx: A Waf Context instance.
+    :param cmd: The command to run.
+
+    """
+    print(f"Running command: {cmd}")
+
+    if "stdout" not in kwargs:
+        kwargs["stdout"] = None
+    if "stderr" not in kwargs:
+        kwargs["stderr"] = None
+
+    ret = ctx.exec_command(cmd, **kwargs)
+
+    if ret != 0:
+        ctx.fatal(f"Command failed with exit code {ret} with {kwargs}")
+
+
+def _search_helper(pattern, on_match):
+    """
+    Helper function to find files in the current environment. This is used
+    to find files in the current environment.
+
+    :param pattern: The glob pattern to match.
+    :param on_match: The function to call on each match.
+    """
+
+    matches = []
+
+    candidates = glob.glob(pattern, recursive=True)
+    for candidate in candidates:
+        if on_match(candidate):
+            matches.append(candidate)
+
+    return matches
+
+
+@extend_context
+def search_executable(ctx, program, path_list=None):
+    """
+    Find a exectuable in the current environment. We cannot use the built-in
+    find_program as it does not support generic Contexts.
+
+    :param ctx: A Waf Context instance.
+    :param program: The name of the exectuable to find.
+    :return: The path to the program.
+    """
+
+    if path_list is None:
+        path_list = os.environ["PATH"].split(os.pathsep)
+
+    # Make sure we have a list of paths
+    if not isinstance(path_list, list):
+        ctx.fatal(f"Path list is not a list: {path_list}. Please use a list of paths.")
+
+    def check_executable(path):
+        # Check if the file is executable
+        if os.path.isfile(path) and os.access(path, os.X_OK):
+            return True
+
+        # Check if the file is a symlink
+        if os.path.islink(path):
+            # Check if the symlink points to an executable
+            target = os.readlink(path)
+            if os.path.isfile(target) and os.access(target, os.X_OK):
+                return True
+
+        return False
+
+    # Check if the program is in the PATH
+    for path in path_list:
+
+        result = _search_helper(os.path.join(path, program), check_executable)
+
+        if result:
+            # If we found the program, return the first match
+            if len(result) == 1:
+                return result[0]
+
+            # If we found multiple matches, return the first one
+            ctx.fatal(f"Multiple matches for {program} found: {result}")
+
+    # If not found, return None
+    return None
+
+
+@extend_context
+def search_file(ctx, filename, path_list=None):
+    """
+    Find a file in the current environment.
+
+    :param ctx: A Waf Context instance.
+    :param filename: The name of the file to find.
+    :param path_list: A list of paths to search in. Defaults to the current directory.
+    :return: The path to the file.
+    """
+
+    if path_list is None:
+        path_list = ["."]
+
+    # Make sure we have a list of paths
+    if not isinstance(path_list, list):
+        ctx.fatal(f"Path list is not a list: {path_list}. Please use a list of paths.")
+
+    def check_file(path):
+        # Check if the file exists
+        return os.path.isfile(path)
+
+    # Check if the file is in the specified paths
+    for path in path_list:
+        result = _search_helper(os.path.join(path, filename), check_file)
+
+        if result:
+            # If we found the file, return the first match
+            if len(result) == 1:
+                return result[0]
+
+            # If we found multiple matches, return the first one
+            ctx.fatal(f"Multiple matches for {filename} found: {result}")
+
+    # If not found, return None
+    return None
+
+
+@extend_context
+def load_environment(ctx, name=""):
+    """
+    Load the environment from a file. This is used to load the environment
+    from a virtualenv.
+
+    :param ctx: A Waf Context instance.
+    :param env: The name of the environment to load.
+    """
+
+    # Glob the build folder if not prompt to configure
+    lst = pathlib.Path(".").glob(f"**/{name}_cache.py")
+
+    if not lst:
+        # If no cache file is found, we are not in a virtualenv
+        ctx.fatal("No cache file found. Please run 'waf configure' first.")
+
+    cache = list(lst)[0]
+
+    # Check if the cache file exists
+    if not os.path.exists(cache):
+        ctx.fatal(
+            f"Cache file {cache} does not exist. Please run 'waf configure' first."
+        )
+
+    # Load the environment
+    ctx.env = ConfigSet.ConfigSet(cache)

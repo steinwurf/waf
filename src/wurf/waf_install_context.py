@@ -12,5 +12,5 @@ class WafInstallContext(InstallContext):
         # Call build() in all dependencies before executing build()
         # in the top-level wscript: this allows us to define all build tasks
         # from the dependencies before reaching the main project
-        if self.is_toplevel():
-            self.recurse_dependencies()
+        # if self.is_toplevel():
+        #     self.recurse_dependencies()
