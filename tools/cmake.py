@@ -226,15 +226,24 @@ def build(ctx):
 
     # Bind _cmake_build as a method to ctx
     ctx.cmake_build = types.MethodType(_cmake_build, ctx)
-
-    jobs = str(ctx.options.cmake_jobs)
+    
     cmake_build_cmd = [
         "cmake",
         "--build",
         ctx.env.CMAKE_BUILD_DIR,
-        "--parallel",
-        jobs,
     ]
+
+    # Add flags to parallelize the build (these are different on windows)
+    if platform.system() != "Windows":
+        jobs = str(ctx.options.cmake_jobs)
+
+        cmake_build_cmd.extend(["--parallel", f"{jobs}"])
+    else:
+        # Parallelize MSBuild https://devblogs.microsoft.com/cppblog/improved-parallelism-in-msbuild/
+        cmake_build_cmd.append("--parallel")
+        cmake_build_cmd.append("--")
+        cmake_build_cmd.append("/p:UseMultiToolTask=true")
+        cmake_build_cmd.append("/p:EnforceProcessCountAcrossBuilds=true")
 
     if ctx.options.cmake_verbose:
         cmake_build_cmd.append("--verbose")
