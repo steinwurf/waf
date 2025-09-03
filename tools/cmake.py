@@ -234,16 +234,18 @@ def build(ctx):
     ]
 
     # Add flags to parallelize the build (these are different on windows)
-    if platform.system() != "Windows":
-        jobs = str(ctx.options.cmake_jobs)
+    # When using Ninja, let it handle parallelization automatically
+    if ctx.options.cmake_generator != "Ninja":
+        if platform.system() != "Windows":
+            jobs = str(ctx.options.cmake_jobs)
 
-        cmake_build_cmd.extend(["--parallel", f"{jobs}"])
-    else:
-        # Parallelize MSBuild https://devblogs.microsoft.com/cppblog/improved-parallelism-in-msbuild/
-        cmake_build_cmd.append("--parallel")
-        cmake_build_cmd.append("--")
-        cmake_build_cmd.append("/p:UseMultiToolTask=true")
-        cmake_build_cmd.append("/p:EnforceProcessCountAcrossBuilds=true")
+            cmake_build_cmd.extend(["--parallel", f"{jobs}"])
+        else:
+            # Parallelize MSBuild https://devblogs.microsoft.com/cppblog/improved-parallelism-in-msbuild/
+            cmake_build_cmd.append("--parallel")
+            cmake_build_cmd.append("--")
+            cmake_build_cmd.append("/p:UseMultiToolTask=true")
+            cmake_build_cmd.append("/p:EnforceProcessCountAcrossBuilds=true")
 
     if ctx.options.cmake_verbose:
         cmake_build_cmd.append("--verbose")
