@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Add "--output-on-failure" to ctest in the tools/cmake.py
 * Patch: Remember to detach logger in `project_version`.
 * Minor: Added project_version as a function on the Context object.
 * Patch: Added dependency paths for resolve conflicts.

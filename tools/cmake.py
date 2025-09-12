@@ -113,13 +113,12 @@ def options(ctx):
 def _cmake_configure(ctx, **kwargs):
     # Run the CMake configure command
     ctx.run_executable(ctx.env.CMAKE_CONFIGURE + ctx.env.CMAKE_CONFIGURE_ARGS, **kwargs)
-    
+
 
 def configure(ctx):
     # Add CMAKE_CONFIGURE_ARGS to the environment if it does not exist
     if not hasattr(ctx.env, "CMAKE_CONFIGURE_ARGS"):
         ctx.env.CMAKE_CONFIGURE_ARGS = []
-    
 
     # set the default build optionas and flags, these can be overridden by the user in between load and configure
     if ctx.is_toplevel():
@@ -159,9 +158,7 @@ def configure(ctx):
             ctx.fatal(f"CMAKE_TOOLCHAIN_FILE not found: {toolchain_path}")
 
         # Append the fully-normalized path
-        ctx.env.CMAKE_CONFIGURE_ARGS.append(
-            f"-DCMAKE_TOOLCHAIN_FILE={toolchain_path}"
-        )
+        ctx.env.CMAKE_CONFIGURE_ARGS.append(f"-DCMAKE_TOOLCHAIN_FILE={toolchain_path}")
 
     if ctx.options.cmake_verbose:
         ctx.env.CMAKE_CONFIGURE_ARGS.append("-DCMAKE_VERBOSE_MAKEFILE=ON")
@@ -196,13 +193,14 @@ def build(ctx):
     # Add CMAKE_BUILD_ARGS to the environment if it does not exist
     if not hasattr(ctx.env, "CMAKE_TEST_ARGS"):
         ctx.env.CMAKE_TEST_ARGS = []
-    
+
     # Run the tests using CTest
     # - How to use valgrind?
     # - gtest_filters?
     ctx.env.CMAKE_TEST_ARGS += [
         "ctest",
         "-VV",  # verbose output
+        "--output-on-failure",
         "--no-tests=error",
         "-C",
         ctx.env.CMAKE_BUILD_TYPE,
@@ -226,7 +224,7 @@ def build(ctx):
 
     # Bind _cmake_build as a method to ctx
     ctx.cmake_build = types.MethodType(_cmake_build, ctx)
-    
+
     cmake_build_cmd = [
         "cmake",
         "--build",
