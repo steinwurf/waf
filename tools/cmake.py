@@ -9,6 +9,7 @@ import platform
 import types
 import tempfile
 import multiprocessing
+import waflib.Utils
 from pathlib import Path
 
 
@@ -111,36 +112,48 @@ def options(ctx):
 
 
 def _cmake_configure(ctx, **kwargs):
+
+    # Combine the base configure command with any additional arguments
+    command = " ".join(ctx.env.CMAKE_CONFIGURE + ctx.env.CMAKE_CONFIGURE_ARGS)
+
+    # Substitute variables in the command list
+    command = waflib.Utils.subst_vars(command, ctx.env)
+
     # Run the CMake configure command
-    ctx.run_executable(ctx.env.CMAKE_CONFIGURE + ctx.env.CMAKE_CONFIGURE_ARGS, **kwargs)
+    ctx.run_executable(command, **kwargs)
 
 
 def configure(ctx):
+
+    if not ctx.is_toplevel():
+        # Only run configure in the top-level wscript
+        return
+
     # Add CMAKE_CONFIGURE_ARGS to the environment if it does not exist
     if not hasattr(ctx.env, "CMAKE_CONFIGURE_ARGS"):
         ctx.env.CMAKE_CONFIGURE_ARGS = []
 
     # set the default build optionas and flags, these can be overridden by the user in between load and configure
-    if ctx.is_toplevel():
-        if "CMAKE_BUILD_DIR" not in ctx.env:
-            ctx.env.CMAKE_BUILD_DIR = ctx.path.get_bld().abspath()
 
-        if "CMAKE_SRC_DIR" not in ctx.env:
-            ctx.env.CMAKE_SRC_DIR = ctx.path.abspath()
+    if "CMAKE_BUILD_DIR" not in ctx.env:
+        ctx.env.CMAKE_BUILD_DIR = ctx.path.get_bld().abspath()
+
+    if "CMAKE_SRC_DIR" not in ctx.env:
+        ctx.env.CMAKE_SRC_DIR = ctx.path.abspath()
 
     ctx.env.CMAKE_CONFIGURE = [
         "cmake",
         "-S",
-        ctx.env.CMAKE_SRC_DIR,
+        "${CMAKE_SRC_DIR}",
         "-B",
-        ctx.env.CMAKE_BUILD_DIR,
+        "${CMAKE_BUILD_DIR}",
     ]
 
     ctx.env.CMAKE_BUILD_TYPE = ctx.options.cmake_build_type
 
     # Add the generator if specified
     if ctx.options.cmake_generator:
-        ctx.env.CMAKE_CONFIGURE.append(f"-G{ctx.options.cmake_generator}")
+        ctx.env.CMAKE_CONFIGURE_ARGS.append(f"-G{ctx.options.cmake_generator}")
 
     ctx.env.CMAKE_CONFIGURE_ARGS += [
         f"-DCMAKE_BUILD_TYPE={ctx.env.CMAKE_BUILD_TYPE}",
@@ -162,9 +175,6 @@ def configure(ctx):
 
     if ctx.options.cmake_verbose:
         ctx.env.CMAKE_CONFIGURE_ARGS.append("-DCMAKE_VERBOSE_MAKEFILE=ON")
-
-    if not ctx.is_toplevel():
-        return
 
     # Here we set up the environment for the CMake configure
     # The user can override this if needed. To run the conigure step call
@@ -189,6 +199,10 @@ def _cmake_build(ctx, **kwargs):
 
 
 def build(ctx):
+
+    if not ctx.is_toplevel():
+        # Only run build in the top-level wscript
+        return
 
     # Add CMAKE_BUILD_ARGS to the environment if it does not exist
     if not hasattr(ctx.env, "CMAKE_TEST_ARGS"):
@@ -218,9 +232,6 @@ def build(ctx):
             "-T",
             "memcheck",
         ]
-
-    if not ctx.is_toplevel():
-        return
 
     # Bind _cmake_build as a method to ctx
     ctx.cmake_build = types.MethodType(_cmake_build, ctx)
