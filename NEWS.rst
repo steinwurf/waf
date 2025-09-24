@@ -6,6 +6,9 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Only run the cmake configure and build if we are the top-level project
+* Patch: Inject the CMAKE_SRC_DIR and CMAKE_BUILD_DIR variables at configure 
+  time. Such that the user can override them after loading the cmake tool.
 * Patch: Add "--output-on-failure" to ctest in the tools/cmake.py
 * Patch: Remember to detach logger in `project_version`.
 * Minor: Added project_version as a function on the Context object.
