@@ -17,6 +17,11 @@ def test_semver_selector():
         "3.0.0",
         "3.0.0-lts.0",
         "3.0.0-lts.1",
+        "backups/3.1.0-lts.0",  # Do not match non-toplevel tags.
+        "4.0.0",
+        "v4.0.1",
+        "5.0.0",
+        "5.1",
     ]
 
     # Select latest tag for major version 1
@@ -27,3 +32,9 @@ def test_semver_selector():
 
     # Select latest tag for major version 3 (LTS tags should be ignored)
     assert selector.select_tag(major=3, tags=tags) == "3.0.0"
+
+    # Select latest tag for major version 4 (v prefix should be ignored)
+    assert selector.select_tag(major=4, tags=tags) == "v4.0.1"
+
+    # Select latest tag for major version 5 (missing minor should be ignored)
+    assert selector.select_tag(major=5, tags=tags) == "5.1"
