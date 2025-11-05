@@ -13,58 +13,6 @@ import waflib.Utils
 from pathlib import Path
 
 
-def _limit_jobs_linux(default_jobs=1):
-    """
-    Calculate the number of jobs based on total system memory (Linux only).
-    If unable to determine memory or not on Linux, return the default value.
-    """
-    if platform.system() != "Linux":
-        # Not on Linux, return the default value
-        return default_jobs
-
-    meminfo_path = "/proc/meminfo"
-    if not os.path.exists(meminfo_path):
-        # /proc/meminfo not found, return the default value
-        return default_jobs
-
-    try:
-        with open(meminfo_path, "r") as meminfo:
-            for line in meminfo:
-                if line.startswith("MemAvailable"):
-                    # MemAvailable is memory a new application can use in kB
-                    # without swapping MemTotal is in kB, convert to GB
-                    total_memory_kb = int(line.split()[1])
-                    total_memory_gb = total_memory_kb / (1024**2)
-                    # Return jobs calculated as total_memory_gb / 2, minimum 1
-                    return max(1, int(total_memory_gb / 2))
-    except Exception as e:
-        # Fallback to default if any error occurs
-        print(f"Error reading memory info: {e}")
-        return default_jobs
-
-
-def _limit_jobs_generic(default_jobs=1):
-    """
-    Calculate the number of jobs based on available CPU cores (Windows only).
-    Returns half the available cores, minimum 1. If not on Windows or error, returns default.
-    """
-
-    try:
-        cores = multiprocessing.cpu_count()
-        return max(1, int(cores / 2))
-    except Exception as e:
-        print(f"Error reading CPU core count: {e}")
-        return default_jobs
-
-
-def _limit_jobs(default_jobs=1):
-    if platform.system() == "Linux":
-        return _limit_jobs_linux(default_jobs)
-    else:
-        # For other platforms, return the default value
-        return _limit_jobs_generic(default_jobs)
-
-
 def options(ctx):
 
     ctx.add_option(
@@ -83,7 +31,7 @@ def options(ctx):
 
     ctx.add_option(
         "--cmake_jobs",
-        default=_limit_jobs(),
+        default=None,
         help="Number of jobs for CMake build",
     )
 
@@ -252,7 +200,7 @@ def build(ctx):
         cmake_build_cmd.append("/p:EnforceProcessCountAcrossBuilds=true")
     else:
         # Non-Windows platforms
-        if ctx.options.cmake_generator != "Ninja":
+        if ctx.options.cmake_jobs:
             jobs = str(ctx.options.cmake_jobs)
             cmake_build_cmd.extend(["--parallel", jobs])
 
