@@ -52,11 +52,18 @@ def options(ctx):
     )
 
     ctx.add_option(
+        "--cmake_build_dir",
+        default=None,
+        help="Specify the cmake build dir to use.",
+    )
+
+    ctx.add_option(
         "--ctest_valgrind",
         action="store_true",
         default=False,
         help="Run tests with Valgrind",
     )
+
 
 
 def _cmake_configure(ctx, **kwargs):
@@ -82,6 +89,10 @@ def configure(ctx):
         ctx.env.CMAKE_CONFIGURE_ARGS = []
 
     # set the default build optionas and flags, these can be overridden by the user in between load and configure
+
+    # If the user specifies a build dir - use that. Otherwise, we check if it is in the env.
+    if ctx.options.cmake_build_dir:
+        ctx.env.CMAKE_BUILD_DIR = ctx.options.cmake_build_dir
 
     if "CMAKE_BUILD_DIR" not in ctx.env:
         ctx.env.CMAKE_BUILD_DIR = ctx.path.get_bld().abspath()
