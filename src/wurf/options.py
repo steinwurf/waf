@@ -1,18 +1,12 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+from . import sub_command
 from .error import WurfError
 import argparse
 
 
 class Options(object):
-    # The command running the dependency resolution
-    RESOLVE_COMMAND = "resolve"
-
-    # The sub command upgrading dependencies, used as
-    # "resolve upgrade [dependency ...]"
-    UPGRADE_COMMAND = "upgrade"
-
     def __init__(
         self,
         args,
@@ -21,9 +15,9 @@ class Options(object):
         default_symlinks_path,
         supported_git_protocols,
     ):
-        # The dependencies to upgrade (None if we are not upgrading) and the
-        # remaining command-line arguments
-        self.upgrade_dependencies, self.args = Options.extract_upgrade(args)
+        # The sub command used (None if there is none) and the remaining
+        # command-line arguments
+        self.used_sub_command, self.args = sub_command.parse(args)
 
         self.parser = parser
 
@@ -96,14 +90,12 @@ class Options(object):
     def lock_versions(self):
         return self.known_args["--lock_versions"]
 
-    def upgrade(self):
-        """Return the dependencies to upgrade.
+    def sub_command(self):
+        """Return the sub command used.
 
-        :return: None if the upgrade sub command was not used, otherwise the
-            dependency names as a list. An empty list means that all
-            dependencies should be upgraded.
+        :return: A SubCommand instance or None if no sub command was used
         """
-        return self.upgrade_dependencies
+        return self.used_sub_command
 
     def path(self, dependency):
         return self.known_args[f"--{dependency.name}_path"]
@@ -125,42 +117,8 @@ class Options(object):
         ) and "--skip_internal" in self.args:
             raise WurfError("Incompatible options")
 
-        if self.upgrade() is not None and "--skip_internal" in self.args:
+        if self.sub_command() is not None and "--skip_internal" in self.args:
             raise WurfError("Incompatible options")
-
-    @staticmethod
-    def extract_upgrade(args):
-        """Take the upgrade sub command out of the command-line arguments.
-
-        Waf treats every argument which is not an option as a command, so the
-        sub command and the dependency names must be removed before waf parses
-        the arguments.
-
-        :param args: The command-line arguments as a list
-        :return: A (dependencies, arguments) tuple, where dependencies is None
-            if the sub command was not used and arguments are the remaining
-            command-line arguments.
-        """
-        for index, arg in enumerate(args):
-            if arg != Options.RESOLVE_COMMAND:
-                continue
-
-            command = index + 1
-
-            if command >= len(args) or args[command] != Options.UPGRADE_COMMAND:
-                continue
-
-            # The dependency names follow the sub command and stop at the
-            # first option
-            start = command + 1
-            end = start
-
-            while end < len(args) and not args[end].startswith("-"):
-                end += 1
-
-            return args[start:end], args[:command] + args[end:]
-
-        return None, args
 
     def __add_path(self, dependency):
         option = f"--{dependency.name}_path"

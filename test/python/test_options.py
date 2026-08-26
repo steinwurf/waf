@@ -4,6 +4,7 @@ import pytest
 
 from wurf.options import Options
 from wurf.error import WurfError
+from wurf.sub_command import UpgradeSubCommand
 
 
 def test_resolve_path():
@@ -216,35 +217,36 @@ def create_options(args):
     )
 
 
-def test_upgrade():
-    # Without the sub command we are not upgrading
+def test_sub_command():
+    # Without a sub command the arguments are passed on to waf
     options = create_options(args=["resolve"])
 
-    assert options.upgrade() is None
+    assert options.sub_command() is None
     assert options.unknown_args == ["resolve"]
 
     # Without any dependencies everything is upgraded
     options = create_options(args=["resolve", "upgrade"])
 
-    assert options.upgrade() == []
+    assert isinstance(options.sub_command(), UpgradeSubCommand)
+    assert options.sub_command().arguments == []
     assert options.unknown_args == ["resolve"]
 
-    # The dependencies are taken out of the arguments passed on to waf
+    # The sub command is taken out of the arguments passed on to waf
     options = create_options(
         args=["resolve", "upgrade", "foo", "bar", "--resolve_path", "/tmp/deps"]
     )
 
-    assert options.upgrade() == ["foo", "bar"]
+    assert options.sub_command().arguments == ["foo", "bar"]
     assert options.unknown_args == ["resolve"]
     assert options.resolve_path() == "/tmp/deps"
 
-    # Only the upgrade following the resolve command is a sub command
+    # Only a sub command following the resolve command is a sub command
     options = create_options(args=["build", "upgrade"])
 
-    assert options.upgrade() is None
+    assert options.sub_command() is None
     assert options.unknown_args == ["build", "upgrade"]
 
 
-def test_upgrade_and_skip_internal():
+def test_sub_command_and_skip_internal():
     with pytest.raises(WurfError):
         create_options(args=["resolve", "upgrade", "--skip_internal"])

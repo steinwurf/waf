@@ -4,6 +4,7 @@
 import os
 from .lock_path_cache import LockPathCache
 from .lock_version_cache import LockVersionCache
+from .sub_command import UpgradeSubCommand
 
 
 class Configuration(object):
@@ -116,7 +117,12 @@ class Configuration(object):
         if self.choose_help():
             return None
 
-        return self.options.upgrade()
+        sub_command = self.options.sub_command()
+
+        if not isinstance(sub_command, UpgradeSubCommand):
+            return None
+
+        return sub_command.arguments
 
     def upgrading(self):
         """:return: True if dependencies should be upgraded."""
