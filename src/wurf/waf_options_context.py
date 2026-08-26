@@ -11,6 +11,7 @@ from waflib import Logs
 
 from . import registry
 from . import waf_conf
+from .options import Options as WurfOptions
 
 
 class WafOptionsContext(Options.OptionsContext):
@@ -39,7 +40,12 @@ class WafOptionsContext(Options.OptionsContext):
         self.wurf_options = None
 
         # Create option group for resolve options.
-        self.resolve_options_group = self.add_option_group("Resolve options")
+        self.resolve_options_group = self.add_option_group(
+            "Resolve options",
+            "The command 'resolve upgrade [dependency ...]' upgrades the given "
+            "dependencies, and the dependencies they pull in, to their newest "
+            "version. Without any names all dependencies are upgraded.",
+        )
 
         # Add option to skip resolve
         self.resolve_options_group.add_option(
@@ -134,6 +140,10 @@ class WafOptionsContext(Options.OptionsContext):
         # figure out why and see if we should combine it with the
         # self.waf_options list
         assert _args is None
+
+        # Waf builds the list of commands to run from sys.argv, so the resolve
+        # sub commands must be taken out before waf parses the arguments
+        _, sys.argv[1:] = WurfOptions.extract_upgrade(sys.argv[1:])
 
         try:
             # We may not have a wurf_options instance if running in a folder

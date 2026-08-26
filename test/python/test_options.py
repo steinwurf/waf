@@ -204,3 +204,47 @@ def test_exclusive_lock_options():
             default_symlinks_path="symlinks_path",
             supported_git_protocols="",
         )
+
+
+def create_options(args):
+    return Options(
+        args=args,
+        parser=argparse.ArgumentParser(),
+        default_resolve_path="resolve_path",
+        default_symlinks_path="symlinks_path",
+        supported_git_protocols="",
+    )
+
+
+def test_upgrade():
+    # Without the sub command we are not upgrading
+    options = create_options(args=["resolve"])
+
+    assert options.upgrade() is None
+    assert options.unknown_args == ["resolve"]
+
+    # Without any dependencies everything is upgraded
+    options = create_options(args=["resolve", "upgrade"])
+
+    assert options.upgrade() == []
+    assert options.unknown_args == ["resolve"]
+
+    # The dependencies are taken out of the arguments passed on to waf
+    options = create_options(
+        args=["resolve", "upgrade", "foo", "bar", "--resolve_path", "/tmp/deps"]
+    )
+
+    assert options.upgrade() == ["foo", "bar"]
+    assert options.unknown_args == ["resolve"]
+    assert options.resolve_path() == "/tmp/deps"
+
+    # Only the upgrade following the resolve command is a sub command
+    options = create_options(args=["build", "upgrade"])
+
+    assert options.upgrade() is None
+    assert options.unknown_args == ["build", "upgrade"]
+
+
+def test_upgrade_and_skip_internal():
+    with pytest.raises(WurfError):
+        create_options(args=["resolve", "upgrade", "--skip_internal"])

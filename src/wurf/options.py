@@ -6,6 +6,13 @@ import argparse
 
 
 class Options(object):
+    # The command running the dependency resolution
+    RESOLVE_COMMAND = "resolve"
+
+    # The sub command upgrading dependencies, used as
+    # "resolve upgrade [dependency ...]"
+    UPGRADE_COMMAND = "upgrade"
+
     def __init__(
         self,
         args,
@@ -14,7 +21,10 @@ class Options(object):
         default_symlinks_path,
         supported_git_protocols,
     ):
-        self.args = args
+        # The dependencies to upgrade (None if we are not upgrading) and the
+        # remaining command-line arguments
+        self.upgrade_dependencies, self.args = Options.extract_upgrade(args)
+
         self.parser = parser
 
         self.known_args = {}
@@ -86,6 +96,15 @@ class Options(object):
     def lock_versions(self):
         return self.known_args["--lock_versions"]
 
+    def upgrade(self):
+        """Return the dependencies to upgrade.
+
+        :return: None if the upgrade sub command was not used, otherwise the
+            dependency names as a list. An empty list means that all
+            dependencies should be upgraded.
+        """
+        return self.upgrade_dependencies
+
     def path(self, dependency):
         return self.known_args[f"--{dependency.name}_path"]
 
@@ -105,6 +124,43 @@ class Options(object):
             self.lock_versions() or self.lock_paths()
         ) and "--skip_internal" in self.args:
             raise WurfError("Incompatible options")
+
+        if self.upgrade() is not None and "--skip_internal" in self.args:
+            raise WurfError("Incompatible options")
+
+    @staticmethod
+    def extract_upgrade(args):
+        """Take the upgrade sub command out of the command-line arguments.
+
+        Waf treats every argument which is not an option as a command, so the
+        sub command and the dependency names must be removed before waf parses
+        the arguments.
+
+        :param args: The command-line arguments as a list
+        :return: A (dependencies, arguments) tuple, where dependencies is None
+            if the sub command was not used and arguments are the remaining
+            command-line arguments.
+        """
+        for index, arg in enumerate(args):
+            if arg != Options.RESOLVE_COMMAND:
+                continue
+
+            command = index + 1
+
+            if command >= len(args) or args[command] != Options.UPGRADE_COMMAND:
+                continue
+
+            # The dependency names follow the sub command and stop at the
+            # first option
+            start = command + 1
+            end = start
+
+            while end < len(args) and not args[end].startswith("-"):
+                end += 1
+
+            return args[start:end], args[:command] + args[end:]
+
+        return None, args
 
     def __add_path(self, dependency):
         option = f"--{dependency.name}_path"

@@ -589,7 +589,7 @@ After re-running ``python waf configure ...``::
 The ``--lock_versions`` option
 ..............................
 
-The ``--lock_versions`` option will write ``lock_resolve_versions.json``
+The ``--lock_versions`` option will write ``lock_version_resolve.json``
 to the project folder. This file will describe the exact version information
 about the project's dependencies.
 
@@ -598,30 +598,30 @@ The version information can be different for different resolvers:
 - ``git`` resolvers will store the SHA1 commit id of the dependency.
 - ``http`` resolvers will store the SHA1 sum of the downloaded dependency.
 
-If the ``lock_resolve_versions.json`` is present, it will take precedence over all
+If the ``lock_version_resolve.json`` is present, it will take precedence over all
 resolvers besides the user options such as manually specifying checkout or
 path.
 
-You can commit the ``lock_resolve_versions.json`` file to git, e.g. when creating
+You can commit the ``lock_version_resolve.json`` file to git, e.g. when creating
 a LTS (Long Term Support) release or similar where you want to pin the exact
 versions for each dependency
 
 As an example::
 
-    # Writes / overwrites an existing lock_resolve_versions.json
+    # Writes / overwrites an existing lock_version_resolve.json
     python waf configure --lock_versions
 
 The ``--lock_paths`` option
 ...........................
 
-The ``--lock_paths`` will write a ``lock_resolve_paths.json`` file in the project
+The ``--lock_paths`` will write a ``lock_path_resolve.json`` file in the project
 folder. It behaves differently from the ``--lock_versions`` option in that it
 will store the relative paths to the resolved dependencies. The typical
 use case for this is to download all dependencies into a folder stored within
 the project (default behavior) to make a standalone archive.
 
-If the ``lock_resolve_paths.json`` is present, it will take precedence over
-both the ``lock_resolve_versions.json`` and all other resolvers besides the user
+If the ``lock_path_resolve.json`` is present, it will take precedence over
+both the ``lock_version_resolve.json`` and all other resolvers besides the user
 resolvers besides the user options, such as manually specifying checkout or
 path.
 
@@ -629,6 +629,33 @@ This makes it possible to easily create a standalone archive::
 
     python waf configure --lock_paths
     python waf standalone
+
+The ``resolve upgrade`` command
+...............................
+
+The ``upgrade`` sub command resolves the specified dependencies as if they
+were not locked, while the remaining dependencies stay at the version stored
+in the ``lock_version_resolve.json`` file::
+
+    python waf resolve upgrade gtest
+
+The dependencies pulled in by an upgraded dependency are upgraded as well, so
+that a new version of ``gtest`` gets the versions of the dependencies it asks
+for.
+
+If an upgraded dependency is checked out at a tag in the project's
+``resolve.json`` file, the tag is updated to the newest tag in the
+repository and the ``resolve.json`` file is rewritten. Only the dependencies
+named on the command-line are updated this way, and a dependency using a
+branch or a commit id is left untouched.
+
+Without any dependency names all dependencies are upgraded::
+
+    python waf resolve upgrade
+
+The lock file is updated when it exists, it is never created by the upgrade.
+So in a project without a ``lock_version_resolve.json`` file nothing is
+locked, and the command simply resolves the newest versions.
 
 Config file
 ...........

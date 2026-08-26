@@ -215,6 +215,29 @@ class Git(object):
         tags = output.split("\n")
         return [t for t in tags if t != ""]
 
+    def remote_tags(self, url, cwd):
+        """
+        Runs 'git ls-remote --tags <url>' in the directory cwd and returns the
+        tags of the remote repository.
+
+        :param url: The URL of the remote repository as a string
+        :param cwd: The current working directory as a string
+        """
+        args = [self.git_binary, "ls-remote", "--tags", "--refs", url]
+        output = self.ctx.cmd_and_log(args, cwd=cwd)
+
+        prefix = "refs/tags/"
+        tags = []
+
+        for line in output.split("\n"):
+            # Every line is the commit id and the ref separated by a tab
+            ref = line.strip().split("\t")[-1]
+
+            if ref.startswith(prefix):
+                tags.append(ref.replace(prefix, "", 1))
+
+        return tags
+
     def remote_origin_url(self, cwd):
         """
         Runs 'git config --get remote.origin.url' in the directory cwd and

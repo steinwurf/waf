@@ -196,6 +196,18 @@ class WafResolveContext(Context.Context):
             raise
 
 
+class WafResolveUpgradeContext(WafResolveContext):
+    # The upgrade sub command is taken out of the arguments before waf builds
+    # the list of commands to run, so this context is never executed. It is
+    # here to make the sub command show up in the help.
+    cmd = "resolve upgrade"
+    fun = "resolve"
+
+
 WafResolveContext.__doc__ = (
     "resolves the dependencies specified in the wscript's resolve function"
+)
+
+WafResolveUpgradeContext.__doc__ = (
+    "upgrades the given dependencies, and the dependencies they pull in"
 )

@@ -141,6 +141,21 @@ class FakeGit:
         git_info = read_git_info(cwd=cwd)
         return git_info["tags"]
 
+    def remote_tags(self, url, cwd):
+        """Fake what tags are in a remote repository"""
+
+        if not os.path.isfile("clone_path.json"):
+            raise NoClonePathError(repository=url)
+
+        with open("clone_path.json") as json_file:
+            clone_path = json.load(json_file)
+
+        for lib_repository, lib_directory in clone_path.items():
+            if url.endswith(lib_repository):
+                return self.tags(cwd=lib_directory)
+
+        raise CloneError(repository=url)
+
     def branches(self, cwd):
         """Fake what branches are in a repository"""
 

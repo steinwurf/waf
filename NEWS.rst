@@ -6,6 +6,9 @@ of every change, see the Git log.
 
 Latest
 ------
+* Minor: Added the ``resolve upgrade`` sub command, which upgrades the
+  specified dependencies and the dependencies they pull in, while keeping the
+  remaining dependencies at the version stored in the lock file.
 * Patch: Only run the cmake configure and build if we are the top-level project
 * Patch: Inject the CMAKE_SRC_DIR and CMAKE_BUILD_DIR variables at configure 
   time. Such that the user can override them after loading the cmake tool.

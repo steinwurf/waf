@@ -19,6 +19,8 @@ def test_dependency_manager():
         git=git,
         options=options,
         skip_internal=False,
+        configuration=mock.Mock(),
+        upgrade=mock.Mock(),
     )
 
     # @todo add tests
