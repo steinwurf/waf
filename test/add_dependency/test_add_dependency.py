@@ -812,6 +812,7 @@ def test_resolve_upgrade(testdirectory):
 
     assert r.stdout.match('*Resolve "bar" (git checkout)*')
     assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
+    assert r.stdout.match("*Upgrade complete*1 upgraded (foo)*")
 
     resolve_json = read_json(directory=app_dir, filename="resolve.json")
     checkout = {d["name"]: d.get("checkout") for d in resolve_json}
@@ -839,7 +840,9 @@ def test_resolve_upgrade(testdirectory):
 
     # Everything is now at the newest version, so upgrading all dependencies
     # should not change the lock file
-    run("upgrade")
+    r = run("upgrade")
+
+    assert r.stdout.match("*Upgrade complete*no changes*")
 
     assert lock == read_json(directory=app_dir, filename="lock_version_resolve.json")
 

@@ -201,8 +201,8 @@ class Upgrade(object):
             resolve_file.write(updated)
 
     def report(self):
-        """Print the versions the upgraded dependencies moved to."""
-        changed = False
+        """Print what the upgrade changed."""
+        upgraded = []
 
         # Without a lock file we have nothing to compare the resolved
         # versions with
@@ -223,8 +223,17 @@ class Upgrade(object):
 
                 detail = f"{before} -> {after}"
 
-            changed = True
+            upgraded.append(name)
             self.ctx.msg(f'Upgraded "{name}"', detail)
 
-        if not changed and locked:
-            self.ctx.msg("Upgrade", "Everything is up to date")
+        if not self.upgraded:
+            summary = "no dependencies to upgrade"
+        elif not locked:
+            names = sorted(self.upgraded)
+            summary = f"{len(names)} resolved ({', '.join(names)})"
+        elif upgraded:
+            summary = f"{len(upgraded)} upgraded ({', '.join(upgraded)})"
+        else:
+            summary = "no changes, everything is up to date"
+
+        self.ctx.msg("Upgrade complete", summary)

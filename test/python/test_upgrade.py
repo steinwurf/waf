@@ -122,3 +122,57 @@ def test_upgrade_checkout(testdirectory):
 
     assert resolve_json[0]["checkout"] == "1.1.0"
     assert resolve_json[1]["checkout"] == "master"
+
+
+def create_dependency(name, resolver_info):
+    dependency = mock.Mock()
+    dependency.name = name
+    dependency.resolver_info = resolver_info
+
+    return dependency
+
+
+def test_upgrade_report():
+    upgrade = create_upgrade(names=[], tags=[], resolve_json_path="resolve.json")
+
+    upgrade.add(
+        dependency=create_dependency(name="foo", resolver_info="2.0.0"),
+        lock_entry={"resolver_info": "1.0.0"},
+    )
+    upgrade.add(
+        dependency=create_dependency(name="bar", resolver_info="3.0.0"),
+        lock_entry={"resolver_info": "3.0.0"},
+    )
+
+    upgrade.report()
+
+    upgrade.ctx.msg.assert_any_call('Upgraded "foo"', "1.0.0 -> 2.0.0")
+    upgrade.ctx.msg.assert_called_with("Upgrade complete", "1 upgraded (foo)")
+
+
+def test_upgrade_report_no_changes():
+    upgrade = create_upgrade(names=[], tags=[], resolve_json_path="resolve.json")
+
+    upgrade.add(
+        dependency=create_dependency(name="foo", resolver_info="1.0.0"),
+        lock_entry={"resolver_info": "1.0.0"},
+    )
+
+    upgrade.report()
+
+    upgrade.ctx.msg.assert_called_once_with(
+        "Upgrade complete", "no changes, everything is up to date"
+    )
+
+
+def test_upgrade_report_without_lock():
+    upgrade = create_upgrade(names=[], tags=[], resolve_json_path="resolve.json")
+
+    upgrade.add(
+        dependency=create_dependency(name="foo", resolver_info="1.0.0"),
+        lock_entry=None,
+    )
+
+    upgrade.report()
+
+    upgrade.ctx.msg.assert_called_once_with("Upgrade complete", "1 resolved (foo)")
