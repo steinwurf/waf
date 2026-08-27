@@ -15,6 +15,8 @@ def test_self_build(testdirectory):
 
     src_dir = root.mkdir("src")
     src_dir.copy_dir(directory="src/wurf")
+    tools_dir = root.mkdir("tools")
+    tools_dir.copy_file("tools/cmake.py")
     root.copy_file("wscript")
     root.copy_file("resolve.json")
     root.copy_file("build/waf")

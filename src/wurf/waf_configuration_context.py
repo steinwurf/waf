@@ -1,25 +1,21 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import os
-
 from waflib import Context
 from waflib import Utils
-from waflib import Logs
 
 from waflib.Configure import ConfigurationContext
-
-from .symlink import create_symlink
-
 
 class WafConfigurationContext(ConfigurationContext):
     def __init__(self, **kw):
         super(WafConfigurationContext, self).__init__(**kw)
 
+
     def init_dirs(self):
         # First call the configuration context init_dirs(..) function
         # which creates the actual folders.
         super(WafConfigurationContext, self).init_dirs()
+
 
     def execute(self):
         # If the main wscript has no "configure" function, bind it to an
@@ -29,6 +25,7 @@ class WafConfigurationContext(ConfigurationContext):
 
         super(WafConfigurationContext, self).execute()
 
+
     def pre_recurse(self, node):
         super(WafConfigurationContext, self).pre_recurse(node)
 
@@ -37,3 +34,4 @@ class WafConfigurationContext(ConfigurationContext):
         # as a FIRST STEP using wurf_cxx_mkspec in waf-tools
         if self.is_toplevel():
             self.recurse_dependencies()
+

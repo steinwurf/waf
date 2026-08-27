@@ -61,7 +61,9 @@ class OnPassiveLoadPathResolver(object):
 
         if not os.path.isfile(config_path):
             raise DependencyError(
-                f"No config - re-run configure {config_path}, {self.resolve_config_path}, {self.dependency.name}",
+                "No config - re-run configure "
+                f"{config_path}, {self.resolve_config_path}, "
+                f"{self.dependency.name}",
                 self.dependency,
             )
 
