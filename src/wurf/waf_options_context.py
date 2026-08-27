@@ -39,15 +39,8 @@ class WafOptionsContext(Options.OptionsContext):
         # Options parser used in the resolve step.
         self.wurf_options = None
 
-        # Create option group for resolve options. The upgrade command is
-        # described here, waf only has room for one line per command in its
-        # list of commands.
-        self.resolve_options_group = self.add_option_group(
-            "Resolve options",
-            "The command './waf upgrade [dependency ...]' upgrades the given "
-            "dependencies, and the dependencies they pull in, to their newest "
-            "version. Without any names all dependencies are upgraded.",
-        )
+        # Create option group for resolve options.
+        self.resolve_options_group = self.add_option_group("Resolve options")
 
         # Add option to skip resolve
         self.resolve_options_group.add_option(
