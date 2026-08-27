@@ -135,8 +135,13 @@ class WafResolveContext(Context.Context):
         # dependency resolution has completed
         post_resolver_actions = self.registry.require("post_resolver_actions")
 
-        for action in post_resolver_actions:
-            action()
+        try:
+            for action in post_resolver_actions:
+                action()
+
+        except WurfError as e:
+            self.logger.debug("Error in post resolve action:\n", exc_info=True)
+            self.fatal(str(e))
 
     def post_recurse(self, node):
         # As the last step in recurse, try to load the dependencies from the

@@ -834,9 +834,10 @@ def test_resolve_upgrade(testdirectory):
     assert lock["foo"]["resolver_info"] == "2.3.3.7"
 
     # Upgrading a dependency which is not used is an error
-    with pytest.raises(RunResultError):
-        r = run("upgrade", "nonexisting")
-        r.stderr.match("*Cannot upgrade unknown dependency: nonexisting*")
+    with pytest.raises(RunResultError) as error:
+        run("upgrade", "nonexisting")
+
+    assert "Cannot upgrade unknown dependency: nonexisting" in str(error.value)
 
     # Everything is now at the newest version, so upgrading all dependencies
     # should not change the lock file
