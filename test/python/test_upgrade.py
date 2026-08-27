@@ -4,6 +4,7 @@ import os
 import mock
 
 from wurf.upgrade import Upgrade
+from wurf.upgrade import parse
 
 
 def create_upgrade(names, tags, resolve_json_path):
@@ -179,4 +180,21 @@ def test_upgrade_report_without_lock():
 
     upgrade.ctx.msg.assert_called_once_with(
         "Upgrade complete", "1 resolved (foo 1.0.0)"
+    )
+
+
+def test_parse():
+    assert parse(args=["configure", "-v"]) == (None, ["configure", "-v"])
+
+    # Without any dependencies everything is upgraded
+    assert parse(args=["upgrade"]) == ([], ["upgrade"])
+
+    # The dependencies are removed, the command itself is kept as waf must
+    # still run it
+    assert parse(args=["upgrade", "foo", "bar"]) == (["foo", "bar"], ["upgrade"])
+
+    # The dependencies stop at the first option
+    assert parse(args=["upgrade", "foo", "-v", "bar"]) == (
+        ["foo"],
+        ["upgrade", "-v", "bar"],
     )

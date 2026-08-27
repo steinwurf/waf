@@ -786,14 +786,14 @@ def test_resolve_upgrade(testdirectory):
 
     def run(*args):
         return app_dir.run(
-            ["python", "waf", "resolve"]
+            ["python", "waf"]
             + list(args)
             + ["--resolve_path", "resolved_dependencies"],
             env=env,
         )
 
     # Lock the versions of all dependencies
-    run("--lock_versions")
+    run("resolve", "--lock_versions")
 
     lock = read_json(directory=app_dir, filename="lock_version_resolve.json")
 
@@ -876,7 +876,6 @@ def test_resolve_upgrade_without_lock(testdirectory):
         [
             "python",
             "waf",
-            "resolve",
             "upgrade",
             "foo",
             "--resolve_path",

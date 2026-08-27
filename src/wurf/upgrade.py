@@ -8,6 +8,39 @@ import os
 from .rewrite import open_for_writing
 from .tag_selector import select_newest_tag
 
+# The waf command upgrading dependencies, used as
+# "./waf upgrade [dependency ...]"
+UPGRADE_COMMAND = "upgrade"
+
+
+def parse(args):
+    """Take the dependencies to upgrade out of the command-line arguments.
+
+    Waf treats every argument which is not an option as a command, so the
+    dependencies must be removed before waf parses the arguments. The command
+    itself is kept, waf must still run it.
+
+    :param args: The command-line arguments as a list
+    :return: A (dependencies, arguments) tuple, where dependencies is None if
+        the upgrade command was not used and arguments are the remaining
+        command-line arguments. No dependencies means that all dependencies
+        should be upgraded.
+    """
+    for index, arg in enumerate(args):
+        if arg != UPGRADE_COMMAND:
+            continue
+
+        # The dependencies follow the command and stop at the first option
+        start = index + 1
+        end = start
+
+        while end < len(args) and not args[end].startswith("-"):
+            end += 1
+
+        return args[start:end], args[:start] + args[end:]
+
+    return None, args
+
 
 def locked_version(entry):
     """Describe the version stored in a lock file entry.

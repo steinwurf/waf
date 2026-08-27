@@ -630,14 +630,14 @@ This makes it possible to easily create a standalone archive::
     python waf configure --lock_paths
     python waf standalone
 
-The ``resolve upgrade`` command
-...............................
+The ``upgrade`` command
+.......................
 
-The ``upgrade`` sub command resolves the specified dependencies as if they
-were not locked, while the remaining dependencies stay at the version stored
-in the ``lock_version_resolve.json`` file::
+The ``upgrade`` command resolves the specified dependencies as if they were
+not locked, while the remaining dependencies stay at the version stored in
+the ``lock_version_resolve.json`` file::
 
-    python waf resolve upgrade gtest
+    python waf upgrade gtest
 
 The dependencies pulled in by an upgraded dependency are upgraded as well, so
 that a new version of ``gtest`` gets the versions of the dependencies it asks
@@ -651,7 +651,7 @@ branch or a commit id is left untouched.
 
 Without any dependency names all dependencies are upgraded::
 
-    python waf resolve upgrade
+    python waf upgrade
 
 The lock file is updated when it exists, it is never created by the upgrade.
 So in a project without a ``lock_version_resolve.json`` file nothing is

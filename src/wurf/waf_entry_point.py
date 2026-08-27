@@ -31,7 +31,7 @@ from . import waf_configuration_context
 from . import waf_build_context
 from . import waf_install_context
 from . import waf_standalone_context
-from . import waf_sub_command_context
+from . import waf_upgrade_context
 
 # We add a number of methods to the ConfigurationContext and BuildContext
 # objects used in Waf's configure(...) and build(...) functions (found in
@@ -47,7 +47,7 @@ assert waf_configuration_context
 assert waf_build_context
 assert waf_install_context
 assert waf_standalone_context
-assert waf_sub_command_context
+assert waf_upgrade_context
 assert waf_conf
 
 
