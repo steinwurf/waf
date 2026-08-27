@@ -147,7 +147,9 @@ def test_upgrade_report():
     upgrade.report()
 
     upgrade.ctx.msg.assert_any_call('Upgraded "foo"', "1.0.0 -> 2.0.0")
-    upgrade.ctx.msg.assert_called_with("Upgrade complete", "1 upgraded (foo)")
+    upgrade.ctx.msg.assert_called_with(
+        "Upgrade complete", "1 upgraded (foo 1.0.0 -> 2.0.0)"
+    )
 
 
 def test_upgrade_report_no_changes():
@@ -175,4 +177,6 @@ def test_upgrade_report_without_lock():
 
     upgrade.report()
 
-    upgrade.ctx.msg.assert_called_once_with("Upgrade complete", "1 resolved (foo)")
+    upgrade.ctx.msg.assert_called_once_with(
+        "Upgrade complete", "1 resolved (foo 1.0.0)"
+    )

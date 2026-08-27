@@ -223,14 +223,20 @@ class Upgrade(object):
 
                 detail = f"{before} -> {after}"
 
-            upgraded.append(name)
+            upgraded.append(f"{name} {before} -> {after}")
             self.ctx.msg(f'Upgraded "{name}"', detail)
 
         if not self.upgraded:
             summary = "no dependencies to upgrade"
         elif not locked:
-            names = sorted(self.upgraded)
-            summary = f"{len(names)} resolved ({', '.join(names)})"
+            resolved = []
+
+            for name in sorted(self.upgraded):
+                dependency, _ = self.upgraded[name]
+                version = resolved_version(dependency)
+                resolved.append(f"{name} {version}" if version else name)
+
+            summary = f"{len(resolved)} resolved ({', '.join(resolved)})"
         elif upgraded:
             summary = f"{len(upgraded)} upgraded ({', '.join(upgraded)})"
         else:

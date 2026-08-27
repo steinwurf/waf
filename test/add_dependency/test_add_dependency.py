@@ -812,7 +812,7 @@ def test_resolve_upgrade(testdirectory):
 
     assert r.stdout.match('*Resolve "bar" (git checkout)*')
     assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
-    assert r.stdout.match("*Upgrade complete*1 upgraded (foo)*")
+    assert r.stdout.match("*Upgrade complete*1 upgraded (foo 1.3.3.7 -> 2.3.3.7)*")
 
     resolve_json = read_json(directory=app_dir, filename="resolve.json")
     checkout = {d["name"]: d.get("checkout") for d in resolve_json}
