@@ -12,8 +12,6 @@ from waflib import Logs
 from waflib.Errors import WafError
 
 from . import registry
-from .sub_command import RESOLVE_COMMAND
-from .sub_command import sub_commands
 from .error import CmdAndLogError
 from .error import WurfError
 from .dependency_manager import DependencyManager
@@ -201,27 +199,3 @@ class WafResolveContext(Context.Context):
 WafResolveContext.__doc__ = (
     "resolves the dependencies specified in the wscript's resolve function"
 )
-
-
-def _create_sub_command_context(sub_command):
-    """Create the context making a sub command show up in the list of waf
-    commands. Waf builds that list from the registered contexts.
-
-    A sub command is taken out of the arguments before waf builds the list of
-    commands to run, so the context is never executed.
-
-    :param sub_command: The SubCommand class to create the context for
-    """
-    return type(
-        f"WafResolve{sub_command.name.capitalize()}Context",
-        (WafResolveContext,),
-        {
-            "cmd": f"{RESOLVE_COMMAND} {sub_command.name}",
-            "fun": RESOLVE_COMMAND,
-            "__doc__": sub_command.help,
-        },
-    )
-
-
-for _sub_command in sub_commands():
-    _create_sub_command_context(sub_command=_sub_command)

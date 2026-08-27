@@ -2,20 +2,19 @@
 # encoding: utf-8
 
 
-# The waf command running the dependency resolution
-RESOLVE_COMMAND = "resolve"
-
-
 class SubCommand(object):
-    """Base class for the sub commands of the resolve command.
+    """Base class for the sub commands.
 
-    A sub command is used as "./waf resolve <name> [argument ...]" and changes
-    how the dependencies are resolved.
+    A sub command is used as "./waf <command> <name> [argument ...]" and
+    changes what the command it belongs to does.
 
-    A sub class defines the name used on the command-line, the one line help
-    shown in the list of waf commands, and the description shown with the
-    resolve options.
+    A sub class defines the command it extends, the name used on the
+    command-line, the one line help shown in the list of waf commands, and the
+    description shown with the options of the command.
     """
+
+    # The waf command the sub command belongs to
+    command = None
 
     # The name used on the command-line
     name = None
@@ -23,7 +22,7 @@ class SubCommand(object):
     # One line help, shown in the list of waf commands
     help = None
 
-    # Description of the sub command, shown with the resolve options
+    # Description of the sub command, shown with the options of the command
     description = None
 
     def __init__(self, arguments):
@@ -35,6 +34,8 @@ class SubCommand(object):
 
 
 class UpgradeSubCommand(SubCommand):
+    command = "resolve"
+
     name = "upgrade"
 
     help = "upgrades the given dependencies, and the dependencies they pull in"
@@ -46,9 +47,19 @@ class UpgradeSubCommand(SubCommand):
     )
 
 
-def sub_commands():
-    """:return: The available sub commands as a list of SubCommand classes."""
-    return [UpgradeSubCommand]
+def sub_commands(command=None):
+    """Return the available sub commands.
+
+    :param command: Only return the sub commands of this waf command, as a
+        string. All sub commands are returned if None.
+    :return: The sub commands as a list of SubCommand classes
+    """
+    available = [UpgradeSubCommand]
+
+    if command is None:
+        return available
+
+    return [s for s in available if s.command == command]
 
 
 def parse(args):
@@ -62,27 +73,28 @@ def parse(args):
         SubCommand instance or None if no sub command was used, and arguments
         are the remaining command-line arguments.
     """
-    available = {sub_command.name: sub_command for sub_command in sub_commands()}
+    available = {(s.command, s.name): s for s in sub_commands()}
 
     for index, arg in enumerate(args):
-        if arg != RESOLVE_COMMAND:
-            continue
+        name = index + 1
 
-        command = index + 1
+        if name >= len(args):
+            break
 
-        if command >= len(args) or args[command] not in available:
+        sub_command = available.get((arg, args[name]), None)
+
+        if sub_command is None:
             continue
 
         # The arguments of the sub command follow it and stop at the first
         # option
-        start = command + 1
+        start = name + 1
         end = start
 
         while end < len(args) and not args[end].startswith("-"):
             end += 1
 
-        sub_command = available[args[command]](arguments=args[start:end])
-
-        return sub_command, args[:command] + args[end:]
+        # The command itself is kept, waf must still run it
+        return sub_command(arguments=args[start:end]), args[:name] + args[end:]
 
     return None, args

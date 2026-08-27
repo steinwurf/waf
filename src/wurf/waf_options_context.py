@@ -12,6 +12,7 @@ from waflib import Logs
 from . import registry
 from . import sub_command
 from . import waf_conf
+from .waf_resolve_context import WafResolveContext
 
 
 class WafOptionsContext(Options.OptionsContext):
@@ -44,7 +45,10 @@ class WafOptionsContext(Options.OptionsContext):
         # per command in its list of commands.
         self.resolve_options_group = self.add_option_group(
             "Resolve options",
-            " ".join(s.description for s in sub_command.sub_commands()),
+            " ".join(
+                s.description
+                for s in sub_command.sub_commands(command=WafResolveContext.cmd)
+            ),
         )
 
         # Add option to skip resolve
@@ -141,8 +145,8 @@ class WafOptionsContext(Options.OptionsContext):
         # self.waf_options list
         assert _args is None
 
-        # Waf builds the list of commands to run from sys.argv, so the resolve
-        # sub commands must be taken out before waf parses the arguments
+        # Waf builds the list of commands to run from sys.argv, so the sub
+        # commands must be taken out before waf parses the arguments
         _, sys.argv[1:] = sub_command.parse(sys.argv[1:])
 
         try:

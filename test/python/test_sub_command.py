@@ -1,5 +1,14 @@
 from wurf.sub_command import UpgradeSubCommand
 from wurf.sub_command import parse
+from wurf.sub_command import sub_commands
+
+
+def test_upgrade_sub_command():
+    assert UpgradeSubCommand.command == "resolve"
+    assert UpgradeSubCommand.name == "upgrade"
+
+    assert sub_commands(command="resolve") == [UpgradeSubCommand]
+    assert sub_commands(command="build") == []
 
 
 def test_parse_without_sub_command():
@@ -13,6 +22,12 @@ def test_parse_without_sub_command():
 
     assert sub_command is None
     assert args == ["resolve", "downgrade"]
+
+    # A sub command only belongs to the command it extends
+    sub_command, args = parse(args=["build", "upgrade"])
+
+    assert sub_command is None
+    assert args == ["build", "upgrade"]
 
 
 def test_parse_sub_command():
