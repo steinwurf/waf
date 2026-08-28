@@ -4,7 +4,6 @@
 import pytest
 from wurf.rewrite import rewrite_file
 
-
 data = """
 Here is some data. And there is also
 a version number:

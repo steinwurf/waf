@@ -6,7 +6,6 @@ import json
 import pytest
 from pytest_testdirectory.runresulterror import RunResultError
 
-
 """ Integration testing of adding a dependency.
 
 This test is a bit involved so lets try to explain what it does:

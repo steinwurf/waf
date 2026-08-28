@@ -65,7 +65,6 @@ def options(ctx):
     )
 
 
-
 def _cmake_configure(ctx, **kwargs):
 
     # Combine the base configure command with any additional arguments
