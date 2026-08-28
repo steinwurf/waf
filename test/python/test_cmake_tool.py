@@ -70,8 +70,9 @@ class MockContext:
         return f"/usr/bin/{name}"
 
 
-def test_cmake_build_ninja_no_parallel():
+def test_cmake_build_ninja_no_parallel(monkeypatch):
     """Test that when Ninja generator is used, no --parallel flags are added."""
+    monkeypatch.setattr(cmake.platform, "system", lambda: "Linux")
     ctx = MockContext(cmake_generator="Ninja")
 
     # Call the build function
@@ -90,8 +91,9 @@ def test_cmake_build_ninja_no_parallel():
     assert "--parallel" not in build_cmd
 
 
-def test_cmake_build_unix_makefiles_with_parallel():
+def test_cmake_build_unix_makefiles_with_parallel(monkeypatch):
     """Test that when Unix Makefiles generator is used, --parallel flags are added."""
+    monkeypatch.setattr(cmake.platform, "system", lambda: "Linux")
     ctx = MockContext(cmake_generator="Unix Makefiles", cmake_jobs=8)
 
     # Call the build function
