@@ -13,9 +13,21 @@ name: Flake8
   pull_request:
 jobs:
   flake8:
-    uses: steinwurf/flake8-action/.github/workflows/action.yml@2.0.0
-    with:
-      excluded_errors: F632
+    container:
+      image: ghcr.io/steinwurf/flake8-4:1.0.0
+      options: --user 0:0
+      volumes:
+      - /home/buildbot/.ssh:/root/.ssh
+    name: Flake8 4.0.1
+    runs-on:
+    - self-hosted
+    - docker
+    - builder
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Check Python syntax
+      run: flake8 . --count --select=E9,F63,F72,F82 --ignore=F632 --show-source --statistics
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
