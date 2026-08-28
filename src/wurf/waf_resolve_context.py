@@ -19,7 +19,6 @@ from .dependency_manager import DependencyManager
 from waflib.extras import semver
 from waflib.extras import archive
 
-
 # To create the tree. https://gist.github.com/hrldcpr/2012250
 
 dependency_cache = {}

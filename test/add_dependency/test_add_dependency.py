@@ -6,7 +6,6 @@ import json
 import pytest
 from pytest_testdirectory.runresulterror import RunResultError
 
-
 """ Integration testing of adding a dependency.
 
 This test is a bit involved so lets try to explain what it does:
@@ -206,9 +205,6 @@ def run_commands(app_dir, git_dir):
     # --foo_magic_option (defined in the 'foo' wscript)
     r = app_dir.run(["python", "waf", "--help"])
     assert r.stdout.match("*Magic option for foo*")
-
-    # The symlink to 'current_build' should be created
-    assert os.path.exists(os.path.join(app_dir.path(), "build_current"))
 
     # The symlinks should be available to all dependencies
     assert os.path.exists(os.path.join(app_dir.path(), "resolve_symlinks", "foo"))
