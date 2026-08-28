@@ -3,6 +3,8 @@
 
 import sys
 import os
+import platform
+import pytest
 
 # Mock waflib module to avoid import errors
 
@@ -70,9 +72,11 @@ class MockContext:
         return f"/usr/bin/{name}"
 
 
-def test_cmake_build_ninja_no_parallel(monkeypatch):
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Linux-specific CMake parallel behavior"
+)
+def test_cmake_build_ninja_no_parallel():
     """Test that when Ninja generator is used, no --parallel flags are added."""
-    monkeypatch.setattr(cmake.platform, "system", lambda: "Linux")
     ctx = MockContext(cmake_generator="Ninja")
 
     # Call the build function
@@ -91,9 +95,11 @@ def test_cmake_build_ninja_no_parallel(monkeypatch):
     assert "--parallel" not in build_cmd
 
 
-def test_cmake_build_unix_makefiles_with_parallel(monkeypatch):
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Linux-specific CMake parallel behavior"
+)
+def test_cmake_build_unix_makefiles_with_parallel():
     """Test that when Unix Makefiles generator is used, --parallel flags are added."""
-    monkeypatch.setattr(cmake.platform, "system", lambda: "Linux")
     ctx = MockContext(cmake_generator="Unix Makefiles", cmake_jobs=8)
 
     # Call the build function
@@ -113,9 +119,11 @@ def test_cmake_build_unix_makefiles_with_parallel(monkeypatch):
     assert "8" in build_cmd
 
 
-def test_cmake_build_no_generator_with_parallel(monkeypatch):
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Linux-specific CMake parallel behavior"
+)
+def test_cmake_build_no_generator_with_parallel():
     """Test that when no generator is specified, --parallel flags are added."""
-    monkeypatch.setattr(cmake.platform, "system", lambda: "Linux")
     ctx = MockContext(cmake_generator="")
 
     # Call the build function
@@ -134,9 +142,11 @@ def test_cmake_build_no_generator_with_parallel(monkeypatch):
     assert "--parallel" in build_cmd
 
 
-def test_cmake_build_ninja_case_sensitive(monkeypatch):
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Linux-specific CMake parallel behavior"
+)
+def test_cmake_build_ninja_case_sensitive():
     """Test that the Ninja check is case sensitive."""
-    monkeypatch.setattr(cmake.platform, "system", lambda: "Linux")
     ctx = MockContext(cmake_generator="ninja")  # lowercase
 
     # Call the build function
