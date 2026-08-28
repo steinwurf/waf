@@ -73,7 +73,8 @@ class MockContext:
 
 
 @pytest.mark.skipif(
-    platform.system() != "Linux", reason="Linux-specific CMake parallel behavior"
+    platform.system() == "Windows",
+    reason="Non-Windows CMake parallel behavior test",
 )
 def test_cmake_build_ninja_no_parallel():
     """Test that when Ninja generator is used, no --parallel flags are added."""
@@ -96,7 +97,8 @@ def test_cmake_build_ninja_no_parallel():
 
 
 @pytest.mark.skipif(
-    platform.system() != "Linux", reason="Linux-specific CMake parallel behavior"
+    platform.system() == "Windows",
+    reason="Non-Windows CMake parallel behavior test",
 )
 def test_cmake_build_unix_makefiles_with_parallel():
     """Test that when Unix Makefiles generator is used, --parallel flags are added."""
@@ -120,7 +122,8 @@ def test_cmake_build_unix_makefiles_with_parallel():
 
 
 @pytest.mark.skipif(
-    platform.system() != "Linux", reason="Linux-specific CMake parallel behavior"
+    platform.system() == "Windows",
+    reason="Non-Windows CMake parallel behavior test",
 )
 def test_cmake_build_no_generator_with_parallel():
     """Test that when no generator is specified, --parallel flags are added."""
@@ -143,7 +146,8 @@ def test_cmake_build_no_generator_with_parallel():
 
 
 @pytest.mark.skipif(
-    platform.system() != "Linux", reason="Linux-specific CMake parallel behavior"
+    platform.system() == "Windows",
+    reason="Non-Windows CMake parallel behavior test",
 )
 def test_cmake_build_ninja_case_sensitive():
     """Test that the Ninja check is case sensitive."""
