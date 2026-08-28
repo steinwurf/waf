@@ -113,8 +113,9 @@ def test_cmake_build_unix_makefiles_with_parallel(monkeypatch):
     assert "8" in build_cmd
 
 
-def test_cmake_build_no_generator_with_parallel():
+def test_cmake_build_no_generator_with_parallel(monkeypatch):
     """Test that when no generator is specified, --parallel flags are added."""
+    monkeypatch.setattr(cmake.platform, "system", lambda: "Linux")
     ctx = MockContext(cmake_generator="")
 
     # Call the build function
@@ -133,8 +134,9 @@ def test_cmake_build_no_generator_with_parallel():
     assert "--parallel" in build_cmd
 
 
-def test_cmake_build_ninja_case_sensitive():
+def test_cmake_build_ninja_case_sensitive(monkeypatch):
     """Test that the Ninja check is case sensitive."""
+    monkeypatch.setattr(cmake.platform, "system", lambda: "Linux")
     ctx = MockContext(cmake_generator="ninja")  # lowercase
 
     # Call the build function
