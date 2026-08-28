@@ -11,6 +11,8 @@ name: Flake8
     branches:
     - master
   pull_request:
+permissions:
+  contents: read
 jobs:
   flake8:
     container:
@@ -18,8 +20,6 @@ jobs:
       options: --user 0:0
       volumes:
       - /home/buildbot/.ssh:/root/.ssh
-    env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     name: Flake8 4.0.1
     runs-on:
     - self-hosted
@@ -28,6 +28,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+      env:
+        ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     - name: Check Python syntax
       run: flake8 . --count --select=E9,F63,F72,F82 --ignore=F632 --show-source --statistics
 concurrency:
