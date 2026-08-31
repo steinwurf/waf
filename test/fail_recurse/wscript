@@ -5,7 +5,7 @@ APPNAME = "fail_recurse"
 VERSION = "1.0.0"
 
 
-NO_RECURSE = False
+BUILD_RECURSE = True
 
 
 def resolve(ctx):

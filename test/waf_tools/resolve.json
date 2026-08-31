@@ -1,9 +1,0 @@
-[
-    {
-        "name": "waf-tools",
-        "resolver": "git",
-        "method": "semver",
-        "major": 4,
-        "source": "github.com/steinwurf/waf-tools.git"
-    }
-]

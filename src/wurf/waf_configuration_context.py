@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import os
-
 from waflib import Context
 from waflib import Utils
-from waflib import Logs
 
 from waflib.Configure import ConfigurationContext
-
-from .symlink import create_symlink
 
 
 class WafConfigurationContext(ConfigurationContext):

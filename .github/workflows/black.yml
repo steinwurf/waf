@@ -11,9 +11,25 @@ name: Black
     branches:
     - master
   pull_request:
+permissions:
+  contents: read
 jobs:
   Black:
-    uses: steinwurf/black-action/.github/workflows/action.yml@2.0.0
+    container:
+      image: ghcr.io/steinwurf/black-22:1.0.0
+      options: --user 0:0
+      volumes:
+      - /home/buildbot/.ssh:/root/.ssh
+    name: Black 22
+    runs-on:
+    - self-hosted
+    - docker
+    - builder
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Black Check
+      run: black . --check
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true

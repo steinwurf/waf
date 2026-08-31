@@ -65,7 +65,6 @@ def options(ctx):
     )
 
 
-
 def _cmake_configure(ctx, **kwargs):
 
     # Combine the base configure command with any additional arguments
@@ -210,8 +209,9 @@ def build(ctx):
         cmake_build_cmd.append("/p:UseMultiToolTask=true")
         cmake_build_cmd.append("/p:EnforceProcessCountAcrossBuilds=true")
     else:
-        # Non-Windows platforms
-        if ctx.options.cmake_jobs:
+        # Non-Windows platforms: only pass --parallel when jobs are set and
+        # the generator is not Ninja (Ninja parallelizes on its own).
+        if ctx.options.cmake_jobs and ctx.options.cmake_generator != "Ninja":
             jobs = str(ctx.options.cmake_jobs)
             cmake_build_cmd.extend(["--parallel", jobs])
 
