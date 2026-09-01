@@ -12,7 +12,17 @@ from .lock_version_cache import LockVersionCache
 class DependencyManager(object):
     RESOLVE_FILE = "resolve.json"
 
-    def __init__(self, registry, dependency_cache, ctx, git, options, skip_internal):
+    def __init__(
+        self,
+        registry,
+        dependency_cache,
+        ctx,
+        git,
+        options,
+        skip_internal,
+        configuration,
+        upgrade,
+    ):
         """Construct an instance.
 
         As the manager resolves dependencies it will store the results
@@ -31,6 +41,9 @@ class DependencyManager(object):
         :param cache: Dict where paths to dependencies should be stored.
         :param ctx: A Waf Context instance.
         :param options: Options instance for collecting / parsing options
+        :param configuration: A Configuration instance.
+        :param upgrade: An Upgrade instance keeping track of the dependencies
+            to upgrade.
         """
 
         self.registry = registry
@@ -39,6 +52,8 @@ class DependencyManager(object):
         self.git = git
         self.options = options
         self.skip_internal = skip_internal
+        self.configuration = configuration
+        self.upgrade = upgrade
 
         # Dict where we will store the dependencies already added. For
         # example two libraries may have an overlap in their
@@ -81,6 +96,11 @@ class DependencyManager(object):
                 self.locked_versions = json.load(f)
 
         for dependency in resolve_json:
+            if self.ctx.is_toplevel() and self.upgrade.named(dependency["name"]):
+                # The dependencies specified by the user are upgraded to the
+                # newest tag in the project's resolve.json file
+                dependency = self.upgrade.upgrade_checkout(dependency_args=dependency)
+
             self.add_dependency(dependency_args=dependency)
 
     def add_dependency(self, dependency_args):
@@ -93,8 +113,15 @@ class DependencyManager(object):
 
         if self.__skip_dependency(dependency):
             return
+
+        upgrading = self.upgrade.upgrading(dependency.name)
         locked_version = self.locked_versions.get(dependency.name, None)
-        if locked_version is not None:
+
+        if upgrading:
+            # An upgraded dependency is resolved as if it was not locked
+            dependency.upgrade = True
+            self.upgrade.add(dependency=dependency, lock_entry=locked_version)
+        elif locked_version is not None:
             dependency.locked_version = locked_version
             dependency.resolver_info = locked_version.get("resolver_info", None)
 
@@ -120,7 +147,8 @@ class DependencyManager(object):
             #
             # str() is needed as waf does not handle unicode in its find_node
             # function (invoked from within recurse).
-            self.ctx.recurse([str(path)], mandatory=False)
+            with self.upgrade.recurse(upgrading=upgrading):
+                self.ctx.recurse([str(path)], mandatory=False)
 
         self.dependency_cache[dependency.name] = {
             "path": path,
@@ -182,6 +210,11 @@ class DependencyManager(object):
     def __is_toggled_on(self, dependency):
         if self.options.lock_paths() or self.options.lock_versions():
             # Always enable toggled dependencies when locking paths or versions
+            return True
+
+        if self.configuration.lock_versions():
+            # An upgrade rewrites the lock file, so it must contain all
+            # dependencies
             return True
 
         if not dependency.optional:

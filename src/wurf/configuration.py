@@ -4,6 +4,7 @@
 import os
 from .lock_path_cache import LockPathCache
 from .lock_version_cache import LockVersionCache
+from .upgrade import UPGRADE_COMMAND
 
 
 class Configuration(object):
@@ -94,12 +95,33 @@ class Configuration(object):
         return False
 
     def lock_versions(self):
+        # An upgrade rewrites the lock file, but never creates one
+        if self.upgrading() and self.choose_resolve_from_lock(
+            LockVersionCache.LOCK_FILE
+        ):
+            return True
         # Lock versions if configuring and the lock versions option was passed
         if "configure" in self.args and self.options.lock_versions():
             return True
         elif "resolve" in self.args and self.options.lock_versions():
             return True
         return False
+
+    def upgrade(self):
+        """Return the dependencies to upgrade.
+
+        :return: None if we are not upgrading, otherwise the dependency names
+            as a list. An empty list means that all dependencies should be
+            upgraded.
+        """
+        if self.choose_help():
+            return None
+
+        return self.options.upgrade()
+
+    def upgrading(self):
+        """:return: True if dependencies should be upgraded."""
+        return self.upgrade() is not None
 
     def choose_resolve_from_lock(self, lock_file):
         if not self.choose_resolve():
@@ -110,4 +132,4 @@ class Configuration(object):
         return os.path.exists(os.path.join(self.project_path, lock_file))
 
     def choose_resolve(self):
-        return any([c in self.args for c in ["configure", "resolve"]])
+        return any([c in self.args for c in ["configure", "resolve", UPGRADE_COMMAND]])

@@ -735,3 +735,154 @@ def test_optional(testdirectory):
     )
 
     assert r.stdout.match('*Resolve "extra" (git semver)*')
+
+
+def add_tag(directory, tag):
+    """Add a tag to the fake git repository in the directory."""
+
+    json_path = os.path.join(directory.path(), "git_info.json")
+
+    with open(json_path, "r") as json_file:
+        git_info = json.load(json_file)
+
+    git_info["tags"].append(tag)
+
+    with open(json_path, "w") as json_file:
+        json.dump(git_info, json_file)
+
+
+def read_json(directory, filename):
+    with open(os.path.join(directory.path(), filename), "r") as json_file:
+        return json.load(json_file)
+
+
+def test_resolve_upgrade(testdirectory):
+    app_dir = mkdir_app(directory=testdirectory)
+
+    git_dir = testdirectory.mkdir(directory="git_dir")
+
+    qux_dir = mkdir_libqux(directory=git_dir)
+    foo_dir = mkdir_libfoo(directory=git_dir)
+    bar_dir = mkdir_libbar(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir, qux_dir=qux_dir)
+    extra_dir = mkdir_libextra(directory=git_dir)
+
+    clone_path = {
+        "acme-corp/foo.git": foo_dir.path(),
+        "acme-corp/bar.git": bar_dir.path(),
+        "acme/baz.git": baz_dir.path(),
+        "acme-corp/extra.git": extra_dir.path(),
+    }
+
+    with open(os.path.join(app_dir.path(), "clone_path.json"), "w") as json_file:
+        json.dump(clone_path, json_file)
+
+    env = dict(os.environ)
+    env["NOCLIMB"] = "1"
+
+    def run(*args):
+        return app_dir.run(
+            ["python", "waf"]
+            + list(args)
+            + ["--resolve_path", "resolved_dependencies"],
+            env=env,
+        )
+
+    # Lock the versions of all dependencies
+    run("resolve", "--lock_versions")
+
+    lock = read_json(directory=app_dir, filename="lock_version_resolve.json")
+
+    assert lock["foo"]["resolver_info"] == "1.3.3.7"
+    assert lock["baz"]["resolver_info"] == "3.3.1"
+
+    # A new version of baz is released. The resolved dependencies are removed
+    # to make the fake git clone the repositories again.
+    add_tag(directory=baz_dir, tag="3.4.0")
+    app_dir.join("resolved_dependencies").rmdir()
+
+    # Upgrading foo also upgrades bar which is a dependency of foo. The
+    # remaining dependencies stay at the locked version, even though a newer
+    # version of baz is available.
+    r = run("upgrade", "foo")
+
+    assert r.stdout.match('*Resolve "bar" (git checkout)*')
+    assert r.stdout.match('*Resolve "baz" (lock/git checkout)*')
+    assert r.stdout.match("*Upgrade complete*1 upgraded (foo 1.3.3.7 -> 2.3.3.7)*")
+
+    resolve_json = read_json(directory=app_dir, filename="resolve.json")
+    checkout = {d["name"]: d.get("checkout") for d in resolve_json}
+
+    # The newest tag is written to the resolve.json file
+    assert checkout["foo"] == "2.3.3.7"
+
+    lock = read_json(directory=app_dir, filename="lock_version_resolve.json")
+
+    assert lock["foo"]["resolver_info"] == "2.3.3.7"
+    assert lock["baz"]["resolver_info"] == "3.3.1"
+
+    # Upgrading baz picks up the newly released version
+    run("upgrade", "baz")
+
+    lock = read_json(directory=app_dir, filename="lock_version_resolve.json")
+
+    assert lock["baz"]["resolver_info"] == "3.4.0"
+    assert lock["foo"]["resolver_info"] == "2.3.3.7"
+
+    # Upgrading a dependency which is not used is an error
+    with pytest.raises(RunResultError) as error:
+        run("upgrade", "nonexisting")
+
+    assert "Cannot upgrade unknown dependency: nonexisting" in str(error.value)
+
+    # Everything is now at the newest version, so upgrading all dependencies
+    # should not change the lock file
+    r = run("upgrade")
+
+    assert r.stdout.match("*Upgrade complete*no changes*")
+
+    assert lock == read_json(directory=app_dir, filename="lock_version_resolve.json")
+
+
+def test_resolve_upgrade_without_lock(testdirectory):
+    app_dir = mkdir_app(directory=testdirectory)
+
+    git_dir = testdirectory.mkdir(directory="git_dir")
+
+    qux_dir = mkdir_libqux(directory=git_dir)
+    foo_dir = mkdir_libfoo(directory=git_dir)
+    bar_dir = mkdir_libbar(directory=git_dir)
+    baz_dir = mkdir_libbaz(directory=git_dir, qux_dir=qux_dir)
+
+    clone_path = {
+        "acme-corp/foo.git": foo_dir.path(),
+        "acme-corp/bar.git": bar_dir.path(),
+        "acme/baz.git": baz_dir.path(),
+    }
+
+    with open(os.path.join(app_dir.path(), "clone_path.json"), "w") as json_file:
+        json.dump(clone_path, json_file)
+
+    env = dict(os.environ)
+    env["NOCLIMB"] = "1"
+
+    # Without a lock file the dependencies are simply resolved, and no lock
+    # file is created
+    app_dir.run(
+        [
+            "python",
+            "waf",
+            "upgrade",
+            "foo",
+            "--resolve_path",
+            "resolved_dependencies",
+        ],
+        env=env,
+    )
+
+    assert not os.path.isfile(os.path.join(app_dir.path(), "lock_version_resolve.json"))
+
+    resolve_json = read_json(directory=app_dir, filename="resolve.json")
+    checkout = {d["name"]: d.get("checkout") for d in resolve_json}
+
+    assert checkout["foo"] == "2.3.3.7"

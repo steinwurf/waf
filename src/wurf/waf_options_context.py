@@ -10,6 +10,7 @@ from waflib import Logs
 
 
 from . import registry
+from . import upgrade
 from . import waf_conf
 
 
@@ -134,6 +135,11 @@ class WafOptionsContext(Options.OptionsContext):
         # figure out why and see if we should combine it with the
         # self.waf_options list
         assert _args is None
+
+        # Waf builds the list of commands to run from sys.argv, so the
+        # dependencies to upgrade must be taken out before waf parses the
+        # arguments
+        _, sys.argv[1:] = upgrade.parse(sys.argv[1:])
 
         try:
             # We may not have a wurf_options instance if running in a folder

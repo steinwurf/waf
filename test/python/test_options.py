@@ -204,3 +204,42 @@ def test_exclusive_lock_options():
             default_symlinks_path="symlinks_path",
             supported_git_protocols="",
         )
+
+
+def create_options(args):
+    return Options(
+        args=args,
+        parser=argparse.ArgumentParser(),
+        default_resolve_path="resolve_path",
+        default_symlinks_path="symlinks_path",
+        supported_git_protocols="",
+    )
+
+
+def test_upgrade():
+    # Without the upgrade command we are not upgrading
+    options = create_options(args=["configure"])
+
+    assert options.upgrade() is None
+    assert options.unknown_args == ["configure"]
+
+    # Without any dependencies everything is upgraded
+    options = create_options(args=["upgrade"])
+
+    assert options.upgrade() == []
+    assert options.unknown_args == ["upgrade"]
+
+    # The dependencies are taken out of the arguments passed on to waf, the
+    # command itself is kept
+    options = create_options(
+        args=["upgrade", "foo", "bar", "--resolve_path", "/tmp/deps"]
+    )
+
+    assert options.upgrade() == ["foo", "bar"]
+    assert options.unknown_args == ["upgrade"]
+    assert options.resolve_path() == "/tmp/deps"
+
+
+def test_upgrade_and_skip_internal():
+    with pytest.raises(WurfError):
+        create_options(args=["upgrade", "--skip_internal"])

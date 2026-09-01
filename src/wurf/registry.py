@@ -36,6 +36,7 @@ from .semver_selector import SemverSelector
 from .store_lock_path_resolver import StoreLockPathResolver
 from .store_lock_version_resolver import StoreLockVersionResolver
 from .try_resolver import TryResolver
+from .upgrade import Upgrade
 from .url_download import UrlDownload
 
 from .error import WurfError
@@ -460,6 +461,20 @@ def options(
         ctx.msg("Resolve path", options.resolve_path())
 
     return options
+
+
+@Registry.cache_once
+@Registry.provide
+def upgrade(ctx, git, git_url_rewriter, project_path, configuration: Configuration):
+    """Return the Upgrade provider."""
+
+    return Upgrade(
+        ctx=ctx,
+        git=git,
+        git_url_rewriter=git_url_rewriter,
+        resolve_json_path=os.path.join(project_path, DependencyManager.RESOLVE_FILE),
+        names=configuration.upgrade(),
+    )
 
 
 @Registry.cache_once
@@ -969,6 +984,17 @@ def dependency_resolver(registry, ctx, configuration: Configuration, dependency)
     if resolver_key is None:
         raise WurfError(f"Unknown resolver chain {configuration.resolver_chain()}")
 
+    if configuration.upgrading():
+        if configuration.resolver_chain() == Configuration.RESOLVE_FROM_PATH_LOCK:
+            raise WurfError(
+                "Upgrading is not supported when using locked paths. "
+                "Remove the lock_path_resolve.json file and try again."
+            )
+
+        if dependency.upgrade:
+            # An upgraded dependency is resolved as if there was no lock file
+            resolver_key = "resolve_chain"
+
     resolver = registry.require(resolver_key)
 
     if configuration.lock_paths():
@@ -981,7 +1007,10 @@ def dependency_resolver(registry, ctx, configuration: Configuration, dependency)
                 "Locking versions is not supported when using locked paths. "
                 "Remove the lock_path_resolve.json file and try again."
             )
-        if configuration.resolver_chain() == Configuration.RESOLVE_FROM_VERSION_LOCK:
+        if (
+            configuration.resolver_chain() == Configuration.RESOLVE_FROM_VERSION_LOCK
+            and not configuration.upgrading()
+        ):
             raise WurfError(
                 "Locking versions is not supported when using locked versions. "
                 "Remove the lock_version_resolve.json file and try again."
@@ -1014,6 +1043,8 @@ def dependency_manager(registry):
     dependency_cache = registry.require("dependency_cache")
     options = registry.require("options")
     skip_internal = registry.require("skip_internal")
+    configuration = registry.require("configuration")
+    upgrade = registry.require("upgrade")
 
     return DependencyManager(
         registry=registry,
@@ -1022,6 +1053,8 @@ def dependency_manager(registry):
         git=git,
         options=options,
         skip_internal=skip_internal,
+        configuration=configuration,
+        upgrade=upgrade,
     )
 
 
@@ -1034,8 +1067,25 @@ def resolve_lock_action(lock_cache_to, project_path):
 
 
 @Registry.provide
+def resolve_upgrade_action(upgrade: Upgrade):
+    def action():
+        unknown = upgrade.unknown()
+
+        if unknown:
+            raise WurfError(f"Cannot upgrade unknown dependency: {', '.join(unknown)}")
+
+        upgrade.report()
+        upgrade.write()
+
+    return action
+
+
+@Registry.provide
 def post_resolver_actions(registry, configuration: Configuration):
     actions = []
+
+    if configuration.upgrading():
+        actions.append(registry.require("resolve_upgrade_action"))
 
     if configuration.lock_paths() or configuration.lock_versions():
         actions.append(registry.require("resolve_lock_action"))

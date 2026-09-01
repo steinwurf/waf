@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+from . import upgrade
 from .error import WurfError
 import argparse
 
@@ -14,7 +15,10 @@ class Options(object):
         default_symlinks_path,
         supported_git_protocols,
     ):
-        self.args = args
+        # The dependencies to upgrade (None if we are not upgrading) and the
+        # remaining command-line arguments
+        self.upgrade_dependencies, self.args = upgrade.parse(args)
+
         self.parser = parser
 
         self.known_args = {}
@@ -86,6 +90,15 @@ class Options(object):
     def lock_versions(self):
         return self.known_args["--lock_versions"]
 
+    def upgrade(self):
+        """Return the dependencies to upgrade.
+
+        :return: None if the upgrade command was not used, otherwise the
+            dependency names as a list. An empty list means that all
+            dependencies should be upgraded.
+        """
+        return self.upgrade_dependencies
+
     def path(self, dependency):
         return self.known_args[f"--{dependency.name}_path"]
 
@@ -104,6 +117,9 @@ class Options(object):
         if (
             self.lock_versions() or self.lock_paths()
         ) and "--skip_internal" in self.args:
+            raise WurfError("Incompatible options")
+
+        if self.upgrade() is not None and "--skip_internal" in self.args:
             raise WurfError("Incompatible options")
 
     def __add_path(self, dependency):
